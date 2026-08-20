@@ -53,8 +53,8 @@ import {
     DialogFooter
 } from '@/components/ui/dialog';
 import useSWR from 'swr';
-import { getDepartmentsAction, createDepartmentAction } from '../../../departments/_actions/department-actions';
-import { createJobAction, updateJobAction } from '../../../_actions/job-actions';
+import { getDepartmentsAction, createDepartmentAction } from '../../departments/_actions/department-actions';
+import { createJobAction, updateJobAction } from '../../_actions/job-actions';
 
 const JOB_TYPES = [
     { value: 'Full-time', label: 'Full-time' },
