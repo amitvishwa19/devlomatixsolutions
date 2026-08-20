@@ -130,22 +130,25 @@ export default function EcommerceProductsPage({ params: paramsPromise }) {
             />
 
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogContent className="bg-card border-border">
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-foreground">Delete Product</AlertDialogTitle>
-                        <AlertDialogDescription className="text-muted-foreground">
-                            Are you sure you want to delete "{productToDelete?.title}"? This action cannot be undone.
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Delete Product</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                            Are you sure you want to delete <span className="font-bold text-foreground">"{productToDelete?.title}"</span>? This action cannot be undone and will permanently remove this product.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="border-border hover:bg-accent">Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel className="rounded-md font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction 
                             onClick={handleDeleteConfirm}
                             disabled={deleteLoading}
-                            className="bg-rose-500 hover:bg-rose-600 text-white"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold flex items-center gap-2"
                         >
-                            {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            Delete
+                            {deleteLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                            {deleteLoading ? "Deleting..." : "Delete Product"}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

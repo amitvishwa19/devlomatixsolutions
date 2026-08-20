@@ -184,25 +184,27 @@ export default function Index() {
             )}
 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && !isDeleting && setDeleteId(null)}>
-                <AlertDialogContent className="max-w-[400px]">
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your
-                            workflow and remove all its data.
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Delete Workflow</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                            Are you sure you want to delete this workflow? This action cannot be undone and will permanently remove all execution logs and node configurations.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4 gap-3">
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel disabled={isDeleting} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                         <Button 
                             variant="destructive" 
                             onClick={confirmDelete}
                             disabled={isDeleting}
-                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground font-medium"
+                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md font-bold flex items-center gap-2"
                         >
                             {isDeleting ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     Deleting...
                                 </>
                             ) : (

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { resend } from '@/lib/resend';
 import JobApplyConfirmationEmail from '@/emails/JobApplyConfirmation';
 import { NewJobApplicationNotificationEmail } from '@/emails/NewJobApplicationNotification';
+import { sendJobApplicationWhatsApp } from '@/utils/AppWhatsApp';
 import React from 'react';
 
 export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfolioUrl }) {
@@ -72,57 +73,57 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
             }
         });
 
-        // 5. Send Acknowledgment & Notification Emails via Resend
+        // 5. Fetch Global App Branding & Context
+        const globalSettings = await prisma.appSettings.findUnique({
+            where: { key: 'global' }
+        }).catch(() => null);
+
+        const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
+        const globalGeneral = (typeof globalSettings?.general === 'object' && globalSettings?.general) ? globalSettings.general : {};
+
+        let workspaceServer = null;
+        let workspaceLogoUrl = null;
+        if (job.workspaceId) {
+            workspaceServer = await prisma.server.findUnique({
+                where: { id: job.workspaceId },
+                select: { name: true, imageUrl: true }
+            }).catch(() => null);
+
+            const workspaceSettings = await prisma.appSettings.findUnique({
+                where: { key: job.workspaceId }
+            }).catch(() => null);
+
+            if (workspaceSettings?.general?.imageUrl || workspaceSettings?.general?.logoUrl) {
+                workspaceLogoUrl = workspaceSettings.general.imageUrl || workspaceSettings.general.logoUrl;
+            }
+        }
+
+        const logoUrl =
+            globalSocial.logoUrl ||
+            globalGeneral.logoUrl ||
+            globalGeneral.imageUrl ||
+            workspaceLogoUrl ||
+            workspaceServer?.imageUrl ||
+            process.env.APP_LOGO_URL ||
+            process.env.NEXT_PUBLIC_APP_LOGO ||
+            '';
+
+        const companyName =
+            workspaceServer?.name ||
+            globalSocial.appName ||
+            globalGeneral.appName ||
+            process.env.NEXT_PUBLIC_APP_NAME ||
+            'Devlomatix';
+
+        const deptName = job.category?.name || job.department || 'General';
+
+        // 6. Send Acknowledgment & Notification Emails via Resend
         try {
             const defaultSender = process.env.RESEND_FROM_EMAIL || 'careers@devlomatix.com';
             const fromEmail = defaultSender.includes('<')
                 ? defaultSender
                 : `Devlomatix Careers <${defaultSender}>`;
             const adminEmail = process.env.JOB_APPLICATION_MAIL || process.env.ADMIN_EMAIL;
-
-            // Fetch Global App Branding (Brand Logo, App Name) and Workspace Info
-            const globalSettings = await prisma.appSettings.findUnique({
-                where: { key: 'global' }
-            }).catch(() => null);
-
-            const globalSocial = (typeof globalSettings?.social === 'object' && globalSettings?.social) ? globalSettings.social : {};
-            const globalGeneral = (typeof globalSettings?.general === 'object' && globalSettings?.general) ? globalSettings.general : {};
-
-            let workspaceServer = null;
-            let workspaceLogoUrl = null;
-            if (job.workspaceId) {
-                workspaceServer = await prisma.server.findUnique({
-                    where: { id: job.workspaceId },
-                    select: { name: true, imageUrl: true }
-                }).catch(() => null);
-
-                const workspaceSettings = await prisma.appSettings.findUnique({
-                    where: { key: job.workspaceId }
-                }).catch(() => null);
-
-                if (workspaceSettings?.general?.imageUrl || workspaceSettings?.general?.logoUrl) {
-                    workspaceLogoUrl = workspaceSettings.general.imageUrl || workspaceSettings.general.logoUrl;
-                }
-            }
-
-            const logoUrl = 
-                globalSocial.logoUrl || 
-                globalGeneral.logoUrl || 
-                globalGeneral.imageUrl || 
-                workspaceLogoUrl || 
-                workspaceServer?.imageUrl || 
-                process.env.APP_LOGO_URL || 
-                process.env.NEXT_PUBLIC_APP_LOGO || 
-                '';
-
-            const companyName = 
-                workspaceServer?.name || 
-                globalSocial.appName || 
-                globalGeneral.appName || 
-                process.env.NEXT_PUBLIC_APP_NAME || 
-                'Devlomatix';
-
-            const deptName = job.category?.name || job.department || 'General';
 
             // A. Send Confirmation Email to Candidate
             const candidateMailPromise = resend.emails.send({
@@ -170,9 +171,19 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
             // Non-blocking for candidate experience: application is still safely stored in DB
         }
 
+        // 7. Send WhatsApp confirmation via Global WhatsApp Account (new_job_application template)
+        if (phone && String(phone).trim() !== '') {
+            sendJobApplicationWhatsApp({
+                phone,
+                name,
+                jobTitle: job.title,
+                companyName
+            }).catch(waErr => console.error("[CAREER_APPLY_WHATSAPP_ERROR]", waErr));
+        }
+
         return {
             success: true,
-            message: "Application submitted successfully! Please check your email for confirmation.",
+            message: "Application submitted successfully! Please check your email and WhatsApp for confirmation.",
             application
         };
 

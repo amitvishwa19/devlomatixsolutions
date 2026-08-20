@@ -1,96 +1,79 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, } from'@/components/ui/alert-dialog';
-import { useAction } from'@/hooks/use-action';
-import { Loader, Trash2 } from'lucide-react';
-import { useState } from'react';
-import { deletePermission } from'../../_action/delete-permission';
-import { toast } from'sonner';
-import { useSession } from'next-auth/react';
-import { Button } from'@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, } from"@/components/ui/dialog"
-import { deleteRole } from'../../_action/delete-role';
-
+import { useAction } from '@/hooks/use-action';
+import { Loader2, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+import { deleteRole } from '../../_action/delete-role';
 
 export function RoleDelete({ open, onClose, data }) {
- const [loading, setLoading] = useState()
- const { data: session } = useSession()
+    const [loading, setLoading] = useState(false);
+    const { data: session } = useSession();
 
- const { execute } = useAction(deleteRole, {
- onSuccess: (data) => {
- onClose(data?.role)
- setLoading(false)
- toast.success('Role deleted successfully...', { id:'new-permission'})
- },
- onError: (error) => {
- console.log(error)
- toast.error('Oops somethig went wrong ! try again later', { id:'new-invoice'})
- setLoading(false);
- }
- })
+    const { execute } = useAction(deleteRole, {
+        onSuccess: (data) => {
+            onClose(data?.role);
+            setLoading(false);
+            toast.success(`Role "${data.role.title}" deleted successfully...`);
+        },
+        onError: (error) => {
+            console.log(error);
+            toast.error('Oops something went wrong! Try again later', { id: 'delete-role' });
+            setLoading(false);
+        }
+    });
 
- const handleOnDelete = async () => {
- setLoading(true)
- await execute({ userId: session?.user?.userId, roleId: data?.id })
- }
+    const handleOnDelete = async () => {
+        setLoading(true);
+        await execute({ userId: session?.user?.userId, roleId: data?.id });
+    };
 
- const handleOpenClose = () => {
- setLoading(false);
- onClose()
- }
+    const handleOpenClose = () => {
+        if (!loading) {
+            setLoading(false);
+            onClose();
+        }
+    };
 
- console.log(data)
+    return (
+        <Dialog open={open} onOpenChange={handleOpenClose}>
+            <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
+                <DialogHeader>
+                    <DialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                        <span>Delete Role</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                        Are you sure you want to delete <span className="font-bold text-foreground">"{data?.title}"</span>? This action cannot be undone. Users assigned to this role will lose their assigned permissions.
+                    </DialogDescription>
+                </DialogHeader>
 
- return (
- <Dialog open={open} onOpenChange={handleOpenClose}>
-
- <DialogContent>
- <DialogHeader>
- <DialogTitle className='flex flex-row items-center gap-2 text-sm'>
- <Trash2 className='h-5 w-5 text-sky-500'/>
- Delete Role
- </DialogTitle>
- <DialogDescription className='text-sm text-muted-foreground'>
- Are you sure you want to delete"{data?.title}"? This action cannot be undone. Users with this role will need to be reassigned.
- </DialogDescription>
- </DialogHeader>
-
- <DialogFooter>
- <DialogClose asChild>
- <Button variant="outline"size='sm'disabled={loading}>Cancel</Button>
- </DialogClose>
- <Button
- className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
- size='sm'
- onClick={handleOnDelete}
- disabled={loading}
- >
- {loading ? <Loader className='animate-spin'/> : <Trash2 />}
- Delete Role
- </Button>
- </DialogFooter>
-
-
- </DialogContent>
- </Dialog>
-
- // <AlertDialog open={open} onOpenChange={onOpenChange} on>
- // <AlertDialogContent className='bg-card'>
- // <AlertDialogHeader>
- // <AlertDialogTitle>{title}</AlertDialogTitle>
- // <AlertDialogDescription>{description}</AlertDialogDescription>
- // </AlertDialogHeader>
- // <AlertDialogFooter>
- // <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
- // <Button
- // onClick={handleOnDelete}
- // variant='sm'
- // disabled={loading}
- // className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
- // >
- // {loading ? <Loader className='animate-spin'/> : <Trash2 />}
- // Delete Permission
- // </Button>
- // </AlertDialogFooter>
- // </AlertDialogContent>
- // </AlertDialog>
- );
+                <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                    <DialogClose asChild>
+                        <Button variant="outline" disabled={loading} className="rounded-md font-bold">
+                            Cancel
+                        </Button>
+                    </DialogClose>
+                    <Button
+                        variant="destructive"
+                        className="rounded-md font-bold flex items-center gap-2"
+                        onClick={handleOnDelete}
+                        disabled={loading}
+                    >
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        {loading ? 'Deleting...' : 'Delete Role'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 }

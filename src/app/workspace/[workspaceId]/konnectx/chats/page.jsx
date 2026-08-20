@@ -1300,23 +1300,26 @@ export default function WhatsAppChatsPage() {
             )}
             {/* Delete Confirmation Modal */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent>
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Delete Conversation?</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
                             This will permanently delete all messages in this conversation.
                             This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel disabled={isDeleting} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmDelete();
                             }}
                             disabled={isDeleting}
-                            className="bg-red-600 hover:bg-red-700 text-white flex items-center gap-2"
+                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md font-bold flex items-center gap-2"
                         >
                             {isDeleting ? (
                                 <>

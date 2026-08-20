@@ -661,25 +661,23 @@ export default function LogPage() {
 
             {/* Delete Confirmation */}
             <AlertDialog open={!!logToDelete} onOpenChange={(open) => !open && setLogToDelete(null)}>
-                <AlertDialogContent className="rounded-md">
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-md bg-destructive/10 flex items-center justify-center">
-                                <Trash2 className="w-4 h-4 text-destructive" />
-                            </div>
-                            Confirm Permanent Deletion
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Confirm Permanent Deletion</span>
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-xs">
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
                             {Array.isArray(logToDelete)
                                 ? `You are about to permanently delete ${logToDelete.length} log entries. This action is irreversible and cannot be recovered.`
                                 : "This will permanently remove this telemetry record from the database. This action cannot be undone."
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="text-[10px] font-bold tracking-wider rounded-md h-8">CANCEL</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[10px] font-bold tracking-wider rounded-md h-8">
-                            DELETE {Array.isArray(logToDelete) ? `${logToDelete.length} ENTRIES` : 'LOG'}
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel className="rounded-md font-bold">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold">
+                            Delete {Array.isArray(logToDelete) ? `${logToDelete.length} Entries` : 'Log'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

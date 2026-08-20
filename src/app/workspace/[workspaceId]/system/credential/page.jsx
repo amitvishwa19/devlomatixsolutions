@@ -598,30 +598,31 @@ export default function SystemCredentials({ params: paramsPromise }) {
 
             {/* Global Alert Dialog */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="bg-background border-border/60 shadow-2xl rounded-md">
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="text-lg font-bold">
-                            {credentialIdToDelete === 'BULK' ? 'Purge Selected Credentials?' : 'Delete Credential?'}
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>{credentialIdToDelete === 'BULK' ? 'Purge Selected Credentials?' : 'Delete Credential?'}</span>
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-xs font-semibold text-muted-foreground">
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
                             {credentialIdToDelete === 'BULK'
                                 ? `You are about to permanently delete ${selectedKeys.size} credentials. This action is destructive and cannot be undone.`
                                 : 'This will permanently remove this connected capability from your workspace vault. This action cannot be undone.'
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="mt-4">
-                        <AlertDialogCancel disabled={isDeleting} className="rounded-md  font-bold">Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel disabled={isDeleting} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             disabled={isDeleting}
                             onClick={(e) => {
                                 e.preventDefault();
                                 confirmDeletion();
                             }}
-                            className="bg-destructive hover:bg-destructive/90 rounded-md font-bold flex items-center gap-2"
+                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md font-bold flex items-center gap-2"
                         >
-                            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                            {isDeleting ? 'Deleting...' : 'Confirm Deletion'}
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            {isDeleting ? 'Deleting...' : 'Delete Credential'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

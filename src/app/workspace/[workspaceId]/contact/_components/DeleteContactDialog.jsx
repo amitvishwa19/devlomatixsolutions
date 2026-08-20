@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,28 +22,30 @@ export function DeleteContactDialog({
 }) {
     return (
         <AlertDialog open={open} onOpenChange={onOpenChange}>
-            <AlertDialogContent className="bg-zinc-950 border-white/5 backdrop-blur-xl">
+            <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-xl font-bold text-white">Remove Contact?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-zinc-400 text-sm">
-                        You are about to permanently delete <span className="text-white font-bold">{contactToDelete?.name}</span> from the secure vault. This action is irreversible and will remove all associated digital records.
+                    <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                        <span>Delete Contact</span>
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                        Are you sure you want to delete <span className="font-bold text-foreground">{contactToDelete?.name}</span>? This action is irreversible and will remove all associated digital records.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="mt-6 flex gap-2">
-                    <AlertDialogCancel className="bg-white/5 border-white/10">Close Vault</AlertDialogCancel>
+                <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                    <AlertDialogCancel disabled={loading} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={(e) => {
                             e.preventDefault();
                             onConfirm();
                         }}
                         disabled={loading}
-                        className="bg-destructive hover:bg-destructive/90    px-6 "
+                        className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rounded-md font-bold flex items-center gap-2"
                     >
                         {loading ? (
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                            'Confirm Deletion'
-                        )}
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : null}
+                        {loading ? 'Deleting...' : 'Delete Contact'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

@@ -1,5 +1,6 @@
-'use client'
-import { useState } from 'react'
+'use client';
+
+import React, { useState } from 'react';
 import {
     AlertDialog,
     AlertDialogCancel,
@@ -8,57 +9,57 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
-import { deleteCategory } from '../_actions/deleteCategory'
-import { toast } from 'sonner'
-import { Loader2, AlertTriangle } from 'lucide-react'
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { deleteCategory } from '../_actions/deleteCategory';
+import { toast } from 'sonner';
+import { Loader2, Trash2 } from 'lucide-react';
 
 export function DeleteCategoryModal({ isOpen, onClose, workspaceId, category, onSuccess }) {
-    const [isDeleting, setIsDeleting] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false);
 
     if (!category) return null;
 
     const handleDelete = async () => {
-        setIsDeleting(true)
+        setIsDeleting(true);
         try {
             const result = await deleteCategory({ 
                 workspaceId, 
                 categoryId: category.id 
-            })
+            });
 
-            if (result.error) {
-                toast.error(result.error)
-                return
+            if (result?.error) {
+                toast.error(result.error);
+                return;
             }
 
-            toast.success("Category deleted successfully")
-            if (onSuccess) onSuccess()
-            onClose()
+            toast.success("Category deleted successfully");
+            if (onSuccess) onSuccess();
+            onClose();
         } catch (error) {
-            toast.error("Failed to delete category")
+            toast.error("Failed to delete category");
         } finally {
-            setIsDeleting(false)
+            setIsDeleting(false);
         }
-    }
+    };
 
     return (
-        <AlertDialog open={isOpen} onOpenChange={onClose}>
-            <AlertDialogContent className="bg-[#0F0F12] border-white/10 sm:max-w-[425px]">
+        <AlertDialog open={isOpen} onOpenChange={(open) => !open && !isDeleting && onClose?.()}>
+            <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                 <AlertDialogHeader>
-                    <AlertDialogTitle className="text-white flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-red-500" />
-                        Delete Category
+                    <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                        <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                        <span>Delete Category</span>
                     </AlertDialogTitle>
-                    <AlertDialogDescription className="text-muted-foreground">
-                        Are you sure you want to delete <span className="text-white font-semibold">{category.name}</span>? 
+                    <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                        Are you sure you want to delete <span className="font-bold text-foreground">"{category.name}"</span>? 
                         This action cannot be undone and will remove the category from all associated products.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter className="mt-4">
+                <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
                     <AlertDialogCancel 
                         disabled={isDeleting} 
-                        className="bg-transparent text-white hover:bg-white/5 border-white/10"
+                        className="rounded-md font-bold"
                     >
                         Cancel
                     </AlertDialogCancel>
@@ -66,13 +67,13 @@ export function DeleteCategoryModal({ isOpen, onClose, workspaceId, category, on
                         onClick={handleDelete} 
                         disabled={isDeleting}
                         variant="destructive"
-                        className="bg-red-500 hover:bg-red-600 text-white"
+                        className="rounded-md font-bold flex items-center gap-2"
                     >
-                        {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Delete Category
+                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                        {isDeleting ? "Deleting..." : "Delete Category"}
                     </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-    )
+    );
 }

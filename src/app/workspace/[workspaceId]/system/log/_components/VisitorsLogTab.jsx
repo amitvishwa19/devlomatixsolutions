@@ -722,23 +722,23 @@ export function VisitorsLogTab() {
 
             {/* Delete Confirmation */}
             <AlertDialog open={!!logToDelete} onOpenChange={(open) => !open && setLogToDelete(null)}>
-                <AlertDialogContent className="rounded-md">
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                     <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                            Confirm Visitor Record Deletion
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Confirm Visitor Record Deletion</span>
                         </AlertDialogTitle>
-                        <AlertDialogDescription className="text-xs">
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
                             {Array.isArray(logToDelete)
-                                ? `Delete ${logToDelete.length} selected visitor log entries?`
-                                : "Permanently remove this site visitor telemetry record?"
+                                ? `Are you sure you want to delete ${logToDelete.length} selected visitor log entries? This action cannot be undone.`
+                                : "Are you sure you want to permanently remove this site visitor telemetry record? This action cannot be undone."
                             }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="text-[10px] font-bold tracking-wider rounded-md h-8">CANCEL</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-[10px] font-bold tracking-wider rounded-md h-8">
-                            DELETE
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel className="rounded-md font-bold">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteLog} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold">
+                            Delete {Array.isArray(logToDelete) ? `${logToDelete.length} Entries` : 'Record'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

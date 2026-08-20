@@ -144,24 +144,24 @@ export const PostRow = ({ post, onApply }) => {
     return (
         <>
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-md border border-border shadow-2xl overflow-hidden p-0 animate-fade-in">
-                    <AlertDialogHeader className="p-8 pb-4">
-                        <div className="w-12 h-12 bg-rose-50 rounded-md flex items-center justify-center mb-4 border border-rose-100 shadow-sm">
-                            <Trash2 className="w-6 h-6 text-rose-500" />
-                        </div>
-                        <AlertDialogTitle className="text-2xl">Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-sm font-medium">
-                            This action cannot be undone. This post will be permanently deleted from your workspace.
+                <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                            <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                            <span>Delete Post</span>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                            Are you sure you want to delete <span className="font-bold text-foreground">"{post.title || 'this post'}"</span>? This action cannot be undone and will permanently remove this post from your workspace.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter className="p-8 pt-4 flex flex-row gap-4 bg-muted/20">
-                        <AlertDialogCancel className="rounded-md text-[10px] font-bold flex-1 mt-0 border-border/60">Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <AlertDialogCancel className="rounded-md font-bold">Cancel</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={(e) => {
                                 e.preventDefault();
                                 handleDelete();
                             }}
-                            className="rounded-md text-[10px] font-bold flex-1 bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/20 pointer-events-auto"
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold flex items-center gap-2"
                             disabled={isDeleting}
                         >
                             {isDeleting ? "Deleting..." : "Delete Post"}

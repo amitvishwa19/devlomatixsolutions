@@ -959,18 +959,19 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                                     <Trash2 className="w-3.5 h-3.5" /> Empty Trash
                                 </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-base font-bold flex items-center gap-2 text-destructive">
-                                        <AlertTriangle className="w-5 h-5" /> Empty Recycle Bin?
+                                    <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                                        <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                                        <span>Empty Recycle Bin?</span>
                                     </AlertDialogTitle>
-                                    <AlertDialogDescription className="text-xs">
-                                        This will permanently delete all {documents.length} items in the trash and remove associated cloud files. This action cannot be undone.
+                                    <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                                        This will permanently delete all <span className="font-bold text-foreground">{documents.length} items</span> in the trash and remove associated cloud files. This action cannot be undone.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="text-xs">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleEmptyTrash} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 text-xs">
+                                <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                                    <AlertDialogCancel className="rounded-md font-bold">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleEmptyTrash} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold">
                                         Permanently Empty
                                     </AlertDialogAction>
                                 </AlertDialogFooter>

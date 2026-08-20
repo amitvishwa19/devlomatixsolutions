@@ -926,15 +926,18 @@ export default function ContactsPage() {
 
                 {/* Individual Deletion Confirmations */}
                 <AlertDialog open={isDeleteCategoryOpen} onOpenChange={setIsDeleteCategoryOpen}>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to delete the category <strong>"{pendingDeleteEntity?.name}"</strong>? This will remove the category from all associated contacts.
+                            <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                                <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                                <span>Delete Category?</span>
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                                Are you sure you want to delete the category <span className="font-bold text-foreground">"{pendingDeleteEntity?.name}"</span>? This will remove the category from all associated contacts.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeletingCategory}>Cancel</AlertDialogCancel>
+                        <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                            <AlertDialogCancel disabled={isDeletingCategory} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -944,9 +947,9 @@ export default function ContactsPage() {
                                     executeDeleteCategory({ id: pendingDeleteEntity?.id }, previousSnapshot);
                                 }}
                                 disabled={isDeletingCategory}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold gap-2"
                             >
-                                {isDeletingCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                {isDeletingCategory ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 {isDeletingCategory ? 'Deleting...' : 'Delete Category'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
@@ -954,15 +957,18 @@ export default function ContactsPage() {
                 </AlertDialog>
 
                 <AlertDialog open={isDeleteGroupOpen} onOpenChange={setIsDeleteGroupOpen}>
-                    <AlertDialogContent>
+                    <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Broadcast Group?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to delete <strong>"{pendingDeleteEntity?.name}"</strong>? This action will permanently remove the group.
+                            <AlertDialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                                <Trash2 className="w-5 h-5 text-destructive shrink-0" />
+                                <span>Delete Broadcast Group?</span>
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                                Are you sure you want to delete <span className="font-bold text-foreground">"{pendingDeleteEntity?.name}"</span>? This action will permanently remove the group.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel disabled={isDeletingGroup}>Cancel</AlertDialogCancel>
+                        <AlertDialogFooter className="gap-2 sm:gap-0 mt-4">
+                            <AlertDialogCancel disabled={isDeletingGroup} className="rounded-md font-bold">Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -972,9 +978,9 @@ export default function ContactsPage() {
                                     executeDeleteGroup({ id: pendingDeleteEntity?.id, userId }, previousSnapshot);
                                 }}
                                 disabled={isDeletingGroup}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-md font-bold gap-2"
                             >
-                                {isDeletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                {isDeletingGroup ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                                 {isDeletingGroup ? 'Deleting...' : 'Delete Group'}
                             </AlertDialogAction>
                         </AlertDialogFooter>
