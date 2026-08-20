@@ -61,7 +61,7 @@ export const JobApplyConfirmationEmail = ({
                     <Section style={infoCard}>
                         <Text style={infoTitle}>APPLICATION SUMMARY</Text>
                         <Hr style={infoHr} />
-                        
+
                         <Row style={infoRow}>
                             <Column style={infoLabel}>Position:</Column>
                             <Column style={infoValue}>{jobTitle}</Column>
@@ -151,11 +151,11 @@ export const JobApplyConfirmationEmail = ({
                 <Section style={footerSection}>
                     <Text style={footer}>
                         Best regards,<br />
-                        <strong>The Talent Acquisition Team</strong><br />
-                        {companyName} Solutions
+                        <strong>HireFlow Team</strong><br />
+                        {companyName}
                     </Text>
                     <Text style={subFooter}>
-                        © {new Date().getFullYear()} {companyName} Solutions. All rights reserved.<br />
+                        © {new Date().getFullYear()} {companyName}. All rights reserved.<br />
                         Growth Driven Technology & Automation
                     </Text>
                 </Section>

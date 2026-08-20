@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -39,7 +39,8 @@ import {
     Lock,
     Key,
     Zap,
-    Info
+    Info,
+    CheckCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -72,6 +73,7 @@ import {
     getHireflowSettingsAction,
     saveHireflowSettingsAction,
     updateHireflowWhatsAppAction,
+    syncHireflowTemplatesAction,
     testHireflowWhatsAppAction
 } from './_actions/hireflow-settings-actions';
 
@@ -92,6 +94,7 @@ export default function HireflowSettingsPage() {
     const [templates, setTemplates] = useState([]);
     const [workspaceInfo, setWorkspaceInfo] = useState(null);
     const [globalDefault, setGlobalDefault] = useState(null);
+    const [isSyncingTemplates, setIsSyncingTemplates] = useState(false);
 
     // Add / Edit Account Modal State
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
@@ -197,6 +200,28 @@ export default function HireflowSettingsPage() {
     useEffect(() => {
         loadSettings();
     }, [loadSettings]);
+
+    // Currently Selected WhatsApp Account
+    const activeAccount = useMemo(() => {
+        return accounts.find(a => a.id === settings.whatsapp.credentialId) ||
+            accounts.find(a => a.isDefault) ||
+            accounts[0] ||
+            null;
+    }, [accounts, settings.whatsapp.credentialId]);
+
+    // Templates Filtered Specifically for Selected Account's Phone ID
+    const accountTemplates = useMemo(() => {
+        if (!activeAccount?.phoneNumberId) return templates;
+        return templates.filter(t => !t.phoneNumberId || t.phoneNumberId === activeAccount.phoneNumberId);
+    }, [templates, activeAccount?.phoneNumberId]);
+
+    // Selected Template Object (for rich live preview)
+    const selectedTemplateObj = useMemo(() => {
+        const currentName = settings.whatsapp.templateName;
+        return accountTemplates.find(t => t.name === currentName || t.templateName === currentName) ||
+            templates.find(t => t.name === currentName || t.templateName === currentName) ||
+            null;
+    }, [accountTemplates, templates, settings.whatsapp.templateName]);
 
     // Handle Save HireFlow Settings (All sections)
     const handleSave = async (makeGlobal = false) => {
@@ -326,20 +351,36 @@ export default function HireflowSettingsPage() {
         }
     };
 
-    // Select Account for HireFlow (Instantly saved to AppSettings key: 'hireflow')
+    // Select Account for HireFlow (Instantly filters templates and updates AppSettings key: 'hireflow')
     const handleSelectAccount = async (acc) => {
-        const toastId = toast.loading(`Setting "${acc.profileName}" for HireFlow...`);
+        const toastId = toast.loading(`Switching to "${acc.profileName}"...`);
         try {
+            // Check available templates for this account
+            const accTemplates = templates.filter(t => !t.phoneNumberId || t.phoneNumberId === acc.phoneNumberId);
+
+            // Check if current template is available in this account, else pick default or first
+            let templateToSet = settings.whatsapp.templateName;
+            const hasCurrentTemplate = accTemplates.some(t => t.name === templateToSet || t.templateName === templateToSet);
+            if (!hasCurrentTemplate && accTemplates.length > 0) {
+                const preferred = accTemplates.find(t => t.name === 'new_job_application' || t.name === 'job_application') || accTemplates[0];
+                templateToSet = preferred.name || preferred.templateName;
+            }
+
             const res = await updateHireflowWhatsAppAction(workspaceId, {
                 credentialId: acc.id,
-                templateName: settings.whatsapp.templateName,
+                templateName: templateToSet,
                 setAsGlobalDefault: false
             });
+
             if (res.success) {
                 toast.success(`HireFlow sender updated to "${acc.profileName}" & saved in AppSettings`, { id: toastId });
                 setSettings(prev => ({
                     ...prev,
-                    whatsapp: { ...prev.whatsapp, credentialId: acc.id }
+                    whatsapp: {
+                        ...prev.whatsapp,
+                        credentialId: acc.id,
+                        templateName: templateToSet
+                    }
                 }));
                 loadSettings();
             } else {
@@ -382,7 +423,7 @@ export default function HireflowSettingsPage() {
         }));
         const toastId = toast.loading(`Saving template "${newTemplate}" to AppSettings...`);
         try {
-            const targetCredId = settings.whatsapp.credentialId || (accounts.find(a => a.isDefault)?.id || accounts[0]?.id);
+            const targetCredId = settings.whatsapp.credentialId || activeAccount?.id;
             const res = await updateHireflowWhatsAppAction(workspaceId, {
                 credentialId: targetCredId,
                 templateName: newTemplate,
@@ -396,6 +437,30 @@ export default function HireflowSettingsPage() {
             }
         } catch (err) {
             toast.error("Error saving template: " + err.message, { id: toastId });
+        }
+    };
+
+    // Sync Templates from Meta for the Active Account
+    const handleSyncTemplates = async () => {
+        if (!activeAccount?.id) {
+            toast.error("Please select a WhatsApp Cloud account first");
+            return;
+        }
+
+        setIsSyncingTemplates(true);
+        const toastId = toast.loading(`Syncing templates from Meta for ${activeAccount.profileName}...`);
+        try {
+            const res = await syncHireflowTemplatesAction(workspaceId, activeAccount.id);
+            if (res.success) {
+                toast.success(res.message || "Templates synced successfully from Meta", { id: toastId });
+                loadSettings();
+            } else {
+                toast.error(res.error || "Failed to sync templates", { id: toastId });
+            }
+        } catch (err) {
+            toast.error("Sync error: " + err.message, { id: toastId });
+        } finally {
+            setIsSyncingTemplates(false);
         }
     };
 
@@ -451,8 +516,6 @@ export default function HireflowSettingsPage() {
         }
     };
 
-    const activeDefaultAcc = accounts.find(a => a.id === settings.whatsapp.credentialId) || accounts.find(a => a.isDefault) || accounts[0];
-
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
@@ -463,7 +526,7 @@ export default function HireflowSettingsPage() {
     }
 
     return (
-        <div className="flex flex-col gap-6 p-4 md:p-6 max-w-7xl mx-auto animate-in fade-in duration-500">
+        <div className="flex flex-col gap-6 p-4 md:p-6 max-w-8xl mx-auto animate-in fade-in duration-500">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-5">
                 <div className="space-y-1">
@@ -551,7 +614,7 @@ export default function HireflowSettingsPage() {
                 {/* Tab 1: WhatsApp Cloud API & Account Selection */}
                 <TabsContent value="whatsapp" className="space-y-6 animate-in fade-in duration-300">
                     {/* Active Production Default Banner */}
-                    {activeDefaultAcc && (
+                    {activeAccount && (
                         <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
                             <div className="flex items-center gap-3.5">
                                 <div className="p-3 bg-emerald-500/20 rounded-xl border border-emerald-500/30 text-emerald-500">
@@ -559,20 +622,20 @@ export default function HireflowSettingsPage() {
                                 </div>
                                 <div className="space-y-0.5">
                                     <div className="flex items-center gap-2">
-                                        <h3 className="text-sm font-bold text-foreground">Active HireFlow Sender: {activeDefaultAcc.profileName}</h3>
+                                        <h3 className="text-sm font-bold text-foreground">Active HireFlow Sender: {activeAccount.profileName}</h3>
                                         <Badge className="bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5">
                                             HIREFLOW SENDER
                                         </Badge>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        Candidate application confirmations and automated interview updates are dispatched through this WhatsApp account.
+                                        Candidate confirmations are dispatched from this WhatsApp account. Templates below are filtered specifically for this account.
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-center gap-2 text-xs font-mono">
                                 <span className="text-muted-foreground text-[10px] uppercase font-bold">Phone ID:</span>
-                                <code className="bg-background/80 px-2 py-1 rounded-md border border-border/40 font-bold">{activeDefaultAcc.phoneNumberId}</code>
+                                <code className="bg-background/80 px-2 py-1 rounded-md border border-border/40 font-bold">{activeAccount.phoneNumberId}</code>
                             </div>
                         </div>
                     )}
@@ -586,7 +649,7 @@ export default function HireflowSettingsPage() {
                                     Configured WhatsApp Cloud Accounts ({accounts.length})
                                 </h3>
                                 <p className="text-xs text-muted-foreground">
-                                    Selecting an account or setting default instantly syncs with <span className="font-semibold text-foreground font-mono text-[11px]">AppSettings (key: hireflow)</span>.
+                                    Select an account to load its approved Meta templates and set it as the HireFlow sender.
                                 </p>
                             </div>
 
@@ -620,14 +683,14 @@ export default function HireflowSettingsPage() {
                             <div className="grid grid-cols-1 gap-3.5">
                                 {accounts.map((acc) => {
                                     const isSelected = (settings.whatsapp.credentialId === acc.id) || (!settings.whatsapp.credentialId && acc.isDefault);
+                                    const countForAcc = templates.filter(t => t.phoneNumberId === acc.phoneNumberId).length;
                                     return (
                                         <Card
                                             key={acc.id}
-                                            className={`border transition-all rounded-xl ${
-                                                isSelected
-                                                    ? 'border-emerald-500/50 bg-emerald-500/[0.03] shadow-md shadow-emerald-500/5'
-                                                    : 'border-border/60 bg-card/40 hover:border-border/80'
-                                            }`}
+                                            className={`border transition-all rounded-xl ${isSelected
+                                                ? 'border-emerald-500/50 bg-emerald-500/[0.03] shadow-md shadow-emerald-500/5'
+                                                : 'border-border/60 bg-card/40 hover:border-border/80'
+                                                }`}
                                         >
                                             <CardContent className="p-4">
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -646,6 +709,9 @@ export default function HireflowSettingsPage() {
                                                             )}
                                                             <Badge variant="outline" className="text-[9px] font-mono border-border/60">
                                                                 {acc.apiVersion || 'v22.0'}
+                                                            </Badge>
+                                                            <Badge variant="secondary" className="text-[9px] font-medium">
+                                                                {countForAcc} Templates
                                                             </Badge>
                                                         </div>
 
@@ -731,48 +797,99 @@ export default function HireflowSettingsPage() {
 
                     {/* Template Mapping & Live Diagnostic Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Template Selection */}
+                        {/* Account-Specific Template Selection */}
                         <Card className="border border-border/40 shadow-sm bg-card/60 backdrop-blur-xl rounded-xl">
                             <CardHeader className="p-4 pb-3">
-                                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4 text-primary" />
-                                    Candidate Application Template Mapping
-                                </CardTitle>
+                                <div className="flex items-center justify-between gap-2">
+                                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                        <MessageSquare className="w-4 h-4 text-primary" />
+                                        Application Message Template
+                                    </CardTitle>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleSyncTemplates}
+                                        disabled={isSyncingTemplates || !activeAccount}
+                                        className="h-7 px-2 text-[11px] font-semibold border-border/60"
+                                    >
+                                        <RefreshCw className={`w-3 h-3 mr-1.5 ${isSyncingTemplates ? 'animate-spin' : ''}`} />
+                                        Sync from Meta
+                                    </Button>
+                                </div>
                                 <CardDescription className="text-xs">
-                                    Changing the template auto-saves directly to <span className="font-semibold text-foreground font-mono text-[11px]">AppSettings (key: hireflow)</span>.
+                                    Showing approved templates for <span className="font-semibold text-foreground">{activeAccount?.profileName || 'Selected Account'}</span> (Phone: {activeAccount?.phoneNumberId || 'None'}).
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="p-4 pt-1 space-y-4">
                                 <div className="space-y-2">
-                                    <Label className="text-xs font-semibold">Message Template</Label>
-                                    <Select
-                                        value={settings.whatsapp.templateName || 'new_job_application'}
-                                        onValueChange={handleTemplateChange}
-                                    >
-                                        <SelectTrigger className="bg-muted/30 border border-border/40 h-10 rounded-lg text-xs font-medium">
-                                            <SelectValue placeholder="Select Template" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="new_job_application">
-                                                <span className="font-semibold">new_job_application</span> (Approved - 1 Parameter: Candidate Name)
-                                            </SelectItem>
-                                            <SelectItem value="job_application">
-                                                <span className="font-semibold">job_application</span> (Approved - Portal Link Button)
-                                            </SelectItem>
-                                            {templates.filter(t => t.name !== 'new_job_application' && t.name !== 'job_application').map(t => (
-                                                <SelectItem key={t.id} value={t.name}>
-                                                    <span className="font-semibold">{t.name}</span> ({t.category} - {t.language})
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-semibold">Select Template</Label>
+                                        <Badge variant="outline" className="text-[10px] font-mono">
+                                            {accountTemplates.length} Template(s) Available
+                                        </Badge>
+                                    </div>
+
+                                    {accountTemplates.length === 0 ? (
+                                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs space-y-2">
+                                            <p className="font-semibold">No templates found for this phone number ({activeAccount?.phoneNumberId}).</p>
+                                            <Button
+                                                size="sm"
+                                                onClick={handleSyncTemplates}
+                                                disabled={isSyncingTemplates}
+                                                className="h-7 text-xs bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+                                            >
+                                                <RefreshCw className={`w-3 h-3 mr-1.5 ${isSyncingTemplates ? 'animate-spin' : ''}`} />
+                                                Fetch Templates from Meta Cloud
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Select
+                                            value={settings.whatsapp.templateName || (accountTemplates[0]?.name || 'new_job_application')}
+                                            onValueChange={handleTemplateChange}
+                                        >
+                                            <SelectTrigger className="bg-muted/30 border border-border/40 h-10 rounded-lg text-xs font-medium">
+                                                <SelectValue placeholder="Select Template" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {accountTemplates.map(t => (
+                                                    <SelectItem key={t.id} value={t.name || t.templateName}>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-semibold">{t.name || t.templateName}</span>
+                                                            <Badge variant="outline" className="text-[9px] py-0 px-1 font-mono">
+                                                                {t.category || 'UTILITY'} • {t.language || 'en_US'}
+                                                            </Badge>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                 </div>
 
+                                {/* Dynamic Template Body Preview */}
                                 <div className="p-3.5 rounded-xl bg-muted/20 border border-border/30 text-xs space-y-1.5">
-                                    <span className="text-[10px] uppercase font-bold text-primary tracking-wider">Template Preview</span>
-                                    <p className="text-muted-foreground leading-relaxed text-[11px] italic">
-                                        "Dear &#123;&#123;1&#125;&#125;, Thank you for applying to Devlomatix. We have received your application successfully and appreciate your interest in joining our team..."
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] uppercase font-bold text-primary tracking-wider flex items-center gap-1.5">
+                                            <Eye className="w-3 h-3" /> Template Preview
+                                        </span>
+                                        {selectedTemplateObj && (
+                                            <span className="text-[10px] text-muted-foreground font-mono">
+                                                {selectedTemplateObj.name} ({selectedTemplateObj.language})
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-muted-foreground leading-relaxed text-[11px] whitespace-pre-wrap font-sans">
+                                        {selectedTemplateObj?.body ? (
+                                            selectedTemplateObj.body
+                                        ) : (
+                                            `"Dear {{1}}, Thank you for applying to ${settings.careerPortal.companyName || 'Devlomatix'}. We have received your application successfully..."`
+                                        )}
                                     </p>
+                                    {selectedTemplateObj?.footer && (
+                                        <p className="text-[10px] text-muted-foreground/80 italic border-t border-border/20 pt-1">
+                                            {selectedTemplateObj.footer}
+                                        </p>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

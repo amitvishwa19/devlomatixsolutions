@@ -5,10 +5,11 @@ import { ensureWorkspaceAccess, checkIsSuperAdmin } from "@/lib/auth-utils";
 import { symmetricDecrypt } from "@/lib/encryption";
 import { sendJobApplicationWhatsApp } from "@/utils/AppWhatsApp";
 import { setDefaultWhatsAppCloudAction } from "@/app/workspace/[workspaceId]/system/_actions/whatsapp-cloud-actions";
+import * as cloudApi from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
 import { revalidatePath } from "next/cache";
 
 /**
- * Helper to decrypt credential payload for display
+ * Helper to decrypt credential payload
  */
 function decryptCredentials(stored) {
     try {
@@ -84,7 +85,7 @@ export async function getHireflowSettingsAction(workspaceId) {
             };
         });
 
-        // 5. Fetch Message Templates for WhatsApp
+        // 5. Fetch Message Templates for WhatsApp (including phoneNumberId)
         const templates = await db.messageTemplate.findMany({
             where: {
                 status: 'APPROVED'
@@ -96,8 +97,15 @@ export async function getHireflowSettingsAction(workspaceId) {
                 language: true,
                 category: true,
                 type: true,
-                body: true
-            }
+                body: true,
+                header: true,
+                footer: true,
+                buttons: true,
+                metadata: true,
+                phoneNumberId: true,
+                status: true
+            },
+            orderBy: { createdAt: 'desc' }
         }).catch(() => []);
 
         // 6. Resolve Merged Settings
@@ -188,6 +196,149 @@ export async function getHireflowSettingsAction(workspaceId) {
     } catch (error) {
         console.error("[GET_HIREFLOW_SETTINGS_ERROR]", error);
         return { success: false, error: error.message || "Failed to load HireFlow settings" };
+    }
+}
+
+/**
+ * Sync templates from Meta for a specific account
+ */
+export async function syncHireflowTemplatesAction(workspaceId, credentialId) {
+    try {
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = session?.user?.userId || session?.user?.id;
+
+        let cred = null;
+        if (credentialId) {
+            cred = await db.credentials.findUnique({
+                where: { id: credentialId }
+            });
+        }
+        if (!cred) {
+            cred = await db.credentials.findFirst({
+                where: {
+                    platform: 'WHATSAPP_CLOUD',
+                    OR: [
+                        { workspaceId },
+                        { isDefault: true },
+                        { userId }
+                    ]
+                },
+                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
+            });
+        }
+
+        if (!cred) {
+            return { success: false, error: "No WhatsApp Cloud account found to sync" };
+        }
+
+        const dec = decryptCredentials(cred.credentials);
+        const cloudCredentials = {
+            accessToken: dec.accessToken || dec.access_token || '',
+            wabaId: dec.wabaId || dec.waba_id || '',
+            phoneNumberId: dec.phoneNumberId || dec.phone_number_id || '',
+            version: dec.apiVersion || 'v22.0'
+        };
+
+        if (!cloudCredentials.accessToken || !cloudCredentials.wabaId) {
+            return { success: false, error: "Missing Access Token or WABA ID for this account" };
+        }
+
+        const metaRes = await cloudApi.fetchTemplates(cloudCredentials);
+        if (!metaRes.success || !Array.isArray(metaRes.data)) {
+            return { success: false, error: metaRes.error || "Failed to fetch templates from Meta" };
+        }
+
+        const metaTemplates = metaRes.data;
+        const currentPhoneId = String(cloudCredentials.phoneNumberId);
+
+        for (const metaT of metaTemplates) {
+            try {
+                const bodyComp = metaT.components?.find(c => c.type === 'BODY');
+                const footerComp = metaT.components?.find(c => c.type === 'FOOTER');
+                const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
+                const headerComp = metaT.components?.find(c => c.type === 'HEADER');
+
+                const templateData = {
+                    userId,
+                    templateId: metaT.id,
+                    name: metaT.name,
+                    templateName: metaT.name,
+                    category: metaT.category || 'UTILITY',
+                    language: metaT.language || 'en_US',
+                    status: metaT.status,
+                    type: headerComp?.format || 'TEXT',
+                    body: bodyComp?.text || "",
+                    footer: footerComp?.text || null,
+                    buttons: buttonComp?.buttons || [],
+                    metadata: {
+                        headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
+                        mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
+                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
+                            : null
+                    },
+                    isDefault: true,
+                    platform: 'WHATSAPP_CLOUD',
+                    phoneNumberId: currentPhoneId
+                };
+
+                const existing = await db.messageTemplate.findFirst({
+                    where: {
+                        OR: [
+                            { templateId: metaT.id },
+                            { templateName: metaT.name },
+                            { name: metaT.name }
+                        ],
+                        language: metaT.language,
+                        phoneNumberId: currentPhoneId
+                    }
+                });
+
+                if (existing) {
+                    await db.messageTemplate.update({
+                        where: { id: existing.id },
+                        data: templateData
+                    });
+                } else {
+                    await db.messageTemplate.create({
+                        data: templateData
+                    });
+                }
+            } catch (err) {
+                console.error(`Failed to process template ${metaT.name}:`, err);
+            }
+        }
+
+        // Fetch refreshed templates for this phone number
+        const updatedTemplates = await db.messageTemplate.findMany({
+            where: {
+                phoneNumberId: currentPhoneId,
+                status: 'APPROVED'
+            },
+            select: {
+                id: true,
+                name: true,
+                templateName: true,
+                language: true,
+                category: true,
+                type: true,
+                body: true,
+                header: true,
+                footer: true,
+                buttons: true,
+                metadata: true,
+                phoneNumberId: true,
+                status: true
+            }
+        });
+
+        return {
+            success: true,
+            message: `Synced ${metaTemplates.length} templates from Meta for ${cred.profile || 'Account'}`,
+            templates: updatedTemplates
+        };
+    } catch (error) {
+        console.error("[SYNC_HIREFLOW_TEMPLATES_ERROR]", error);
+        return { success: false, error: error.message || "Failed to sync templates" };
     }
 }
 
