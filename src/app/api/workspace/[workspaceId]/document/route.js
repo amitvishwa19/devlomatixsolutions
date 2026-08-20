@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { headers } from "next/headers";
 import mime from "mime-types";
 import path from "path";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
-
 
 export async function GET(req, { params }) {
     try {
@@ -21,40 +19,139 @@ export async function GET(req, { params }) {
         const limit = searchParams.get("limit");
         const isFolder = searchParams.get("isFolder");
         const isTrash = searchParams.get("isTrash");
+        const filter = searchParams.get("filter") || "all"; // all, mine, shared, starred, recent
+        const type = searchParams.get("type"); // folder, note, image, pdf, video, audio, document
+        const search = searchParams.get("search");
+        const category = searchParams.get("category");
+        const status = searchParams.get("status");
+        const sortBy = searchParams.get("sortBy") || "createdAt";
+        const sortOrder = searchParams.get("sortOrder") || "desc";
 
         const whereClause = {
             workspaceId: workspaceId,
-            OR: [
-                { userId: currentUserId },
-                { sharedWith: { some: { userId: currentUserId } } }
-            ]
         };
 
+        // Trash status
         if (isTrash === "true") {
             whereClause.deletedAt = { not: null };
         } else {
             whereClause.deletedAt = null;
         }
 
-        if (parentId) {
+        // Ownership / Sharing Filters
+        if (filter === "mine") {
+            whereClause.userId = currentUserId;
+        } else if (filter === "shared") {
+            whereClause.AND = [
+                { userId: { not: currentUserId } },
+                { sharedWith: { some: { userId: currentUserId } } }
+            ];
+        } else if (filter === "starred") {
+            whereClause.isStarred = true;
+            whereClause.OR = [
+                { userId: currentUserId },
+                { sharedWith: { some: { userId: currentUserId } } }
+            ];
+        } else {
+            // "all" or "recent"
+            whereClause.OR = [
+                { userId: currentUserId },
+                { sharedWith: { some: { userId: currentUserId } } }
+            ];
+        }
+
+        // Folder drill-down
+        if (parentId !== null && parentId !== undefined) {
             whereClause.parentId = parentId === "root" ? null : parentId;
         }
 
-        if (isFolder !== null) {
+        // isFolder filter
+        if (isFolder !== null && isFolder !== undefined) {
             whereClause.isFolder = isFolder === "true";
         }
+
+        // File type filtering
+        if (type) {
+            if (type === "folder") {
+                whereClause.isFolder = true;
+            } else if (type === "note") {
+                whereClause.isFolder = false;
+                whereClause.OR = [
+                    { fileType: "application/vnd.devlomatix.note" },
+                    { content: { not: null }, fileUrl: null }
+                ];
+            } else if (type === "image") {
+                whereClause.isFolder = false;
+                whereClause.fileType = { startsWith: "image/" };
+            } else if (type === "pdf") {
+                whereClause.isFolder = false;
+                whereClause.fileType = "application/pdf";
+            } else if (type === "video") {
+                whereClause.isFolder = false;
+                whereClause.fileType = { startsWith: "video/" };
+            } else if (type === "audio") {
+                whereClause.isFolder = false;
+                whereClause.fileType = { startsWith: "audio/" };
+            } else if (type === "document" || type === "files") {
+                whereClause.isFolder = false;
+            }
+        }
+
+        // Category filter
+        if (category && category !== "All" && category !== "ALL") {
+            whereClause.category = category;
+        }
+
+        // Status filter
+        if (status && status !== "ALL") {
+            whereClause.status = status.toUpperCase();
+        }
+
+        // Search term
+        if (search && search.trim()) {
+            whereClause.AND = [
+                ...(whereClause.AND || []),
+                {
+                    OR: [
+                        { name: { contains: search.trim(), mode: "insensitive" } },
+                        { description: { contains: search.trim(), mode: "insensitive" } },
+                        { tags: { hasSome: [search.trim()] } }
+                    ]
+                }
+            ];
+        }
+
+        // Dynamic sorting
+        const validSortFields = ["name", "createdAt", "updatedAt", "fileSize", "status"];
+        const orderField = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+        const orderDirection = sortOrder === "asc" ? "asc" : "desc";
 
         const documents = await db.workspaceDocument.findMany({
             where: whereClause,
             take: limit ? parseInt(limit) : undefined,
             orderBy: {
-                createdAt: 'desc'
+                [orderField]: orderDirection
             },
             include: {
-                user: true,
+                user: {
+                    select: {
+                        id: true,
+                        displayName: true,
+                        email: true,
+                        avatar: true,
+                        role: true,
+                    }
+                },
                 sharedWith: {
                     include: {
-                        user: true
+                        user: {
+                            select: {
+                                id: true,
+                                displayName: true,
+                                email: true,
+                                avatar: true,
+                            }
+                        }
                     }
                 },
                 _count: {
@@ -63,11 +160,24 @@ export async function GET(req, { params }) {
                     }
                 }
             }
-        })
+        });
 
-        console.log("documents", documents);
+        // Compute helper flags for client consumption
+        const formattedDocs = documents.map(doc => {
+            const isOwner = doc.userId === currentUserId;
+            const userAccess = doc.sharedWith?.find(s => s.userId === currentUserId);
+            const userRole = isOwner ? "OWNER" : (userAccess?.role || "VIEWER");
 
-        return NextResponse.json(documents);
+            return {
+                ...doc,
+                isOwner,
+                userRole,
+                canEdit: isOwner || userRole === "EDITOR" || userRole === "ADMIN",
+                sharedCount: doc.sharedWith?.length || 0,
+            };
+        });
+
+        return NextResponse.json(formattedDocs);
     } catch (error) {
         console.error("[DOCUMENT_GET]", error);
         return new NextResponse("Internal Error", { status: 500 });
@@ -76,52 +186,97 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return new NextResponse("Unauthorized", { status: 401 });
+        }
+        const currentUserId = session.user.userId || session.user.id;
+
         const { workspaceId } = await params;
         const body = await req.json();
-        const { name, description, fileUrl, fileKey, fileType: clientFileType, fileSize, category, userId, isFolder, parentId } = body;
-
-
-
-
-        const user = await db.user.findUnique({ where: { id: userId } })
-        if (!user) return NextResponse.json({ status: 401, message: 'Unauthorized access' })
+        const {
+            name,
+            description,
+            fileUrl,
+            fileKey,
+            fileType: clientFileType,
+            fileSize,
+            category,
+            content,
+            isFolder,
+            parentId,
+            tags = [],
+            status = "APPROVED"
+        } = body;
 
         if (!name && !isFolder) {
-            return new NextResponse("Missing required fields", { status: 400 });
+            return new NextResponse("Document name is required", { status: 400 });
         }
 
-        console.log("create body", body);
-
         // Server-side MIME type detection and extension extraction
-        let detectedMimeType = null;
+        let detectedMimeType = clientFileType;
         let detectedExtension = null;
 
         if (isFolder) {
             detectedMimeType = "folder";
             detectedExtension = null;
+        } else if (content !== undefined && !fileUrl) {
+            // Native Rich Note / Doc
+            detectedMimeType = "application/vnd.devlomatix.note";
+            detectedExtension = ".doc";
         } else if (name) {
-            detectedMimeType = mime.lookup(name) || clientFileType || 'application/octet-stream';
+            detectedMimeType = mime.lookup(name) || clientFileType || "application/octet-stream";
             detectedExtension = path.extname(name).toLowerCase();
         }
 
         const document = await db.workspaceDocument.create({
             data: {
-                name,
-                description,
-                fileUrl,
-                fileKey,
-                fileType: detectedMimeType || clientFileType,
+                name: name.trim(),
+                description: description ? description.trim() : null,
+                fileUrl: fileUrl || null,
+                fileKey: fileKey || null,
+                fileType: detectedMimeType,
                 extension: detectedExtension,
-                fileSize,
-                category,
+                fileSize: fileSize || (content ? Buffer.byteLength(content, "utf8") : 0),
+                content: content || null,
+                category: category || "GENERAL",
                 workspaceId,
-                userId,
+                userId: currentUserId,
                 isFolder: !!isFolder,
                 parentId: parentId || null,
+                status: status || "APPROVED",
+                tags: Array.isArray(tags) ? tags : [],
                 sharedWith: {
                     create: {
-                        userId: userId,
+                        userId: currentUserId,
                         role: "EDITOR"
+                    }
+                }
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        displayName: true,
+                        email: true,
+                        avatar: true,
+                    }
+                },
+                sharedWith: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                displayName: true,
+                                email: true,
+                                avatar: true,
+                            }
+                        }
+                    }
+                },
+                _count: {
+                    select: {
+                        children: true
                     }
                 }
             }

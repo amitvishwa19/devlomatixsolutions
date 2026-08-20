@@ -1,124 +1,115 @@
-'use client'
-import React, { useState, useEffect, useMemo } from'react'
-import { FileText, Users, HardDrive, TrendingUp, Loader2 } from"lucide-react";
-import { Card, CardContent } from"@/components/ui/card";
-import axios from"@/utils/axios";
-import { format } from"date-fns";
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { FileText, Users, HardDrive, Star, Sparkles, Loader2, Layers } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import axios from "@/utils/axios";
 
 export default function DocumentStats({ workspaceId, userId }) {
- const [documents, setDocuments] = useState([]);
- const [loading, setLoading] = useState(true);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
- useEffect(() => {
- const fetchAll = async () => {
- if (!workspaceId) return;
- try {
- setLoading(true);
- const response = await axios.get(`/api/workspace/${workspaceId}/document`);
- setDocuments(response.data);
- } catch (error) {
- console.error("Error fetching stats data:", error);
- } finally {
- setLoading(false);
- }
- };
- fetchAll();
- }, [workspaceId]);
+    useEffect(() => {
+        const fetchStatsData = async () => {
+            if (!workspaceId) return;
+            try {
+                setLoading(true);
+                const response = await axios.get(`/api/workspace/${workspaceId}/document`);
+                setDocuments(response.data || []);
+            } catch (error) {
+                console.error("Error fetching stats data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStatsData();
+    }, [workspaceId]);
 
- const stats = useMemo(() => {
- if (documents.length === 0) return [
- { label:"Total Documents", value:"0", change:"+0%", icon: FileText, color:"text-primary", bg:"bg-blue-50"},
- { label:"Active Users", value:"1", change:"+0%", icon: Users, color:"text-blue-600", bg:"bg-indigo-50"},
- { label:"Storage Used", value:"0 MB", change:"0%", icon: HardDrive, color:"text-amber-600", bg:"bg-amber-50"},
- { label:"This Month", value:"0", change:"+0%", icon: TrendingUp, color:"text-emerald-600", bg:"bg-emerald-50"},
- ];
+    const stats = useMemo(() => {
+        const totalDocs = documents.length;
+        const totalSize = documents.reduce((acc, doc) => acc + (doc.fileSize || 0), 0);
+        const starredCount = documents.filter(d => d.isStarred).length;
 
- const totalDocs = documents.length;
- const totalSize = documents.reduce((acc, doc) => acc + (doc.fileSize || 0), 0);
- const uniqueUsers = new Set(documents.map(doc => doc.userId)).size;
+        // Unique collaborators set
+        const collaboratorSet = new Set();
+        documents.forEach(d => {
+            if (d.userId) collaboratorSet.add(d.userId);
+            d.sharedWith?.forEach(s => {
+                if (s.userId) collaboratorSet.add(s.userId);
+            });
+        });
+        const activeCollaborators = Math.max(collaboratorSet.size, 1);
 
- const now = new Date();
- const thisMonthDocs = documents.filter(doc => {
- const date = new Date(doc.createdAt);
- return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
- }).length;
+        const sizeInMb = (totalSize / (1024 * 1024)).toFixed(1);
+        const formattedSize = totalSize > 1024 * 1024 * 1024
+            ? `${(totalSize / (1024 * 1024 * 1024)).toFixed(2)} GB`
+            : `${sizeInMb} MB`;
 
- const sizeInMb = (totalSize / (1024 * 1024)).toFixed(1);
- const storagePercent = Math.min((totalSize / (1024 * 1024 * 1024)) * 100, 100).toFixed(1); // Assuming 1GB soft limit for progress
+        return [
+            {
+                label: "Total Assets",
+                value: totalDocs.toLocaleString(),
+                subText: `${documents.filter(d => d.isFolder).length} folders • ${documents.filter(d => !d.isFolder).length} files`,
+                icon: Layers,
+                color: "text-primary",
+                bgColor: "bg-primary/10 border-primary/20",
+            },
+            {
+                label: "Storage Space",
+                value: formattedSize,
+                subText: "Cloud Storage Quota",
+                icon: HardDrive,
+                color: "text-blue-500",
+                bgColor: "bg-blue-500/10 border-blue-500/20",
+            },
+            {
+                label: "Team Collaborators",
+                value: activeCollaborators.toLocaleString(),
+                subText: "Active Members with Access",
+                icon: Users,
+                color: "text-emerald-500",
+                bgColor: "bg-emerald-500/10 border-emerald-500/20",
+            },
+            {
+                label: "Starred Items",
+                value: starredCount.toLocaleString(),
+                subText: "Fast Access Bookmarks",
+                icon: Star,
+                color: "text-amber-500",
+                bgColor: "bg-amber-500/10 border-amber-500/20",
+            },
+        ];
+    }, [documents]);
 
- return [
- {
- label:"Total Documents",
- value: totalDocs.toLocaleString(),
- change: `+${((thisMonthDocs / totalDocs) * 100).toFixed(0)}%`,
- icon: FileText,
- color:"text-primary",
- bg:"bg-blue-50"
- },
- {
- label:"Active Users",
- value: uniqueUsers.toLocaleString(),
- change:"+12%", // Mocked growth
- icon: Users,
- color:"text-blue-600",
- bg:"bg-indigo-50"
- },
- {
- label:"Storage Used",
- value: sizeInMb > 1024 ? (sizeInMb / 1024).toFixed(1) +"GB": sizeInMb +"MB",
- change: `${storagePercent}%`,
- icon: HardDrive,
- color:"text-amber-600",
- bg:"bg-amber-50"
- },
- {
- label:"This Month",
- value: thisMonthDocs.toLocaleString(),
- change:"+8.1%",
- icon: TrendingUp,
- color:"text-emerald-600",
- bg:"bg-emerald-50"
- },
- ];
- }, [documents]);
+    return (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            {stats.map((stat, i) => {
+                const Icon = stat.icon;
+                return (
+                    <Card
+                        key={stat.label}
+                        className="p-3 border border-border/50 bg-card/60 backdrop-blur-xs shadow-xs hover:border-primary/30 transition-all rounded-xl"
+                    >
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="min-w-0">
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
+                                    {stat.label}
+                                </span>
+                                <div className="text-lg font-black tracking-tight text-foreground mt-0.5">
+                                    {loading ? "--" : stat.value}
+                                </div>
+                                <span className="text-[10px] text-muted-foreground/70 truncate block mt-0.5">
+                                    {stat.subText}
+                                </span>
+                            </div>
 
- if (loading && documents.length === 0) {
- return (
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
- {[1, 2, 3, 4].map((i) => (
- <Card key={i} className="h-28 border-none bg-background shadow-sm flex items-center justify-center">
- <Loader2 className="h-6 w-6 text-primary/20 animate-spin"/>
- </Card>
- ))}
- </div>
- );
- }
-
- return (
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
- {stats.map((stat, i) => (
- <Card
- key={stat.label}
- className="animate-fade-up border shadow-sm bg-background"
- style={{ animationDelay: `${i * 100}ms` }}
- >
- <CardContent className="">
- <div className="flex items-start justify-between">
- <div>
- <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
- <h3 className="text-2xl font-bold mt-1">{stat.value}</h3>
- <div className="flex items-center gap-2 mt-1">
- <span className={`text-xs font-medium ${stat.color}`}>{stat.change}</span>
- <span className="text-[10px] text-muted-foreground opacity-60">from last month</span>
- </div>
- </div>
- <div className={`${stat.bg} p-3 rounded-md`}>
- <stat.icon className={`h-5 w-5 ${stat.color}`} />
- </div>
- </div>
- </CardContent>
- </Card>
- ))}
- </div>
- )
+                            <div className={`p-2 rounded-lg border shrink-0 ${stat.bgColor} ${stat.color}`}>
+                                <Icon className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </Card>
+                );
+            })}
+        </div>
+    );
 }

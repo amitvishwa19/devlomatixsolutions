@@ -12,10 +12,7 @@ export default function DocumentPage() {
  console.log(workspaceId, session?.user?.userId);
 
  return (
- <div className="flex-1 h-full overflow-y-auto p-2">
-
-
-
+ <div className="flex flex-col flex-1 h-full overflow-hidden">
  <DocumentManager
  workspaceId={workspaceId}
  userId={session?.user?.userId} // In a real app, this would be the actual user ID from the session

@@ -16,8 +16,8 @@ export default function ActivityFeeds({ workspaceId, userId }) {
  const response = await axios.get(`/api/workspace/${workspaceId}/document?limit=5`);
  setActivities(response.data.map(doc => ({
  icon: doc.isFolder ? CheckCircle2 : Upload,
- text: `${doc.user?.name ||"Member"} ${doc.isFolder ?'created folder':'uploaded'} ${doc.name}`,
- time: formatDistanceToNow(new Date(doc.createdAt)) +"ago"
+ text: `${doc.user?.displayName ||"Member"} ${doc.isFolder ?'created folder':'uploaded'} ${doc.name}`,
+ time: formatDistanceToNow(new Date(doc.createdAt)) +" ago"
  })));
  } catch (error) {
  console.error("Error fetching activity feed:", error);

@@ -1,210 +1,351 @@
 'use client';
 
-import { useState, useEffect } from'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from'@/components/ui/dialog';
-import { Button } from'@/components/ui/button';
-import { Input } from'@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from'@/components/ui/select';
-import { Search, Loader2, Users, X, UserPlus, Globe } from'lucide-react';
-import axios from'@/utils/axios';
-import { toast } from'sonner';
+import { useState, useEffect, useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Search, Loader2, Users, X, UserPlus, Globe, Copy, Check, ShieldCheck, Shield, Lock, Trash2 } from 'lucide-react';
+import axios from '@/utils/axios';
+import { toast } from 'sonner';
 
 export default function ShareModal({ isOpen, onOpenChange, document, workspaceId, onShareComplete }) {
- const [searchQuery, setSearchQuery] = useState('');
- const [searchResults, setSearchResults] = useState([]);
- const [isSearching, setIsSearching] = useState(false);
- const [isSubmitting, setIsSubmitting] = useState(false);
- const [role, setRole] = useState('VIEWER');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedRole, setSelectedRole] = useState('VIEWER');
+    const [collaborators, setCollaborators] = useState([]);
+    const [owner, setOwner] = useState(null);
+    const [isLoadingAccess, setIsLoadingAccess] = useState(false);
+    const [copied, setCopied] = useState(false);
 
- // Debounce search
- useEffect(() => {
- if (!searchQuery || searchQuery.length < 2) {
- setSearchResults([]);
- return;
- }
+    // Fetch full access list when modal opens
+    const fetchAccessList = useCallback(async () => {
+        if (!document?.id || !workspaceId) return;
+        try {
+            setIsLoadingAccess(true);
+            const res = await axios.get(`/api/workspace/${workspaceId}/document/${document.id}/share`);
+            setCollaborators(res.data.sharedWith || []);
+            setOwner(res.data.user || null);
+        } catch (error) {
+            console.error("Error fetching access list:", error);
+        } finally {
+            setIsLoadingAccess(false);
+        }
+    }, [document?.id, workspaceId]);
 
- const delayFn = setTimeout(async () => {
- setIsSearching(true);
- try {
- const res = await axios.get(`/api/users/search?q=${searchQuery}`);
- // Filter out users already in sharedWith
- const existingIds = document?.sharedWith?.map(s => s.userId) || [];
- setSearchResults(res.data.filter(u => !existingIds.includes(u.id)));
- } catch (error) {
- console.error(error);
- } finally {
- setIsSearching(false);
- }
- }, 400);
+    useEffect(() => {
+        if (isOpen && document?.id) {
+            fetchAccessList();
+            setSearchQuery('');
+            setSearchResults([]);
+        }
+    }, [isOpen, document?.id, fetchAccessList]);
 
- return () => clearTimeout(delayFn);
- }, [searchQuery, document]);
+    // Live search for workspace users
+    useEffect(() => {
+        if (!isOpen) return;
 
- const handleShare = async (userId) => {
- if (!document) return;
- setIsSubmitting(true);
- try {
- await axios.post(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
- userId,
- role
- });
- toast.success("Access granted successfully");
- setSearchQuery('');
- setSearchResults([]);
- if (onShareComplete) onShareComplete();
- } catch (error) {
- toast.error("Failed to share document");
- } finally {
- setIsSubmitting(false);
- }
- };
+        const delayFn = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const res = await axios.get(`/api/workspace/${workspaceId}/document/share/users`, {
+                    params: {
+                        q: searchQuery,
+                        documentId: document?.id
+                    }
+                });
 
- const handleRemove = async (userId) => {
- if (!document) return;
- setIsSubmitting(true);
- try {
- await axios.delete(`/api/workspace/${workspaceId}/document/${document.id}/share?userId=${userId}`);
- toast.success("Access revoked");
- if (onShareComplete) onShareComplete();
- } catch (error) {
- toast.error("Failed to revoke access");
- } finally {
- setIsSubmitting(false);
- }
- };
+                // Filter out the owner and already added users from the dropdown
+                const existingUserIds = new Set([
+                    document?.userId,
+                    owner?.id,
+                    ...(collaborators.map(c => c.userId || c.user?.id))
+                ].filter(Boolean));
 
- if (!document) return null;
+                const filtered = (res.data || []).filter(u => !existingUserIds.has(u.id));
+                setSearchResults(filtered);
+            } catch (error) {
+                console.error("User search error:", error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
 
- return (
- <Dialog open={isOpen} onOpenChange={onOpenChange}>
- <DialogContent className="sm:max-w-md rounded-md border-none shadow-2xl overflow-hidden p-0">
- <div className="p-6 pb-4">
- <DialogHeader className="mb-4">
- <DialogTitle className="text-xl font-bold flex items-center gap-2">
- <Users className="w-5 h-5 text-primary"/>
- Share {document.isFolder ?'Folder':'Document'}
- </DialogTitle>
- <DialogDescription className="font-medium">
- Invite workspace members to collaborate on <span className="text-foreground font-bold">{document.name}</span>
- </DialogDescription>
- </DialogHeader>
+        return () => clearTimeout(delayFn);
+    }, [searchQuery, isOpen, workspaceId, document?.id, owner?.id, collaborators]);
 
- {/* Invite Section */}
- <div className="flex items-center gap-2 mt-2">
- <div className="relative flex-1">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
- <Input 
- placeholder="Search by name or email..."
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="pl-9 h-11 bg-muted/40 border-none rounded-md focus-visible:ring-1 focus-visible:ring-primary/40 font-medium"
- />
- {isSearching && (
- <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground"/>
- )}
- </div>
- <Select value={role} onValueChange={setRole}>
- <SelectTrigger className="w-[110px] h-11 border-none bg-muted/40 font-semibold rounded-md">
- <SelectValue />
- </SelectTrigger>
- <SelectContent className="rounded-md shadow-xl border-border/40">
- <SelectItem value="VIEWER"className="font-semibold py-2">Viewer</SelectItem>
- <SelectItem value="EDITOR"className="font-semibold py-2">Editor</SelectItem>
- </SelectContent>
- </Select>
- </div>
+    const handleShareUser = async (targetUserId, roleToAssign = selectedRole) => {
+        if (!document?.id || !targetUserId) return;
+        setIsSubmitting(true);
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
+                userId: targetUserId,
+                role: roleToAssign
+            });
+            toast.success("Collaborator access granted");
+            setSearchQuery('');
+            setSearchResults([]);
+            fetchAccessList();
+            if (onShareComplete) onShareComplete();
+        } catch (error) {
+            console.error("Failed to grant access:", error);
+            toast.error(error.response?.data?.message || "Failed to grant access");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
- {/* Search Results Dropdown Simulation */}
- {searchResults.length > 0 && (
- <div className="mt-2 bg-card rounded-md border border-border/50 shadow-sm max-h-48 overflow-y-auto">
- {searchResults.map(user => (
- <div key={user.id} className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-0">
- <div className="flex items-center gap-3">
- <Avatar className="h-8 w-8">
- <AvatarImage src={user.avatar} />
- <AvatarFallback className="text-xs">{user.displayName?.charAt(0) || user.email?.charAt(0) ||'?'}</AvatarFallback>
- </Avatar>
- <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{user.displayName ||'Unknown User'}</span>
- <span className="text-xs text-muted-foreground mt-1">{user.email}</span>
- </div>
- </div>
- <Button 
- size="sm"
- onClick={() => handleShare(user.id)}
- disabled={isSubmitting}
- className="h-8 rounded-md font-bold text-xs"
- >
- Invite
- </Button>
- </div>
- ))}
- </div>
- )}
- </div>
+    const handleUpdateRole = async (targetUserId, newRole) => {
+        if (!document?.id || !targetUserId) return;
+        setIsSubmitting(true);
+        try {
+            await axios.post(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
+                userId: targetUserId,
+                role: newRole
+            });
+            toast.success(`Role updated to ${newRole}`);
+            fetchAccessList();
+            if (onShareComplete) onShareComplete();
+        } catch (error) {
+            toast.error("Failed to update role");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
- <div className="bg-muted/20 px-6 py-4 border-t border-border/40">
- <h4 className="text-xs text-muted-foreground mb-4">People with access</h4>
- 
- <div className="space-y-3">
- {/* The Owner (technically from the document.user relation) */}
- {document.user && (
- <div className="flex items-center justify-between">
- <div className="flex items-center gap-3">
- <Avatar className="h-9 w-9 border border-border/50">
- <AvatarImage src={document.user.avatar} />
- <AvatarFallback className="text-xs font-bold text-primary">{document.user.displayName?.charAt(0) || document.user.name?.charAt(0) ||'?'}</AvatarFallback>
- </Avatar>
- <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{document.user.displayName || document.user.name ||'Owner'} <span className="text-xs text-muted-foreground font-medium ml-1">(Owner)</span></span>
- <span className="text-xs text-muted-foreground mt-1">{document.user.email}</span>
- </div>
- </div>
- <span className="text-xs font-bold text-muted-foreground/50">Owner</span>
- </div>
- )}
+    const handleRevokeAccess = async (targetUserId) => {
+        if (!document?.id || !targetUserId) return;
+        setIsSubmitting(true);
+        try {
+            await axios.delete(`/api/workspace/${workspaceId}/document/${document.id}/share`, {
+                params: { userId: targetUserId }
+            });
+            toast.success("Access revoked");
+            fetchAccessList();
+            if (onShareComplete) onShareComplete();
+        } catch (error) {
+            toast.error("Failed to revoke access");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
- {/* Shared Users */}
- {document.sharedWith?.length === 0 && !document.user && (
- <div className="text-sm text-muted-foreground py-2 flex items-center gap-2">
- <Globe className="w-4 h-4 text-muted-foreground/50"/>
- No one else has access
- </div>
- )}
+    const handleCopyLink = () => {
+        if (typeof window === 'undefined') return;
+        const shareUrl = `${window.location.origin}/workspace/${workspaceId}/document?preview=${document?.id}`;
+        navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        toast.success("Direct link copied to clipboard!");
+        setTimeout(() => setCopied(false), 2500);
+    };
 
- {document.sharedWith?.map((access) => {
- if (!access.user || access.userId === document.userId) return null; // Skip owner if accidentally in sharedWith
- return (
- <div key={access.id} className="flex items-center justify-between group">
- <div className="flex items-center gap-3">
- <Avatar className="h-9 w-9 border border-border/50">
- <AvatarImage src={access.user.avatar} />
- <AvatarFallback className="text-xs font-bold">{access.user.displayName?.charAt(0) || access.user.email?.charAt(0) ||'?'}</AvatarFallback>
- </Avatar>
- <div className="flex flex-col">
- <span className="text-sm font-bold leading-none">{access.user.displayName ||'User'}</span>
- <span className="text-xs text-muted-foreground mt-1">{access.user.email}</span>
- </div>
- </div>
- <div className="flex items-center gap-2">
- <span className="text-xs font-bold text-foreground/70">{access.role}</span>
- <Button 
- variant="ghost"
- size="icon"
- className="h-7 w-7 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all rounded-md"
- onClick={() => handleRemove(access.userId)}
- disabled={isSubmitting}
- >
- <X className="w-4 h-4"/>
- </Button>
- </div>
- </div>
- );
- })}
- </div>
- </div>
- </DialogContent>
- </Dialog>
- );
+    if (!document) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-lg rounded-xl border border-border/60 bg-card p-0 shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="p-6 pb-4 border-b border-border/30 bg-muted/20">
+                    <DialogHeader className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-primary">
+                            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                                <Users className="w-4 h-4 text-primary" />
+                            </div>
+                            <DialogTitle className="text-lg font-bold">
+                                Share {document.isFolder ? 'Folder' : 'Document'}
+                            </DialogTitle>
+                        </div>
+                        <DialogDescription className="text-xs text-muted-foreground truncate max-w-full">
+                            Manage collaborator permissions for <span className="font-semibold text-foreground">{document.name}</span>
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {/* Invite / Search input */}
+                    <div className="mt-4 flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search workspace members by name or email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 h-10 bg-background text-xs rounded-lg border-border/60 focus-visible:ring-1 focus-visible:ring-primary font-medium"
+                            />
+                            {isSearching && (
+                                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                            )}
+                        </div>
+                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                            <SelectTrigger className="w-[105px] h-10 bg-background text-xs font-semibold rounded-lg border-border/60">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-lg shadow-xl border-border/50">
+                                <SelectItem value="VIEWER" className="text-xs font-semibold py-1.5">Viewer</SelectItem>
+                                <SelectItem value="EDITOR" className="text-xs font-semibold py-1.5">Editor</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Live search results drop panel */}
+                    {searchResults.length > 0 && (
+                        <div className="mt-2 bg-background rounded-lg border border-border/60 shadow-xl max-h-48 overflow-y-auto divide-y divide-border/30">
+                            {searchResults.map((user) => (
+                                <div key={user.id} className="flex items-center justify-between p-2.5 hover:bg-muted/40 transition-colors">
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <Avatar className="h-8 w-8 border border-border/40">
+                                            <AvatarImage src={user.avatar} />
+                                            <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                                                {user.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col min-w-0">
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-xs font-bold truncate text-foreground">{user.displayName}</span>
+                                                {user.isWorkspaceMember && (
+                                                    <Badge variant="secondary" className="text-[8px] px-1 py-0 h-3.5 bg-primary/10 text-primary">Member</Badge>
+                                                )}
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground truncate">{user.email}</span>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        onClick={() => handleShareUser(user.id)}
+                                        disabled={isSubmitting}
+                                        className="h-7 text-xs font-semibold rounded-md px-3 bg-primary hover:bg-primary/90"
+                                    >
+                                        <UserPlus className="w-3.5 h-3.5 mr-1" /> Invite
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* People with Access Section */}
+                <div className="p-6 space-y-4 max-h-[320px] overflow-y-auto">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                            People with Access ({1 + collaborators.filter(c => c.userId !== (owner?.id || document.userId)).length})
+                        </span>
+                        {isLoadingAccess && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                    </div>
+
+                    <div className="space-y-2.5">
+                        {/* Owner Row */}
+                        {(owner || document.user) && (
+                            <div className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <Avatar className="h-8 w-8 border border-border/50">
+                                        <AvatarImage src={owner?.avatar || document.user?.avatar} />
+                                        <AvatarFallback className="text-xs font-bold bg-amber-500/10 text-amber-500">
+                                            {(owner?.displayName || document.user?.displayName || document.user?.name)?.charAt(0) || 'O'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex flex-col min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-xs font-bold text-foreground truncate">
+                                                {owner?.displayName || document.user?.displayName || document.user?.name || 'Owner'}
+                                            </span>
+                                            <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/30 text-[9px] px-1 py-0">Owner</Badge>
+                                        </div>
+                                        <span className="text-[11px] text-muted-foreground truncate">{owner?.email || document.user?.email}</span>
+                                    </div>
+                                </div>
+                                <span className="text-[11px] font-semibold text-muted-foreground pr-2">Full Control</span>
+                            </div>
+                        )}
+
+                        {/* Collaborators List */}
+                        {collaborators.map((access) => {
+                            const isOwnerRow = access.userId === (owner?.id || document.userId);
+                            if (isOwnerRow || !access.user) return null;
+
+                            return (
+                                <div key={access.id} className="flex items-center justify-between p-2.5 rounded-lg bg-card hover:bg-muted/30 border border-border/40 transition-colors group">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <Avatar className="h-8 w-8 border border-border/50">
+                                            <AvatarImage src={access.user.avatar} />
+                                            <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
+                                                {access.user.displayName?.charAt(0) || access.user.name?.charAt(0) || access.user.email?.charAt(0) || '?'}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="text-xs font-bold text-foreground truncate">
+                                                {access.user.displayName || access.user.name || 'User'}
+                                            </span>
+                                            <span className="text-[11px] text-muted-foreground truncate">{access.user.email}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                        <Select
+                                            value={access.role}
+                                            onValueChange={(newRole) => handleUpdateRole(access.userId, newRole)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <SelectTrigger className="h-7 w-[90px] text-[11px] font-semibold bg-muted/40 border-border/50 rounded-md">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-md">
+                                                <SelectItem value="VIEWER" className="text-xs font-semibold py-1">Viewer</SelectItem>
+                                                <SelectItem value="EDITOR" className="text-xs font-semibold py-1">Editor</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7 text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 rounded-md"
+                                            onClick={() => handleRevokeAccess(access.userId)}
+                                            disabled={isSubmitting}
+                                            title="Revoke access"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+
+                        {collaborators.filter(c => c.userId !== (owner?.id || document.userId)).length === 0 && (
+                            <div className="py-6 text-center border border-dashed border-border/50 rounded-lg">
+                                <Globe className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1.5" />
+                                <p className="text-xs font-medium text-muted-foreground">Only the owner currently has access.</p>
+                                <p className="text-[10px] text-muted-foreground/70 mt-0.5">Use the search box above to add team members.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer Link Share */}
+                <div className="p-4 bg-muted/30 border-t border-border/40 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground truncate">
+                        <Lock className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                        <span className="truncate">Restricted to workspace members with access</span>
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCopyLink}
+                        className="text-xs font-semibold gap-1.5 h-8 bg-background border-border/60 hover:bg-primary/5 hover:text-primary shrink-0"
+                    >
+                        {copied ? (
+                            <>
+                                <Check className="w-3.5 h-3.5 text-emerald-500" /> Copied
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="w-3.5 h-3.5" /> Copy Link
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
 }

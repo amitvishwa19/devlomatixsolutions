@@ -5,21 +5,21 @@ import { useRouter } from'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from'@/components/ui/dialog';
 import { Button } from'@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
-import { Loader2, FolderOpen, FileText, Calendar, Database, HardDrive, Layers, Trash2 } from'lucide-react';
-import { Badge } from'@/components/ui/badge';
-import axios from'@/utils/axios';
-import { format } from'date-fns';
-import { toast } from'sonner';
-import { AlertModal } from'@/components/global/AlertModal';
+import { Loader2, FolderOpen, FileText, Calendar, Database, HardDrive, Layers, Trash2, Upload } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import axios from '@/utils/axios';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { AlertModal } from '@/components/global/AlertModal';
 
 const statusStyles = {
- complete:"bg-emerald-50 text-emerald-700 border-emerald-200",
- pending:"bg-amber-50 text-amber-700 border-amber-200",
- review:"bg-blue-50 text-blue-700 border-blue-200",
- approved:"bg-emerald-50 text-emerald-700 border-emerald-200",
+  complete: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  pending: "bg-amber-50 text-amber-700 border-amber-200",
+  review: "bg-blue-50 text-blue-700 border-blue-200",
+  approved: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
-export default function FolderDetailsModal({ isOpen, onOpenChange, folder, workspaceId, onDelete }) {
+export default function FolderDetailsModal({ isOpen, onOpenChange, folder, workspaceId, onDelete, onUploadToFolder }) {
  const router = useRouter();
  const [files, setFiles] = useState([]);
  const [isLoading, setIsLoading] = useState(false);
@@ -136,6 +136,17 @@ export default function FolderDetailsModal({ isOpen, onOpenChange, folder, works
  className="w-full h-11 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
  >
  Open Folder
+ </Button>
+ <Button 
+ variant="outline"
+ onClick={() => {
+   onOpenChange(false);
+   if (onUploadToFolder) onUploadToFolder(folder);
+ }}
+ className="w-full h-11 rounded-md border-primary/30 text-primary hover:bg-primary/5 shadow-xs flex items-center justify-center gap-2 font-semibold"
+ >
+ <Upload className="w-4 h-4"/>
+ Upload Files to Folder
  </Button>
  <Button 
  variant="outline"
