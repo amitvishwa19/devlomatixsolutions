@@ -32,7 +32,8 @@ import {
  History,
  AlertCircle,
  FileCheck,
- Loader2
+ Loader2,
+ Trash2
 } from'lucide-react';
 import axios from'axios';
 import Scorecards from'../../_components/Scorecards';
@@ -47,6 +48,14 @@ import { Separator } from'@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from"@/components/ui/tabs";
 import { Textarea } from'@/components/ui/textarea';
 import { Input } from'@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 
 import useSWR from'swr';
 
@@ -61,8 +70,26 @@ export default function CandidateProfilePage() {
  const [isParsing, setIsParsing] = useState(false);
  const [isScoring, setIsScoring] = useState(false);
  const [noteText, setNoteText] = useState("");
+ const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+ const [isDeleting, setIsDeleting] = useState(false);
 
  const { data: candidateData, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`, fetcher);
+
+ const handleDeleteCandidate = async () => {
+    if (!candidateId) return;
+    setIsDeleting(true);
+    try {
+      await axios.delete(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`);
+      toast.success("Candidate deleted successfully");
+      setIsDeleteDialogOpen(false);
+      router.push(`/workspace/${workspaceId}/hireflow/candidates`);
+    } catch (error) {
+      console.error("[DELETE_CANDIDATE_ERROR]", error);
+      toast.error(error.response?.data?.message || "Failed to delete candidate");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
  const handleGenerateOffer = async () => {
  if (!candidateData) return;
@@ -210,6 +237,15 @@ export default function CandidateProfilePage() {
  >
  {isOfferGenerating ? <Loader2 className="w-3 h-3 animate-spin mr-2"/> : <FileCheck className="w-3 h-3 mr-2"/>}
  Generate Offer
+ </Button>
+ <Button 
+ variant="ghost" 
+ size="icon" 
+ className="w-10 rounded-md opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
+ onClick={() => setIsDeleteDialogOpen(true)}
+ title="Delete Candidate"
+ >
+ <Trash2 size={18} />
  </Button>
  </div>
  </div>
@@ -630,8 +666,47 @@ export default function CandidateProfilePage() {
  </Card>
  </TabsContent>
  </Tabs>
- </div>
- );
+
+    {/* Delete Candidate Confirmation Modal */}
+    <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => !open && !isDeleting && setIsDeleteDialogOpen(false)}>
+      <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+            <Trash2 className="w-5 h-5" /> Delete Candidate
+          </DialogTitle>
+          <DialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+            Are you sure you want to delete <span className="font-bold text-foreground">{candidate.name}</span>? 
+            This will permanently remove their application records, scorecards, and notes. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0 mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsDeleteDialogOpen(false)}
+            disabled={isDeleting}
+            className="rounded-md font-bold"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteCandidate}
+            disabled={isDeleting}
+            className="rounded-md font-bold"
+          >
+            {isDeleting ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
+              </span>
+            ) : (
+              "Delete Candidate"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+  );
 }
 
 function Circle({ size, className }) {

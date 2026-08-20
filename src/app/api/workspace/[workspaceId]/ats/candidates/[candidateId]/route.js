@@ -68,3 +68,26 @@ export async function PUT(req, { params }) {
         return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
     }
 }
+
+export async function DELETE(req, { params }) {
+    try {
+        const { workspaceId, candidateId } = await params;
+        const session = await getServerSession(authOptions);
+        if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+        const candidate = await prisma.candidate.findUnique({
+            where: { id: candidateId }
+        });
+
+        if (!candidate) return NextResponse.json({ message: "Candidate not found" }, { status: 404 });
+
+        await prisma.candidate.delete({
+            where: { id: candidateId }
+        });
+
+        return NextResponse.json({ success: true, message: "Candidate deleted successfully" });
+    } catch (error) {
+        console.error("[ATS_CANDIDATE_DELETE]", error);
+        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+    }
+}

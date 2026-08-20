@@ -22,7 +22,13 @@ import {
     Check,
     Upload,
     Sparkles,
-    Files
+    Files,
+    Briefcase,
+    Code,
+    Shield,
+    Rocket,
+    Target,
+    BookOpen
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,15 +54,44 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const getFolderTheme = (document) => {
+    const tags = document.tags || [];
+    const colorTag = tags.find(t => t?.startsWith('color:'))?.replace('color:', '') || 'amber';
+    const iconTag = tags.find(t => t?.startsWith('icon:'))?.replace('icon:', '') || 'folder';
+
+    const colorMap = {
+        emerald: { bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-500", fill: "fill-emerald-500/20 text-emerald-500" },
+        rose: { bg: "bg-rose-500/10 border-rose-500/20 text-rose-500", fill: "fill-rose-500/20 text-rose-500" },
+        indigo: { bg: "bg-indigo-500/10 border-indigo-500/20 text-indigo-500", fill: "fill-indigo-500/20 text-indigo-500" },
+        amber: { bg: "bg-amber-500/10 border-amber-500/20 text-amber-500", fill: "fill-amber-500/20 text-amber-500" },
+        cyan: { bg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-500", fill: "fill-cyan-500/20 text-cyan-500" },
+        purple: { bg: "bg-purple-500/10 border-purple-500/20 text-purple-500", fill: "fill-purple-500/20 text-purple-500" },
+        blue: { bg: "bg-blue-500/10 border-blue-500/20 text-blue-500", fill: "fill-blue-500/20 text-blue-500" },
+    };
+
+    const theme = colorMap[colorTag] || colorMap.amber;
+    return { theme, iconTag };
+};
+
 const FileTypeVisual = ({ document }) => {
     const type = document.fileType || '';
     const isFolder = document.isFolder;
     const isNote = !isFolder && (!document.fileUrl || type === 'application/vnd.devlomatix.note');
 
     if (isFolder) {
+        const { theme, iconTag } = getFolderTheme(document);
+        let FolderIcon = Folder;
+        if (iconTag === 'briefcase') FolderIcon = Briefcase;
+        else if (iconTag === 'code') FolderIcon = Code;
+        else if (iconTag === 'shield') FolderIcon = Shield;
+        else if (iconTag === 'rocket') FolderIcon = Rocket;
+        else if (iconTag === 'target') FolderIcon = Target;
+        else if (iconTag === 'sparkles') FolderIcon = Sparkles;
+        else if (iconTag === 'book') FolderIcon = BookOpen;
+
         return (
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-                <Folder className="w-5 h-5 text-amber-500 fill-amber-500/20" />
+            <div className={`w-10 h-10 rounded-lg ${theme.bg} border flex items-center justify-center shrink-0`}>
+                <FolderIcon className={`w-5 h-5 ${theme.fill}`} />
             </div>
         );
     }
@@ -448,3 +483,5 @@ export const DocumentCard = ({
         </Card>
     );
 };
+
+export default DocumentCard;

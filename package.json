@@ -128,6 +128,7 @@
     "jodit-react": "^5.2.38",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.4",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lexical": "^0.38.2",
     "livekit-server-sdk": "^2.14.0",

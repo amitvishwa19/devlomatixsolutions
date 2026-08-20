@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,12 @@ import {
     Download,
     Printer,
     FileCode,
-    FileCheck
+    FileCheck,
+    Maximize2,
+    Minimize2,
+    ListTree,
+    Clock,
+    BookOpen
 } from 'lucide-react';
 import TipTap from '@/components/global/TipTap';
 import { toast } from 'sonner';
@@ -55,6 +60,8 @@ export default function RichDocumentEditorModal({
     const [tagInput, setTagInput] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+    const [isZenMode, setIsZenMode] = useState(false);
+    const [showOutline, setShowOutline] = useState(false);
 
     useEffect(() => {
         if (document) {
@@ -73,6 +80,29 @@ export default function RichDocumentEditorModal({
             setTags([]);
         }
     }, [document, isOpen]);
+
+    // Live Metrics
+    const docMetrics = useMemo(() => {
+        const plain = (content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        const words = plain ? plain.split(' ').filter(Boolean).length : 0;
+        const chars = plain.length;
+        const readTimeMinutes = Math.max(1, Math.ceil(words / 200));
+        return { words, chars, readTimeMinutes };
+    }, [content]);
+
+    // Heading Outline Extraction
+    const headings = useMemo(() => {
+        if (!content) return [];
+        const regex = /<h([1-3])[^>]*>(.*?)<\/h[1-3]>/gi;
+        const list = [];
+        let match;
+        while ((match = regex.exec(content)) !== null) {
+            const level = parseInt(match[1], 10);
+            const text = match[2].replace(/<[^>]+>/g, '').trim();
+            if (text) list.push({ level, text });
+        }
+        return list;
+    }, [content]);
 
     const handleApplyTemplate = (template) => {
         if (content && content.length > 30) {
@@ -151,7 +181,7 @@ export default function RichDocumentEditorModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onOpenChange}>
-                <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 rounded-2xl border border-border/60 bg-card shadow-2xl flex flex-col overflow-hidden">
+                <DialogContent className={`${isZenMode ? 'max-w-[98vw] w-[98vw] h-[96vh]' : 'max-w-4xl w-[95vw] h-[90vh]'} p-0 rounded-2xl border border-border/60 bg-card shadow-2xl flex flex-col overflow-hidden transition-all duration-200`}>
                     {/* Header */}
                     <div className="px-6 py-3.5 border-b border-border/40 bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                         <div className="flex items-center gap-3">
@@ -162,14 +192,33 @@ export default function RichDocumentEditorModal({
                                 <DialogTitle className="text-base font-bold">
                                     {document?.id ? 'Edit Document' : 'Create New Document'}
                                 </DialogTitle>
-                                <p className="text-[11px] text-muted-foreground">
-                                    Native rich-text document with AI intelligence, templates, and export tools.
-                                </p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[11px] text-muted-foreground">
+                                        Native rich-text document
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">•</span>
+                                    <span className="text-[10px] font-mono text-primary font-semibold flex items-center gap-1">
+                                        <Clock className="w-3 h-3" /> {docMetrics.readTimeMinutes} min read ({docMetrics.words} words)
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
                         {/* Top Action Toolbar */}
                         <div className="flex items-center gap-2 flex-wrap">
+                            {/* Outline Toggle */}
+                            {headings.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setShowOutline(prev => !prev)}
+                                    className={`text-xs font-semibold gap-1.5 h-8 border-border/60 ${showOutline ? 'bg-primary/10 text-primary border-primary/30' : 'bg-background'}`}
+                                >
+                                    <ListTree className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Outline ({headings.length})</span>
+                                </Button>
+                            )}
+
                             {/* Templates Dropdown */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -193,7 +242,9 @@ export default function RichDocumentEditorModal({
                                             onClick={() => handleApplyTemplate(tpl)}
                                             className="text-xs font-semibold py-2 cursor-pointer flex flex-col items-start gap-0.5 rounded-lg"
                                         >
-                                            <span className="font-bold text-foreground">{tpl.title}</span>
+                                            <div className="font-bold text-foreground flex items-center gap-1.5">
+                                                <span>{tpl.title}</span>
+                                            </div>
                                             <span className="text-[10px] text-muted-foreground line-clamp-1">{tpl.description}</span>
                                         </DropdownMenuItem>
                                     ))}
@@ -247,6 +298,17 @@ export default function RichDocumentEditorModal({
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
+
+                            {/* Zen Mode Toggle */}
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setIsZenMode(prev => !prev)}
+                                className="h-8 w-8 rounded-lg border-border/60 bg-background"
+                                title={isZenMode ? "Exit Zen Mode" : "Full-Screen Zen Mode"}
+                            >
+                                {isZenMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+                            </Button>
 
                             <Button
                                 size="sm"
@@ -354,13 +416,40 @@ export default function RichDocumentEditorModal({
                         </div>
                     </div>
 
-                    {/* TipTap Rich Editor */}
+                    {/* TipTap Rich Editor + Outline Panel */}
                     <div className="space-y-1.5">
                         <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                             Document Content
                         </Label>
-                        <div className="border border-border/60 rounded-xl overflow-hidden bg-background shadow-inner">
-                            <TipTap data={content} onChange={(html) => setContent(html)} />
+                        <div className={`grid ${showOutline && headings.length > 0 ? 'grid-cols-1 lg:grid-cols-4 gap-4' : 'grid-cols-1'}`}>
+                            <div className={`${showOutline && headings.length > 0 ? 'lg:col-span-3' : 'w-full'} border border-border/60 rounded-xl overflow-hidden bg-background shadow-inner`}>
+                                <TipTap data={content} onChange={(html) => setContent(html)} />
+                            </div>
+
+                            {/* Sticky Table of Contents Sidebar */}
+                            {showOutline && headings.length > 0 && (
+                                <div className="hidden lg:flex flex-col p-4 rounded-xl border border-border/60 bg-muted/20 space-y-3 h-fit max-h-[500px] overflow-y-auto">
+                                    <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
+                                            <ListTree className="w-3.5 h-3.5 text-primary" />
+                                            Table of Contents
+                                        </div>
+                                        <span className="text-[10px] text-muted-foreground font-mono">{headings.length} headings</span>
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        {headings.map((h, idx) => (
+                                            <div
+                                                key={idx}
+                                                style={{ paddingLeft: `${(h.level - 1) * 12}px` }}
+                                                className="text-xs font-medium text-muted-foreground hover:text-primary transition-colors py-1 cursor-default truncate flex items-center gap-1.5"
+                                            >
+                                                <span className="text-[10px] font-mono text-primary/70">H{h.level}</span>
+                                                <span className="truncate">{h.text}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

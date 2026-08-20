@@ -1,46 +1,38 @@
-'use client';
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { FileText, Users, HardDrive, Star, Sparkles, Loader2, Layers } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getDocuments } from "../_actions/get-documents";
+import { getDocumentStats } from "../_actions/get-document-stats";
 
 export default function DocumentStats({ workspaceId, userId }) {
-    const [documents, setDocuments] = useState([]);
+    const [statsData, setStatsData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchStatsData = async () => {
+        let isMounted = true;
+        const fetchStats = async () => {
             if (!workspaceId) return;
             try {
-                setLoading(true);
-                const response = await getDocuments(workspaceId);
-                if (response.success) {
-                    setDocuments(response.data || []);
+                const response = await getDocumentStats(workspaceId);
+                if (isMounted && response.success && response.data) {
+                    setStatsData(response.data);
                 }
             } catch (error) {
                 console.error("Error fetching stats data:", error);
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
-        fetchStatsData();
+        fetchStats();
+        return () => {
+            isMounted = false;
+        };
     }, [workspaceId]);
 
     const stats = useMemo(() => {
-        const totalDocs = documents.length;
-        const totalSize = documents.reduce((acc, doc) => acc + (doc.fileSize || 0), 0);
-        const starredCount = documents.filter(d => d.isStarred).length;
-
-        // Unique collaborators set
-        const collaboratorSet = new Set();
-        documents.forEach(d => {
-            if (d.userId) collaboratorSet.add(d.userId);
-            d.sharedWith?.forEach(s => {
-                if (s.userId) collaboratorSet.add(s.userId);
-            });
-        });
-        const activeCollaborators = Math.max(collaboratorSet.size, 1);
+        const totalDocs = statsData?.totalCount || 0;
+        const totalSize = statsData?.totalSizeBytes || 0;
+        const starredCount = statsData?.starredCount || 0;
+        const activeCollaborators = Math.max(statsData?.collaboratorCount || 1, 1);
 
         const sizeInMb = (totalSize / (1024 * 1024)).toFixed(1);
         const formattedSize = totalSize > 1024 * 1024 * 1024
@@ -51,7 +43,7 @@ export default function DocumentStats({ workspaceId, userId }) {
             {
                 label: "Total Assets",
                 value: totalDocs.toLocaleString(),
-                subText: `${documents.filter(d => d.isFolder).length} folders • ${documents.filter(d => !d.isFolder).length} files`,
+                subText: "Production Documents & Assets",
                 icon: Layers,
                 color: "text-primary",
                 bgColor: "bg-primary/10 border-primary/20",
@@ -81,7 +73,7 @@ export default function DocumentStats({ workspaceId, userId }) {
                 bgColor: "bg-amber-500/10 border-amber-500/20",
             },
         ];
-    }, [documents]);
+    }, [statsData]);
 
     return (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">

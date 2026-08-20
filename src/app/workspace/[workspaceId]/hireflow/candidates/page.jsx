@@ -4,59 +4,70 @@ import { useState } from'react';
 import { motion, AnimatePresence } from'framer-motion';
 import { useParams, useRouter } from'next/navigation';
 import {
- Search,
- Filter,
- Download,
- UserPlus,
- MoreHorizontal,
- Star,
- Mail,
- Phone,
- MapPin,
- ExternalLink,
- ChevronRight,
- Users,
- CheckCircle2,
- Clock,
- X,
- SlidersHorizontal,
- Briefcase,
- Sparkles,
- LayoutGrid,
- List as ListIcon,
- FileText
-} from'lucide-react';
-import { Button } from'@/components/ui/button';
-import { Input } from'@/components/ui/input';
-import { Badge } from'@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
+    Search,
+    Filter,
+    Download,
+    UserPlus,
+    MoreHorizontal,
+    Star,
+    Mail,
+    Phone,
+    MapPin,
+    ExternalLink,
+    ChevronRight,
+    Users,
+    CheckCircle2,
+    Clock,
+    X,
+    SlidersHorizontal,
+    Briefcase,
+    Sparkles,
+    LayoutGrid,
+    List as ListIcon,
+    FileText,
+    Trash2,
+    Loader2
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
- DropdownMenu,
- DropdownMenuContent,
- DropdownMenuItem,
- DropdownMenuTrigger
-} from'@/components/ui/dropdown-menu';
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import {
- Select,
- SelectContent,
- SelectItem,
- SelectTrigger,
- SelectValue
-} from'@/components/ui/select';
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from '@/components/ui/dialog';
 import {
- Table,
- TableBody,
- TableCell,
- TableHead,
- TableHeader,
- TableRow,
-} from"@/components/ui/table";
-import { CandidateModal } from'../_components/CandidateModal';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
+} from '@/components/ui/select';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { CandidateModal } from '../_components/CandidateModal';
 import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
+import { toast } from 'sonner';
 
-import useSWR from'swr';
-import axios from'axios';
+import useSWR from 'swr';
+import axios from 'axios';
 
 const fetcher = url => axios.get(url).then(res => res.data);
 
@@ -72,6 +83,24 @@ export default function TalentDatabasePage() {
  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+ const [candidateToDelete, setCandidateToDelete] = useState(null);
+ const [isDeleting, setIsDeleting] = useState(false);
+
+ const handleConfirmDelete = async () => {
+     if (!candidateToDelete) return;
+     setIsDeleting(true);
+     try {
+         await axios.delete(`/api/workspace/${workspaceId}/ats/candidates/${candidateToDelete.id}`);
+         toast.success("Candidate deleted successfully");
+         setCandidateToDelete(null);
+         mutate();
+     } catch (error) {
+         console.error("[DELETE_CANDIDATE_ERROR]", error);
+         toast.error(error.response?.data?.message || "Failed to delete candidate");
+     } finally {
+         setIsDeleting(false);
+     }
+ };
 
 
  const talents = candidates ? candidates.map(c => ({
@@ -267,9 +296,29 @@ export default function TalentDatabasePage() {
  </Button>
  </DropdownMenuTrigger>
  <DropdownMenuContent align="end"className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
- <DropdownMenuItem className="font-bold text-xs">Share Profile</DropdownMenuItem>
- <DropdownMenuItem className="font-bold text-xs">Add to Project</DropdownMenuItem>
- <DropdownMenuItem className="font-bold text-xs text-rose-500">Archive</DropdownMenuItem>
+ <DropdownMenuItem 
+     className="font-bold text-xs cursor-pointer"
+     onClick={() => {
+         setSelectedCandidateId(candidate.id);
+         setIsDetailsModalOpen(true);
+     }}
+ >
+     <ExternalLink size={13} className="mr-2" /> View Profile
+ </DropdownMenuItem>
+ {candidate.resumeUrl && (
+     <DropdownMenuItem 
+         className="font-bold text-xs cursor-pointer"
+         onClick={() => window.open(candidate.resumeUrl, '_blank')}
+     >
+         <FileText size={13} className="mr-2" /> View Resume
+     </DropdownMenuItem>
+ )}
+ <DropdownMenuItem 
+     className="font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center cursor-pointer"
+     onClick={() => setCandidateToDelete(candidate)}
+ >
+     <Trash2 size={13} className="mr-2" /> Delete Candidate
+ </DropdownMenuItem>
  </DropdownMenuContent>
  </DropdownMenu>
  </div>
@@ -365,10 +414,30 @@ export default function TalentDatabasePage() {
  <MoreHorizontal size={16} />
  </Button>
  </DropdownMenuTrigger>
- <DropdownMenuContent className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
- <DropdownMenuItem className="font-bold text-xs">Share Profile</DropdownMenuItem>
- <DropdownMenuItem className="font-bold text-xs">Add to Project</DropdownMenuItem>
- <DropdownMenuItem className="font-bold text-xs text-rose-500">Archive</DropdownMenuItem>
+ <DropdownMenuContent align="end" className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">
+ <DropdownMenuItem 
+     className="font-bold text-xs cursor-pointer"
+     onClick={() => {
+         setSelectedCandidateId(candidate.id);
+         setIsDetailsModalOpen(true);
+     }}
+ >
+     <ExternalLink size={13} className="mr-2" /> View Profile
+ </DropdownMenuItem>
+ {candidate.resumeUrl && (
+     <DropdownMenuItem 
+         className="font-bold text-xs cursor-pointer"
+         onClick={() => window.open(candidate.resumeUrl, '_blank')}
+     >
+         <FileText size={13} className="mr-2" /> View Resume
+     </DropdownMenuItem>
+ )}
+ <DropdownMenuItem 
+     className="font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center cursor-pointer"
+     onClick={() => setCandidateToDelete(candidate)}
+ >
+     <Trash2 size={13} className="mr-2" /> Delete Candidate
+ </DropdownMenuItem>
  </DropdownMenuContent>
  </DropdownMenu>
  </div>
@@ -409,7 +478,51 @@ export default function TalentDatabasePage() {
  onClose={() => setIsDetailsModalOpen(false)}
  candidateId={selectedCandidateId}
  workspaceId={workspaceId}
+ onDeleteSuccess={() => {
+     setIsDetailsModalOpen(false);
+     setSelectedCandidateId(null);
+     mutate();
+ }}
  />
+
+ {/* Delete Candidate Confirmation Modal */}
+ <Dialog open={!!candidateToDelete} onOpenChange={(open) => !open && !isDeleting && setCandidateToDelete(null)}>
+     <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
+         <DialogHeader>
+             <DialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
+                 <Trash2 className="w-5 h-5" /> Delete Candidate
+             </DialogTitle>
+             <DialogDescription className="text-xs font-medium text-muted-foreground mt-2">
+                 Are you sure you want to delete <span className="font-bold text-foreground">{candidateToDelete?.name}</span>? 
+                 This will permanently remove their application records, scorecards, and notes. This action cannot be undone.
+             </DialogDescription>
+         </DialogHeader>
+         <DialogFooter className="gap-2 sm:gap-0 mt-4">
+             <Button
+                 variant="outline"
+                 onClick={() => setCandidateToDelete(null)}
+                 disabled={isDeleting}
+                 className="rounded-md font-bold"
+             >
+                 Cancel
+             </Button>
+             <Button
+                 variant="destructive"
+                 onClick={handleConfirmDelete}
+                 disabled={isDeleting}
+                 className="rounded-md font-bold"
+             >
+                 {isDeleting ? (
+                     <span className="flex items-center gap-2">
+                         <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
+                     </span>
+                 ) : (
+                     "Delete Candidate"
+                 )}
+             </Button>
+         </DialogFooter>
+     </DialogContent>
+ </Dialog>
  </div>
  );
 }

@@ -99,16 +99,28 @@ import RichDocumentEditorModal from './RichDocumentEditorModal';
 import DocumentInspector from './DocumentInspector';
 import FolderDetailsModal from './FolderDetailsModal';
 import DocumentAiModal from './DocumentAiModal';
+import { BatchActionBar } from './BatchActionBar';
+import { DocumentCommandPalette } from './DocumentCommandPalette';
+import {
+    AllAssetsTab,
+    FilesTableTab,
+    FoldersGridTab,
+    UploadsTab,
+    TrashTab
+} from './tabs';
 import { EmptyState } from '@/components/global/EmptyState';
 
-const getFileIcon = (fileType = '', name = '') => {
-    if (fileType.includes("pdf") || name.endsWith(".pdf")) return <FileText className="w-4 h-4 text-rose-500" />;
-    if (fileType.includes("image") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".webp")) return <ImageIcon className="w-4 h-4 text-emerald-500" />;
-    if (fileType.includes("spreadsheet") || fileType.includes("excel") || name.endsWith(".xlsx") || name.endsWith(".csv")) return <FileSpreadsheet className="w-4 h-4 text-green-500" />;
-    if (fileType === 'application/vnd.devlomatix.note' || name.endsWith(".doc")) return <FileText className="w-4 h-4 text-purple-500" />;
-    if (fileType.includes("video") || name.endsWith(".mp4")) return <Video className="w-4 h-4 text-indigo-500" />;
-    if (fileType.includes("audio") || name.endsWith(".mp3")) return <Music className="w-4 h-4 text-pink-500" />;
-    if (fileType.includes("zip") || fileType.includes("rar")) return <FileArchive className="w-4 h-4 text-amber-500" />;
+const getFileIcon = (fileType, name) => {
+    const type = (fileType || '').toLowerCase();
+    const fileName = (name || '').toLowerCase();
+
+    if (type.includes("pdf") || fileName.endsWith(".pdf")) return <FileText className="w-4 h-4 text-rose-500" />;
+    if (type.includes("image") || fileName.endsWith(".png") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".webp") || fileName.endsWith(".svg")) return <ImageIcon className="w-4 h-4 text-emerald-500" />;
+    if (type.includes("spreadsheet") || type.includes("excel") || fileName.endsWith(".xlsx") || fileName.endsWith(".csv")) return <FileSpreadsheet className="w-4 h-4 text-green-500" />;
+    if (type === 'application/vnd.devlomatix.note' || fileName.endsWith(".doc") || fileName.endsWith(".docx") || fileName.endsWith(".note")) return <FileText className="w-4 h-4 text-purple-500" />;
+    if (type.includes("video") || fileName.endsWith(".mp4") || fileName.endsWith(".webm") || fileName.endsWith(".mov")) return <Video className="w-4 h-4 text-indigo-500" />;
+    if (type.includes("audio") || fileName.endsWith(".mp3") || fileName.endsWith(".wav") || fileName.endsWith(".m4a")) return <Music className="w-4 h-4 text-pink-500" />;
+    if (type.includes("zip") || type.includes("rar") || type.includes("tar") || type.includes("gz") || fileName.endsWith(".zip")) return <FileArchive className="w-4 h-4 text-amber-500" />;
 
     return <FileIcon className="w-4 h-4 text-primary" />;
 };
@@ -145,6 +157,8 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [isFolderOpen, setIsFolderOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
+    const [newFolderColor, setNewFolderColor] = useState('amber');
+    const [newFolderIcon, setNewFolderIcon] = useState('folder');
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [isRichDocOpen, setIsRichDocOpen] = useState(false);
     const [editingDoc, setEditingDoc] = useState(null);
@@ -155,6 +169,9 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const [inspectorDoc, setInspectorDoc] = useState(null);
     const [folderDetailsDoc, setFolderDetailsDoc] = useState(null);
     const [isFolderDetailsOpen, setIsFolderDetailsOpen] = useState(false);
+
+    // Command Palette state
+    const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
     // AI Intelligence Modal
     const [aiTargetDoc, setAiTargetDoc] = useState(null);
@@ -220,13 +237,13 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     const [uploadQueue, setUploadQueue] = useState([]);
     const fileInputRef = useRef(null);
 
-    // Sync activeTab with URL search param
+    // Sync activeTab with URL search param without looping
     useEffect(() => {
         const currentParam = searchParams.get('view') || 'all';
         if (currentParam !== activeTab) {
             setActiveTab(currentParam);
         }
-    }, [searchParams, activeTab]);
+    }, [searchParams]);
 
     // Sync currentFolder and breadcrumbs with URL folderId / parentId parameter
     useEffect(() => {
@@ -273,9 +290,10 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         return () => {
             isMounted = false;
         };
-    }, [workspaceId, searchParams, currentFolder]);
+    }, [workspaceId, searchParams, currentFolder?.id]);
 
     const handleTabChange = (newTab) => {
+        if (newTab === activeTab) return;
         setActiveTab(newTab);
         setSelectedDocIds([]);
         const params = new URLSearchParams(searchParams.toString());
@@ -286,8 +304,11 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             setCurrentFolder(null);
             setBreadcrumbs([]);
         }
-        router.replace(`${pathname}?${params.toString()}`);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     };
+
+    // Extract folderId parameter value for fetch dependencies
+    const urlFolderId = searchParams.get('folderId') || searchParams.get('parentId') || '';
 
     // Fetch documents based on active tab and filters
     const fetchDocuments = useCallback(async () => {
@@ -296,14 +317,13 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         try {
             const isTrashView = activeTab === 'trash';
             const isFolderOnly = activeTab === 'folders';
-            const isFilesOnly = activeTab === 'files';
+            const isFilesOnly = activeTab === 'files' || activeTab === 'uploads';
 
             const filterType = activeTab === 'shared' ? 'shared' :
                 activeTab === 'starred' ? 'starred' :
                     activeTab === 'mine' ? 'mine' : 'all';
 
-            const folderIdParam = searchParams.get('folderId') || searchParams.get('parentId');
-            const targetParentId = activeTab === 'all' ? (folderIdParam || currentFolder?.id || 'root') : undefined;
+            const targetParentId = activeTab === 'all' ? (urlFolderId || currentFolder?.id || 'root') : undefined;
 
             const res = await getDocuments(workspaceId, {
                 filter: filterType,
@@ -320,16 +340,6 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
 
             if (res.success) {
                 setDocuments(res.data || []);
-
-                // Check if preview param is in URL
-                const previewDocId = searchParams.get('preview');
-                if (previewDocId && !viewerTargetDoc) {
-                    const found = res.data?.find(d => d.id === previewDocId);
-                    if (found) {
-                        setViewerTargetDoc(found);
-                        setIsViewerModalOpen(true);
-                    }
-                }
             } else {
                 toast.error(res.error || "Failed to load documents");
             }
@@ -339,11 +349,23 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         } finally {
             setLoading(false);
         }
-    }, [workspaceId, activeTab, selectedType, searchTerm, statusFilter, categoryFilter, currentFolder?.id, sortBy, sortOrder, searchParams, viewerTargetDoc]);
+    }, [workspaceId, activeTab, selectedType, searchTerm, statusFilter, categoryFilter, currentFolder?.id, urlFolderId, sortBy, sortOrder]);
 
     useEffect(() => {
         fetchDocuments();
     }, [fetchDocuments]);
+
+    // Handle URL preview param independently
+    useEffect(() => {
+        const previewDocId = searchParams.get('preview');
+        if (previewDocId && !viewerTargetDoc && documents.length > 0) {
+            const found = documents.find(d => d.id === previewDocId);
+            if (found) {
+                setViewerTargetDoc(found);
+                setIsViewerModalOpen(true);
+            }
+        }
+    }, [searchParams, documents, viewerTargetDoc]);
 
     // Folder navigation
     const handleOpenFolder = (folder) => {
@@ -354,7 +376,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             params.set('view', 'all');
             setActiveTab('all');
         }
-        router.push(`${pathname}?${params.toString()}`);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
         setCurrentFolder(folder);
         setBreadcrumbs(prev => {
             const existsIdx = prev.findIndex(b => b.id === folder.id);
@@ -364,20 +386,28 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
         setSelectedDocIds([]);
     };
 
-    const handleNavigateBreadcrumb = (folder, index) => {
+    const handleNavigateBreadcrumb = (target) => {
         const params = new URLSearchParams(searchParams.toString());
         params.delete('parentId');
-        if (folder === null) {
+        if (!target || target === 'root' || target === null) {
             params.delete('folderId');
             setBreadcrumbs([]);
             setCurrentFolder(null);
+        } else if (typeof target === 'string') {
+            const idx = breadcrumbs.findIndex(b => b.id === target);
+            params.set('folderId', target);
+            if (idx !== -1) {
+                setBreadcrumbs(prev => prev.slice(0, idx + 1));
+                setCurrentFolder(breadcrumbs[idx]);
+            }
         } else {
-            params.set('folderId', folder.id);
-            setBreadcrumbs(prev => prev.slice(0, index + 1));
-            setCurrentFolder(folder);
+            params.set('folderId', target.id);
+            const idx = breadcrumbs.findIndex(b => b.id === target.id);
+            if (idx !== -1) setBreadcrumbs(prev => prev.slice(0, idx + 1));
+            setCurrentFolder(target);
         }
         setSelectedDocIds([]);
-        router.push(`${pathname}?${params.toString()}`);
+        router.push(`${pathname}?${params.toString()}`, { scroll: false });
     };
 
     // Upload handling via Supabase Storage
@@ -478,12 +508,15 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             const res = await createDocument(workspaceId, {
                 name: newFolderName.trim(),
                 isFolder: true,
-                parentId: activeFolderId || null
+                parentId: activeFolderId || null,
+                tags: [`color:${newFolderColor}`, `icon:${newFolderIcon}`]
             });
             if (!res.success) throw new Error(res.error);
             toast.success("Folder created successfully");
             setIsFolderOpen(false);
             setNewFolderName('');
+            setNewFolderColor('amber');
+            setNewFolderIcon('folder');
             fetchDocuments();
             fetchAllFolders();
         } catch (error) {
@@ -506,6 +539,22 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
             }
         } catch (error) {
             toast.error("Failed to update star");
+        }
+    };
+
+    // Bulk Star toggle
+    const handleBatchToggleStar = async () => {
+        if (selectedDocIds.length === 0) return;
+        try {
+            const selectedDocs = documents.filter(d => selectedDocIds.includes(d.id));
+            const shouldStar = selectedDocs.some(d => !d.isStarred);
+            await Promise.all(
+                selectedDocIds.map(id => updateDocument(workspaceId, id, { isStarred: shouldStar }))
+            );
+            toast.success(`${selectedDocIds.length} items ${shouldStar ? 'starred' : 'unstarred'}`);
+            fetchDocuments();
+        } catch (error) {
+            toast.error("Failed to update stars");
         }
     };
 
@@ -638,7 +687,37 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
     };
 
     return (
-        <div className="flex flex-col h-full overflow-hidden bg-card/20 relative">
+        <div
+            className="flex flex-col h-full overflow-hidden bg-card/20 relative"
+            onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+            }}
+            onDragLeave={(e) => {
+                if (e.currentTarget.contains(e.relatedTarget)) return;
+                setDragOver(false);
+            }}
+            onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                const files = Array.from(e.dataTransfer.files || []);
+                const activeFolderId = currentFolder?.id || searchParams.get('folderId') || searchParams.get('parentId') || null;
+                files.forEach(f => startUploadFile(f, activeFolderId));
+            }}
+        >
+            {/* Global Drag & Drop Overlay */}
+            {dragOver && (
+                <div className="absolute inset-0 z-50 bg-background/85 backdrop-blur-md border-4 border-dashed border-primary/60 rounded-xl flex flex-col items-center justify-center pointer-events-none animate-in fade-in duration-150">
+                    <div className="p-4 rounded-full bg-primary/10 text-primary mb-3 shadow-lg scale-110 animate-bounce">
+                        <Upload className="w-10 h-10" />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">Drop files anywhere to upload</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Uploading into <span className="font-semibold text-foreground">{currentFolder ? currentFolder.name : 'Root Directory'}</span>
+                    </p>
+                </div>
+            )}
+
             {/* Top Stats Banner */}
             <div className="p-3 border-b border-border/40 bg-card/40 backdrop-blur-md shrink-0">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
@@ -656,6 +735,20 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
 
                     {/* Primary Action Buttons */}
                     <div className="flex items-center gap-2 shrink-0">
+                        {/* Command Palette Trigger */}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsCommandPaletteOpen(true)}
+                            className="text-xs font-semibold gap-2 h-8 bg-muted/40 border-border/60 hover:bg-muted text-muted-foreground px-3"
+                        >
+                            <Search className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Commands</span>
+                            <kbd className="pointer-events-none inline-flex h-4 select-none items-center gap-1 rounded border bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground">
+                                Ctrl K
+                            </kbd>
+                        </Button>
+
                         <Button
                             size="sm"
                             variant="outline"
@@ -924,606 +1017,127 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 </div>
             )}
 
-            {/* Main Content Area */}
-            <div className="flex-1 min-h-0 flex overflow-hidden">
-                {/* 1. UPLOADS TAB VIEW */}
-                {activeTab === 'uploads' ? (
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {/* Target Destination Folder Bar */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-card/80 border border-border/60 rounded-xl backdrop-blur-md">
-                            <div className="flex items-center gap-2">
-                                <FolderIcon className="w-4 h-4 text-amber-500" />
-                                <div>
-                                    <p className="text-xs font-bold text-foreground">Upload Destination Folder</p>
-                                    <p className="text-[10px] text-muted-foreground">Files dropped or uploaded here will be stored in this directory</p>
-                                </div>
-                            </div>
-                            <div className="w-full sm:w-64">
-                                <Select value={uploadTargetFolderId} onValueChange={setUploadTargetFolderId}>
-                                    <SelectTrigger className="h-8 text-xs font-semibold bg-background rounded-lg border-border/60">
-                                        <SelectValue placeholder="Select target folder" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-lg max-h-56">
-                                        <SelectItem value="root" className="text-xs font-semibold">📁 [Root Directory] (Main Workspace)</SelectItem>
-                                        {availableFolders.map((f) => (
-                                            <SelectItem key={f.id} value={f.id} className="text-xs font-semibold">
-                                                📁 {f.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+            {/* Main Content Area with Top Loading Bar */}
+            <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
+                {/* Smooth Top Loading Indicator */}
+                <div className="h-0.5 w-full bg-transparent overflow-hidden shrink-0">
+                    {loading && (
+                        <div className="h-full w-full bg-primary animate-pulse transition-all duration-300" />
+                    )}
+                </div>
 
-                        <Card
-                            className={`border-2 border-dashed p-10 text-center transition-all duration-200 cursor-pointer rounded-2xl ${dragOver
-                                ? "border-primary bg-primary/5 scale-[1.01]"
-                                : "border-border/60 bg-card/60 hover:bg-muted/10 hover:border-primary/40"
-                                }`}
-                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                            onDragLeave={() => setDragOver(false)}
-                            onDrop={handleDropUpload}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <div className="w-14 h-14 bg-primary/10 border border-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                <Upload className="h-7 w-7 text-primary" />
-                            </div>
-                            <p className="font-bold text-sm text-foreground">Click to browse or drop files here</p>
-                            <p className="text-[10px] text-muted-foreground mt-1 font-mono uppercase tracking-wider">
-                                PDF • DOCX • XLSX • PNG • JPG • MP4 • MP3 (UP TO 50 MB)
-                            </p>
-                        </Card>
-
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileInputChange}
-                            className="hidden"
-                            multiple
+                <div className="flex-1 min-h-0 flex overflow-hidden">
+                    {/* 1. UPLOADS TAB VIEW */}
+                    {activeTab === 'uploads' ? (
+                        <UploadsTab
+                            workspaceId={workspaceId}
+                            documents={documents}
+                            loading={loading}
+                            availableFolders={availableFolders}
+                            uploadTargetFolderId={uploadTargetFolderId}
+                            setUploadTargetFolderId={setUploadTargetFolderId}
+                            onViewDocument={(doc) => {
+                                setViewerTargetDoc(doc);
+                                setIsViewerModalOpen(true);
+                            }}
+                            onUploadSuccess={() => {
+                                fetchDocuments();
+                                fetchAllFolders();
+                            }}
                         />
-
-                        {/* Active Queue */}
-                        {uploadQueue.length > 0 && (
-                            <div className="space-y-2">
-                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                    Upload Progress ({uploadQueue.length})
-                                </h3>
-                                <div className="space-y-2">
-                                    {uploadQueue.map((item) => (
-                                        <Card key={item.id} className="p-3.5 border border-border/60 bg-card flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                                    <Upload className="w-4 h-4 text-primary" />
-                                                </div>
-                                                <div className="flex-1 min-w-0 space-y-1">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-xs font-bold truncate text-foreground">{item.name}</span>
-                                                        <span className="text-[10px] font-mono text-muted-foreground">{item.size}</span>
-                                                    </div>
-                                                    {item.status === 'uploading' && (
-                                                        <Progress value={item.progress} className="h-1.5" />
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Upload History Table */}
-                        <div className="space-y-2">
-                            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                Recently Uploaded Files
-                            </h3>
-                            <Card className="border border-border/60 bg-card/80 backdrop-blur-md rounded-xl overflow-hidden divide-y divide-border/30">
-                                {loading && documents.length === 0 ? (
-                                    <div className="p-12 text-center">
-                                        <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
-                                        <span className="text-xs font-mono text-muted-foreground">Loading history...</span>
-                                    </div>
-                                ) : documents.length === 0 ? (
-                                    <div className="p-12 text-center">
-                                        <EmptyState
-                                            icon={Clock}
-                                            title="No Uploads Yet"
-                                            description="Files you upload in this workspace will appear here."
-                                        />
-                                    </div>
-                                ) : (
-                                    documents.map((doc) => (
-                                        <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-muted/30 transition-colors">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-8 h-8 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
-                                                    <FileIcon className="w-4 h-4 text-primary" />
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-bold text-foreground truncate">{doc.name}</p>
-                                                    <p className="text-[10px] text-muted-foreground">
-                                                        {doc.fileSize ? `${(doc.fileSize / 1024).toFixed(0)} KB` : 'Unknown size'} • {format(new Date(doc.createdAt), "yyyy-MM-dd HH:mm")}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-1 shrink-0">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => {
-                                                        setViewerTargetDoc(doc);
-                                                        setIsViewerModalOpen(true);
-                                                    }}
-                                                    className="h-7 text-xs font-semibold gap-1 text-primary hover:bg-primary/10"
-                                                >
-                                                    <Eye className="w-3.5 h-3.5" /> View
-                                                </Button>
-                                                {doc.fileUrl && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        asChild
-                                                        className="h-7 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        <a href={doc.fileUrl} download>
-                                                            <Download className="w-3.5 h-3.5" />
-                                                        </a>
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </Card>
-                        </div>
-                    </div>
-                ) : activeTab === 'files' ? (
-                    /* 2. FILES TABLE VIEW */
-                    <div className="flex-1 overflow-hidden p-4 flex flex-col">
-                        <div className="bg-card/80 backdrop-blur-md rounded-xl border border-border/60 shadow-xs flex-1 overflow-hidden flex flex-col">
-                            <div className="overflow-x-auto flex-1">
-                                <table className="w-full text-left border-collapse min-w-[800px]">
-                                    <thead>
-                                        <tr className="border-b border-border/40 bg-muted/20 text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                                            <th className="p-3 w-10 text-center">
-                                                <Checkbox
-                                                    checked={selectedDocIds.length === documents.length && documents.length > 0}
-                                                    onCheckedChange={handleSelectAll}
-                                                    className="rounded border-border/60"
-                                                />
-                                            </th>
-                                            <th className="p-3">Asset Name</th>
-                                            <th className="p-3">Owner / Author</th>
-                                            <th className="p-3">Category</th>
-                                            <th className="p-3">File Size</th>
-                                            <th className="p-3">Status</th>
-                                            <th className="p-3">Collaborators</th>
-                                            <th className="p-3">Date</th>
-                                            <th className="p-3 w-12 text-right"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/30 text-xs font-medium text-foreground/90">
-                                        {loading ? (
-                                            <tr>
-                                                <td colSpan={9} className="p-12 text-center text-muted-foreground">
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                                                        <span className="text-xs font-mono">Loading files database...</span>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : documents.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={9} className="p-16 text-center">
-                                                    <EmptyState
-                                                        icon={FileText}
-                                                        title="No Files Found"
-                                                        description="No files match your search criteria or category filter."
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            documents.map((f) => (
-                                                <tr key={f.id} className="hover:bg-muted/30 transition-colors group">
-                                                    <td className="p-3 text-center">
-                                                        <Checkbox
-                                                            checked={selectedDocIds.includes(f.id)}
-                                                            onCheckedChange={(c) => handleSelectToggle(f.id, c)}
-                                                            className="rounded border-border/60"
-                                                        />
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <div className="flex items-center gap-2.5">
-                                                            <button
-                                                                onClick={() => handleToggleStar(f)}
-                                                                className="text-muted-foreground/40 hover:text-amber-500 transition-colors"
-                                                            >
-                                                                <Star className={`w-3.5 h-3.5 ${f.isStarred ? "text-amber-500 fill-amber-500" : ""}`} />
-                                                            </button>
-                                                            {getFileIcon(f.fileType, f.name)}
-                                                            <span
-                                                                onClick={() => {
-                                                                    if (f.content) {
-                                                                        setEditingDoc(f);
-                                                                        setIsRichDocOpen(true);
-                                                                    } else {
-                                                                        setViewerTargetDoc(f);
-                                                                        setIsViewerModalOpen(true);
-                                                                    }
-                                                                }}
-                                                                className="truncate max-w-[260px] font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
-                                                            >
-                                                                {f.name}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-3 text-muted-foreground">
-                                                        {f.user?.displayName || "Member"}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <Badge variant="outline" className="text-[10px] border-border/60 font-mono">
-                                                            {f.category || "GENERAL"}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="p-3 text-muted-foreground font-mono">
-                                                        {f.fileSize ? (f.fileSize > 1024 * 1024 ? `${(f.fileSize / (1024 * 1024)).toFixed(1)} MB` : `${(f.fileSize / 1024).toFixed(0)} KB`) : "Rich Doc"}
-                                                    </td>
-                                                    <td className="p-3">
-                                                        <Badge variant="secondary" className="text-[9px] font-semibold bg-primary/10 text-primary border border-primary/20">
-                                                            {f.status || 'APPROVED'}
-                                                        </Badge>
-                                                    </td>
-                                                    <td className="p-3">
-                                                        {f.sharedCount > 0 ? (
-                                                            <span className="flex items-center gap-1 text-primary text-[11px] font-semibold">
-                                                                <Users className="w-3 h-3" /> {f.sharedCount} members
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-[10px] text-muted-foreground/60 italic">Private</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-3 text-muted-foreground font-mono text-[11px]">
-                                                        {format(new Date(f.createdAt), "yyyy-MM-dd")}
-                                                    </td>
-                                                    <td className="p-3 text-right">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/50 hover:text-foreground">
-                                                                    <MoreHorizontal className="w-3.5 h-3.5" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-44 rounded-lg shadow-xl border-border/50">
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setViewerTargetDoc(f);
-                                                                        setIsViewerModalOpen(true);
-                                                                    }}
-                                                                    className="text-xs font-semibold gap-2 cursor-pointer"
-                                                                >
-                                                                    <Eye className="w-3.5 h-3.5 text-primary" /> View / Preview
-                                                                </DropdownMenuItem>
-                                                                {f.content && (
-                                                                    <DropdownMenuItem
-                                                                        onClick={() => {
-                                                                            setEditingDoc(f);
-                                                                            setIsRichDocOpen(true);
-                                                                        }}
-                                                                        className="text-xs font-semibold gap-2 cursor-pointer"
-                                                                    >
-                                                                        <Pencil className="w-3.5 h-3.5 text-purple-500" /> Edit Note
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                {f.fileUrl && (
-                                                                    <DropdownMenuItem asChild className="text-xs font-semibold gap-2 cursor-pointer">
-                                                                        <a href={f.fileUrl} download>
-                                                                            <Download className="w-3.5 h-3.5 text-emerald-500" /> Download
-                                                                        </a>
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                <DropdownMenuItem
-                                                                    onClick={() => {
-                                                                        setShareTargetDoc(f);
-                                                                        setIsShareModalOpen(true);
-                                                                    }}
-                                                                    className="text-xs font-semibold gap-2 cursor-pointer"
-                                                                >
-                                                                    <Users className="w-3.5 h-3.5 text-primary" /> Share Access
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    onClick={() => handleDeleteDocument(f.id)}
-                                                                    className="text-xs font-semibold gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                                >
-                                                                    <Trash2 className="w-3.5 h-3.5" /> Move to Trash
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                ) : activeTab === 'folders' ? (
-                    /* 3. FOLDERS GRID VIEW */
-                    <div className="flex-1 overflow-y-auto p-4">
-                        {loading && documents.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-24 space-y-3">
-                                <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                                <p className="text-xs font-mono text-muted-foreground animate-pulse">Loading Directory Folders...</p>
-                            </div>
-                        ) : documents.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <EmptyState
-                                    icon={FolderOpen}
-                                    title="No Folders Found"
-                                    description={searchTerm ? "No folders match your search criteria." : "Organize your workspace by creating your first folder."}
-                                />
-                                <Button onClick={() => setIsFolderOpen(true)} size="sm" className="mt-4 text-xs font-semibold gap-1.5">
-                                    <FolderPlus className="w-3.5 h-3.5" /> Create Directory Folder
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
-                                {documents.map((folder) => (
-                                    <Card
-                                        key={folder.id}
-                                        onClick={() => {
-                                            setFolderDetailsDoc(folder);
-                                            setIsFolderDetailsOpen(true);
-                                        }}
-                                        className="p-4 flex flex-col justify-between hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group border-border/60 bg-card rounded-xl relative overflow-hidden"
-                                    >
-                                        <div className="flex items-start justify-between w-full mb-3">
-                                            <div className="h-10 w-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 group-hover:scale-105 transition-transform">
-                                                <FolderOpen className="h-5 w-5 fill-amber-500/20" />
-                                            </div>
-
-                                            <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => handleToggleStar(folder)}
-                                                    className={`p-1 rounded-md text-muted-foreground/60 hover:text-amber-500 transition-colors ${folder.isStarred ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                        }`}
-                                                    title={folder.isStarred ? "Unstar" : "Star"}
-                                                >
-                                                    <Star className={`w-3.5 h-3.5 ${folder.isStarred ? "text-amber-500 fill-amber-500" : ""}`} />
-                                                </button>
-
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-7 w-7 rounded-md text-muted-foreground/60 hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
-                                                        >
-                                                            <MoreHorizontal className="h-3.5 w-3.5" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-48 rounded-lg shadow-xl border-border/50">
-                                                        <DropdownMenuItem
-                                                            className="text-xs font-semibold gap-2 cursor-pointer"
-                                                            onClick={() => handleOpenFolder(folder)}
-                                                        >
-                                                            <FolderOpen className="h-3.5 w-3.5 text-primary" /> Open Folder
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-xs font-semibold gap-2 cursor-pointer"
-                                                            onClick={() => handleOpenUploadModal(folder)}
-                                                        >
-                                                            <Upload className="h-3.5 w-3.5 text-emerald-500" /> Upload Files Here
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-xs font-semibold gap-2 cursor-pointer"
-                                                            onClick={() => {
-                                                                setShareTargetDoc(folder);
-                                                                setIsShareModalOpen(true);
-                                                            }}
-                                                        >
-                                                            <Share2 className="h-3.5 w-3.5 text-primary" /> Share Folder
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuItem
-                                                            onClick={() => handleDeleteDocument(folder.id)}
-                                                            className="text-xs font-semibold gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                        >
-                                                            <Trash2 className="h-3.5 w-3.5" /> Delete Folder
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1">
-                                            <h3 className="text-xs font-bold truncate text-foreground group-hover:text-primary transition-colors">
-                                                {folder.name}
-                                            </h3>
-                                            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                                <span>{folder._count?.children || 0} files</span>
-                                                {folder.sharedCount > 0 && (
-                                                    <span className="flex items-center gap-0.5 text-primary font-semibold">
-                                                        <Users className="w-2.5 h-2.5" /> {folder.sharedCount}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Card>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                ) : activeTab === 'trash' ? (
-                    /* 4. TRASH VIEW */
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {loading && documents.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-24 space-y-3">
-                                <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                                <p className="text-xs font-mono text-muted-foreground animate-pulse">Loading Trash Items...</p>
-                            </div>
-                        ) : documents.length === 0 ? (
-                            <div className="py-20 text-center">
-                                <EmptyState
-                                    icon={Trash2}
-                                    title="Recycle Bin is Empty"
-                                    description="Deleted documents and folders will appear here where you can restore them or permanently delete them."
-                                />
-                            </div>
-                        ) : (
-                            <Card className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-md shadow-xs overflow-hidden divide-y divide-border/30">
-                                {documents.map((item) => (
-                                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 hover:bg-muted/30 transition-colors group gap-3">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center shrink-0">
-                                                {item.isFolder ? <FolderIcon className="w-5 h-5 text-amber-500 fill-amber-500/20" /> : getFileIcon(item.fileType, item.name)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-bold text-foreground truncate">{item.name}</p>
-                                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                                    Deleted {formatDistanceToNow(new Date(item.deletedAt || new Date()))} ago
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 shrink-0">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => handleRestoreItem(item.id)}
-                                                className="h-8 px-3 text-xs font-semibold rounded-lg bg-background hover:bg-primary/5 hover:text-primary border-border/60"
-                                            >
-                                                <RefreshCcw className="w-3.5 h-3.5 mr-1" /> Restore
-                                            </Button>
-                                            <Button
-                                                variant="destructive"
-                                                size="sm"
-                                                onClick={() => handlePermanentDeleteItem(item.id)}
-                                                className="h-8 px-3 text-xs font-semibold rounded-lg"
-                                            >
-                                                <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete Permanently
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </Card>
-                        )}
-                    </div>
-                ) : (
-                    /* 5. EXPLORER / ALL ASSETS / SHARED / STARRED VIEW */
-                    <div className="flex-1 overflow-y-auto p-4">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center h-64 gap-3">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                <span className="text-xs font-mono text-muted-foreground animate-pulse uppercase tracking-wider">
-                                    Synchronizing Documents...
-                                </span>
-                            </div>
-                        ) : documents.length === 0 ? (
-                            <div className="py-16 text-center">
-                                <EmptyState
-                                    icon={currentFolder ? FolderOpen : FileText}
-                                    title={
-                                        activeTab === 'starred' ? "No Starred Items" :
-                                            activeTab === 'shared' ? "No Shared Documents" :
-                                                currentFolder ? `"${currentFolder.name}" is empty` :
-                                                    "No Documents Found"
-                                    }
-                                    description={
-                                        searchTerm ? "No assets match your search criteria." :
-                                            currentFolder ? "This folder has no files or subfolders yet. Upload a file or create a note to get started." :
-                                                "Start by creating a note, folder, or uploading a file."
-                                    }
-                                />
-                                <div className="mt-4 flex items-center justify-center gap-2">
-                                    <Button
-                                        size="sm"
-                                        onClick={() => {
-                                            setEditingDoc(null);
-                                            setIsRichDocOpen(true);
-                                        }}
-                                        className="text-xs font-semibold gap-1.5"
-                                    >
-                                        <Pencil className="w-3.5 h-3.5" /> Create Note
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => handleOpenUploadModal()}
-                                        className="text-xs font-semibold gap-1.5"
-                                    >
-                                        <Upload className="w-3.5 h-3.5" /> Upload File
-                                    </Button>
-                                </div>
-                            </div>
-                        ) : viewMode === 'grid' ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5">
-                                {documents.map((doc) => (
-                                    <DocumentCard
-                                        key={doc.id}
-                                        document={doc}
-                                        isSelected={selectedDocIds.includes(doc.id)}
-                                        onSelectToggle={handleSelectToggle}
-                                        onDelete={handleDeleteDocument}
-                                        onDownload={(d) => window.open(d.fileUrl, '_blank')}
-                                        onView={(d) => {
-                                            setViewerTargetDoc(d);
-                                            setIsViewerModalOpen(true);
-                                        }}
-                                        onShare={(d) => {
-                                            setShareTargetDoc(d);
-                                            setIsShareModalOpen(true);
-                                        }}
-                                        onEditNote={(d) => {
-                                            setEditingDoc(d);
-                                            setIsRichDocOpen(true);
-                                        }}
-                                        onOpenFolder={handleOpenFolder}
-                                        onUploadToFolder={handleOpenUploadModal}
-                                        onMoveDocument={handleMoveDocument}
-                                        onToggleStar={handleToggleStar}
-                                        onDuplicate={handleDuplicateDocument}
-                                        onAiInsights={handleOpenAiInsights}
-                                        onSelectForInspector={(d) => setInspectorDoc(d)}
-                                        viewMode="grid"
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                {documents.map((doc) => (
-                                    <DocumentCard
-                                        key={doc.id}
-                                        document={doc}
-                                        isSelected={selectedDocIds.includes(doc.id)}
-                                        onSelectToggle={handleSelectToggle}
-                                        onDelete={handleDeleteDocument}
-                                        onDownload={(d) => window.open(d.fileUrl, '_blank')}
-                                        onView={(d) => {
-                                            setViewerTargetDoc(d);
-                                            setIsViewerModalOpen(true);
-                                        }}
-                                        onShare={(d) => {
-                                            setShareTargetDoc(d);
-                                            setIsShareModalOpen(true);
-                                        }}
-                                        onEditNote={(d) => {
-                                            setEditingDoc(d);
-                                            setIsRichDocOpen(true);
-                                        }}
-                                        onOpenFolder={handleOpenFolder}
-                                        onUploadToFolder={handleOpenUploadModal}
-                                        onMoveDocument={handleMoveDocument}
-                                        onToggleStar={handleToggleStar}
-                                        onDuplicate={handleDuplicateDocument}
-                                        onAiInsights={handleOpenAiInsights}
-                                        onSelectForInspector={(d) => setInspectorDoc(d)}
-                                        viewMode="list"
-                                    />
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
+                    ) : activeTab === 'files' ? (
+                        /* 2. FILES TABLE VIEW */
+                        <FilesTableTab
+                            documents={documents}
+                            loading={loading}
+                            selectedDocIds={selectedDocIds}
+                            onSelectToggle={handleSelectToggle}
+                            onSelectAll={handleSelectAll}
+                            onToggleStar={handleToggleStar}
+                            onEditNote={(doc) => {
+                                setEditingDoc(doc);
+                                setIsRichDocOpen(true);
+                            }}
+                            onViewDocument={(doc) => {
+                                setViewerTargetDoc(doc);
+                                setIsViewerModalOpen(true);
+                            }}
+                            onShareDocument={(doc) => {
+                                setShareTargetDoc(doc);
+                                setIsShareModalOpen(true);
+                            }}
+                            onDeleteDocument={handleDeleteDocument}
+                        />
+                    ) : activeTab === 'folders' ? (
+                        /* 3. FOLDERS GRID VIEW */
+                        <FoldersGridTab
+                            documents={documents}
+                            loading={loading}
+                            searchTerm={searchTerm}
+                            onOpenFolder={handleOpenFolder}
+                            onOpenFolderDetails={(folder) => {
+                                setFolderDetailsDoc(folder);
+                                setIsFolderDetailsOpen(true);
+                            }}
+                            onUploadToFolder={handleOpenUploadModal}
+                            onShareFolder={(folder) => {
+                                setShareTargetDoc(folder);
+                                setIsShareModalOpen(true);
+                            }}
+                            onToggleStar={handleToggleStar}
+                            onDeleteFolder={handleDeleteDocument}
+                            onOpenCreateFolder={() => setIsFolderOpen(true)}
+                        />
+                    ) : activeTab === 'trash' ? (
+                        /* 4. TRASH VIEW */
+                        <TrashTab
+                            documents={documents}
+                            loading={loading}
+                            onRestoreItem={handleRestoreItem}
+                            onPermanentDeleteItem={handlePermanentDeleteItem}
+                            onRestoreAll={handleRestoreAllTrash}
+                            onEmptyTrash={handleEmptyTrash}
+                        />
+                    ) : (
+                        /* 5. EXPLORER / ALL ASSETS / SHARED / STARRED VIEW */
+                        <AllAssetsTab
+                            documents={documents}
+                            loading={loading}
+                            viewMode={viewMode}
+                            activeTab={activeTab}
+                            currentFolder={currentFolder}
+                            breadcrumbs={breadcrumbs}
+                            searchTerm={searchTerm}
+                            selectedDocIds={selectedDocIds}
+                            onSelectToggle={handleSelectToggle}
+                            onNavigateBreadcrumb={handleNavigateBreadcrumb}
+                            onDeleteDocument={handleDeleteDocument}
+                            onViewDocument={(doc) => {
+                                setViewerTargetDoc(doc);
+                                setIsViewerModalOpen(true);
+                            }}
+                            onShareDocument={(doc) => {
+                                setShareTargetDoc(doc);
+                                setIsShareModalOpen(true);
+                            }}
+                            onEditNote={(doc) => {
+                                setEditingDoc(doc);
+                                setIsRichDocOpen(true);
+                            }}
+                            onOpenFolder={handleOpenFolder}
+                            onUploadToFolder={handleOpenUploadModal}
+                            onMoveDocument={handleMoveDocument}
+                            onToggleStar={handleToggleStar}
+                            onDuplicate={handleDuplicateDocument}
+                            onAiInsights={handleOpenAiInsights}
+                            onSelectForInspector={(d) => setInspectorDoc(d)}
+                            onOpenCreateNote={() => {
+                                setEditingDoc(null);
+                                setIsRichDocOpen(true);
+                            }}
+                            onOpenUploadModal={() => handleOpenUploadModal()}
+                        />
+                    )}
 
                 {/* Right Inspector Drawer (Active in Explorer & Shared Views) */}
                 {inspectorDoc && activeTab !== 'uploads' && activeTab !== 'trash' && (
@@ -1549,6 +1163,7 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                         workspaceId={workspaceId}
                     />
                 )}
+                </div>
             </div>
 
             {/* Global Modals */}
@@ -1595,25 +1210,77 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
 
             {/* Create Folder Modal */}
             <Dialog open={isFolderOpen} onOpenChange={setIsFolderOpen}>
-                <DialogContent className="sm:max-w-[420px] rounded-xl border border-border/60 p-6 shadow-2xl">
+                <DialogContent className="sm:max-w-[460px] rounded-2xl border border-border/60 p-6 shadow-2xl">
                     <DialogHeader className="space-y-1">
                         <div className="flex items-center gap-2 text-amber-500">
                             <FolderPlus className="w-5 h-5" />
                             <DialogTitle className="text-base font-bold">Create Directory Folder</DialogTitle>
                         </div>
                         <DialogDescription className="text-xs text-muted-foreground">
-                            Create a new folder in <span className="font-semibold text-foreground">{currentFolder ? currentFolder.name : 'Root Directory'}</span>.
+                            Create a custom-branded folder in <span className="font-semibold text-foreground">{currentFolder ? currentFolder.name : 'Root Directory'}</span>.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="py-3 space-y-1.5">
-                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Folder Name</Label>
-                        <Input
-                            placeholder="e.g. Invoices 2026, Product Specs..."
-                            value={newFolderName}
-                            onChange={(e) => setNewFolderName(e.target.value)}
-                            className="h-10 text-xs font-semibold rounded-lg bg-background border-border/60"
-                        />
+                    <div className="py-3 space-y-4">
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Folder Name *</Label>
+                            <Input
+                                placeholder="e.g. Invoices 2026, Engineering Specs..."
+                                value={newFolderName}
+                                onChange={(e) => setNewFolderName(e.target.value)}
+                                className="h-10 text-xs font-semibold rounded-lg bg-background border-border/60"
+                            />
+                        </div>
+
+                        {/* Color Theme Selector */}
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Accent Color</Label>
+                            <div className="flex items-center gap-2">
+                                {[
+                                    { id: 'amber', bg: 'bg-amber-500', label: 'Amber' },
+                                    { id: 'emerald', bg: 'bg-emerald-500', label: 'Emerald' },
+                                    { id: 'blue', bg: 'bg-blue-500', label: 'Blue' },
+                                    { id: 'indigo', bg: 'bg-indigo-500', label: 'Indigo' },
+                                    { id: 'rose', bg: 'bg-rose-500', label: 'Rose' },
+                                    { id: 'purple', bg: 'bg-purple-500', label: 'Purple' },
+                                    { id: 'cyan', bg: 'bg-cyan-500', label: 'Cyan' },
+                                ].map((c) => (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => setNewFolderColor(c.id)}
+                                        className={`w-6 h-6 rounded-full ${c.bg} transition-transform ${newFolderColor === c.id ? 'ring-2 ring-offset-2 ring-primary scale-110 shadow-md' : 'opacity-70 hover:opacity-100 hover:scale-105'}`}
+                                        title={c.label}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Icon Style Selector */}
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Folder Icon</Label>
+                            <div className="grid grid-cols-4 gap-2">
+                                {[
+                                    { id: 'folder', label: 'Folder' },
+                                    { id: 'briefcase', label: 'Business' },
+                                    { id: 'code', label: 'Tech' },
+                                    { id: 'shield', label: 'Security' },
+                                    { id: 'rocket', label: 'Releases' },
+                                    { id: 'target', label: 'Marketing' },
+                                    { id: 'sparkles', label: 'Creative' },
+                                    { id: 'book', label: 'Docs' },
+                                ].map((ic) => (
+                                    <button
+                                        key={ic.id}
+                                        type="button"
+                                        onClick={() => setNewFolderIcon(ic.id)}
+                                        className={`p-2 rounded-lg border text-xs font-medium transition-colors text-center ${newFolderIcon === ic.id ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs' : 'border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40'}`}
+                                    >
+                                        {ic.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
 
                     <DialogFooter className="gap-2 pt-2">
@@ -1743,6 +1410,45 @@ export function DocumentManager({ workspaceId, userId, initialView = 'all' }) {
                 onOpenChange={setIsAiModalOpen}
                 document={aiTargetDoc}
                 workspaceId={workspaceId}
+            />
+
+            {/* Floating Linear-style Multi-Select Action Dock */}
+            <BatchActionBar
+                selectedDocs={documents.filter(d => selectedDocIds.includes(d.id))}
+                onClearSelection={() => setSelectedDocIds([])}
+                onMove={openBatchMoveModal}
+                onDelete={handleBatchDelete}
+                onToggleStarAll={handleBatchToggleStar}
+                isTrashView={activeTab === 'trash'}
+                onRestore={handleRestoreAllTrash}
+                onPermanentDelete={handleEmptyTrash}
+            />
+
+            {/* Power-User Command Palette (Cmd+K / Ctrl+K) */}
+            <DocumentCommandPalette
+                isOpen={isCommandPaletteOpen}
+                onOpenChange={setIsCommandPaletteOpen}
+                documents={documents}
+                onCreateNote={() => {
+                    setEditingDoc(null);
+                    setIsRichDocOpen(true);
+                }}
+                onCreateFolder={() => setIsFolderOpen(true)}
+                onUploadFile={() => handleOpenUploadModal()}
+                onNavigateView={(view) => handleTabChange(view)}
+                onSelectDocument={(doc) => {
+                    if (doc.isFolder) {
+                        handleOpenFolder(doc);
+                    } else if (!doc.fileUrl || doc.fileType === 'application/vnd.devlomatix.note') {
+                        setEditingDoc(doc);
+                        setIsRichDocOpen(true);
+                    } else {
+                        setViewerTargetDoc(doc);
+                        setIsViewerModalOpen(true);
+                    }
+                }}
+                onToggleViewMode={() => setViewMode(prev => prev === 'grid' ? 'list' : 'grid')}
+                viewMode={viewMode}
             />
         </div>
     );

@@ -24,16 +24,17 @@ import {
     Dialog,
     DialogContent,
     DialogHeader,
-    DialogTitle
+    DialogTitle,
+    DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import axios from 'axios';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { applyForJob } from '../_actions/apply-job';
 
 const applySchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,6 +47,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [submittedEmail, setSubmittedEmail] = useState("");
     const [resumeUrl, setResumeUrl] = useState("");
 
     const {
@@ -73,20 +75,25 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
 
         setIsSubmitting(true);
         try {
-            const response = await axios.post(`/api/public/jobs/${job.id}/apply`, {
-                ...data,
+            const response = await applyForJob({
+                jobId: job.id,
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                portfolioUrl: data.portfolioUrl,
                 resumeUrl
             });
 
-            if (response.data.success) {
+            if (response.success) {
+                setSubmittedEmail(data.email);
                 setIsSuccess(true);
-                toast.success(response.data.message || "Application submitted successfully!");
+                toast.success(response.message || "Application submitted successfully!");
             } else {
-                toast.error(response.data.error || "Failed to submit application");
+                toast.error(response.error || "Failed to submit application");
             }
         } catch (error) {
             console.error("[APPLY_ERROR]", error);
-            toast.error(error.response?.data?.error || "Internal Server Error");
+            toast.error(error.message || "Failed to submit application");
         } finally {
             setIsSubmitting(false);
         }
@@ -137,6 +144,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
 
     const handleClose = () => {
         setIsSuccess(false);
+        setSubmittedEmail("");
         setResumeUrl("");
         reset();
         onClose();
@@ -146,6 +154,10 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
         return (
             <Dialog open={isOpen} onOpenChange={handleClose}>
                 <DialogContent className="bg-card border rounded-xl p-4 overflow-hidden">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Application Sent</DialogTitle>
+                        <DialogDescription>Your application for {job.title} has been submitted successfully.</DialogDescription>
+                    </DialogHeader>
                     <div className="flex flex-col items-center text-center space-y-6 py-8">
                         <motion.div
                             initial={{ scale: 0 }}
@@ -156,12 +168,17 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                             <CheckCircle2 size={48} className="text-primary" />
                         </motion.div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl tracking-tight">Application Sent!</h2>
-                            <p className="text-sm font-medium text-muted-foreground opacity-70">
-                                Thanks for applying to the <span className="text-primary font-bold">{job.title}</span> position at Devlomatix. We&apos;ll be in touch soon!
+                            <h2 className="text-2xl tracking-tight font-bold">Application Sent!</h2>
+                            <p className="text-sm font-medium text-muted-foreground opacity-90">
+                                Thanks for applying to the <span className="text-primary font-bold">{job.title}</span> position.
                             </p>
+                            {submittedEmail && (
+                                <p className="text-xs text-muted-foreground/80 bg-muted/40 p-2.5 rounded-lg border border-border/40">
+                                    📩 A confirmation email has been sent to <span className="font-semibold text-foreground">{submittedEmail}</span> with your application details and next steps.
+                                </p>
+                            )}
                         </div>
-                        <Button onClick={handleClose} className="w-full h-12 rounded-lg font-bold ">
+                        <Button onClick={handleClose} className="w-full h-12 rounded-lg font-bold">
                             Got it, thanks!
                         </Button>
                     </div>
@@ -173,6 +190,10 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
     return (
         <Dialog open={isOpen} onOpenChange={handleClose} modal={false}>
             <DialogContent className="min-h-[90vh] max-h-[90vh] min-w-[90vw] bg-background rounded-xl p-0 overflow-hidden flex flex-col border">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{job.title || "Job Application"}</DialogTitle>
+                    <DialogDescription>Submit your application for {job.title || "this position"}</DialogDescription>
+                </DialogHeader>
                 <div className="flex flex-col md:flex-row h-full max-h-[90vh] overflow-y-auto md:overflow-hidden">
 
 
@@ -181,7 +202,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                         <div className="p-6 space-y-8">
                             <div className="space-y-4">
                                 <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full">{job.department}</Badge>
-                                <DialogTitle className="text-3xl tracking-tight leading-tight">{job.title}</DialogTitle>
+                                <h3 className="text-3xl font-bold tracking-tight leading-tight">{job.title}</h3>
                                 <div className="flex flex-wrap gap-4 pt-2">
                                     <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                                         <MapPin size={14} className="text-primary" /> {job.location}
