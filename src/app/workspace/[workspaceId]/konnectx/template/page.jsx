@@ -20,7 +20,7 @@ import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { useModal } from '@/hooks/useModal';
 import { DynamicIcon } from 'lucide-react/dynamic';
-import { AlertModal } from "@/components/global/AlertModal";
+import { DeleteConfirmDialog } from '@/app/workspace/_components/DeleteConfirmDialog';
 
 // Modular Components
 import TemplateBuilder from './_components/TemplateBuilder';
@@ -93,6 +93,7 @@ export default function TemplatePage() {
     const [selectedShareTemplate, setSelectedShareTemplate] = useState(null);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [deleteTargetId, setDeleteTargetId] = useState(null);
+    const [deleteTargetTemplate, setDeleteTargetTemplate] = useState(null);
     const { data: session } = useSession();
     const userId = session?.user?.userId || session?.user?.id;
 
@@ -298,7 +299,9 @@ export default function TemplatePage() {
     };
 
     const handleDelete = (id) => {
+        const template = templates.find(t => t.id === id);
         setDeleteTargetId(id);
+        setDeleteTargetTemplate(template || null);
         setIsDeleteConfirmOpen(true);
     };
 
@@ -309,6 +312,7 @@ export default function TemplatePage() {
         toast.loading("Deleting template...", { id: "delete-toast" });
         executeDeleteTemplate({ workspaceId, id: deleteTargetId });
         setDeleteTargetId(null);
+        setDeleteTargetTemplate(null);
     };
 
     const handleClone = (template) => {
@@ -733,15 +737,31 @@ export default function TemplatePage() {
                     onShareUpdate={handleShareUpdate}
                 />
 
-                <AlertModal
+                <DeleteConfirmDialog
                     isOpen={isDeleteConfirmOpen}
-                    onClose={() => setIsDeleteConfirmOpen(false)}
+                    onClose={() => {
+                        setIsDeleteConfirmOpen(false);
+                        setDeleteTargetTemplate(null);
+                        setDeleteTargetId(null);
+                    }}
                     onConfirm={confirmDelete}
-                    loading={isDeletingId === deleteTargetId}
                     title="Delete Template"
-                    description="This will permanently delete this template from your local database. If it was submitted to Meta, it will also be removed from Meta Cloud API."
-                    confirmText="Delete"
-                    variant="destructive"
+                    entityName={deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}
+                    description={
+                        deleteTargetTemplate?.templateId ? (
+                            <>
+                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>? 
+                                This will remove the template from your workspace and submit a deletion request to <strong>Meta Cloud API</strong>. This action cannot be undone.
+                            </>
+                        ) : (
+                            <>
+                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>? 
+                                This action cannot be undone and will permanently remove this draft template.
+                            </>
+                        )
+                    }
+                    confirmText="Delete Template"
+                    isDeleting={isDeletingId === deleteTargetId}
                 />
             </div>
         </TooltipProvider>
