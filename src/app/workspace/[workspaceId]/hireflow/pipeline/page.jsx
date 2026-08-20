@@ -14,14 +14,27 @@ import {
     User,
     ArrowRight,
     Briefcase,
-    GripVertical
+    GripVertical,
+    Sparkles,
+    UserPlus,
+    FileText,
+    ExternalLink,
+    Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
+import { CandidateModal } from '../_components/CandidateModal';
 import { getJobByIdAction } from '../_actions/job-actions';
 import { getApplicationsAction, updateApplicationStageAction } from '../_actions/pipeline-actions';
 import { toast } from 'sonner';
@@ -59,6 +72,7 @@ export default function CandidatePipelinePage() {
     const [localApps, setLocalApps] = useState([]);
     const [selectedCandidateId, setSelectedCandidateId] = useState(null);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     // Sync SWR data into local state
     useEffect(() => {
@@ -119,7 +133,7 @@ export default function CandidatePipelinePage() {
     return (
         <div className="flex flex-col flex-1 overflow-hidden">
             {/* Header */}
-            <div className="p-4  shrink-0 space-y-4">
+            <div className="p-4 shrink-0 space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
                         <div className="flex items-center gap-2 text-[10px] tracking-[0.2em] text-muted-foreground opacity-40">
@@ -144,9 +158,20 @@ export default function CandidatePipelinePage() {
                                 className="pl-11 h-11 rounded-md bg-card/40 backdrop-blur-xl border-border/40 text-sm font-medium"
                             />
                         </div>
-                        <Button variant="outline" className="h-11 rounded-md px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl">
-                            <Filter className="w-4 h-4 mr-2 opacity-50" />
-                            Filters
+                        <Button 
+                            variant="outline" 
+                            onClick={() => router.push(`/workspace/${workspaceId}/hireflow/candidates`)}
+                            className="h-11 rounded-md px-4 font-bold border-border/40 bg-card/40 backdrop-blur-xl"
+                        >
+                            <User className="w-4 h-4 mr-2 opacity-50" />
+                            Talent Pool
+                        </Button>
+                        <Button
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="h-11 rounded-md px-5 bg-primary font-bold shadow-lg shadow-primary/20"
+                        >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Add Candidate
                         </Button>
                     </div>
                 </div>
@@ -178,7 +203,7 @@ export default function CandidatePipelinePage() {
                                         </div>
 
                                         {/* Droppable Column with vertical ScrollArea */}
-                                        <ScrollArea className="h-[74vh] rounded-md border  bg-muted/20">
+                                        <ScrollArea className="h-[74vh] rounded-md border bg-muted/20">
                                             <Droppable droppableId={stage.id}>
                                                 {(provided, snapshot) => (
                                                     <div
@@ -200,7 +225,11 @@ export default function CandidatePipelinePage() {
                                                                         ref={dragProvided.innerRef}
                                                                         {...dragProvided.draggableProps}
                                                                         {...dragProvided.dragHandleProps}
-                                                                        className={`p-5 rounded-md bg-card/60 backdrop-blur-xl border border-border/40 shadow-xl shadow-black/5 cursor-grab group hover:border-primary/40 transition-all select-none ${dragSnapshot.isDragging
+                                                                        onClick={() => {
+                                                                            setSelectedCandidateId(candidate.candidateId);
+                                                                            setIsDetailsModalOpen(true);
+                                                                        }}
+                                                                        className={`p-5 rounded-md bg-card/60 backdrop-blur-xl border border-border/40 shadow-xl shadow-black/5 cursor-pointer group hover:border-primary/40 transition-all select-none ${dragSnapshot.isDragging
                                                                             ? 'shadow-2xl shadow-primary/20 border-primary/40 scale-[1.03] rotate-1 ring-2 ring-primary/20'
                                                                             : ''
                                                                             }`}
@@ -208,31 +237,32 @@ export default function CandidatePipelinePage() {
                                                                         <div className="flex items-start justify-between mb-4">
                                                                             <div className="flex items-center gap-3">
                                                                                 <Avatar className="w-10 border-2 border-primary/20 shadow-lg">
-                                                                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                                                        {candidate.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                                                                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                                                                        {candidate.name.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                                                                                     </AvatarFallback>
                                                                                 </Avatar>
                                                                                 <div>
-                                                                                    <h4
-                                                                                        className="text-sm font-bold group-hover:text-primary transition-colors cursor-pointer"
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            setSelectedCandidateId(candidate.candidateId);
-                                                                                            setIsDetailsModalOpen(true);
-                                                                                        }}
-                                                                                    >
+                                                                                    <h4 className="text-sm font-bold group-hover:text-primary transition-colors">
                                                                                         {candidate.name}
                                                                                     </h4>
                                                                                     <p className="text-[10px] text-muted-foreground opacity-40">Applied {candidate.appliedAt}</p>
                                                                                 </div>
                                                                             </div>
-                                                                            <CandidateDropdown candidate={candidate} />
+                                                                            <CandidateDropdown 
+                                                                                candidate={candidate} 
+                                                                                workspaceId={workspaceId}
+                                                                                router={router}
+                                                                                onOpenDetails={() => {
+                                                                                    setSelectedCandidateId(candidate.candidateId);
+                                                                                    setIsDetailsModalOpen(true);
+                                                                                }}
+                                                                            />
                                                                         </div>
 
                                                                         <div className="flex items-center gap-4 mt-6">
-                                                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 text-amber-500">
-                                                                                <Star size={10} className="fill-current" />
-                                                                                <span className="text-[10px]">{candidate.score}</span>
+                                                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/10 text-primary">
+                                                                                <Sparkles size={10} className="fill-current" />
+                                                                                <span className="text-[10px] font-bold">Score {candidate.score}</span>
                                                                             </div>
                                                                             <Badge variant="outline" className="text-[9px] border-border/30 opacity-40">
                                                                                 {candidate.role}
@@ -240,21 +270,45 @@ export default function CandidatePipelinePage() {
                                                                         </div>
 
                                                                         <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/10">
-                                                                            <div className="flex items-center gap-3 opacity-40">
-                                                                                <MessageSquare size={14} />
-                                                                                <Calendar size={14} />
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="icon"
+                                                                                    className="h-7 w-7 rounded-md opacity-40 hover:opacity-100 hover:text-emerald-500 hover:bg-emerald-500/10"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setSelectedCandidateId(candidate.candidateId);
+                                                                                        setIsDetailsModalOpen(true);
+                                                                                    }}
+                                                                                    title="Send WhatsApp message"
+                                                                                >
+                                                                                    <MessageSquare size={13} />
+                                                                                </Button>
+                                                                                <Button
+                                                                                    variant="ghost"
+                                                                                    size="icon"
+                                                                                    className="h-7 w-7 rounded-md opacity-40 hover:opacity-100 hover:text-amber-500 hover:bg-amber-500/10"
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setSelectedCandidateId(candidate.candidateId);
+                                                                                        setIsDetailsModalOpen(true);
+                                                                                    }}
+                                                                                    title="Scorecard & Feedback"
+                                                                                >
+                                                                                    <Star size={13} />
+                                                                                </Button>
                                                                             </div>
                                                                             <Button
                                                                                 variant="ghost"
                                                                                 size="sm"
-                                                                                className="h-7 text-[9px] opacity-0 group-hover:opacity-100 transition-all"
+                                                                                className="h-7 text-[9px] font-bold text-primary opacity-80 group-hover:opacity-100 transition-all hover:bg-primary/10"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
                                                                                     setSelectedCandidateId(candidate.candidateId);
                                                                                     setIsDetailsModalOpen(true);
                                                                                 }}
                                                                             >
-                                                                                Profile <ArrowRight size={10} className="ml-1" />
+                                                                                Copilot <ArrowRight size={10} className="ml-1" />
                                                                             </Button>
                                                                         </div>
                                                                     </div>
@@ -302,19 +356,56 @@ export default function CandidatePipelinePage() {
                     mutate();
                 }}
             />
+
+            {/* Add Candidate Modal */}
+            <CandidateModal
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
+                workspaceId={workspaceId}
+                onSuccess={mutate}
+            />
         </div>
     );
 }
 
-function CandidateDropdown({ candidate }) {
+function CandidateDropdown({ candidate, workspaceId, router, onOpenDetails }) {
     return (
-        <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 rounded-md opacity-20 hover:opacity-100"
-            onClick={(e) => e.stopPropagation()}
-        >
-            <MoreHorizontal size={14} />
-        </Button>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 rounded-md opacity-40 hover:opacity-100 group-hover:opacity-80"
+                >
+                    <MoreHorizontal size={14} />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={onOpenDetails} className="text-xs cursor-pointer">
+                    <Sparkles size={14} className="mr-2 text-primary" />
+                    AI Copilot & Drawer
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenDetails} className="text-xs cursor-pointer">
+                    <Send size={14} className="mr-2 text-emerald-500" />
+                    Send WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenDetails} className="text-xs cursor-pointer">
+                    <Star size={14} className="mr-2 text-amber-500" />
+                    Scorecard / Feedback
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onOpenDetails} className="text-xs cursor-pointer">
+                    <FileText size={14} className="mr-2 text-blue-500" />
+                    Digital Offer Builder
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                    onClick={() => router.push(`/workspace/${workspaceId}/hireflow/candidates/${candidate.candidateId}`)}
+                    className="text-xs cursor-pointer"
+                >
+                    <ExternalLink size={14} className="mr-2 opacity-60" />
+                    Full Profile Page
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

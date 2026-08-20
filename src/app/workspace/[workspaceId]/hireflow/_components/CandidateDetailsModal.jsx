@@ -19,12 +19,16 @@ import {
     AlertCircle,
     Star,
     Send,
-    Award,
     FileText,
+    FileCheck,
     ChevronLeft,
     Loader2,
     Trash2,
-    MessageSquare
+    MessageSquare,
+    ExternalLink,
+    Award,
+    Play,
+    History
 } from 'lucide-react';
 import Scorecards from './Scorecards';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
