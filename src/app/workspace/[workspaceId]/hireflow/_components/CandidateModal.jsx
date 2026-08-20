@@ -21,52 +21,53 @@ import {
  DialogTitle,
  DialogFooter,
 } from'@/components/ui/dialog';
-import { toast } from'sonner';
-import axios from'axios';
+import { toast } from 'sonner';
+import { createCandidateAction } from '../_actions/candidate-actions';
 
 export const CandidateModal = ({ isOpen, onClose, workspaceId, onSuccess }) => {
- const [isSubmitting, setIsSubmitting] = useState(false);
- const [formData, setFormData] = useState({
- name:'',
- email:'',
- phone:'',
- location:'',
- summary:'',
- skills:''
- });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        location: '',
+        summary: '',
+        skills: ''
+    });
 
- const handleSubmit = async (e) => {
- e.preventDefault();
- if (!formData.name || !formData.email) {
- toast.error("Name and Email are required");
- return;
- }
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.email) {
+            toast.error("Name and Email are required");
+            return;
+        }
 
- setIsSubmitting(true);
- try {
- const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(Boolean);
- await axios.post(`/api/workspace/${workspaceId}/ats/candidates`, {
- ...formData,
- skills: skillsArray
- });
- toast.success("Candidate added successfully");
- onSuccess?.();
- onClose();
- setFormData({
- name:'',
- email:'',
- phone:'',
- location:'',
- summary:'',
- skills:''
- });
- } catch (error) {
- console.error("Failed to add candidate:", error);
- toast.error("Failed to add candidate");
- } finally {
- setIsSubmitting(false);
- }
- };
+        setIsSubmitting(true);
+        try {
+            const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(Boolean);
+            const res = await createCandidateAction(workspaceId, {
+                ...formData,
+                skills: skillsArray
+            });
+            if (!res.success) throw new Error(res.error);
+            toast.success("Candidate added successfully");
+            onSuccess?.();
+            onClose();
+            setFormData({
+                name: '',
+                email: '',
+                phone: '',
+                location: '',
+                summary: '',
+                skills: ''
+            });
+        } catch (error) {
+            console.error("Failed to add candidate:", error);
+            toast.error(error.message || "Failed to add candidate");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
  return (
  <Dialog open={isOpen} onOpenChange={onClose}>

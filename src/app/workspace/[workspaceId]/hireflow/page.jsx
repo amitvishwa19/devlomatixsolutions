@@ -30,13 +30,9 @@ import { Progress } from '@/components/ui/progress';
 import { StatCards } from './_components/StatCards';
 import { RecentApplicants } from './_components/RecentApplicants';
 import { PipelineSummary } from './_components/PipelineSummary';
+import { getHireflowSummaryAction } from './_actions/summary-actions';
 
 import useSWR from 'swr';
-import axios from 'axios';
-
-const fetcher = url => axios.get(url).then(res => res.data);
-
-// Global Icon lookups or helpers can sit here if necessary
 
 export default function AtsDashboard() {
     const { workspaceId } = useParams();
@@ -44,12 +40,15 @@ export default function AtsDashboard() {
     const searchParams = useSearchParams();
     const activeTab = searchParams.get('tab') || 'overview';
 
-    const { data: summary, isLoading } = useSWR(`/api/workspace/${workspaceId}/ats/summary`, fetcher);
+    const { data: summary, isLoading } = useSWR(
+        workspaceId ? ['hireflow-summary', workspaceId] : null,
+        () => getHireflowSummaryAction(workspaceId).then(res => res.data)
+    );
 
     const handleTabChange = (value) => {
         const params = new URLSearchParams(searchParams);
         params.set('tab', value);
-        router.push(`/workspace/${workspaceId}/ats?${params.toString()}`);
+        router.push(`/workspace/${workspaceId}/hireflow?${params.toString()}`);
     };
 
     return (
@@ -68,7 +67,7 @@ export default function AtsDashboard() {
                         Filters
                     </Button>
                     <Button
-                        onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs/create`)}
+                        onClick={() => router.push(`/workspace/${workspaceId}/hireflow/jobs`)}
                         className="rounded-md px-6 bg-primary shadow-lg shadow-primary/20"
                     >
                         <Plus className="w-4 h-4" />
@@ -105,14 +104,14 @@ export default function AtsDashboard() {
                             <Card className="border bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 hover:border-primary/40 animate-in fade-in duration-700">
                                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                                     <CardTitle className="text-xl">Focus Positions</CardTitle>
-                                    <Button variant="ghost" size="sm" className="text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>
+                                    <Button variant="ghost" size="sm" className="text-[10px] tracking-[0.2em] opacity-40 hover:opacity-100" onClick={() => router.push(`/workspace/${workspaceId}/hireflow/jobs`)}>
                                         View All Jobs <ArrowUpRight className="ml-2 w-3 h-3" />
                                     </Button>
                                 </CardHeader>
                                 <CardContent className='border'>
                                     <div className="space-y-4">
                                         {(summary?.focusJobs || []).map((job, i) => (
-                                            <div key={i} className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10 hover:border-primary/20 transition-all cursor-pointer group" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>
+                                            <div key={i} className="flex items-center justify-between p-4 rounded-md bg-muted/20 border border-border/10 hover:border-primary/20 transition-all cursor-pointer group" onClick={() => router.push(`/workspace/${workspaceId}/hireflow/jobs`)}>
                                                 <div className="flex items-center gap-4">
                                                     <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                                         <Briefcase size={20} />
@@ -433,7 +432,7 @@ export default function AtsDashboard() {
                                                 </div>
                                                 <div className="flex items-center justify-between pt-2">
                                                     <p className="text-[10px] font-black opacity-40 uppercase tracking-widest">{job.candidates} Applicants</p>
-                                                    <Button variant="ghost" className="h-6 text-[9px] p-0 font-bold uppercase tracking-widest hover:text-primary" onClick={() => router.push(`/workspace/${workspaceId}/ats/jobs`)}>Details <ArrowUpRight className="ml-1 w-3 h-3" /></Button>
+                                                    <Button variant="ghost" className="h-6 text-[9px] p-0 font-bold uppercase tracking-widest hover:text-primary" onClick={() => router.push(`/workspace/${workspaceId}/hireflow/jobs`)}>Details <ArrowUpRight className="ml-1 w-3 h-3" /></Button>
                                                 </div>
                                             </div>
                                         </div>

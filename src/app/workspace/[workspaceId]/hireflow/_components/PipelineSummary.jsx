@@ -82,7 +82,7 @@ export const PipelineSummary = ({ stats, nextInterview }) => {
                         </div>
                     </div>
                     <Button
-                        onClick={() => router.push(`/workspace/${workspaceId}/ats/interviews/${nextInterview?.id || 'demo-session'}`)}
+                        onClick={() => router.push(`/workspace/${workspaceId}/hireflow/interviews/${nextInterview?.id || 'demo-session'}`)}
                         className="rounded-md px-6 text-[9px] bg-foreground text-background hover:bg-foreground/90 transition-all shadow-xl shadow-black/20"
                     >
                         Launch Interview Space <Play size={12} className="ml-2 fill-current" />

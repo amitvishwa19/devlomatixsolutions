@@ -34,164 +34,166 @@ import {
  FileCheck,
  Loader2,
  Trash2
-} from'lucide-react';
-import axios from'axios';
-import Scorecards from'../../_components/Scorecards';
-import { generateOfferLetter } from'@/lib/ats/pdf-generator';
-import { toast } from'sonner';
-import { Button } from'@/components/ui/button';
-import { Badge } from'@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from'@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from'@/components/ui/avatar';
-import { Progress } from'@/components/ui/progress';
-import { Separator } from'@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from"@/components/ui/tabs";
-import { Textarea } from'@/components/ui/textarea';
-import { Input } from'@/components/ui/input';
+} from 'lucide-react';
+import Scorecards from '../../_components/Scorecards';
+import { generateOfferLetter } from '@/lib/ats/pdf-generator';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { DeleteConfirmDialog } from '@/app/workspace/_components/DeleteConfirmDialog';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog';
+    getCandidateByIdAction,
+    deleteCandidateAction,
+    createCandidateNoteAction,
+    createCandidateScorecardAction,
+    aiParseResumeAction
+} from '../../_actions/candidate-actions';
+import useSWR from 'swr';
 
-import useSWR from'swr';
+export default function CandidateDetailPage() {
+    const { workspaceId, candidateId } = useParams();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState('overview');
+    const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+    const [isOfferGenerating, setIsOfferGenerating] = useState(false);
+    const [isParsing, setIsParsing] = useState(false);
+    const [isScoring, setIsScoring] = useState(false);
+    const [noteText, setNoteText] = useState("");
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
 
-const fetcher = url => axios.get(url).then(res => res.data);
+    const { data: candidateData, isLoading, mutate } = useSWR(
+        workspaceId && candidateId ? ['candidate', workspaceId, candidateId] : null,
+        () => getCandidateByIdAction(workspaceId, candidateId).then(res => res.data)
+    );
 
-export default function CandidateProfilePage() {
- const { workspaceId, candidateId } = useParams();
- const router = useRouter();
- const [activeTab, setActiveTab ] = useState('overview');
- const [isScorecardOpen, setIsScorecardOpen] = useState(false);
- const [isOfferGenerating, setIsOfferGenerating] = useState(false);
- const [isParsing, setIsParsing] = useState(false);
- const [isScoring, setIsScoring] = useState(false);
- const [noteText, setNoteText] = useState("");
- const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
- const [isDeleting, setIsDeleting] = useState(false);
+    const handleDeleteCandidate = async () => {
+        if (!candidateId) return;
+        setIsDeleting(true);
+        try {
+            const res = await deleteCandidateAction(workspaceId, candidateId);
+            if (!res.success) throw new Error(res.error);
+            toast.success("Candidate deleted successfully");
+            setIsDeleteDialogOpen(false);
+            router.push(`/workspace/${workspaceId}/hireflow/candidates`);
+        } catch (error) {
+            console.error("[DELETE_CANDIDATE_ERROR]", error);
+            toast.error(error.message || "Failed to delete candidate");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
- const { data: candidateData, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`, fetcher);
+    const handleGenerateOffer = async () => {
+        if (!candidateData) return;
+        setIsOfferGenerating(true);
+        try {
+            const data = {
+                candidateName: candidateData.name,
+                jobTitle: candidateData.applications?.[0]?.job?.title || "Position",
+                salary: "₹18,00,000 - ₹24,00,000",
+                startDate: "June 1, 2026",
+            };
+            const doc = generateOfferLetter(data);
+            doc.save(`Offer_Letter_${candidateData.name.replace(' ', '_')}.pdf`);
+            toast.success("Offer Letter generated and downloaded!");
+        } catch (error) {
+            toast.error("Failed to generate offer letter");
+            console.error(error);
+        } finally {
+            setIsOfferGenerating(false);
+        }
+    };
 
- const handleDeleteCandidate = async () => {
-    if (!candidateId) return;
-    setIsDeleting(true);
-    try {
-      await axios.delete(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`);
-      toast.success("Candidate deleted successfully");
-      setIsDeleteDialogOpen(false);
-      router.push(`/workspace/${workspaceId}/hireflow/candidates`);
-    } catch (error) {
-      console.error("[DELETE_CANDIDATE_ERROR]", error);
-      toast.error(error.response?.data?.message || "Failed to delete candidate");
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    const handleAiParse = async () => {
+        setIsParsing(true);
+        try {
+            const res = await aiParseResumeAction(workspaceId, { candidateId });
+            if (res.success) {
+                toast.success("AI Insights updated from resume!");
+                mutate();
+            } else {
+                toast.error(res.error || "AI Parsing failed");
+            }
+        } catch (error) {
+            toast.error("AI Parsing failed");
+        } finally {
+            setIsParsing(false);
+        }
+    };
 
- const handleGenerateOffer = async () => {
- if (!candidateData) return;
- setIsOfferGenerating(true);
- try {
- const data = {
- candidateName: candidateData.name,
- jobTitle: candidateData.applications?.[0]?.job?.title ||"Position",
- salary:"₹18,00,000 - ₹24,00,000",
- startDate:"June 1, 2026",
- };
- const doc = generateOfferLetter(data);
- doc.save(`Offer_Letter_${candidateData.name.replace('','_')}.pdf`);
- toast.success("Offer Letter generated and downloaded!");
- } catch (error) {
- toast.error("Failed to generate offer letter");
- console.error(error);
- } finally {
- setIsOfferGenerating(false);
- }
- };
+    if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary" /></div>;
+    if (!candidateData) return <div>Candidate not found</div>;
 
- const handleAiParse = async () => {
- setIsParsing(true);
- try {
- const res = await axios.post(`/api/workspace/${workspaceId}/ats/ai/parsing`, {
- candidateId: candidateId
- });
- if (res.data.success) {
- toast.success("AI Insights updated from resume!");
- mutate();
- }
- } catch (error) {
- toast.error("AI Parsing failed");
- } finally {
- setIsParsing(false);
- }
- };
+    const candidate = {
+        name: candidateData.name,
+        role: candidateData.applications?.[0]?.job?.title || "Candidate",
+        status: candidateData.applications?.[0]?.stage || "Applied",
+        score: candidateData.aiMatchScore ? (candidateData.aiMatchScore / 20).toFixed(1) : "N/A",
+        appliedAt: new Date(candidateData.createdAt).toLocaleDateString(),
+        email: candidateData.email,
+        phone: candidateData.phone || "N/A",
+        location: candidateData.location || "N/A",
+        summary: candidateData.aiInsights?.summary || "No summary available.",
+        skills: candidateData.skills || [],
+        aiInsights: {
+            matchingScore: candidateData.aiMatchScore || 0,
+            summary: candidateData.aiInsights?.summary || "Deep analysis pending...",
+            pros: candidateData.aiInsights?.pros || [],
+            cons: candidateData.aiInsights?.cons || []
+        },
+        experience: candidateData.experience || [],
+        education: candidateData.education || [],
+        timeline: [
+            { stage: "Applied", date: new Date(candidateData.createdAt).toLocaleDateString(), status: "completed" }
+        ],
+        scorecards: candidateData.scorecards || [],
+        notes: candidateData.notes || [],
+        communications: [],
+        resumeUrl: candidateData.resumeUrl || null
+    };
 
- if (isLoading) return <div className="flex h-screen items-center justify-center"><Loader2 className="animate-spin text-primary"/></div>;
- if (!candidateData) return <div>Candidate not found</div>;
+    const handleSubmitScorecard = async (data) => {
+        try {
+            const res = await createCandidateScorecardAction(workspaceId, {
+                candidateId,
+                applicationId: candidateData.applications?.[0]?.id,
+                scores: data.scores,
+                feedback: data.overallFeedback,
+                overallScore: Object.values(data.scores).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0) / 5,
+                recommendation: data.finalRecommendation
+            });
+            if (!res.success) throw new Error(res.error);
+            toast.success("Scorecard submitted successfully!");
+            setIsScorecardOpen(false);
+            mutate();
+        } catch (error) {
+            toast.error(error.message || "Failed to submit scorecard");
+        }
+    };
 
- const candidate = {
- name: candidateData.name,
- role: candidateData.applications?.[0]?.job?.title ||"Candidate",
- status: candidateData.applications?.[0]?.stage ||"Applied",
- score: candidateData.aiMatchScore ? (candidateData.aiMatchScore / 20).toFixed(1) :"N/A",
- appliedAt: new Date(candidateData.createdAt).toLocaleDateString(),
- email: candidateData.email,
- phone: candidateData.phone ||"N/A",
- location: candidateData.location ||"N/A",
- summary: candidateData.aiInsights?.summary ||"No summary available.",
- skills: candidateData.skills || [],
- aiInsights: {
- matchingScore: candidateData.aiMatchScore || 0,
- summary: candidateData.aiInsights?.summary ||"Deep analysis pending...",
- pros: candidateData.aiInsights?.pros || [],
- cons: candidateData.aiInsights?.cons || []
- },
- experience: candidateData.experience || [],
- education: candidateData.education || [],
- timeline: [
- { stage:"Applied", date: new Date(candidateData.createdAt).toLocaleDateString(), status:"completed"}
- ],
- scorecards: candidateData.scorecards || [],
- notes: candidateData.notes || [],
- communications: [],
- resumeUrl: candidateData.resumeUrl || null
- };
-
- const handleSubmitScorecard = async (data) => {
- try {
- await axios.post(`/api/workspace/${workspaceId}/ats/scorecards`, {
- candidateId,
- applicationId: candidateData.applications?.[0]?.id,
- scores: data.scores,
- feedback: data.overallFeedback,
- overallScore: Object.values(data.scores).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0) / 5,
- recommendation: data.finalRecommendation
- });
- toast.success("Scorecard submitted successfully!");
- setIsScorecardOpen(false);
- mutate();
- } catch (error) {
- toast.error("Failed to submit scorecard");
- }
- };
-
- const handlePostNote = async () => {
- if (!noteText.trim()) return;
- try {
- await axios.post(`/api/workspace/${workspaceId}/ats/notes`, {
- candidateId,
- text: noteText
- });
- setNoteText("");
- toast.success("Note posted!");
- mutate();
- } catch (error) {
- toast.error("Failed to post note");
- }
- };
+    const handlePostNote = async () => {
+        if (!noteText.trim()) return;
+        try {
+            const res = await createCandidateNoteAction(workspaceId, {
+                candidateId,
+                text: noteText
+            });
+            if (!res.success) throw new Error(res.error);
+            setNoteText("");
+            toast.success("Note posted!");
+            mutate();
+        } catch (error) {
+            toast.error(error.message || "Failed to post note");
+        }
+    };
 
  return (
  <div className="flex flex-col gap-8 p-8 max-w-[1400px] mx-auto animate-in fade-in duration-700">

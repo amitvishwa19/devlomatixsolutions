@@ -64,43 +64,45 @@ import {
 } from "@/components/ui/table";
 import { CandidateModal } from '../_components/CandidateModal';
 import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
+import { getCandidatesAction, deleteCandidateAction } from '../_actions/candidate-actions';
 import { toast } from 'sonner';
 
 import useSWR from 'swr';
-import axios from 'axios';
-
-const fetcher = url => axios.get(url).then(res => res.data);
 
 export default function TalentDatabasePage() {
- const { workspaceId } = useParams();
- const router = useRouter();
- const [searchQuery, setSearchQuery] = useState("");
- const [selectedDepartment, setSelectedDepartment] = useState("all");
- const [selectedStatus, setSelectedStatus] = useState("all");
- const [viewMode, setViewMode] = useState("list");
+    const { workspaceId } = useParams();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedDepartment, setSelectedDepartment] = useState("all");
+    const [selectedStatus, setSelectedStatus] = useState("all");
+    const [viewMode, setViewMode] = useState("list");
 
- const { data: candidates, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/candidates`, fetcher);
- const [isAddModalOpen, setIsAddModalOpen] = useState(false);
- const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
- const [selectedCandidateId, setSelectedCandidateId] = useState(null);
- const [candidateToDelete, setCandidateToDelete] = useState(null);
- const [isDeleting, setIsDeleting] = useState(false);
+    const { data: candidates, isLoading, mutate } = useSWR(
+        workspaceId ? ['candidates', workspaceId] : null,
+        () => getCandidatesAction(workspaceId).then(res => res.data)
+    );
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+    const [candidateToDelete, setCandidateToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
- const handleConfirmDelete = async () => {
-     if (!candidateToDelete) return;
-     setIsDeleting(true);
-     try {
-         await axios.delete(`/api/workspace/${workspaceId}/ats/candidates/${candidateToDelete.id}`);
-         toast.success("Candidate deleted successfully");
-         setCandidateToDelete(null);
-         mutate();
-     } catch (error) {
-         console.error("[DELETE_CANDIDATE_ERROR]", error);
-         toast.error(error.response?.data?.message || "Failed to delete candidate");
-     } finally {
-         setIsDeleting(false);
-     }
- };
+    const handleConfirmDelete = async () => {
+        if (!candidateToDelete) return;
+        setIsDeleting(true);
+        try {
+            const res = await deleteCandidateAction(workspaceId, candidateToDelete.id);
+            if (!res.success) throw new Error(res.error);
+            toast.success("Candidate deleted successfully");
+            setCandidateToDelete(null);
+            mutate();
+        } catch (error) {
+            console.error("[DELETE_CANDIDATE_ERROR]", error);
+            toast.error(error.message || "Failed to delete candidate");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
 
  const talents = candidates ? candidates.map(c => ({

@@ -41,7 +41,6 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { toast } from 'sonner';
-import axios from 'axios';
 import TipTap from '@/components/global/TipTap';
 import JoditRichEditor from '@/components/global/JoditRichEditor';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -54,12 +53,12 @@ import {
     DialogFooter
 } from '@/components/ui/dialog';
 import useSWR from 'swr';
-
-const fetcher = url => axios.get(url).then(res => res.data);
+import { getDepartmentsAction, createDepartmentAction } from '../../../departments/_actions/department-actions';
+import { createJobAction, updateJobAction } from '../../../_actions/job-actions';
 
 const JOB_TYPES = [
-    { value: 'Full-Time', label: 'Full-time' },
-    { value: 'Part-Time', label: 'Part-time' },
+    { value: 'Full-time', label: 'Full-time' },
+    { value: 'Part-time', label: 'Part-time' },
     { value: 'Contract', label: 'Contract' },
     { value: 'Internship', label: 'Internship' },
     { value: 'Remote', label: 'Remote' },
@@ -73,8 +72,8 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
 
     // Data Fetching
     const { data: departments, isLoading: isLoadingDepts, mutate: mutateDepts } = useSWR(
-        open ? `/api/workspace/${workspaceId}/ats/departments` : null,
-        fetcher
+        open && workspaceId ? ['departments', workspaceId] : null,
+        () => getDepartmentsAction(workspaceId).then(res => res.data)
     );
 
     // Form State
@@ -107,9 +106,10 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
 
         setIsCreatingDept(true);
         try {
-            const res = await axios.post(`/api/workspace/${workspaceId}/ats/departments`, {
+            const res = await createDepartmentAction(workspaceId, {
                 name: targetName
             });
+            if (!res.success) throw new Error(res.error);
 
             toast.success(`Department "${targetName}" created & selected!`);
             const newDept = res.data;
@@ -121,8 +121,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
             setIsAddDeptModalOpen(false);
         } catch (error) {
             console.error("Failed to create department:", error);
-            const errMsg = error.response?.data?.message || error.response?.data?.error || "Failed to create department";
-            toast.error(errMsg);
+            toast.error(error.message || "Failed to create department");
         } finally {
             setIsCreatingDept(false);
         }
@@ -169,19 +168,20 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
             };
 
             if (isEdit && data?.id) {
-                await axios.put(`/api/workspace/${workspaceId}/ats/jobs/${data.id}`, payload);
+                const res = await updateJobAction(workspaceId, data.id, payload);
+                if (!res.success) throw new Error(res.error);
                 toast.success("Job position updated successfully!");
             } else {
-                await axios.post(`/api/workspace/${workspaceId}/ats/jobs`, payload);
+                const res = await createJobAction(workspaceId, payload);
+                if (!res.success) throw new Error(res.error);
                 toast.success("Job position published successfully!");
             }
 
             setOpen(false);
             if (onSuccess) onSuccess();
         } catch (error) {
-            console.error("Failed to save job:", error.response?.data || error);
-            const errMsg = error.response?.data?.message || error.response?.data?.error || "Failed to save job position";
-            toast.error(errMsg);
+            console.error("Failed to save job:", error);
+            toast.error(error.message || "Failed to save job position");
         } finally {
             setIsSubmitting(false);
         }

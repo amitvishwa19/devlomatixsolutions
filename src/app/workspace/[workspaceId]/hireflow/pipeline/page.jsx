@@ -21,12 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
+import { getJobByIdAction } from '../_actions/job-actions';
+import { getApplicationsAction, updateApplicationStageAction } from '../_actions/pipeline-actions';
 import { toast } from 'sonner';
 
 import useSWR from 'swr';
-import axios from 'axios';
-
-const fetcher = url => axios.get(url).then(res => res.data);
 
 const STAGE_MAP = [
     { id: 'APPLIED', title: 'Applied', color: 'bg-blue-500', accent: 'border-blue-500/30' },
@@ -46,14 +46,19 @@ export default function CandidatePipelinePage() {
     const [isMounted, setIsMounted] = useState(false);
     useEffect(() => { setIsMounted(true); }, []);
 
-    const { data: job } = useSWR(jobId ? `/api/workspace/${workspaceId}/ats/jobs/${jobId}` : null, fetcher);
+    const { data: job } = useSWR(
+        jobId && workspaceId ? ['job', workspaceId, jobId] : null,
+        () => getJobByIdAction(workspaceId, jobId).then(res => res.data)
+    );
     const { data: applications, mutate } = useSWR(
-        `/api/workspace/${workspaceId}/ats/applications${jobId ? `?jobId=${jobId}` : ''}`,
-        fetcher
+        workspaceId ? ['applications', workspaceId, jobId] : null,
+        () => getApplicationsAction(workspaceId, jobId).then(res => res.data)
     );
 
     // Local optimistic state for instant drag feedback
     const [localApps, setLocalApps] = useState([]);
+    const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
     // Sync SWR data into local state
     useEffect(() => {
@@ -98,10 +103,8 @@ export default function CandidatePipelinePage() {
             toast.success(`Moved to ${stageLabel}`, { duration: 2000 });
 
             try {
-                await axios.put(`/api/workspace/${workspaceId}/ats/applications`, {
-                    applicationId: draggableId,
-                    stage: newStage
-                });
+                const res = await updateApplicationStageAction(workspaceId, draggableId, newStage);
+                if (!res.success) throw new Error(res.error);
                 mutate();
             } catch (error) {
                 console.error("Failed to update stage:", error);
@@ -214,7 +217,8 @@ export default function CandidatePipelinePage() {
                                                                                         className="text-sm font-bold group-hover:text-primary transition-colors cursor-pointer"
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
-                                                                                            router.push(`/workspace/${workspaceId}/hireflow/candidates/${candidate.candidateId}`);
+                                                                                            setSelectedCandidateId(candidate.candidateId);
+                                                                                            setIsDetailsModalOpen(true);
                                                                                         }}
                                                                                     >
                                                                                         {candidate.name}
@@ -246,7 +250,8 @@ export default function CandidatePipelinePage() {
                                                                                 className="h-7 text-[9px] opacity-0 group-hover:opacity-100 transition-all"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
-                                                                                    router.push(`/workspace/${workspaceId}/hireflow/candidates/${candidate.candidateId}`);
+                                                                                    setSelectedCandidateId(candidate.candidateId);
+                                                                                    setIsDetailsModalOpen(true);
                                                                                 }}
                                                                             >
                                                                                 Profile <ArrowRight size={10} className="ml-1" />
@@ -281,6 +286,22 @@ export default function CandidatePipelinePage() {
                     <p className="text-xs text-muted-foreground opacity-40">Loading pipeline...</p>
                 </div>
             )}
+
+            {/* Candidate Details Drawer Modal */}
+            <CandidateDetailsModal
+                isOpen={isDetailsModalOpen}
+                onClose={() => {
+                    setIsDetailsModalOpen(false);
+                    setSelectedCandidateId(null);
+                }}
+                candidateId={selectedCandidateId}
+                workspaceId={workspaceId}
+                onDeleteSuccess={() => {
+                    setIsDetailsModalOpen(false);
+                    setSelectedCandidateId(null);
+                    mutate();
+                }}
+            />
         </div>
     );
 }

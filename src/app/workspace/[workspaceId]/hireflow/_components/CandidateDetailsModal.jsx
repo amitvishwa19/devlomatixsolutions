@@ -3,13 +3,29 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    ChevronLeft, Star, Calendar, MessageSquare, Mail, Phone, MapPin, 
-    Download, Share2, MoreHorizontal, Sparkles, CheckCircle2, Clock, 
-    Briefcase, GraduationCap, ExternalLink, ChevronRight, Play, User, 
-    Send, ThumbsUp, ThumbsDown, Award, Plus, FileText, History, 
-    AlertCircle, FileCheck, Loader2, Trash2
+    X, 
+    User, 
+    Mail, 
+    Phone, 
+    MapPin, 
+    Calendar,
+    Briefcase,
+    GraduationCap,
+    Download,
+    Share2,
+    Sparkles,
+    CheckCircle2,
+    Clock,
+    AlertCircle,
+    Star,
+    Send,
+    Award,
+    FileText,
+    ChevronLeft,
+    Loader2,
+    Trash2,
+    MessageSquare
 } from 'lucide-react';
-import axios from 'axios';
 import Scorecards from './Scorecards';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
 import { toast } from 'sonner';
@@ -36,30 +52,115 @@ import {
     SheetHeader,
     SheetTitle
 } from '@/components/ui/sheet';
+import { OfferBuilderModal } from './OfferBuilderModal';
+import {
+    getCandidateByIdAction,
+    deleteCandidateAction,
+    createCandidateNoteAction,
+    createCandidateScorecardAction,
+    aiParseResumeAction,
+    sendCandidateWhatsAppAction,
+    getCandidateCommunicationsAction,
+    generateAiInterviewQuestionsAction
+} from '../_actions/candidate-actions';
 
 import useSWR from 'swr';
-
-const fetcher = url => axios.get(url).then(res => res.data);
 
 export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceId, onDeleteSuccess }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [isScorecardOpen, setIsScorecardOpen] = useState(false);
-    const [isOfferGenerating, setIsOfferGenerating] = useState(false);
+    const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
     const [isScoring, setIsScoring] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Communication & WhatsApp State
+    const [commChannel, setCommChannel] = useState('whatsapp');
+    const [whatsAppText, setWhatsAppText] = useState('');
+    const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+    const [communications, setCommunications] = useState([]);
+    const [isLoadingComms, setIsLoadingComms] = useState(false);
+
+    // AI Interview Questions State
+    const [aiQuestions, setAiQuestions] = useState([]);
+    const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+
     const { data: candidateData, isLoading, mutate } = useSWR(
-        candidateId && isOpen ? `/api/workspace/${workspaceId}/ats/candidates/${candidateId}` : null, 
-        fetcher
+        candidateId && isOpen && workspaceId ? ['candidate', workspaceId, candidateId] : null, 
+        () => getCandidateByIdAction(workspaceId, candidateId).then(res => res.data)
     );
+
+    const loadCommunications = async () => {
+        if (!candidateId || !workspaceId) return;
+        setIsLoadingComms(true);
+        try {
+            const res = await getCandidateCommunicationsAction({ workspaceId, candidateId });
+            if (res.success) {
+                setCommunications(res.communications || []);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsLoadingComms(false);
+        }
+    };
+
+    const handleSendWhatsApp = async () => {
+        if (!whatsAppText.trim()) {
+            toast.error("Please enter a message");
+            return;
+        }
+        setIsSendingWhatsApp(true);
+        try {
+            const res = await sendCandidateWhatsAppAction({
+                workspaceId,
+                candidateId,
+                text: whatsAppText.trim()
+            });
+            if (res.success) {
+                toast.success("WhatsApp message sent successfully!");
+                setWhatsAppText('');
+                loadCommunications();
+            } else {
+                toast.error(res.error || "Failed to send WhatsApp message");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to send WhatsApp message");
+        } finally {
+            setIsSendingWhatsApp(false);
+        }
+    };
+
+    const handleGenerateAiQuestions = async () => {
+        setIsGeneratingQuestions(true);
+        try {
+            const res = await generateAiInterviewQuestionsAction({
+                workspaceId,
+                candidateId,
+                jobId: candidateData?.applications?.[0]?.jobId
+            });
+            if (res.success && res.questions) {
+                setAiQuestions(res.questions);
+                toast.success("AI Interview Questions generated!");
+            } else {
+                toast.error(res.error || "Failed to generate AI questions");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Error generating interview questions");
+        } finally {
+            setIsGeneratingQuestions(false);
+        }
+    };
 
     const handleDeleteCandidate = async () => {
         if (!candidateId) return;
         setIsDeleting(true);
         try {
-            await axios.delete(`/api/workspace/${workspaceId}/ats/candidates/${candidateId}`);
+            const res = await deleteCandidateAction(workspaceId, candidateId);
+            if (!res.success) throw new Error(res.error);
             toast.success("Candidate deleted successfully");
             setIsDeleteDialogOpen(false);
             if (onDeleteSuccess) {
@@ -69,42 +170,21 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
             }
         } catch (error) {
             console.error("[DELETE_CANDIDATE_ERROR]", error);
-            toast.error(error.response?.data?.message || "Failed to delete candidate");
+            toast.error(error.message || "Failed to delete candidate");
         } finally {
             setIsDeleting(false);
-        }
-    };
-
-    const handleGenerateOffer = async () => {
-        if (!candidateData) return;
-        setIsOfferGenerating(true);
-        try {
-            const data = {
-                candidateName: candidateData.name,
-                jobTitle: candidateData.applications?.[0]?.job?.title || "Position",
-                salary: "₹18,00,000 - ₹24,00,000",
-                startDate: "June 1, 2026",
-            };
-            const doc = generateOfferLetter(data);
-            doc.save(`Offer_Letter_${candidateData.name.replace(' ', '_')}.pdf`);
-            toast.success("Offer Letter generated and downloaded!");
-        } catch (error) {
-            toast.error("Failed to generate offer letter");
-            console.error(error);
-        } finally {
-            setIsOfferGenerating(false);
         }
     };
 
     const handleAiParse = async () => {
         setIsParsing(true);
         try {
-            const res = await axios.post(`/api/workspace/${workspaceId}/ats/ai/parsing`, {
-                candidateId: candidateId
-            });
-            if (res.data.success) {
+            const res = await aiParseResumeAction(workspaceId, { candidateId });
+            if (res.success) {
                 toast.success("AI Insights updated from resume!");
                 mutate();
+            } else {
+                toast.error(res.error || "AI Parsing failed");
             }
         } catch (error) {
             toast.error("AI Parsing failed");
@@ -117,7 +197,7 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
 
     const handleSubmitScorecard = async (data) => {
         try {
-            await axios.post(`/api/workspace/${workspaceId}/ats/scorecards`, {
+            const res = await createCandidateScorecardAction(workspaceId, {
                 candidateId,
                 applicationId: candidateData.applications?.[0]?.id,
                 scores: data.scores,
@@ -125,26 +205,28 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                 overallScore: Object.values(data.scores).reduce((a, b) => (Number(a) || 0) + (Number(b) || 0), 0) / 5,
                 recommendation: data.finalRecommendation
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Scorecard submitted successfully!");
             setIsScorecardOpen(false);
             mutate();
         } catch (error) {
-            toast.error("Failed to submit scorecard");
+            toast.error(error.message || "Failed to submit scorecard");
         }
     };
 
     const handlePostNote = async () => {
         if (!noteText.trim()) return;
         try {
-            await axios.post(`/api/workspace/${workspaceId}/ats/notes`, {
+            const res = await createCandidateNoteAction(workspaceId, {
                 candidateId,
                 text: noteText
             });
+            if (!res.success) throw new Error(res.error);
             setNoteText("");
             toast.success("Note posted!");
             mutate();
         } catch (error) {
-            toast.error("Failed to post note");
+            toast.error(error.message || "Failed to post note");
         }
     };
 
@@ -197,11 +279,10 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                 </Button>
                                 <Separator orientation="vertical" className="h-6" />
                                 <Button 
-                                    disabled={isOfferGenerating}
-                                    onClick={handleGenerateOffer}
+                                    onClick={() => setIsOfferModalOpen(true)}
                                     className="rounded-md px-6 text-[10px] bg-primary shadow-lg shadow-primary/20"
                                 >
-                                    {isOfferGenerating ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : <FileCheck className="w-3 h-3 mr-2" />}
+                                    <FileCheck className="w-3 h-3 mr-2" />
                                     Generate Offer
                                 </Button>
                                 <Button 
@@ -454,21 +535,66 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="space-y-8">
-                                            <Card className="border-border/40 bg-primary/5 backdrop-blur-xl rounded-md p-8 border-primary/20 text-center space-y-6 shadow-xl shadow-primary/5">
-                                                <Award className="w-12 h-12 text-primary mx-auto opacity-40" />
-                                                <div className="space-y-2">
-                                                    <h3 className="text-xl">Structured Feedback</h3>
+                                        <div className="space-y-6">
+                                            <Card className="border-border/40 bg-primary/5 backdrop-blur-xl rounded-md p-6 border-primary/20 text-center space-y-4 shadow-xl shadow-primary/5">
+                                                <Award className="w-10 h-10 text-primary mx-auto opacity-60" />
+                                                <div className="space-y-1">
+                                                    <h3 className="text-base font-bold">Structured Feedback</h3>
                                                     <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                                                        Ensure unbiased hiring by completing the structured scorecard for this candidate's latest round.
+                                                        Ensure unbiased hiring by completing the structured scorecard for this round.
                                                     </p>
                                                 </div>
                                                 <Button 
                                                     onClick={() => setIsScorecardOpen(true)}
-                                                    className="w-full h-12 rounded-md text-[10px] bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
+                                                    className="w-full h-10 rounded-md text-xs font-bold bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all"
                                                 >
                                                     Launch Scorecard
                                                 </Button>
+                                            </Card>
+
+                                            {/* AI Interview Questions Copilot */}
+                                            <Card className="border-border/40 bg-card/40 backdrop-blur-xl rounded-md p-6 border-border/40 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <Sparkles className="w-4 h-4 text-primary" />
+                                                        <h4 className="text-xs font-bold">AI Interview Questions</h4>
+                                                    </div>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={handleGenerateAiQuestions}
+                                                        disabled={isGeneratingQuestions}
+                                                        className="h-7 text-[10px] font-bold bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
+                                                    >
+                                                        {isGeneratingQuestions ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                                                        Generate
+                                                    </Button>
+                                                </div>
+                                                
+                                                {aiQuestions.length > 0 ? (
+                                                    <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+                                                        {aiQuestions.map((q, idx) => (
+                                                            <div key={idx} className="p-3 rounded-md bg-muted/30 border border-border/20 space-y-1.5 text-left">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <Badge variant="outline" className="text-[9px] font-bold border-primary/30 text-primary">
+                                                                        {q.category}
+                                                                    </Badge>
+                                                                    <Badge variant="secondary" className="text-[9px] font-bold">
+                                                                        {q.difficulty}
+                                                                    </Badge>
+                                                                </div>
+                                                                <p className="text-xs font-semibold text-foreground/90">{q.question}</p>
+                                                                {q.objective && (
+                                                                    <p className="text-[10px] text-muted-foreground"><span className="font-bold text-foreground/60">Objective:</span> {q.objective}</p>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-[11px] text-muted-foreground/60 italic text-center py-2">
+                                                        Click Generate to get tailored interview questions based on candidate resume and job requirements.
+                                                    </p>
+                                                )}
                                             </Card>
                                         </div>
                                     </div>
@@ -479,85 +605,150 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                     <div className="lg:col-span-2 space-y-6">
                                         <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
-                                            <CardHeader className="p-8 pb-4 border-b border-border/10">
-                                                <CardTitle className="text-lg">New Message</CardTitle>
+                                            <CardHeader className="p-6 pb-3 border-b border-border/10">
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-base font-bold">Candidate Outreach</CardTitle>
+                                                    <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-md border border-border/20">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setCommChannel('whatsapp')}
+                                                            className={`h-7 px-3 text-xs font-bold rounded-md transition-all ${commChannel === 'whatsapp' ? 'bg-emerald-500 text-white shadow-sm' : 'text-muted-foreground'}`}
+                                                        >
+                                                            <MessageSquare size={13} className="mr-1.5" /> WhatsApp
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => setCommChannel('email')}
+                                                            className={`h-7 px-3 text-xs font-bold rounded-md transition-all ${commChannel === 'email' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground'}`}
+                                                        >
+                                                            <Mail size={13} className="mr-1.5" /> Email
+                                                        </Button>
+                                                    </div>
+                                                </div>
                                             </CardHeader>
-                                            <CardContent className="p-8 space-y-6">
-                                                <div className="space-y-2">
-                                                    <p className="text-[10px] opacity-40">Recipient</p>
-                                                    <Input value={candidateData.email} readOnly className="h-12 rounded-md bg-muted/20 border-border/20 font-bold" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <p className="text-[10px] opacity-40">Subject</p>
-                                                    <Input placeholder="Enter email subject..." className="h-12 rounded-md bg-muted/20 border-border/20 font-bold" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <p className="text-[10px] opacity-40">Message Body</p>
-                                                        <Button variant="ghost" className="h-6 text-[9px] text-primary p-0">
-                                                            Use AI Template
-                                                        </Button>
-                                                    </div>
-                                                    <Textarea 
-                                                        placeholder="Write your message here..."
-                                                        className="min-h-[250px] rounded-md bg-muted/20 border-border/20 font-medium text-xs p-6"
-                                                    />
-                                                </div>
-                                                <div className="flex items-center justify-between pt-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <Button variant="outline" size="icon" className="w-10 rounded-md border-border/20">
-                                                            <Plus size={16} />
-                                                        </Button>
-                                                        <Button variant="outline" size="icon" className="w-10 rounded-md border-border/20">
-                                                            <FileText size={16} />
-                                                        </Button>
-                                                    </div>
-                                                    <Button className="h-12 px-8 rounded-md bg-primary text-[10px] shadow-lg shadow-primary/20">
-                                                        Send Email <Send size={14} className="ml-2" />
-                                                    </Button>
-                                                </div>
+                                            <CardContent className="p-6 space-y-4">
+                                                {commChannel === 'whatsapp' ? (
+                                                    <>
+                                                        <div className="flex items-center justify-between p-3 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                                            <div className="flex items-center gap-2">
+                                                                <Phone className="w-4 h-4 text-emerald-500" />
+                                                                <span className="text-xs font-bold text-foreground">{candidateData.phone || "No phone number available"}</span>
+                                                            </div>
+                                                            <Badge className="bg-emerald-500 text-white text-[9px]">KonnectX Cloud API</Badge>
+                                                        </div>
+
+                                                        {/* Quick Message Templates */}
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Quick Templates</p>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => setWhatsAppText(`Hi ${candidateData.name}, we loved your profile for ${candidateData.applications?.[0]?.job?.title || 'the open role'} and would like to schedule an interview. Please let us know your availability this week!`)}
+                                                                    className="h-7 text-[10px] rounded-md border-border/30 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+                                                                >
+                                                                    📅 Interview Invite
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => setWhatsAppText(`Hello ${candidateData.name}, congratulations! Your application for ${candidateData.applications?.[0]?.job?.title || 'the role'} has been shortlisted for the next evaluation round.`)}
+                                                                    className="h-7 text-[10px] rounded-md border-border/30 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+                                                                >
+                                                                    ✨ Shortlisted
+                                                                </Button>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => setWhatsAppText(`Hi ${candidateData.name}, our hiring team is preparing your official offer letter for ${candidateData.applications?.[0]?.job?.title || 'the role'}. We will share the document shortly.`)}
+                                                                    className="h-7 text-[10px] rounded-md border-border/30 hover:border-emerald-500/40 hover:bg-emerald-500/5"
+                                                                >
+                                                                    🎉 Offer Discussion
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-1.5">
+                                                            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">WhatsApp Message Body</p>
+                                                            <Textarea 
+                                                                value={whatsAppText}
+                                                                onChange={(e) => setWhatsAppText(e.target.value)}
+                                                                placeholder="Type your WhatsApp message..."
+                                                                className="min-h-[160px] rounded-md bg-muted/20 border-border/30 font-medium text-xs p-4"
+                                                            />
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-2">
+                                                            <p className="text-[10px] text-muted-foreground">Direct 2-way message synced to KonnectX</p>
+                                                            <Button 
+                                                                onClick={handleSendWhatsApp}
+                                                                disabled={isSendingWhatsApp || !candidateData.phone}
+                                                                className="h-10 px-6 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-lg shadow-emerald-500/20"
+                                                            >
+                                                                {isSendingWhatsApp ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Send size={13} className="mr-1.5" />}
+                                                                Send WhatsApp
+                                                            </Button>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] opacity-40">Recipient</p>
+                                                            <Input value={candidateData.email} readOnly className="h-10 rounded-md bg-muted/20 border-border/20 font-bold text-xs" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] opacity-40">Subject</p>
+                                                            <Input placeholder="Enter email subject..." className="h-10 rounded-md bg-muted/20 border-border/20 font-bold text-xs" />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <p className="text-[10px] opacity-40">Email Body</p>
+                                                            <Textarea 
+                                                                placeholder="Write your email message here..."
+                                                                className="min-h-[160px] rounded-md bg-muted/20 border-border/20 font-medium text-xs p-4"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-center justify-end pt-2">
+                                                            <Button className="h-10 px-6 rounded-md bg-primary text-xs font-bold shadow-lg shadow-primary/20">
+                                                                Send Email <Send size={13} className="ml-1.5" />
+                                                            </Button>
+                                                        </div>
+                                                    </>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     </div>
 
                                     <div className="space-y-6">
                                         <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
-                                            <CardHeader>
-                                                <CardTitle className="text-[10px] opacity-40">Communication History</CardTitle>
+                                            <CardHeader className="p-6 pb-2">
+                                                <div className="flex items-center justify-between">
+                                                    <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Message History</CardTitle>
+                                                    <Button variant="ghost" size="sm" onClick={loadCommunications} className="h-6 text-[10px] p-0">
+                                                        Refresh
+                                                    </Button>
+                                                </div>
                                             </CardHeader>
-                                            <CardContent className="p-8 pt-0 space-y-4">
-                                                {(candidateData.communications || []).map((comm, i) => (
-                                                    <div key={i} className="p-4 rounded-md bg-muted/10 border border-border/10 flex items-center justify-between group cursor-pointer hover:bg-primary/5 hover:border-primary/20 transition-all">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary">
-                                                                <Mail size={14} />
+                                            <CardContent className="p-6 pt-2 space-y-3 max-h-[360px] overflow-y-auto">
+                                                {communications.length > 0 ? (
+                                                    communications.map((comm) => (
+                                                        <div key={comm.id} className="p-3 rounded-md bg-muted/20 border border-border/20 space-y-1">
+                                                            <div className="flex items-center justify-between text-[10px]">
+                                                                <Badge className={comm.direction === 'OUTBOUND' ? 'bg-primary/10 text-primary border-primary/20 text-[9px]' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px]'}>
+                                                                    {comm.direction === 'OUTBOUND' ? 'Outgoing' : 'Incoming'} ({comm.channel})
+                                                                </Badge>
+                                                                <span className="text-muted-foreground opacity-60 text-[9px]">{comm.date}</span>
                                                             </div>
-                                                            <div>
-                                                                <p className="text-xs font-bold">{comm.subject}</p>
-                                                                <p className="text-[9px] opacity-40">{comm.date}</p>
-                                                            </div>
+                                                            <p className="text-xs font-medium text-foreground/90 mt-1 whitespace-pre-wrap">{comm.body}</p>
                                                         </div>
-                                                        <ChevronRight size={14} className="opacity-20 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                                                    </div>
-                                                ))}
-                                                {(!candidateData.communications || candidateData.communications.length === 0) && (
-                                                    <p className="text-[10px] font-bold text-center opacity-20 italic pt-4">No older messages encrypted.</p>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-[11px] text-muted-foreground/50 italic text-center py-6">
+                                                        No recent communications logged.
+                                                    </p>
                                                 )}
                                             </CardContent>
-                                        </Card>
-
-                                        {/* Nurture Call to Action */}
-                                        <Card className="border-border/40 bg-emerald-500/5 backdrop-blur-xl rounded-md p-8 border-emerald-500/20 text-center space-y-6">
-                                            <Sparkles className="w-12 h-12 text-emerald-500 mx-auto opacity-40" />
-                                            <div className="space-y-2">
-                                                <h3 className="text-xl">AI Nurture</h3>
-                                                <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                                                    Send a personalized AI-generated update to keep the candidate engaged.
-                                                </p>
-                                            </div>
-                                            <Button className="w-full h-12 rounded-md text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
-                                                Send Nurture Update
-                                            </Button>
                                         </Card>
                                     </div>
                                 </div>
@@ -705,6 +896,14 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+
+                {/* Interactive Offer Builder Modal */}
+                <OfferBuilderModal
+                    isOpen={isOfferModalOpen}
+                    onClose={() => setIsOfferModalOpen(false)}
+                    candidate={candidateData}
+                    workspaceId={workspaceId}
+                />
             </SheetContent>
         </Sheet>
     );

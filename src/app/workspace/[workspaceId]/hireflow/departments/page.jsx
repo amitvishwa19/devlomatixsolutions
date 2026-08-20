@@ -36,14 +36,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
 import useSWR from 'swr';
-import axios from 'axios';
-import { deleteDepartmentAction } from './_actions/department-actions';
-
-const fetcher = url => axios.get(url).then(res => res.data);
+import { getDepartmentsAction, createDepartmentAction, deleteDepartmentAction } from "./_actions/department-actions";
 
 export default function DepartmentsPage() {
   const { workspaceId } = useParams();
-  const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -56,8 +52,8 @@ export default function DepartmentsPage() {
   const [description, setDescription] = useState("");
 
   const { data: departments, error, isLoading, mutate } = useSWR(
-    `/api/workspace/${workspaceId}/ats/departments`,
-    fetcher
+    workspaceId ? ['departments', workspaceId] : null,
+    () => getDepartmentsAction(workspaceId).then(res => res.data)
   );
 
   const handleCreate = async () => {
@@ -68,10 +64,11 @@ export default function DepartmentsPage() {
 
     setIsSubmitting(true);
     try {
-      await axios.post(`/api/workspace/${workspaceId}/ats/departments`, {
+      const res = await createDepartmentAction(workspaceId, {
         name,
         description
       });
+      if (!res.success) throw new Error(res.error);
       toast.success("Department created successfully!");
       setIsDialogOpen(false);
       setName("");
@@ -79,7 +76,7 @@ export default function DepartmentsPage() {
       mutate();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "Failed to create department");
+      toast.error(err.message || "Failed to create department");
     } finally {
       setIsSubmitting(false);
     }

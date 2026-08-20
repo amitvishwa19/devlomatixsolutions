@@ -29,12 +29,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import useSWR from 'swr';
-import axios from 'axios';
 import JobCreateSheet from './components/JobCreateSheet';
+import { getJobsAction, updateJobAction } from '../_actions/job-actions';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
-const fetcher = url => axios.get(url).then(res => res.data);
 
 export default function JobManagementPage() {
     const { workspaceId } = useParams();
@@ -47,7 +45,10 @@ export default function JobManagementPage() {
     const [selectedJob, setSelectedJob] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
 
-    const { data: jobs, isLoading, mutate } = useSWR(`/api/workspace/${workspaceId}/ats/jobs`, fetcher);
+    const { data: jobs, isLoading, mutate } = useSWR(
+        workspaceId ? ['jobs', workspaceId] : null,
+        () => getJobsAction(workspaceId).then(res => res.data)
+    );
 
     const displayJobs = (jobs || []).filter(job =>
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -56,13 +57,14 @@ export default function JobManagementPage() {
 
     const handleClosePosition = async (jobId) => {
         try {
-            await axios.put(`/api/workspace/${workspaceId}/ats/jobs/${jobId}`, {
+            const res = await updateJobAction(workspaceId, jobId, {
                 status: 'CLOSED'
             });
+            if (!res.success) throw new Error(res.error);
             toast.success("Position closed successfully");
             mutate();
         } catch (error) {
-            toast.error("Failed to close position");
+            toast.error(error.message || "Failed to close position");
         }
     };
 
@@ -116,7 +118,7 @@ export default function JobManagementPage() {
                 <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
-                        onClick={() => router.push(`/workspace/${workspaceId}/ats/departments`)}
+                        onClick={() => router.push(`/workspace/${workspaceId}/hireflow/departments`)}
                         className="rounded-md px-6 font-bold  "
                     >
                         <Building2 className="w-4 h-4 mr-2 opacity-50" />
@@ -152,7 +154,7 @@ export default function JobManagementPage() {
                     <Button
                         variant="ghost"
                         className="rounded-md px-4 text-xs font-bold gap-2"
-                        onClick={() => router.push(`/workspace/${workspaceId}/ats/departments`)}
+                        onClick={() => router.push(`/workspace/${workspaceId}/hireflow/departments`)}
                     >
                         <Filter size={14} className="opacity-40" />
                         Departments
@@ -255,7 +257,7 @@ export default function JobManagementPage() {
                                                         <Button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                router.push(`/workspace/${workspaceId}/ats/pipeline?jobId=${job.id}`)
+                                                                router.push(`/workspace/${workspaceId}/hireflow/pipeline?jobId=${job.id}`)
                                                             }}
                                                             size="sm"
                                                             className="h-8 px-4 rounded-md bg-primary text-primary-foreground text-[9px]    shadow-lg shadow-primary/20 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100"
@@ -333,7 +335,7 @@ export default function JobManagementPage() {
                                     onClick={(e) => {
                                         // Prevent redirect if clicking on a button or menu item
                                         if (e.target.closest('button') || e.target.closest('[role="menuitem"]')) return;
-                                        router.push(`/workspace/${workspaceId}/ats/jobs/${job.id}`)
+                                        router.push(`/workspace/${workspaceId}/hireflow/jobs/${job.id}`)
                                     }}
                                 >
                                     <div className="flex items-start justify-between">
@@ -413,7 +415,7 @@ export default function JobManagementPage() {
                                     <Button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            router.push(`/workspace/${workspaceId}/ats/pipeline?jobId=${job.id}`)
+                                            router.push(`/workspace/${workspaceId}/hireflow/pipeline?jobId=${job.id}`)
                                         }}
                                         className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-[10px]    shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
                                     >
