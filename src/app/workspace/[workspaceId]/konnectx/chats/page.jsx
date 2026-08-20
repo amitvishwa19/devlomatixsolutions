@@ -21,7 +21,8 @@ import {
     Loader2,
     Sparkles,
     MessageSquare,
-    Trash2, Share2, UserPlus, Eye, Mail, Tag, Info, X
+    Trash2, Share2, UserPlus, Eye, Mail, Tag, Info, X,
+    RefreshCw
 } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import { useAction } from "@/hooks/use-action";
@@ -393,11 +394,13 @@ export default function WhatsAppChatsPage() {
         };
         window.addEventListener('wa-account-switched', handleSwitch);
 
-        // [TEMPORARILY DISABLED] - Continuous polling disabled for now
-        // const interval = setInterval(fetchConversations, 5000);
+        // Continuous polling every 3.5 seconds to fetch latest messages live
+        const interval = setInterval(() => {
+            fetchConversations();
+        }, 3500);
+
         return () => {
-            // [TEMPORARILY DISABLED]
-            // clearInterval(interval);
+            clearInterval(interval);
             window.removeEventListener('wa-account-switched', handleSwitch);
         };
     }, [workspaceId]);
@@ -712,6 +715,18 @@ export default function WhatsAppChatsPage() {
                         </div>
 
                         <AccountSwitcher />
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 rounded-lg border-border/40 bg-background/50 hover:bg-muted/50 shrink-0"
+                            onClick={() => {
+                                fetchConversations();
+                                toast.success("Refreshed messages");
+                            }}
+                            title="Refresh messages"
+                        >
+                            <RefreshCw className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                        </Button>
                     </div>
                 </div>
 

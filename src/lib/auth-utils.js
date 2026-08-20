@@ -69,3 +69,42 @@ export async function ensureWorkspaceAccess(workspaceId) {
 
     return session;
 }
+
+/**
+ * Checks if the current authenticated user has the 'super-admin' role slug.
+ */
+export async function checkIsSuperAdmin(session, userId) {
+    if (!session && !userId) return false;
+
+    if (session?.user?.role === "SUPER_ADMIN") return true;
+
+    const sessionRoles = session?.user?.roles || [];
+    const hasSuperAdminRole = sessionRoles.some(r => {
+        const slug = r.slug || String(r.title || r.name || '').toLowerCase().replace(/\s+/g, '-').trim();
+        return slug === 'super-admin';
+    });
+    if (hasSuperAdminRole) return true;
+
+    const targetUserId = userId || session?.user?.userId || session?.user?.id;
+    if (targetUserId) {
+        try {
+            const { db } = await import("@/lib/db");
+            const userInDb = await db.user.findUnique({
+                where: { id: targetUserId },
+                include: { roles: true }
+            });
+            if (userInDb) {
+                if (userInDb.role === "SUPER_ADMIN") return true;
+                if (userInDb.roles?.some(r => {
+                    const slug = r.slug || String(r.title || r.name || '').toLowerCase().replace(/\s+/g, '-').trim();
+                    return slug === 'super-admin';
+                })) {
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.error("[checkIsSuperAdmin] Error verifying roles:", e);
+        }
+    }
+    return false;
+}

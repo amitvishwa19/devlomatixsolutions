@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
+import { getWhatsappDefault } from "@/lib/whatsapp-default";
 import fs from 'fs';
 
 const SendMessageSchema = z.object({
@@ -39,14 +40,23 @@ const handler = async (data) => {
         const cleanTo = to.replace(/[^\d+]/g, '');
 
         // 1. Fetch Cloud API Credentials
-        let credential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-        });
+        const defaultInfo = await getWhatsappDefault(workspaceId).catch(() => null);
+        let credential = null;
+        if (defaultInfo?.credentialId) {
+            credential = await db.credentials.findUnique({ where: { id: defaultInfo.credentialId } }).catch(() => null);
+        }
 
         if (!credential) {
             credential = await db.credentials.findFirst({
-                where: { userId, platform: 'WHATSAPP_CLOUD' },
-                orderBy: { updatedAt: 'desc' }
+                where: {
+                    OR: [
+                        { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true },
+                        { userId, platform: 'WHATSAPP_CLOUD', isDefault: true },
+                        { workspaceId, platform: 'WHATSAPP_CLOUD' },
+                        { userId, platform: 'WHATSAPP_CLOUD' },
+                    ]
+                },
+                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
             });
         }
 

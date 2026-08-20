@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
-import { ensureWorkspaceAccess } from "@/lib/auth-utils";
+import { ensureWorkspaceAccess, checkIsSuperAdmin } from "@/lib/auth-utils";
 import { symmetricDecrypt } from "@/lib/encryption";
 
 const SyncDefaultCredentialSchema = z.object({
@@ -15,6 +15,7 @@ const handler = async (data) => {
 
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = session?.user?.userId || session?.user?.id;
 
         const credential = await db.credentials.findFirst({
             where: {
@@ -39,8 +40,12 @@ const handler = async (data) => {
             cloudCreds = JSON.parse(symmetricDecrypt(stored));
         } else if (typeof stored === 'string') {
             cloudCreds = JSON.parse(stored);
-        } else {
-            cloudCreds = stored;
+        } else if (typeof stored === 'object' && stored !== null) {
+            if (stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
+                cloudCreds = JSON.parse(symmetricDecrypt(stored.enc));
+            } else {
+                cloudCreds = stored;
+            }
         }
 
         const defaultInfo = {
@@ -50,23 +55,54 @@ const handler = async (data) => {
             wabaId: cloudCreds?.wabaId || cloudCreds?.waba_id || '',
         };
 
-        const existing = await db.appSettings.findUnique({ where: { key: 'global' } });
-
-        const integrations = {
-            ...(existing?.integrations || {}),
-            whatsappDefault: defaultInfo,
-        };
+        // 1. Always save to workspace settings (key = workspaceId)
+        const existingWs = await db.appSettings.findUnique({ where: { key: workspaceId } }).catch(() => null);
+        const wsIntegrations = (typeof existingWs?.integrations === 'object' && existingWs?.integrations !== null)
+            ? existingWs.integrations
+            : {};
 
         await db.appSettings.upsert({
-            where: { key: 'global' },
+            where: { key: workspaceId },
             create: {
-                key: 'global',
-                integrations,
+                key: workspaceId,
+                integrations: {
+                    ...wsIntegrations,
+                    whatsappDefault: defaultInfo,
+                },
             },
             update: {
-                integrations,
+                integrations: {
+                    ...wsIntegrations,
+                    whatsappDefault: defaultInfo,
+                },
             },
         });
+
+        // 2. If super-admin, ALSO save to global settings (key = 'global')
+        const isSuperAdmin = await checkIsSuperAdmin(session, userId);
+        if (isSuperAdmin) {
+            const existingGlobal = await db.appSettings.findUnique({ where: { key: 'global' } }).catch(() => null);
+            const glIntegrations = (typeof existingGlobal?.integrations === 'object' && existingGlobal?.integrations !== null)
+                ? existingGlobal.integrations
+                : {};
+
+            await db.appSettings.upsert({
+                where: { key: 'global' },
+                create: {
+                    key: 'global',
+                    integrations: {
+                        ...glIntegrations,
+                        whatsappDefault: defaultInfo,
+                    },
+                },
+                update: {
+                    integrations: {
+                        ...glIntegrations,
+                        whatsappDefault: defaultInfo,
+                    },
+                },
+            });
+        }
 
         return { success: true, data: defaultInfo };
     } catch (error) {

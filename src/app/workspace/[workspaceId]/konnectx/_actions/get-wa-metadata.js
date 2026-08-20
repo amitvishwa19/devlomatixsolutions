@@ -15,14 +15,37 @@ const handler = async (data) => {
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
-        
-        let authRecord = await db.whatsAppAuth.findUnique({
-            where: { sessionId: userId }
-        });
+
+        // 1. Fetch workspace settings & global settings
+        const wsSettings = await db.appSettings.findUnique({ where: { key: workspaceId } }).catch(() => null);
+        const glSettings = await db.appSettings.findUnique({ where: { key: 'global' } }).catch(() => null);
+        const authRecord = await db.whatsAppAuth.findUnique({ where: { sessionId: userId } }).catch(() => null);
+
+        const glMetadata = (typeof glSettings?.integrations?.whatsappMetadata === 'object' && glSettings?.integrations?.whatsappMetadata !== null)
+            ? glSettings.integrations.whatsappMetadata
+            : (typeof glSettings?.integrations?.whatsappSettings === 'object' && glSettings?.integrations?.whatsappSettings !== null)
+                ? glSettings.integrations.whatsappSettings
+                : {};
+
+        const wsMetadata = (typeof wsSettings?.integrations?.whatsappMetadata === 'object' && wsSettings?.integrations?.whatsappMetadata !== null)
+            ? wsSettings.integrations.whatsappMetadata
+            : (typeof wsSettings?.integrations?.whatsappSettings === 'object' && wsSettings?.integrations?.whatsappSettings !== null)
+                ? wsSettings.integrations.whatsappSettings
+                : {};
+
+        const authMetadata = (typeof authRecord?.metadata === 'object' && authRecord?.metadata !== null)
+            ? authRecord.metadata
+            : {};
+
+        const mergedMetadata = {
+            ...glMetadata,
+            ...authMetadata,
+            ...wsMetadata,
+        };
 
         return {
             data: {
-                metadata: JSON.parse(JSON.stringify(authRecord?.metadata || {})),
+                metadata: JSON.parse(JSON.stringify(mergedMetadata)),
             }
         };
     } catch (error) {

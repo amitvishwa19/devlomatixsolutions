@@ -1,13 +1,24 @@
 import { db } from '@/lib/db';
 
-export async function getWhatsappDefault() {
+export async function getWhatsappDefault(workspaceId) {
     try {
-        const settings = await db.appSettings.findUnique({
+        if (workspaceId) {
+            const wsSettings = await db.appSettings.findUnique({
+                where: { key: workspaceId },
+                select: { integrations: true },
+            }).catch(() => null);
+
+            if (wsSettings?.integrations?.whatsappDefault) {
+                return wsSettings.integrations.whatsappDefault;
+            }
+        }
+
+        const globalSettings = await db.appSettings.findUnique({
             where: { key: 'global' },
             select: { integrations: true },
-        });
+        }).catch(() => null);
 
-        return settings?.integrations?.whatsappDefault || null;
+        return globalSettings?.integrations?.whatsappDefault || null;
     } catch (error) {
         console.error('[getWhatsappDefault] Error:', error);
         return null;

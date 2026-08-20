@@ -97,11 +97,11 @@ export function GeneralTab({
 
     const { execute: executeSetDefault } = useAction(setDefaultCredential, {
         onSuccess: () => {
-            toast.success('Default account updated');
+            toast.success('Default WhatsApp account updated', { id: 'set-default-account' });
             fetchCloudCreds();
         },
         onError: (error) => {
-            toast.error(error);
+            toast.error(error || 'Failed to set default account', { id: 'set-default-account' });
         }
     });
 
@@ -144,6 +144,7 @@ export function GeneralTab({
     };
 
     const handleSetDefaultAccount = (id) => {
+        toast.loading('Setting default WhatsApp account...', { id: 'set-default-account' });
         executeSetDefault({ workspaceId, id });
     };
 
