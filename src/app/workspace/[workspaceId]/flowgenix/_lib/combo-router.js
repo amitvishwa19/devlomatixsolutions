@@ -16,6 +16,8 @@ try {
 export const ROUTING_PRESETS = {
     "auto": [
         { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
+        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
+        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Llama Free" },
         { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel Llama 3.1" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Llama 3.3" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
@@ -25,6 +27,8 @@ export const ROUTING_PRESETS = {
     ],
     "auto/coding": [
         { provider: "openrouter", model: "qwen/qwen-2.5-coder-32b-instruct", name: "OpenRouter Qwen Coder" },
+        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
+        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Llama Free" },
         { provider: "anthropic", model: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" },
         { provider: "freemodel", model: "qwen/qwen-2.5-72b-instruct", name: "Qwen 2.5 72B" },
@@ -40,8 +44,9 @@ export const ROUTING_PRESETS = {
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" }
     ],
     "auto/cheap": [
-        { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel (Free Tier)" },
         { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Free" },
+        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
+        { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel (Free Tier)" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Cloud (Free Tier)" },
         { provider: "google", model: "gemini-2.0-flash", name: "Google AI Studio (Free Tier)" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" }
@@ -50,6 +55,7 @@ export const ROUTING_PRESETS = {
         { provider: "anthropic", model: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
         { provider: "deepseek", model: "deepseek-reasoner", name: "DeepSeek R1" },
         { provider: "openrouter", model: "deepseek/deepseek-r1", name: "OpenRouter DeepSeek R1" },
+        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
         { provider: "openai", model: "gpt-4o", name: "GPT-4o" },
         { provider: "freemodel", model: "deepseek-ai/deepseek-r1-distill-llama-70b", name: "FreeModel DeepSeek R1" }
@@ -201,12 +207,11 @@ export async function executeGatewayRequest({
         }
     });
 
-    // Check if any message contains multimodal image attachments
-    let hasImages = false;
+    let totalSavingsPercent = 0;
+
+    // Process compression on input messages if enabled
     let processedMessages = messages.map(msg => {
         if (Array.isArray(msg.content)) {
-            const containsImg = msg.content.some(part => part.type === 'image_url' || part.image_url);
-            if (containsImg) hasImages = true;
             return msg;
         }
         if (typeof msg.content === 'string' && (compression?.rtk || compression?.caveman) && msg.content.length > 30) {
@@ -234,6 +239,23 @@ export async function executeGatewayRequest({
     const inputTokens = estimateTokens(JSON.stringify(cleanMessages));
     const errorsTried = [];
 
+    // Safe Token Limits Normalization:
+    // When max_tokens is omitted, providers like OpenRouter reserve credits for the maximum context window (e.g., 28k-32k tokens),
+    // which fails on accounts with limited credits with: "This request requires more credits, or fewer max_tokens. You requested up to X tokens, but can only afford Y".
+    let requestedMaxTokens = extraParams.max_tokens ?? extraParams.maxTokens;
+    let safeMaxTokens = 2048; // Safe default token limit
+
+    if (requestedMaxTokens !== undefined && requestedMaxTokens !== null) {
+        const parsed = Number(requestedMaxTokens);
+        if (!isNaN(parsed) && parsed > 0) {
+            safeMaxTokens = Math.min(parsed, 4096);
+        }
+    }
+
+    const cleanExtraParams = { ...extraParams };
+    delete cleanExtraParams.maxTokens;
+    delete cleanExtraParams.max_tokens;
+
     // Cascading Failover Loop
     for (let i = 0; i < candidates.length; i++) {
         const candidate = candidates[i];
@@ -245,8 +267,8 @@ export async function executeGatewayRequest({
         }
 
         let targetModel = candidate.model;
-        if (!targetModel || targetModel === "main" || targetModel === "auto") {
-            targetModel = (dbConfig.name && dbConfig.name !== "main") 
+        if (!targetModel || targetModel === "main" || targetModel === "auto" || targetModel.toLowerCase().includes("main")) {
+            targetModel = (dbConfig.name && !dbConfig.name.toLowerCase().includes("main")) 
                 ? dbConfig.name 
                 : (DEFAULT_PROVIDER_MODELS[candidate.provider.toLowerCase()] || "auto");
         }
@@ -272,7 +294,8 @@ export async function executeGatewayRequest({
                 model: targetModel,
                 messages: cleanMessages,
                 stream: Boolean(stream),
-                ...extraParams
+                max_tokens: safeMaxTokens,
+                ...cleanExtraParams
             };
 
             const targetRes = await fetch(endpoint, {
@@ -309,8 +332,59 @@ export async function executeGatewayRequest({
                 };
             }
 
-            // If non-200 (e.g. 429 Rate Limit, 500 Server Error, 404 Model Not Found), log and cascade to next candidate
+            // If non-200 (e.g. 429 Rate Limit, 400/402 Credit Limit, 500 Server Error, 404 Model Not Found)
             const errorText = await targetRes.text().catch(() => "Unknown response body");
+
+            // Smart Auto-Recovery for OpenRouter / LLM Credit & max_tokens limit errors
+            if (candidate.provider === 'openrouter' && (targetRes.status === 400 || targetRes.status === 402 || targetRes.status === 403)) {
+                const affordableMatch = errorText.match(/can only afford (\d+)/i);
+                const hasMaxTokensMsg = errorText.toLowerCase().includes("fewer max_tokens") || errorText.toLowerCase().includes("more credits");
+
+                if (affordableMatch || hasMaxTokensMsg) {
+                    const affordableCount = affordableMatch ? parseInt(affordableMatch[1], 10) : 1024;
+                    // Lower max_tokens to fit comfortably in the user's available token balance
+                    const retryLimit = Math.max(128, Math.min(affordableCount > 100 ? affordableCount - 100 : affordableCount, 1500));
+                    
+                    console.log(`[FlowGenix Gateway] Auto-recovering OpenRouter ${targetModel} (available credits: ~${affordableCount} tokens). Retrying with max_tokens=${retryLimit}...`);
+
+                    try {
+                        const retryRes = await fetch(endpoint, {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({
+                                ...payload,
+                                max_tokens: retryLimit
+                            })
+                        });
+
+                        if (retryRes.ok) {
+                            const latencyMs = Date.now() - startTime;
+                            recordTelemetry({
+                                workspaceId,
+                                requestModel: requestedModel,
+                                resolvedProvider: dbConfig.provider.toUpperCase(),
+                                resolvedModel: targetModel,
+                                tokensIn: inputTokens,
+                                tokensOut: stream ? 150 : 200,
+                                compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
+                                latencyMs,
+                                status: retryRes.status
+                            });
+
+                            return {
+                                success: true,
+                                response: retryRes,
+                                resolvedProvider: candidate.provider,
+                                resolvedModel: targetModel,
+                                latencyMs
+                            };
+                        }
+                    } catch (retryErr) {
+                        console.warn("[FlowGenix Gateway] OpenRouter auto-retry failed:", retryErr.message);
+                    }
+                }
+            }
+
             console.warn(`[FlowGenix Gateway] Failover: ${candidate.provider}/${targetModel} status ${targetRes.status}. Cascading to backup...`);
 
             errorsTried.push({

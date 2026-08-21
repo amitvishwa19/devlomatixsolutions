@@ -97,7 +97,10 @@ function renderMessagePreview(lastMessage) {
             if (['image', 'video', 'audio', 'document', 'sticker'].includes(type)) {
                 return `[${type.toUpperCase()}] ${parsed.caption || text || ""}`.trim();
             }
-            if (type === 'template') return `[Template] ${text || ""}`.trim();
+            if (type === 'template') {
+                const clean = text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
+                return `📋 ${clean || text || "Template message"}`;
+            }
             if (type === 'location') return "📍 Location shared";
             if (type === 'contacts') return `👤 Contact: ${parsed.text || "Shared Contact"}`;
             if (type === 'poll') return `📊 Poll: ${parsed.text || "New Poll"}`;
@@ -362,7 +365,7 @@ export default function WhatsAppChatsPage() {
 
     const fetchConversations = () => executeConversations({ workspaceId });
     const fetchContacts = () => { executeGetContacts({ workspaceId, userId }); };
-    const fetchTemplates = () => executeGetTemplates({ workspaceId });
+    const fetchTemplates = () => executeGetTemplates({ workspaceId, all: true });
     const fetchGroups = () => executeGetGroups({ workspaceId });
     const fetchCategories = () => executeGetCategories({ workspaceId, type: 'CONTACT' });
 
@@ -611,21 +614,33 @@ export default function WhatsAppChatsPage() {
     };
 
     const handleTemplateClick = (msg) => {
-        const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
+        const templateName = msg.metadata?.templateName ||
+            msg.metadata?.originalPayload?.template?.name ||
+            (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
+                ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
+                : null);
+
         if (!templateName) return;
 
         console.log(`[Preview] Looking for template: ${templateName}`);
 
-        const foundTemplate = templates.find(t =>
+        let foundTemplate = templates.find(t =>
             t.templateName === templateName || t.name === templateName
         );
 
-        if (foundTemplate) {
-            setPreviewTemplate(foundTemplate);
-            setIsPreviewOpen(true);
-        } else {
-            toast.error("Template details not found locally.");
+        if (!foundTemplate) {
+            foundTemplate = {
+                name: templateName,
+                templateName: templateName,
+                body: msg.text?.replace(/^\[Template:[^\]]+\]\s*/, '') || msg.text || "WhatsApp Template Message",
+                type: 'TEXT',
+                status: 'APPROVED',
+                metadata: msg.metadata || {}
+            };
         }
+
+        setPreviewTemplate(foundTemplate);
+        setIsPreviewOpen(true);
     };
 
     // Helper: Find contact for a JID
@@ -1008,11 +1023,21 @@ export default function WhatsAppChatsPage() {
                                         </div>
                                     ) : (
                                         selectedChat.messages.map((msg, i) => {
-                                            const isTemplate = msg.metadata?.type === 'template';
-                                            const type = msg.metadata?.type?.toLowerCase() || 'text';
-                                            const isMedia = ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'unsupported'].includes(type);
-                                            const templateName = msg.metadata?.originalPayload?.template?.name || msg.metadata?.templateName;
-                                            const templateDef = isTemplate ? templates.find(t => t.templateName === templateName || t.name === templateName) : null;
+                                            const isTemplate = msg.metadata?.type === 'template' ||
+                                                msg.metadata?.type === 'TEMPLATE' ||
+                                                Boolean(msg.metadata?.templateName) ||
+                                                Boolean(msg.metadata?.originalPayload?.template?.name) ||
+                                                (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
+                                            const type = msg.metadata?.type?.toLowerCase() || (isTemplate ? 'template' : 'text');
+                                            const isMedia = !isTemplate && ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'unsupported'].includes(type);
+                                            const templateName = msg.metadata?.templateName ||
+                                                msg.metadata?.originalPayload?.template?.name ||
+                                                (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
+                                                    ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
+                                                    : null);
+                                            const templateDef = (isTemplate && templateName)
+                                                ? templates.find(t => t.templateName === templateName || t.name === templateName)
+                                                : null;
 
                                             return (
                                                 <div

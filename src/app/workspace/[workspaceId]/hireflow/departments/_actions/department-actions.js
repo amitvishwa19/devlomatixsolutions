@@ -13,8 +13,25 @@ export async function getDepartmentsAction(workspaceId) {
     try {
         await ensureWorkspaceAccess(workspaceId);
 
+        // Find root parent category for ATS Departments if it exists
+        const rootParent = await prisma.category.findUnique({
+            where: {
+                workspaceId_slug: {
+                    workspaceId,
+                    slug: 'ats-departments'
+                }
+            }
+        });
+
         const departments = await prisma.category.findMany({
-            where: { workspaceId, type: 'DEPARTMENT' },
+            where: {
+                workspaceId,
+                OR: [
+                    { type: 'ATS_DEPARTMENT' },
+                    { type: 'DEPARTMENT' },
+                    ...(rootParent ? [{ parentId: rootParent.id }] : [])
+                ]
+            },
             include: {
                 _count: {
                     select: { jobs: true }
@@ -40,18 +57,46 @@ export async function createDepartmentAction(workspaceId, data) {
 
         const { name, description, color } = data;
 
+        // Find or ensure the root parent category exists for ATS Departments
+        let rootParent = await prisma.category.findUnique({
+            where: {
+                workspaceId_slug: {
+                    workspaceId,
+                    slug: 'ats-departments'
+                }
+            }
+        });
+
+        if (!rootParent) {
+            rootParent = await prisma.category.create({
+                data: {
+                    name: 'ATS Departments',
+                    slug: 'ats-departments',
+                    workspaceId,
+                    type: 'SYSTEM',
+                    color: '#3b82f6'
+                }
+            });
+        }
+
+        const baseSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        const slug = `${baseSlug}-${Date.now().toString(36)}`;
+
         const department = await prisma.category.create({
             data: {
                 name,
+                slug,
                 description: description || null,
-                color: color || null,
-                type: 'DEPARTMENT',
+                color: color || '#3b82f6',
+                type: 'ATS_DEPARTMENT',
+                parentId: rootParent.id,
                 workspaceId,
                 userId
             }
         });
 
         revalidatePath(`/workspace/${workspaceId}/hireflow/departments`);
+        revalidatePath(`/workspace/${workspaceId}/hireflow/jobs`);
         return { success: true, data: department };
     } catch (error) {
         console.error("[CREATE_DEPARTMENT_ACTION_ERROR]", error);
@@ -78,6 +123,7 @@ export async function updateDepartmentAction(workspaceId, departmentId, data) {
         });
 
         revalidatePath(`/workspace/${workspaceId}/hireflow/departments`);
+        revalidatePath(`/workspace/${workspaceId}/hireflow/jobs`);
         return { success: true, data: department };
     } catch (error) {
         console.error("[UPDATE_DEPARTMENT_ACTION_ERROR]", error);
@@ -114,6 +160,7 @@ export async function deleteDepartmentAction(departmentId, workspaceId) {
         });
 
         revalidatePath(`/workspace/${workspaceId}/hireflow/departments`);
+        revalidatePath(`/workspace/${workspaceId}/hireflow/jobs`);
         return { success: true, message: "Department deleted successfully" };
     } catch (error) {
         console.error("[DELETE_DEPARTMENT_ACTION_ERROR]", error);

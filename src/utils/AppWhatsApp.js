@@ -272,9 +272,16 @@ export async function sendJobApplicationWhatsApp({
                         metadata: {
                             type: 'template',
                             templateName: templateName,
-                            candidateName: name,
+                            candidateName: candidateName || name,
                             jobTitle: jobTitle,
                             companyName: appName,
+                            components: components,
+                            originalPayload: {
+                                template: {
+                                    name: templateName,
+                                    components: components
+                                }
+                            },
                             phone_number_id: String(metaApiCredentials.phoneNumberId),
                             apiResponse: result?.data || result?.error || null
                         }

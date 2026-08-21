@@ -670,43 +670,21 @@ export default function CandidateDetailPage() {
  </Tabs>
 
     {/* Delete Candidate Confirmation Modal */}
-    <Dialog open={isDeleteDialogOpen} onOpenChange={(open) => !open && !isDeleting && setIsDeleteDialogOpen(false)}>
-      <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-destructive flex items-center gap-2">
-            <Trash2 className="w-5 h-5" /> Delete Candidate
-          </DialogTitle>
-          <DialogDescription className="text-xs font-medium text-muted-foreground mt-2">
-            Are you sure you want to delete <span className="font-bold text-foreground">{candidate.name}</span>? 
-            This will permanently remove their application records, scorecards, and notes. This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0 mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setIsDeleteDialogOpen(false)}
-            disabled={isDeleting}
-            className="rounded-md font-bold"
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={handleDeleteCandidate}
-            disabled={isDeleting}
-            className="rounded-md font-bold"
-          >
-            {isDeleting ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" /> Deleting...
-              </span>
-            ) : (
-              "Delete Candidate"
-            )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <DeleteConfirmDialog
+      isOpen={isDeleteDialogOpen}
+      onClose={() => setIsDeleteDialogOpen(false)}
+      onConfirm={handleDeleteCandidate}
+      title="Delete Candidate"
+      entityName={candidateData?.name}
+      description={
+        <>
+          Are you sure you want to delete <span className="font-bold text-foreground">{candidateData?.name}</span>? 
+          This will permanently remove their application records, scorecards, and notes. This action cannot be undone.
+        </>
+      }
+      confirmText="Delete Candidate"
+      isDeleting={isDeleting}
+    />
   </div>
   );
 }
