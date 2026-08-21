@@ -65,7 +65,6 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Chatbot", icon: "bot", url: `${baseWhatsappCloudApiPath}/chatbot` },
                 { title: "Reports", icon: "file-spreadsheet", url: `${baseWhatsappCloudApiPath}/reports` },
                 { title: "Analytics", icon: "bar-chart-3", url: `${baseWhatsappCloudApiPath}/analytics` },
-                { title: "Usage & billing", icon: "credit-card", url: `${baseWhatsappCloudApiPath}/settings?tab=billing` },
                 { title: "Docs", icon: "book-open-text", url: `${baseWhatsappCloudApiPath}/docs` },
                 { title: "Settings", icon: "settings-2", url: `${baseWhatsappCloudApiPath}/settings` },
             ],

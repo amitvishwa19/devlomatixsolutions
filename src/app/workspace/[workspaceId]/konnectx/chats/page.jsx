@@ -37,6 +37,7 @@ import { getContacts } from "../contacts/_actions/get-contacts";
 import { getGroups } from "../contacts/_actions/get-groups";
 import { getCategories } from "../contacts/_actions/get-categories";
 import { getTemplates } from "../template/_actions/get-templates";
+import ManageContactModal from "./_components/ManageContactModal";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -178,6 +179,10 @@ export default function WhatsAppChatsPage() {
     // View Contact Modal State
     const [isViewContactOpen, setIsViewContactOpen] = useState(false);
     const [viewContactJid, setViewContactJid] = useState(null);
+
+    // Manage Contact / Group / Tag Modal State
+    const [isManageContactOpen, setIsManageContactOpen] = useState(false);
+    const [manageContactJid, setManageContactJid] = useState(null);
 
     // Sidebar/Filter State
     const [groups, setGroups] = useState([]);
@@ -414,8 +419,8 @@ export default function WhatsAppChatsPage() {
             scrollRef.current.scrollIntoView({ behavior, block: 'end', inline: 'nearest' });
 
             const viewport = scrollRef.current.closest('[data-radix-scroll-area-viewport]') ||
-                             scrollRef.current.closest('.overflow-y-auto') ||
-                             scrollRef.current.parentElement;
+                scrollRef.current.closest('.overflow-y-auto') ||
+                scrollRef.current.parentElement;
             if (viewport) {
                 if (behavior === 'smooth') {
                     viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
@@ -749,8 +754,9 @@ export default function WhatsAppChatsPage() {
 
 
             <div className="flex h-full overflow-hidden">
-                <div className="w-1/4 border-r border-border/50 flex flex-col min-w-[300px]">
-                    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col h-full">
+
+                <div className="w-[320px] md:w-[350px] border-r border-border/50 flex flex-col shrink-0">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col h-full min-w-0">
 
                         <div className="px-4 h-14 py-2 border-b border-border/50 bg-muted/5">
                             <TabsList className="grid w-full grid-cols-2">
@@ -761,10 +767,10 @@ export default function WhatsAppChatsPage() {
 
                         <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
                             {/* Segment Filters Inside Tab */}
-                            <div className="px-4 py-2 border-b border-border/40 bg-card/10 flex flex-wrap items-center gap-2">
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
                                 <Badge
                                     variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                    className="cursor-pointer text-[10px]"
+                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
                                     onClick={() => setActiveSegment('all')}
                                 >
                                     All Chats
@@ -773,18 +779,18 @@ export default function WhatsAppChatsPage() {
                                     <Badge
                                         key={catName}
                                         variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] gap-1"
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
                                         onClick={() => setActiveSegment(`category:${catName}`)}
                                     >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/60" />
-                                        {catName}
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/80 shrink-0" />
+                                        <span>{catName}</span>
                                     </Badge>
                                 ))}
                                 {groups.map(group => (
                                     <Badge
                                         key={group.id}
                                         variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px]"
+                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
                                         onClick={() => setActiveSegment(`group:${group.id}`)}
                                     >
                                         {group.name}
@@ -792,8 +798,8 @@ export default function WhatsAppChatsPage() {
                                 ))}
                             </div>
 
-                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 h-full [&>div>div]:h-full ">
-                                <div id="chats-contacts-list-content" className="flex flex-col h-full ">
+                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
+                                <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
                                     {filteredConversations.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
                                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
@@ -808,70 +814,103 @@ export default function WhatsAppChatsPage() {
                                     ) : (
                                         filteredConversations.map((chat) => (
                                             <div
+                                                id='chatinfoblock'
                                                 key={chat.jid}
                                                 onClick={() => setSelectedJid(chat.jid)}
-                                                className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                className={`flex items-start gap-2.5 p-3 w-full border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                             >
-                                                <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
+                                                {/* Left: Avatar */}
+                                                <Avatar className="w-10 h-10 border-2 border-background shadow-xs shrink-0 mt-0.5">
                                                     <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                                                         {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
 
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between mb-0.5">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="flex flex-col">
-                                                                <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{chat.name || chat.jid.split('@')[0]}</h3>
-                                                                <span className="text-[9px] text-muted-foreground/50 truncate">{getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}</span>
-                                                            </div>
-                                                            {getContactForJid(chat.jid)?.category && (
-                                                                <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50 px-1">
-                                                                    {getContactForJid(chat.jid).category}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                                            <span className="text-[9px] text-muted-foreground group-hover:hidden">
-                                                                {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
-                                                            </span>
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <button
-                                                                        className="p-1 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground"
-                                                                        title="More options"
-                                                                    >
-                                                                        <MoreVertical size={14} />
-                                                                    </button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-44">
-                                                                    <DropdownMenuItem
-                                                                        className="gap-2 cursor-pointer"
-                                                                        onClick={() => { setViewContactJid(chat.jid); setIsViewContactOpen(true); }}
-                                                                    >
-                                                                        <Eye size={13} /> View Contact
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem
-                                                                        className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
-                                                                        onClick={() => handleAssignConversation(chat.jid)}
-                                                                    >
-                                                                        <Share2 size={13} /> Share / Delegate
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem
-                                                                        className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                                        onClick={(e) => handleDeleteConversation(e, chat.jid)}
-                                                                    >
-                                                                        <Trash2 size={13} /> Delete Chat
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </div>
+                                                {/* Middle: Name, Category, Phone, Message Snippet */}
+                                                <div className="flex-1 min-w-0 w-0 overflow-hidden">
+                                                    <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
+                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">
+                                                            {chat.name || chat.jid.split('@')[0]}
+                                                        </h3>
+                                                        {getContactForJid(chat.jid)?.category && (
+                                                            <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 shrink-0 max-w-[65px] truncate border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-normal">
+                                                                {getContactForJid(chat.jid).category}
+                                                            </Badge>
+                                                        )}
                                                     </div>
-                                                    <p className="text-[11px] text-muted-foreground truncate opacity-70">
-                                                        {chat.fromMe && <span className="text-[9px] uppercase font-bold mr-1 text-primary/60">You:</span>}
-                                                        {renderMessagePreview(chat.lastMessage)}
+
+                                                    <p className="text-[9px] text-muted-foreground/60 truncate font-mono mb-1">
+                                                        {getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}
                                                     </p>
+
+                                                    <div className="flex items-center gap-1 min-w-0 w-full overflow-hidden">
+                                                        {chat.fromMe && <span className="text-[9px] uppercase font-bold text-primary/70 shrink-0">You:</span>}
+                                                        <p className="text-[11px] text-muted-foreground truncate opacity-70 min-w-0 flex-1 block overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
+                                                            {renderMessagePreview(chat.lastMessage)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Right: Timestamp & DropdownMenu Action */}
+                                                <div id='dropdownoptions' className="flex flex-col items-end justify-between shrink-0 ml-auto pl-1 self-stretch gap-1">
+                                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap shrink-0">
+                                                        {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
+                                                    </span>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all shrink-0"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                title="More options"
+                                                            >
+                                                                <MoreVertical className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 z-50 shadow-xl border-border/60 bg-popover">
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-emerald-600 focus:text-emerald-700 focus:bg-emerald-500/10 font-medium"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setManageContactJid(chat.jid);
+                                                                    setIsManageContactOpen(true);
+                                                                }}
+                                                            >
+                                                                <UserPlus className="w-3.5 h-3.5" /> {getContactForJid(chat.jid) ? "Edit Contact & Tags" : "Add to Contacts"}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setViewContactJid(chat.jid);
+                                                                    setIsViewContactOpen(true);
+                                                                }}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" /> View Contact
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAssignConversation(chat.jid);
+                                                                }}
+                                                            >
+                                                                <Share2 className="w-3.5 h-3.5" /> Share / Delegate
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteConversation(e, chat.jid);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
                                         ))
@@ -880,12 +919,12 @@ export default function WhatsAppChatsPage() {
                             </ScrollArea>
                         </TabsContent>
 
-                        <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col ">
+                        <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
                             {/* Segment Filters Inside Tab */}
-                            <div className="px-4 py-2 border-b border-border/40 bg-card/10 flex flex-wrap items-center gap-2">
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
                                 <Badge
                                     variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                    className="cursor-pointer text-[10px]"
+                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
                                     onClick={() => setActiveSegment('all')}
                                 >
                                     All Contacts
@@ -894,18 +933,18 @@ export default function WhatsAppChatsPage() {
                                     <Badge
                                         key={catName}
                                         variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] gap-1"
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
                                         onClick={() => setActiveSegment(`category:${catName}`)}
                                     >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/60" />
-                                        {catName}
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shrink-0" />
+                                        <span>{catName}</span>
                                     </Badge>
                                 ))}
                                 {groups.map(group => (
                                     <Badge
                                         key={group.id}
                                         variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px]"
+                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
                                         onClick={() => setActiveSegment(`group:${group.id}`)}
                                     >
                                         {group.name}
@@ -913,8 +952,8 @@ export default function WhatsAppChatsPage() {
                                 ))}
                             </div>
 
-                            <ScrollArea className="flex-1 min-h-0 h-full [&>div>div]:h-full">
-                                <div className="flex flex-col h-full">
+                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
+                                <div className="flex flex-col w-full min-w-0">
                                     {filteredContacts.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
                                             <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
@@ -981,13 +1020,58 @@ export default function WhatsAppChatsPage() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                        <h2 className="text-sm font-bold">{activeName}</h2>
-                                        <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
-                                            {selectedChat ? "Active Conversation" : "New Chat"}
-                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <h2 className="text-sm font-bold">{activeName}</h2>
+                                            {getContactForJid(selectedJid)?.category && (
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-medium">
+                                                    {getContactForJid(selectedJid).category}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
+                                                {selectedChat ? "Active Conversation" : "New Chat"}
+                                            </p>
+                                            {getContactForJid(selectedJid)?.groups?.map(g => (
+                                                <Badge key={g.id} variant="secondary" className="text-[8px] px-1 py-0 h-3.5 opacity-80 bg-muted/60">
+                                                    {g.name}
+                                                </Badge>
+                                            ))}
+                                            {getContactForJid(selectedJid)?.tags?.slice(0, 2).map(t => (
+                                                <Badge key={t} variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal text-muted-foreground">
+                                                    #{t}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center gap-1.5">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className={`h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-lg transition-all ${getContactForJid(selectedJid)
+                                            ? "border-border/60 hover:bg-muted/50 text-foreground"
+                                            : "border-emerald-500/30 bg-emerald-500/10  hover:bg-emerald-500/20 text-foreground"
+                                            }`}
+                                        onClick={() => {
+                                            setManageContactJid(selectedJid);
+                                            setIsManageContactOpen(true);
+                                        }}
+                                        title={getContactForJid(selectedJid) ? "Manage Contact, Groups & Tags" : "Add user to Contacts"}
+                                    >
+                                        {getContactForJid(selectedJid) ? (
+                                            <>
+                                                <Tag className="w-3.5 h-3.5 text-amber-400" />
+                                                <span className="hidden sm:inline">Tags & Groups</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <UserPlus className="w-3.5 h-3.5" />
+                                                <span>Add Contact</span>
+                                            </>
+                                        )}
+                                    </Button>
+
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -996,7 +1080,7 @@ export default function WhatsAppChatsPage() {
                                         title="Share this conversation"
                                     >
                                         <Share2 className="w-3.5 h-3.5" />
-                                        Share
+                                        <span className="hidden sm:inline">Share</span>
                                     </Button>
                                     <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
                                         <Video className="w-4 h-4" />
@@ -1004,9 +1088,48 @@ export default function WhatsAppChatsPage() {
                                     <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
                                         <Phone className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                        <MoreVertical className="w-4 h-4" />
-                                    </Button>
+
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-52">
+                                            <DropdownMenuItem
+                                                className="gap-2 cursor-pointer text-emerald-500 focus:text-emerald-400 focus:bg-emerald-500/10 font-medium"
+                                                onClick={() => {
+                                                    setManageContactJid(selectedJid);
+                                                    setIsManageContactOpen(true);
+                                                }}
+                                            >
+                                                <UserPlus size={14} />
+                                                {getContactForJid(selectedJid) ? "Edit Contact, Tags & Groups" : "Add to Contacts"}
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                className="gap-2 cursor-pointer"
+                                                onClick={() => {
+                                                    setViewContactJid(selectedJid);
+                                                    setIsViewContactOpen(true);
+                                                }}
+                                            >
+                                                <Eye size={14} /> View Contact Details
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                                className="gap-2 cursor-pointer text-purple-400 focus:text-purple-300 focus:bg-purple-500/10"
+                                                onClick={() => handleAssignConversation(selectedJid)}
+                                            >
+                                                <Share2 size={14} /> Share / Delegate
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                onClick={(e) => handleDeleteConversation(e, selectedJid)}
+                                            >
+                                                <Trash2 size={14} /> Delete Conversation
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             </div>
 
@@ -1181,148 +1304,148 @@ export default function WhatsAppChatsPage() {
                     )}
                 </div>
 
-
-
             </div>
 
             {/* ===== Template Picker Modal ===== */}
-            {isTemplateDrawerOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-lg bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-                        {/* Header */}
-                        <div className="flex items-center justify-between px-5 py-4 border-b border-border/50 bg-muted/10">
-                            <div className="flex items-center gap-2">
-                                <Layout className="w-4 h-4 text-primary" />
-                                <h2 className="font-semibold text-sm">
-                                    {selectedTemplateForSend ? 'Fill Variables' : 'Select a Template'}
-                                </h2>
+            {
+                isTemplateDrawerOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="w-full max-w-lg bg-card border border-border/60 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+                            {/* Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-border/50 bg-muted/10">
+                                <div className="flex items-center gap-2">
+                                    <Layout className="w-4 h-4 text-primary" />
+                                    <h2 className="font-semibold text-sm">
+                                        {selectedTemplateForSend ? 'Fill Variables' : 'Select a Template'}
+                                    </h2>
+                                </div>
+                                <button
+                                    onClick={() => { setIsTemplateDrawerOpen(false); setSelectedTemplateForSend(null); }}
+                                    className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none"
+                                >
+                                    ✕
+                                </button>
                             </div>
-                            <button
-                                onClick={() => { setIsTemplateDrawerOpen(false); setSelectedTemplateForSend(null); }}
-                                className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none"
-                            >
-                                ✕
-                            </button>
-                        </div>
 
-                        {/* Content */}
-                        <div className="p-4 max-h-[65vh] overflow-y-auto">
-                            {!selectedTemplateForSend ? (
-                                /* Template List */
-                                <>
-                                    {templates.filter(t => t.approved || t.status === 'APPROVED').length === 0 ? (
-                                        <div className="text-center py-10 text-muted-foreground">
-                                            <Layout className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                                            <p className="text-xs">No approved templates found.</p>
-                                            <p className="text-xs opacity-70 mt-1">Sync your templates from the Templates page.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col gap-2">
-                                            {templates
-                                                .filter(t => t.approved || t.status === 'APPROVED')
-                                                .map(tpl => (
-                                                    <button
-                                                        key={tpl.id}
-                                                        onClick={() => handleSelectTemplate(tpl)}
-                                                        className="text-left p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:bg-primary/5 transition-all duration-150 group"
-                                                    >
-                                                        <div className="flex items-start justify-between gap-2">
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                                                                    {tpl.name}
-                                                                </p>
-                                                                <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
-                                                                    {tpl.body}
-                                                                </p>
+                            {/* Content */}
+                            <div className="p-4 max-h-[65vh] overflow-y-auto">
+                                {!selectedTemplateForSend ? (
+                                    /* Template List */
+                                    <>
+                                        {templates.filter(t => t.approved || t.status === 'APPROVED').length === 0 ? (
+                                            <div className="text-center py-10 text-muted-foreground">
+                                                <Layout className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                                <p className="text-xs">No approved templates found.</p>
+                                                <p className="text-xs opacity-70 mt-1">Sync your templates from the Templates page.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col gap-2">
+                                                {templates
+                                                    .filter(t => t.approved || t.status === 'APPROVED')
+                                                    .map(tpl => (
+                                                        <button
+                                                            key={tpl.id}
+                                                            onClick={() => handleSelectTemplate(tpl)}
+                                                            className="text-left p-3 rounded-xl border border-border/40 hover:border-primary/50 hover:bg-primary/5 transition-all duration-150 group"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                                                                        {tpl.name}
+                                                                    </p>
+                                                                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                                                                        {tpl.body}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="flex flex-col items-end gap-1 shrink-0">
+                                                                    <span className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                                                                        APPROVED
+                                                                    </span>
+                                                                    <span className="text-[9px] text-muted-foreground uppercase">{tpl.language || 'en'}</span>
+                                                                </div>
                                                             </div>
-                                                            <div className="flex flex-col items-end gap-1 shrink-0">
-                                                                <span className="text-[9px] bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 px-1.5 py-0.5 rounded-full font-medium">
-                                                                    APPROVED
-                                                                </span>
-                                                                <span className="text-[9px] text-muted-foreground uppercase">{tpl.language || 'en'}</span>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                /* Variable Input View */
-                                <div className="flex flex-col gap-4">
-                                    {/* Template Preview */}
-                                    <div className="rounded-xl bg-muted/30 border border-border/40 p-3">
-                                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Preview</p>
-                                        <p className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
-                                            {fillTemplatePreview(selectedTemplateForSend.body, templateVars)}
-                                        </p>
-                                    </div>
-
-                                    {/* Media Header Input if required */}
-                                    {['IMAGE', 'VIDEO', 'DOCUMENT'].includes((selectedTemplateForSend.type || '').toUpperCase()) && (
-                                        <div className="flex flex-col gap-1.5 bg-primary/5 p-3 rounded-xl border border-primary/10">
-                                            <label className="text-[10px] font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
-                                                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                                {selectedTemplateForSend.type} Header Required
-                                            </label>
-                                            <Input
-                                                value={templateMediaUrl}
-                                                onChange={(e) => setTemplateMediaUrl(e.target.value)}
-                                                placeholder={`https://... or Meta Media ID`}
-                                                className="h-9 text-xs bg-background/60 border-border/40 focus-visible:ring-primary/20"
-                                            />
-                                            <p className="text-[9px] text-muted-foreground">
-                                                Provide a public URL (e.g. Supabase link) or Meta Media ID to change the image for this message.
+                                                        </button>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    /* Variable Input View */
+                                    <div className="flex flex-col gap-4">
+                                        {/* Template Preview */}
+                                        <div className="rounded-xl bg-muted/30 border border-border/40 p-3">
+                                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">Preview</p>
+                                            <p className="text-xs leading-relaxed text-foreground whitespace-pre-wrap">
+                                                {fillTemplatePreview(selectedTemplateForSend.body, templateVars)}
                                             </p>
                                         </div>
-                                    )}
 
-                                    {/* Variable Fields */}
-                                    {Object.keys(templateVars).length > 0 ? (
-                                        <div className="flex flex-col gap-3">
-                                            <p className="text-xs font-medium text-muted-foreground">Fill in the variables:</p>
-                                            {Object.keys(templateVars).map((key, idx) => (
-                                                <div key={key} className="flex flex-col gap-1">
-                                                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                                                        Variable {idx + 1} <span className="text-primary">{key}</span>
-                                                    </label>
-                                                    <Input
-                                                        autoFocus={idx === 0}
-                                                        value={templateVars[key]}
-                                                        onChange={(e) => setTemplateVars(prev => ({ ...prev, [key]: e.target.value }))}
-                                                        placeholder={`Enter value for ${key}...`}
-                                                        className="h-9 text-xs bg-background/60 border-border/40"
-                                                    />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-xs text-muted-foreground text-center py-2">No variables required for this template.</p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                                        {/* Media Header Input if required */}
+                                        {['IMAGE', 'VIDEO', 'DOCUMENT'].includes((selectedTemplateForSend.type || '').toUpperCase()) && (
+                                            <div className="flex flex-col gap-1.5 bg-primary/5 p-3 rounded-xl border border-primary/10">
+                                                <label className="text-[10px] font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                                                    <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                                    {selectedTemplateForSend.type} Header Required
+                                                </label>
+                                                <Input
+                                                    value={templateMediaUrl}
+                                                    onChange={(e) => setTemplateMediaUrl(e.target.value)}
+                                                    placeholder={`https://... or Meta Media ID`}
+                                                    className="h-9 text-xs bg-background/60 border-border/40 focus-visible:ring-primary/20"
+                                                />
+                                                <p className="text-[9px] text-muted-foreground">
+                                                    Provide a public URL (e.g. Supabase link) or Meta Media ID to change the image for this message.
+                                                </p>
+                                            </div>
+                                        )}
 
-                        {/* Footer Actions */}
-                        <div className="px-5 py-3 border-t border-border/50 bg-muted/5 flex items-center justify-between gap-3">
-                            {selectedTemplateForSend ? (
-                                <>
-                                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedTemplateForSend(null)}>
-                                        ← Back
-                                    </Button>
-                                    <Button size="sm" className="text-xs bg-primary" onClick={handleSendTemplate}>
-                                        Send Template
-                                    </Button>
-                                </>
-                            ) : (
-                                <div className="text-[10px] text-muted-foreground italic">
-                                    Select an approved template to continue
-                                </div>
-                            )}
+                                        {/* Variable Fields */}
+                                        {Object.keys(templateVars).length > 0 ? (
+                                            <div className="flex flex-col gap-3">
+                                                <p className="text-xs font-medium text-muted-foreground">Fill in the variables:</p>
+                                                {Object.keys(templateVars).map((key, idx) => (
+                                                    <div key={key} className="flex flex-col gap-1">
+                                                        <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
+                                                            Variable {idx + 1} <span className="text-primary">{key}</span>
+                                                        </label>
+                                                        <Input
+                                                            autoFocus={idx === 0}
+                                                            value={templateVars[key]}
+                                                            onChange={(e) => setTemplateVars(prev => ({ ...prev, [key]: e.target.value }))}
+                                                            placeholder={`Enter value for ${key}...`}
+                                                            className="h-9 text-xs bg-background/60 border-border/40"
+                                                        />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground text-center py-2">No variables required for this template.</p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Footer Actions */}
+                            <div className="px-5 py-3 border-t border-border/50 bg-muted/5 flex items-center justify-between gap-3">
+                                {selectedTemplateForSend ? (
+                                    <>
+                                        <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedTemplateForSend(null)}>
+                                            ← Back
+                                        </Button>
+                                        <Button size="sm" className="text-xs bg-primary" onClick={handleSendTemplate}>
+                                            Send Template
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <div className="text-[10px] text-muted-foreground italic">
+                                        Select an approved template to continue
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
             {/* Delete Confirmation Modal */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-2xl border-destructive/20 shadow-2xl">
@@ -1520,6 +1643,23 @@ export default function WhatsAppChatsPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+
+            {/* Manage Contact & Group / Tag Modal */}
+            <ManageContactModal
+                isOpen={isManageContactOpen}
+                onOpenChange={setIsManageContactOpen}
+                selectedJid={manageContactJid || selectedJid}
+                selectedChat={conversations.find(c => c.jid === (manageContactJid || selectedJid))}
+                existingContact={getContactForJid(manageContactJid || selectedJid)}
+                categories={categories}
+                groups={groups}
+                userId={userId}
+                workspaceId={workspaceId}
+                onSaved={() => {
+                    fetchContacts();
+                    fetchConversations();
+                }}
+            />
+        </div >
     );
 }
