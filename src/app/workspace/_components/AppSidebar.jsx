@@ -26,7 +26,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { getSidebarNavItems } from "../_lib/sidebar-nav-item";
 import { useAccess } from "@/providers/WorkspaceProvider";
 import { useSession } from "next-auth/react";
-import { Button } from "@/components/ui/button";
 import SettingModal from "../[workspaceId]/system/_components/SettingModal";
 
 export default function AppSidebar() {
@@ -123,7 +122,7 @@ export default function AppSidebar() {
                 </SidebarHeader>
 
                 <SidebarContent className="bg-transparent px-2 group-data-[collapsible=icon]:px-0 overflow-hidden">
-                    <ScrollArea className="h-[70vh]">
+                    <ScrollArea className="h-[75vh]">
                         {navigation.map((item, index) => {
                             const { parent, child, baseUrl } = item;
                             const isOpen = openGroups[index];
@@ -299,19 +298,7 @@ export default function AppSidebar() {
                                 Docs
                             </span>
                         </Link>
-                        <Link
-                            href={`/workspace/${workspaceId}/system/help`}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all duration-300 group/footer w-full group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center"
-                        >
-                            <DynamicIcon
-                                name="help-circle"
-                                size={16}
-                                className="shrink-0 opacity-70 group-hover/footer:opacity-100 transition-opacity"
-                            />
-                            <span className="group-data-[collapsible=icon]:hidden whitespace-nowrap">
-                                Help & Support
-                            </span>
-                        </Link>
+
                         <div
                             className="flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-muted-foreground cursor-pointer"
                             onClick={() => {
@@ -334,10 +321,9 @@ export default function AppSidebar() {
                 <SidebarFooter>
                     <OrgAuthBlock collapsed={state === "collapsed"} />
                 </SidebarFooter>
-
-
-
             </Sidebar>
+
+
             <SettingModal
                 open={settingModal.open}
                 onClose={() => {

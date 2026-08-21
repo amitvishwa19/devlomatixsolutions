@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,14 +33,26 @@ import {
     Loader2, 
     Check, 
     UserPlus, 
-    Sparkles,
-    FolderPlus
+    FolderPlus,
+    Palette
 } from 'lucide-react';
 import { useAction } from '@/hooks/use-action';
 import { saveContact } from '../../contacts/_actions/save-contact';
+import { saveCategory } from '../../contacts/_actions/save-category';
 import { toast } from 'sonner';
 
 const POPULAR_TAGS = ['Lead', 'Customer', 'VIP', 'Support', 'Candidate', 'High Priority', 'Follow-up', 'Enterprise'];
+
+const CATEGORY_COLORS = [
+    '#3b82f6', // Blue
+    '#10b981', // Emerald
+    '#8b5cf6', // Purple
+    '#f59e0b', // Amber
+    '#ef4444', // Red
+    '#ec4899', // Pink
+    '#06b6d4', // Cyan
+    '#64748b', // Slate
+];
 
 export default function ManageContactModal({
     isOpen,
@@ -52,6 +64,7 @@ export default function ManageContactModal({
     groups = [],
     userId,
     workspaceId,
+    onCategoryCreated,
     onSaved
 }) {
     const [name, setName] = useState('');
@@ -62,6 +75,23 @@ export default function ManageContactModal({
     const [tagInput, setTagInput] = useState('');
     const [selectedGroupIds, setSelectedGroupIds] = useState([]);
 
+    // Category Creation State
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [newCategoryColor, setNewCategoryColor] = useState('#3b82f6');
+    const [localCategories, setLocalCategories] = useState(categories || []);
+
+    // Sync categories prop when it changes
+    useEffect(() => {
+        if (categories && categories.length > 0) {
+            setLocalCategories(categories);
+        }
+    }, [categories]);
+
+    // Track open state and selectedJid to prevent background polling from wiping user inputs
+    const prevOpenRef = useRef(false);
+    const prevJidRef = useRef(null);
+
     // Clean Phone number helper
     const extractCleanPhone = (jid) => {
         if (!jid) return '';
@@ -71,7 +101,10 @@ export default function ManageContactModal({
     };
 
     useEffect(() => {
-        if (isOpen) {
+        const isOpening = isOpen && !prevOpenRef.current;
+        const isSwitchingJid = isOpen && selectedJid && selectedJid !== prevJidRef.current;
+
+        if (isOpening || isSwitchingJid) {
             if (existingContact) {
                 setName(existingContact.name || '');
                 setPhone(existingContact.phone || extractCleanPhone(selectedJid));
@@ -91,9 +124,15 @@ export default function ManageContactModal({
                 setSelectedGroupIds([]);
             }
             setTagInput('');
+            setIsCreatingCategory(false);
+            setNewCategoryName('');
         }
-    }, [isOpen, existingContact, selectedJid, selectedChat]);
 
+        prevOpenRef.current = isOpen;
+        prevJidRef.current = selectedJid;
+    }, [isOpen, selectedJid]); // Intentionally isolated from background polling updates
+
+    // Action: Save Contact
     const { execute: executeSaveContact, isLoading } = useAction(saveContact, {
         onSuccess: (data) => {
             toast.success(existingContact ? "Contact attributes updated!" : "Contact saved successfully!");
@@ -104,6 +143,43 @@ export default function ManageContactModal({
             toast.error(err || "Failed to save contact");
         }
     });
+
+    // Action: Save Category
+    const { execute: executeSaveCategory, isLoading: isSavingCategory } = useAction(saveCategory, {
+        onSuccess: (data) => {
+            toast.success("Category created successfully!");
+            if (data) {
+                setLocalCategories(prev => {
+                    if (prev.some(c => c.name.toLowerCase() === data.name.toLowerCase())) {
+                        return prev;
+                    }
+                    return [...prev, data];
+                });
+                setCategory(data.name);
+            }
+            setNewCategoryName('');
+            setIsCreatingCategory(false);
+            onCategoryCreated?.();
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to create category");
+        }
+    });
+
+    const handleCreateCategory = (e) => {
+        e?.preventDefault?.();
+        if (!newCategoryName.trim()) {
+            toast.error("Category name is required");
+            return;
+        }
+        executeSaveCategory({
+            name: newCategoryName.trim(),
+            color: newCategoryColor,
+            type: 'CONTACT',
+            workspaceId,
+            userId
+        });
+    };
 
     const handleAddTag = (tagToAdd) => {
         const clean = (tagToAdd || tagInput).trim().replace(',', '');
@@ -238,38 +314,120 @@ export default function ManageContactModal({
                                     <FolderPlus className="w-3.5 h-3.5 text-blue-400" />
                                     <span>Category / Segment</span>
                                 </Label>
-                                {category && (
+                                <div className="flex items-center gap-2">
+                                    {category && !isCreatingCategory && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-[10px] text-muted-foreground hover:text-foreground px-1.5"
+                                            onClick={() => setCategory('')}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
                                     <Button
                                         type="button"
-                                        variant="ghost"
+                                        variant={isCreatingCategory ? "secondary" : "ghost"}
                                         size="sm"
-                                        className="h-6 text-[10px] text-muted-foreground hover:text-foreground"
-                                        onClick={() => setCategory('')}
+                                        className="h-6 text-[10px] text-primary hover:text-primary gap-1 px-2 border border-primary/20 bg-primary/5 hover:bg-primary/10"
+                                        onClick={() => setIsCreatingCategory(!isCreatingCategory)}
                                     >
-                                        Clear
+                                        <Plus className="w-3 h-3" />
+                                        {isCreatingCategory ? "Cancel" : "Add Category"}
                                     </Button>
-                                )}
+                                </div>
                             </div>
 
-                            <Select value={category || "NONE"} onValueChange={(val) => setCategory(val === "NONE" ? "" : val)}>
-                                <SelectTrigger className="h-9 text-xs bg-background/50 border-border/50">
-                                    <SelectValue placeholder="Select a Category..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="NONE" className="text-xs text-muted-foreground">None</SelectItem>
-                                    {categories.map((cat) => (
-                                        <SelectItem key={cat.id || cat.name} value={cat.name} className="text-xs">
-                                            <div className="flex items-center gap-2">
-                                                <div 
-                                                    className="w-2 h-2 rounded-full shrink-0" 
-                                                    style={{ backgroundColor: cat.color || '#3b82f6' }} 
-                                                />
-                                                <span>{cat.name}</span>
+                            {/* Inline New Category Creation Form */}
+                            {isCreatingCategory ? (
+                                <div className="p-3 bg-muted/20 border border-primary/20 rounded-xl space-y-3 animate-in fade-in zoom-in duration-200">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                                            <Palette className="w-3.5 h-3.5 text-primary" />
+                                            Create New Category
+                                        </span>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={newCategoryName}
+                                            onChange={(e) => setNewCategoryName(e.target.value)}
+                                            placeholder="Category Name (e.g. VIP Client, Partner)"
+                                            className="h-8 text-xs bg-background border-border/60 flex-1"
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.preventDefault();
+                                                    handleCreateCategory();
+                                                }
+                                            }}
+                                        />
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            className="h-8 text-xs px-3 bg-primary text-primary-foreground gap-1 shrink-0 font-medium"
+                                            onClick={handleCreateCategory}
+                                            disabled={isSavingCategory || !newCategoryName.trim()}
+                                        >
+                                            {isSavingCategory ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                                            Save
+                                        </Button>
+                                    </div>
+
+                                    {/* Color Picker Circles */}
+                                    <div className="flex items-center gap-1.5 pt-0.5">
+                                        <span className="text-[10px] text-muted-foreground mr-1">Color:</span>
+                                        {CATEGORY_COLORS.map(c => (
+                                            <button
+                                                key={c}
+                                                type="button"
+                                                onClick={() => setNewCategoryColor(c)}
+                                                className={`w-5 h-5 rounded-full transition-all flex items-center justify-center ${newCategoryColor === c ? 'ring-2 ring-primary ring-offset-2 scale-110' : 'opacity-70 hover:opacity-100'}`}
+                                                style={{ backgroundColor: c }}
+                                            >
+                                                {newCategoryColor === c && <Check className="w-2.5 h-2.5 text-white" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <Select 
+                                    value={category || "NONE"} 
+                                    onValueChange={(val) => {
+                                        if (val === "CREATE_NEW") {
+                                            setIsCreatingCategory(true);
+                                        } else if (val === "NONE") {
+                                            setCategory("");
+                                        } else {
+                                            setCategory(val);
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger className="h-9 text-xs bg-background/50 border-border/50">
+                                        <SelectValue placeholder="Select a Category..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="z-50">
+                                        <SelectItem value="NONE" className="text-xs text-muted-foreground">None</SelectItem>
+                                        {localCategories.map((cat) => (
+                                            <SelectItem key={cat.id || cat.name} value={cat.name} className="text-xs">
+                                                <div className="flex items-center gap-2">
+                                                    <div 
+                                                        className="w-2 h-2 rounded-full shrink-0" 
+                                                        style={{ backgroundColor: cat.color || '#3b82f6' }} 
+                                                    />
+                                                    <span>{cat.name}</span>
+                                                </div>
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="CREATE_NEW" className="text-xs font-semibold text-primary border-t border-border/40 mt-1 pt-1">
+                                            <div className="flex items-center gap-1.5">
+                                                <Plus className="w-3 h-3" />
+                                                <span>+ Create new category...</span>
                                             </div>
                                         </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                    </SelectContent>
+                                </Select>
+                            )}
                         </div>
 
                         {/* Section 3: Custom Tags */}

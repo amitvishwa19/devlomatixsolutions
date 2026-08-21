@@ -1655,6 +1655,7 @@ export default function WhatsAppChatsPage() {
                 groups={groups}
                 userId={userId}
                 workspaceId={workspaceId}
+                onCategoryCreated={fetchCategories}
                 onSaved={() => {
                     fetchContacts();
                     fetchConversations();
