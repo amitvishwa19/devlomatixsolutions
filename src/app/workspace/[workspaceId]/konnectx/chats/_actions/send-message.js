@@ -39,25 +39,34 @@ const handler = async (data) => {
 
         const cleanTo = to.replace(/[^\d+]/g, '');
 
-        // 1. Fetch Cloud API Credentials
-        const defaultInfo = await getWhatsappDefault(workspaceId).catch(() => null);
-        let credential = null;
-        if (defaultInfo?.credentialId) {
-            credential = await db.credentials.findUnique({ where: { id: defaultInfo.credentialId } }).catch(() => null);
+        // 1. Fetch Cloud API Credentials (prioritize user's switched default)
+        let credential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        }).catch(() => null);
+
+        if (!credential) {
+            credential = await db.credentials.findFirst({
+                where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+            }).catch(() => null);
+        }
+
+        if (!credential) {
+            const defaultInfo = await getWhatsappDefault(workspaceId).catch(() => null);
+            if (defaultInfo?.credentialId) {
+                credential = await db.credentials.findUnique({ where: { id: defaultInfo.credentialId } }).catch(() => null);
+            }
         }
 
         if (!credential) {
             credential = await db.credentials.findFirst({
                 where: {
                     OR: [
-                        { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true },
-                        { userId, platform: 'WHATSAPP_CLOUD', isDefault: true },
                         { workspaceId, platform: 'WHATSAPP_CLOUD' },
                         { userId, platform: 'WHATSAPP_CLOUD' },
                     ]
                 },
-                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
-            });
+                orderBy: { updatedAt: 'desc' }
+            }).catch(() => null);
         }
 
         if (!credential || !credential.credentials) {

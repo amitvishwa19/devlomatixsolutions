@@ -220,16 +220,14 @@ export default function WhatsAppChatsPage() {
                         );
                         return { ...newConv, messages: [...newConv.messages, ...localTempMsgs] };
                     });
-                    prevConversations.forEach(prevConv => {
-                        if (!incomingConvMap.has(getPhoneLast10(prevConv.jid))) {
-                            if (prevConv.messages.some(m => String(m.id).startsWith('temp_'))) mergedResults.push(prevConv);
-                        }
-                    });
                     return mergedResults.sort((a, b) => b.timestamp - a.timestamp);
                 });
 
                 setSelectedJid(currentJid => {
                     if (!currentJid && data.conversations.length > 0) return data.conversations[0].jid;
+                    if (currentJid && !data.conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(currentJid))) {
+                        return data.conversations.length > 0 ? data.conversations[0].jid : null;
+                    }
                     return currentJid;
                 });
             }
@@ -394,6 +392,9 @@ export default function WhatsAppChatsPage() {
         fetchCategories();
 
         const handleSwitch = () => {
+            setIsLoading(true);
+            setConversations([]);
+            setSelectedJid(null);
             fetchConversations();
             fetchTemplates();
             fetchContacts();

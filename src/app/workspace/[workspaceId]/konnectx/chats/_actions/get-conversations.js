@@ -32,24 +32,39 @@ const handler = async (data) => {
             ].filter(Boolean))
         ];
 
-        // 2. Resolve Active Default Credential
-        const defaultInfo = await getWhatsappDefault(workspaceId).catch(() => null);
-        let defaultCredential = null;
-        if (defaultInfo?.credentialId) {
-            defaultCredential = await db.credentials.findUnique({ where: { id: defaultInfo.credentialId } }).catch(() => null);
+        // 2. Resolve Active Default Credential (Prioritize user's switched default)
+        let defaultCredential = await db.credentials.findFirst({
+            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+        }).catch(() => null);
+
+        if (!defaultCredential) {
+            defaultCredential = await db.credentials.findFirst({
+                where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+            }).catch(() => null);
+        }
+
+        if (!defaultCredential) {
+            defaultCredential = await db.credentials.findFirst({
+                where: { userId: { in: workspaceUserIds }, platform: 'WHATSAPP_CLOUD', isDefault: true }
+            }).catch(() => null);
+        }
+
+        if (!defaultCredential) {
+            const defaultInfo = await getWhatsappDefault(workspaceId).catch(() => null);
+            if (defaultInfo?.credentialId) {
+                defaultCredential = await db.credentials.findUnique({ where: { id: defaultInfo.credentialId } }).catch(() => null);
+            }
         }
 
         if (!defaultCredential) {
             defaultCredential = await db.credentials.findFirst({
                 where: {
                     OR: [
-                        { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true },
-                        { userId: { in: workspaceUserIds }, platform: 'WHATSAPP_CLOUD', isDefault: true },
                         { workspaceId, platform: 'WHATSAPP_CLOUD' },
                         { userId: { in: workspaceUserIds }, platform: 'WHATSAPP_CLOUD' },
                     ]
                 },
-                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
+                orderBy: { updatedAt: 'desc' }
             }).catch(() => null);
         }
 
@@ -107,12 +122,31 @@ const handler = async (data) => {
             }
         });
 
-        const [messages, assignedMsgs, contacts, shares] = await Promise.all([
+        const [rawMessages, rawAssignedMsgs, contacts, shares] = await Promise.all([
             ownMessages, 
             assignedMessages, 
             allContacts,
             allShares
         ]);
+
+        // 5. Filter messages strictly by activePhoneId if available
+        const filterByActivePhone = (msg) => {
+            if (!activePhoneId) return true;
+            const msgPhoneId = msg.metadata?.phone_number_id || 
+                               msg.metadata?.phoneNumberId || 
+                               msg.metadata?.phoneId ||
+                               msg.metadata?.raw?.metadata?.phone_number_id ||
+                               msg.metadata?.raw?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
+            if (msgPhoneId) {
+                return String(msgPhoneId) === activePhoneId;
+            }
+            // For legacy messages without phone_number_id in metadata:
+            // if no phone ID was ever stamped, include it so old data isn't hidden
+            return true;
+        };
+
+        const messages = rawMessages.filter(filterByActivePhone);
+        const assignedMsgs = rawAssignedMsgs.filter(filterByActivePhone);
 
         // Fetch contacts owned by assigning users for name resolution
         const assigningUserIds = [...new Set(assignedShares.map(s => s.sharedByUserId))];
@@ -229,6 +263,7 @@ const handler = async (data) => {
         return { 
             data: {
                 success: true, 
+                activePhoneId,
                 conversations: JSON.parse(JSON.stringify(conversations))
             } 
         };
