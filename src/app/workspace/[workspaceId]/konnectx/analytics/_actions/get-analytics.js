@@ -18,12 +18,19 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // Get all workspace users
-        const workspaceUsers = await db.workspaceUser.findMany({
-            where: { workspaceId },
-            select: { userId: true }
-        });
-        const workspaceUserIds = Array.from(new Set([userId, ...workspaceUsers.map(u => u.userId)]));
+        // Resolve workspace team user IDs
+        const workspace = await db.server.findUnique({
+            where: { id: workspaceId },
+            include: { members: true }
+        }).catch(() => null);
+
+        const workspaceUserIds = [
+            ...new Set([
+                userId,
+                workspace?.userId,
+                ...((workspace?.members || []).map(m => m.userId))
+            ].filter(Boolean))
+        ];
 
         // Find Default Credential
         const defaultCredential = await db.credentials.findFirst({

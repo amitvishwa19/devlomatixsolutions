@@ -159,18 +159,6 @@ export const getSidebarNavItems = (workspaceId) => {
             baseUrl: baseSocialhubPath,
             permission: `navbar:SocialHub:Parent`
         },
-        // {
-        //     parent: { title: "Documents", icon: "file", url: baseDocPath },
-        //     child: [
-        //         { title: "All Assets", icon: "layout-grid", url: baseDocPath },
-        //         { title: "Files", icon: "files", url: `${baseDocPath}?view=files` },
-        //         { title: "Folders", icon: "folder", url: `${baseDocPath}?view=folders` },
-        //         { title: "Uploads", icon: "upload-cloud", url: `${baseDocPath}?view=uploads` },
-        //         { title: "Trash", icon: "trash-2", url: `${baseDocPath}?view=trash` },
-        //     ],
-        //     baseUrl: baseDocPath,
-        //     permission: `navbar:Documents:Parent`
-        // },
         {
             parent: { title: "Documents", icon: "file", url: baseDocPath },
             child: [],

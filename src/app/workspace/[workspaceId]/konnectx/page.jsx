@@ -1,24 +1,35 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
-import { CheckCircle2, MessageCircleDashed, Users, MessageSquare, AlertCircle } from "lucide-react";
+import { 
+    MessageSquare, Send, Zap, Users, ShieldCheck, RefreshCw, 
+    Plus, Sparkles, AlertCircle, Bot, Workflow, BarChart3, Settings2,
+    CheckCircle2, Radio
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAction } from "@/hooks/use-action";
-import CampaignList from "./_components/CampaignList";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
+
 import DashboardStats from "./_components/DashboardStats";
+import DashboardAnalyticsVisualizer from "./_components/DashboardAnalyticsVisualizer";
+import KonnectxSuiteLaunchpad from "./_components/KonnectxSuiteLaunchpad";
+import CampaignList from "./_components/CampaignList";
 import RecentActivity from "./_components/RecentActivity";
+import QuickTestMessageModal from "./_components/QuickTestMessageModal";
+import AccountSwitcher from "./_components/AccountSwitcher";
+import CreateCampaignDialog from "./_components/CreateCampaignDialog";
+import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
+import DeleteCampaignDialog from "./campaigns/_cpmponents/DeleteCampaignDialog";
+
 import { getActivities } from "./_actions/get-activities";
 import { getCampaigns } from "./campaigns/_actions/get-campaigns";
 import { saveCampaign } from "./campaigns/_actions/save-campaign";
 import { deleteCampaign as deleteCampaignAction } from "./campaigns/_actions/delete-campaign";
 import { toggleCampaignStatus as toggleCampaignStatusAction } from "./campaigns/_actions/toggle-campaign-status";
-import WhatsAppSettingModal from "./_components/WhatsAppSettingModal";
-import AccountSwitcher from "./_components/AccountSwitcher";
-import { toast } from "sonner";
-import DeleteCampaignDialog from "./campaigns/_cpmponents/DeleteCampaignDialog";
-
-
+import { syncTemplates } from "./template/_actions/sync-templates";
 
 const mapApiCampaignToUI = (campaign) => ({
     id: campaign.id,
@@ -31,17 +42,16 @@ const mapApiCampaignToUI = (campaign) => ({
     createdAt: campaign.createdAt
 });
 
-// Removed hardcoded activities constant
-
 export default function DashboardPage() {
     const params = useParams();
+    const router = useRouter();
     const workspaceId = params.workspaceId;
+
     const [campaigns, setCampaigns] = useState([]);
     const [activities, setActivities] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editCampaign, setEditCampaign] = useState(null);
-    const [waConnectionOpen, setWaConnectionOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loadingCampaigns, setLoadingCampaigns] = useState(false);
     const [activityPage, setActivityPage] = useState(1);
     const [activityPagination, setActivityPagination] = useState({
         totalPages: 1,
@@ -49,47 +59,45 @@ export default function DashboardPage() {
         totalOnPage: 0,
         hasMore: false
     });
-    const [error, setError] = useState(null);
-    const [isWhatsappSettingOpen, setIsWhatsappSettingOpen] = useState(false);
-    const handleWhatsappSettingClose = () => setIsWhatsappSettingOpen(false);
+    const [campaignError, setCampaignError] = useState(null);
 
+    const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+    const [isWhatsappSettingOpen, setIsWhatsappSettingOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [campaignToDelete, setCampaignToDelete] = useState(null);
+    const [isSyncingTemplates, setIsSyncingTemplates] = useState(false);
 
+    // 1. Fetch Campaigns
     const { execute: executeGetCampaigns } = useAction(getCampaigns, {
         onSuccess: (data) => {
             const incoming = (data.campaigns || []).map(mapApiCampaignToUI);
             setCampaigns(incoming);
-            setLoading(false);
+            setLoadingCampaigns(false);
         },
         onError: (error) => {
-            setError(error);
-            setLoading(false);
+            setCampaignError(error);
+            setLoadingCampaigns(false);
         }
     });
 
     const fetchCampaigns = useCallback(() => {
-        if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
-
-        setLoading(true);
-        setError(null);
+        if (!workspaceId || workspaceId === "[workspaceId]" || workspaceId === "undefined") return;
+        setLoadingCampaigns(true);
+        setCampaignError(null);
         executeGetCampaigns({ workspaceId });
     }, [workspaceId, executeGetCampaigns]);
 
-
+    // 2. Fetch Recent Activities
     const { execute: executeGetActivities, isLoading: activitiesLoading } = useAction(getActivities, {
         onSuccess: (data) => {
             if (data.activities) {
-                // Map API activities to UI format
-                const mapped = data.activities.map(act => ({
+                const mapped = data.activities.map((act) => ({
                     id: act.id,
                     type: act.type,
                     title: act.title,
-                    time: act.time ? new Date(act.time).toLocaleString() : 'Just now',
+                    time: act.time ? new Date(act.time).toLocaleString() : "Just now",
                     description: act.description,
-                    color: act.type === 'success' ? 'text-emerald-400' : act.type === 'message' ? 'text-blue-400' : 'text-amber-400',
-                    bg: act.type === 'success' ? 'bg-emerald-400/10' : act.type === 'message' ? 'bg-blue-400/10' : 'bg-amber-400/10'
                 }));
                 setActivities(mapped);
                 if (data.pagination) {
@@ -98,17 +106,17 @@ export default function DashboardPage() {
             }
         },
         onError: (error) => {
-            console.error('Failed to fetch WA activities:', error);
+            console.error("Failed to fetch WA activities:", error);
         }
     });
 
     const fetchActivities = useCallback((page = 1) => {
-        if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
-        executeGetActivities({ workspaceId, page, pageSize: 5 });
+        if (!workspaceId || workspaceId === "[workspaceId]" || workspaceId === "undefined") return;
+        executeGetActivities({ workspaceId, page, pageSize: 6 });
     }, [workspaceId, executeGetActivities]);
 
     useEffect(() => {
-        if (workspaceId && workspaceId !== '[workspaceId]') {
+        if (workspaceId && workspaceId !== "[workspaceId]") {
             fetchCampaigns();
             fetchActivities(activityPage);
         }
@@ -118,14 +126,37 @@ export default function DashboardPage() {
             fetchActivities(activityPage);
         };
 
-        window.addEventListener('wa-account-switched', handleAccountSwitch);
-        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
+        window.addEventListener("wa-account-switched", handleAccountSwitch);
+        return () => window.removeEventListener("wa-account-switched", handleAccountSwitch);
     }, [workspaceId, activityPage, fetchCampaigns, fetchActivities]);
 
-    const refresh = () => fetchCampaigns();
+    // 3. Sync Templates from Meta
+    const { execute: executeSyncTemplates } = useAction(syncTemplates, {
+        onSuccess: (res) => {
+            setIsSyncingTemplates(false);
+            toast.success("Meta templates synchronized successfully!", {
+                description: "All approved and pending templates are updated."
+            });
+            fetchCampaigns();
+            fetchActivities(1);
+        },
+        onError: (err) => {
+            setIsSyncingTemplates(false);
+            toast.error(err || "Failed to sync templates from Meta Graph API");
+        }
+    });
 
+    const handleSyncTemplates = () => {
+        setIsSyncingTemplates(true);
+        executeSyncTemplates({ workspaceId });
+    };
+
+    // 4. Toggle Campaign Status
     const { execute: executeToggleStatus } = useAction(toggleCampaignStatusAction, {
-        onSuccess: () => refresh()
+        onSuccess: () => {
+            fetchCampaigns();
+            toast.success("Campaign status updated");
+        }
     });
 
     const toggleCampaignStatus = (campaign) => {
@@ -137,16 +168,17 @@ export default function DashboardPage() {
         });
     };
 
+    // 5. Delete Campaign
     const { execute: executeDeleteCampaign } = useAction(deleteCampaignAction, {
         onSuccess: () => {
-            refresh();
+            fetchCampaigns();
             setDeleteDialogOpen(false);
             setCampaignToDelete(null);
             setIsDeleting(false);
             toast.success("Campaign deleted");
         },
         onError: (error) => {
-            setError(error);
+            setCampaignError(error);
             setDeleteDialogOpen(false);
             setCampaignToDelete(null);
             setIsDeleting(false);
@@ -168,11 +200,16 @@ export default function DashboardPage() {
         executeDeleteCampaign({ workspaceId, id: campaignToDelete.id });
     };
 
+    // 6. Save Campaign
     const { execute: executeSaveCampaign } = useAction(saveCampaign, {
         onSuccess: () => {
             setDialogOpen(false);
             setEditCampaign(null);
-            refresh();
+            fetchCampaigns();
+            toast.success("Campaign saved successfully");
+        },
+        onError: (err) => {
+            toast.error(err || "Failed to save campaign");
         }
     });
 
@@ -183,100 +220,141 @@ export default function DashboardPage() {
             name: data.name,
             messageTemplate: data.template,
             status: data.status,
-            description: "" // Add description if needed
+            description: ""
         });
     };
 
     return (
-        <div className="space-y-4 animate-in fade-in duration-500 p-4">
+        <div className="space-y-5 p-4 md:p-6 pb-12 animate-in fade-in duration-300">
+            {/* 1. Hero Command Center Banner */}
+            <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="relative p-5 rounded-2xl overflow-hidden bg-gradient-to-br from-card via-card to-secondary/30 border border-border/70 shadow-xs"
+            >
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Left: Branding & Status */}
+                    <div className="space-y-1.5 max-w-2xl">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px] font-bold tracking-wider uppercase border border-emerald-500/20">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Meta Cloud API v21.0
+                            </span>
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono bg-secondary/60 px-2 py-0.5 rounded-md border border-border/50">
+                                <Radio className="w-3 h-3 text-emerald-500" /> Webhook Live
+                            </span>
+                        </div>
 
+                        <h1 className="text-xl md:text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+                            KonnectX Command Hub
+                        </h1>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            Control your WhatsApp Business broadcasts, 2-way AI customer chats, Meta interactive form flows, and audience deliverability from one unified console.
+                        </p>
+                    </div>
 
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
-                    <p className="text-xs text-muted-foreground mt-1">Overview of your WhatsApp campaigns</p>
+                    {/* Right: Account Switcher & Direct Actions */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        <AccountSwitcher />
+
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setIsTestModalOpen(true)}
+                            className="h-8 text-xs font-semibold gap-1.5 border-border/70 hover:bg-secondary shadow-2xs"
+                        >
+                            <Send className="w-3.5 h-3.5 text-emerald-500" />
+                            <span>Quick Test</span>
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleSyncTemplates}
+                            disabled={isSyncingTemplates}
+                            className="h-8 text-xs font-semibold gap-1.5 border-border/70 hover:bg-secondary shadow-2xs"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 text-blue-500 ${isSyncingTemplates ? "animate-spin" : ""}`} />
+                            <span>{isSyncingTemplates ? "Syncing..." : "Sync Meta"}</span>
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            onClick={() => router.push(`/workspace/${workspaceId}/konnectx/campaigns`)}
+                            className="h-8 text-xs font-semibold gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>New Broadcast</span>
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-3">
+            </motion.div>
 
-                    <AccountSwitcher />
-                </div>
-            </div>
-
+            {/* 2. Executive KPI & Telemetry Cards */}
             <DashboardStats workspaceId={workspaceId} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 3. Interactive Deliverability & Telemetry Visualizer */}
+            <DashboardAnalyticsVisualizer workspaceId={workspaceId} />
 
-                <div className="lg:col-span-2 space-y-4">
+            {/* 4. KonnectX Suite Tools Launchpad */}
+            <KonnectxSuiteLaunchpad workspaceId={workspaceId} />
+
+            {/* 5. Broadcast Campaigns & Real-time Live Activity Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left Column (2 Cols): Campaign Management Table */}
+                <div className="lg:col-span-2 space-y-3">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-base font-semibold text-foreground">
-                            Campaigns <span className="text-sm text-muted-foreground">({campaigns.length})</span>
-                        </h3>
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                <Zap className="w-4 h-4 text-emerald-500" /> Broadcast Campaigns
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">Manage and track your active WhatsApp broadcasts</p>
+                        </div>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setDialogOpen(true)}
+                            className="h-7 text-xs font-semibold gap-1.5 border-border/70 hover:bg-secondary"
+                        >
+                            <Plus className="w-3 h-3 text-emerald-500" />
+                            <span>Quick Campaign</span>
+                        </Button>
                     </div>
 
-                    {loading ?
-                        <div className="bg-card border border-border rounded-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="border-b border-border text-left">
-                                            {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                                                <th key={i} className="px-6 py-4">
-                                                    <div className="h-3 w-16 bg-muted animate-pulse rounded" />
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border">
-                                        {[1, 2, 3].map(i => (
-                                            <tr key={i}>
-                                                {[1, 2, 3, 4, 5, 6, 7].map(j => (
-                                                    <td key={j} className="px-6 py-4">
-                                                        <div className="h-4 w-full bg-muted animate-pulse rounded" />
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div> :
-                        error ?
-                            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                                {error}
-                            </div> :
-
-                            campaigns.length === 0 ?
-                                <div className="flex flex-col items-center justify-center py-12 px-4 text-center border rounded-lg border-dashed border-border bg-card/50">
-                                    <MessageCircleDashed className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                                    <h3 className="text-lg font-medium text-foreground">No campaigns found</h3>
-                                    <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                                        You haven&apos;t created any WhatsApp campaigns yet. Head to the Bulk Sender to start your first broadcast.
-                                    </p>
-                                    <Button variant="outline" className="mt-6" asChild>
-                                        <a href={`/workspace/${workspaceId}/wa-cloud-api/bulk-sender`}>Go to Bulk Sender</a>
-                                    </Button>
-                                </div> :
-                                <CampaignList
-                                    campaigns={campaigns}
-                                    onToggleStatus={(id) => {
-                                        const c = campaigns.find((c) => c.id === id);
-                                        if (c) toggleCampaignStatus(c);
-                                    }}
-                                    onEdit={(c) => {
-                                        setEditCampaign(c);
-                                        setDialogOpen(true);
-                                    }}
-                                    onDelete={handleDeleteClick} />
-
-                    }
+                    {campaignError ? (
+                        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-xs text-destructive flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            <span>{campaignError}</span>
+                        </div>
+                    ) : (
+                        <CampaignList
+                            campaigns={campaigns}
+                            workspaceId={workspaceId}
+                            onToggleStatus={(id) => {
+                                const c = campaigns.find((item) => item.id === id);
+                                if (c) toggleCampaignStatus(c);
+                            }}
+                            onEdit={(c) => {
+                                setEditCampaign(c);
+                                setDialogOpen(true);
+                            }}
+                            onDelete={handleDeleteClick}
+                        />
+                    )}
                 </div>
 
-                <div className="lg:col-span-1 space-y-4">
+                {/* Right Column (1 Col): Live Event Activity Stream */}
+                <div className="lg:col-span-1 space-y-3">
                     <div className="flex items-center justify-between">
-                        <h3 className="text-base font-semibold text-foreground">
-                            Recent Activity <span className="text-sm text-muted-foreground">({activities.length})</span>
-                        </h3>
+                        <div>
+                            <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-primary" /> Live Activity Feed
+                            </h3>
+                            <p className="text-[11px] text-muted-foreground">Real-time webhook messages & approvals</p>
+                        </div>
                     </div>
+
                     <RecentActivity
                         activities={activities}
                         loading={activitiesLoading}
@@ -286,12 +364,33 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-
-            <WhatsAppSettingModal
-                open={isWhatsappSettingOpen}
-                onClose={handleWhatsappSettingClose}
+            {/* 6. Modals & Dialogs */}
+            {/* Quick Test Message Modal */}
+            <QuickTestMessageModal
+                open={isTestModalOpen}
+                onOpenChange={setIsTestModalOpen}
+                workspaceId={workspaceId}
+                onSentSuccess={() => {
+                    fetchCampaigns();
+                    fetchActivities(1);
+                }}
             />
 
+            {/* Quick Campaign Dialog */}
+            <CreateCampaignDialog
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                editCampaign={editCampaign}
+                onSave={handleSaveCampaign}
+            />
+
+            {/* WhatsApp Setting Modal */}
+            <WhatsAppSettingModal
+                open={isWhatsappSettingOpen}
+                onClose={() => setIsWhatsappSettingOpen(false)}
+            />
+
+            {/* Delete Campaign Confirmation Dialog */}
             <DeleteCampaignDialog
                 open={deleteDialogOpen}
                 onOpenChange={setDeleteDialogOpen}
@@ -299,9 +398,6 @@ export default function DashboardPage() {
                 isDeleting={isDeleting}
                 onConfirm={confirmDelete}
             />
-
-
-        </div>);
-
+        </div>
+    );
 }
-
