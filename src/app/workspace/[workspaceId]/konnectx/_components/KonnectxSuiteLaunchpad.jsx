@@ -75,10 +75,10 @@ export default function KonnectxSuiteLaunchpad({ workspaceId }) {
             hoverBorder: "hover:border-teal-500/40"
         },
         {
-            title: "WhatsApp Commerce & Orders",
+            title: "WhatsApp Catalog & Commerce",
             description: "Interactive catalog products, single & multi-item checkout carts, and instant payment alerts.",
-            icon: ShoppingCart,
-            href: `/workspace/${workspaceId}/konnectx/ecommerce`,
+            icon: ShoppingBag,
+            href: `/workspace/${workspaceId}/konnectx/catalog`,
             badge: "Catalog & Pay",
             accent: "text-rose-500",
             bgAccent: "bg-rose-500/10 border-rose-500/20",

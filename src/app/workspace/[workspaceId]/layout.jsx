@@ -29,7 +29,7 @@ function WorkspaceLayoutInner({ children }) {
                         </div>
                         <div className='flex-1 min-h-0 relative pt-0 overflow-hidden'>
                             <div className='h-full relative border border-border/80  rounded-lg bg-card overflow-hidden shadow-xs'>
-                                <ScrollArea className="h-full overflow-hidden relative">
+                                <ScrollArea className="h-full overflow-hidden relative bg-background">
                                     {children}
                                     <ScrollBar orientation="vertical" />
                                 </ScrollArea>

@@ -493,6 +493,189 @@ async function deleteFlowMeta(credentials, flowId) {
     }
 }
 
+async function fetchAssignedCatalogs(credentials) {
+    const { accessToken, wabaId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!wabaId) return response(false, null, 'Missing wabaId');
+
+    const url = `${BASE_URL}/${version}/${wabaId}/assigned_product_catalogs`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_COMMERCE_CATALOGS_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to fetch assigned catalogs');
+        }
+        return response(true, data.data || []);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function getCommerceSettings(credentials) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!phoneNumberId) return response(false, null, 'Missing phoneNumberId');
+
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/whatsapp_commerce_settings`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.warn('[WA_COMMERCE_SETTINGS_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to fetch commerce settings');
+        }
+        return response(true, data.data?.[0] || data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function updateCommerceSettings(credentials, settings) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!phoneNumberId) return response(false, null, 'Missing phoneNumberId');
+
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/whatsapp_commerce_settings`;
+    const searchParams = new URLSearchParams();
+    if (settings.is_catalog_visible !== undefined) searchParams.append('is_catalog_visible', String(settings.is_catalog_visible));
+    if (settings.is_cart_enabled !== undefined) searchParams.append('is_cart_enabled', String(settings.is_cart_enabled));
+    if (settings.catalog_id) searchParams.append('catalog_id', settings.catalog_id);
+
+    try {
+        const res = await fetch(`${url}?${searchParams.toString()}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_COMMERCE_SETTINGS_UPDATE_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to update commerce settings');
+        }
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function fetchCatalogProductsMeta(credentials, catalogId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!catalogId) return response(false, null, 'Missing catalogId');
+
+    const url = `${BASE_URL}/${version}/${catalogId}/products?fields=id,retailer_id,name,description,price,currency,image_url,url,availability,category,review_status&limit=100`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_CATALOG_PRODUCTS_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to fetch catalog products');
+        }
+        return response(true, data.data || []);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function createCatalogProductMeta(credentials, catalogId, product) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!catalogId) return response(false, null, 'Missing catalogId');
+
+    const url = `${BASE_URL}/${version}/${catalogId}/products`;
+    const priceInCents = Math.round(Number(product.price || 0) * 100);
+
+    const payload = {
+        retailer_id: product.sku || product.retailer_id || `SKU_${Date.now()}`,
+        name: product.name || product.title,
+        description: product.description || product.name || product.title,
+        price: priceInCents,
+        currency: (product.currency || 'INR').toUpperCase(),
+        image_url: product.image_url || product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30',
+        url: product.url || 'https://example.com',
+        availability: product.availability || (product.status === 'out of stock' ? 'out of stock' : 'in stock'),
+        condition: product.condition || 'new'
+    };
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_CATALOG_CREATE_PRODUCT_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to create product in catalog');
+        }
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function deleteCatalogProductMeta(credentials, productId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    const url = `${BASE_URL}/${version}/${productId}`;
+
+    try {
+        const res = await fetch(url, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) return response(false, null, data.error?.message || 'Failed to delete catalog product');
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+async function sendProductInteractiveMessage(credentials, to, { catalogId, retailerId, bodyText, footerText }) {
+    const cleanTo = to.replace(/[^\d+]/g, '').replace(/^\+/, '');
+    const payload = {
+        to: cleanTo,
+        type: 'interactive',
+        interactive: {
+            type: 'product',
+            body: { text: bodyText || 'Check out this product from our catalog:' },
+            ...(footerText ? { footer: { text: footerText } } : {}),
+            action: {
+                catalog_id: catalogId,
+                product_retailer_id: retailerId
+            }
+        }
+    };
+    return metaPost(credentials, 'messages', payload);
+}
+
+async function sendCatalogInteractiveMessage(credentials, to, { bodyText, footerText }) {
+    const cleanTo = to.replace(/[^\d+]/g, '').replace(/^\+/, '');
+    const payload = {
+        to: cleanTo,
+        type: 'interactive',
+        interactive: {
+            type: 'catalog_message',
+            body: { text: bodyText || 'Explore our complete product catalog on WhatsApp!' },
+            ...(footerText ? { footer: { text: footerText } } : {}),
+            action: {
+                name: 'catalog_message'
+            }
+        }
+    };
+    return metaPost(credentials, 'messages', payload);
+}
+
 export {
     testCloudConnection,
     sendTextMessage,
@@ -511,5 +694,13 @@ export {
     publishFlowMeta,
     deleteFlowMeta,
     getFlowAssetMeta,
-    uploadMetaMedia
+    uploadMetaMedia,
+    fetchAssignedCatalogs,
+    getCommerceSettings,
+    updateCommerceSettings,
+    fetchCatalogProductsMeta,
+    createCatalogProductMeta,
+    deleteCatalogProductMeta,
+    sendProductInteractiveMessage,
+    sendCatalogInteractiveMessage
 };
