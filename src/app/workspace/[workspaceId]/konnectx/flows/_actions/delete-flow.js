@@ -38,7 +38,7 @@ const handler = async (data) => {
         }
 
         await db.whatsAppFlow.delete({
-            where: { id, userId }
+            where: { id }
         });
 
         return { success: true };

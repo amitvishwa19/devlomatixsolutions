@@ -401,7 +401,12 @@ async function updateFlowAssetMeta(credentials, flowId, flowJson) {
             body: formData
         });
         const data = await res.json();
-        if (!res.ok) return response(false, null, data.error?.message || 'Failed to upload flow asset');
+        if (!res.ok) {
+            console.error('[WA_FLOW_ASSET_ERROR]', data.error);
+            const errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to upload flow asset';
+            const validationErrors = data.error?.error_data?.validation_errors || [];
+            return response(false, data, errorMsg, validationErrors);
+        }
         return response(true, data);
     } catch (err) {
         return response(false, null, err.message);
@@ -419,7 +424,12 @@ async function publishFlowMeta(credentials, flowId) {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         const data = await res.json();
-        if (!res.ok) return response(false, null, data.error?.message || 'Failed to publish flow');
+        if (!res.ok) {
+            console.error('[WA_FLOW_PUBLISH_ERROR]', data.error);
+            const errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to publish flow';
+            const validationErrors = data.error?.error_data?.validation_errors || [];
+            return response(false, data, errorMsg, validationErrors);
+        }
         return response(true, data);
     } catch (err) {
         return response(false, null, err.message);

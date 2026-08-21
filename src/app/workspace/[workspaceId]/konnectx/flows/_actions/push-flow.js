@@ -65,7 +65,16 @@ const handler = async (data) => {
         // 4. Generate and upload flow.json asset
         const flowJson = generateFlowDSL(flow.screens, { endpointUrl: flow.endpointUrl });
         const uploadRes = await cloudApi.updateFlowAssetMeta(credentials, metaId, flowJson);
-        if (!uploadRes.success) throw new Error(`Meta Upload Error: ${uploadRes.error}`);
+        if (!uploadRes.success) {
+            const validationErrors = uploadRes.validationErrors || uploadRes.data?.error?.error_data?.validation_errors || [];
+            if (validationErrors.length > 0) {
+                await db.whatsAppFlow.update({
+                    where: { id: localFlowId },
+                    data: { metaValidationErrors: JSON.stringify(validationErrors) }
+                }).catch(() => {});
+            }
+            throw new Error(`Meta Upload Error: ${uploadRes.error}`);
+        }
 
         // 5. Update Local DB
         await db.whatsAppFlow.update({
@@ -73,7 +82,8 @@ const handler = async (data) => {
             data: {
                 flowId: metaId,
                 definition: flowJson,
-                status: 'DRAFT'
+                status: 'DRAFT',
+                metaValidationErrors: null
             }
         });
 

@@ -26,7 +26,7 @@ const handler = async (data) => {
         if (id) {
             // Update
             const flow = await db.whatsAppFlow.update({
-                where: { id, userId },
+                where: { id },
                 data: {
                     ...rest,
                     updatedAt: new Date()

@@ -5,6 +5,7 @@ import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import { getDecryptedCredentials } from "../../settings/_actions/get-decrypted-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
+import { generateFlowDSL } from "../_lib/flow-utils";
 
 import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
@@ -26,7 +27,8 @@ const handler = async (data) => {
             where: { id: localFlowId, workspaceId }
         });
 
-        if (!flow || !flow.flowId) throw new Error("Flow not pushed to Meta yet");
+        if (!flow) throw new Error("Flow not found in database");
+        if (!flow.flowId) throw new Error("Flow has not been pushed to Meta yet. Please click 'Push' first.");
 
         // 2. Get Credentials
         const credsRes = await getDecryptedCredentials({ workspaceId });
@@ -34,22 +36,53 @@ const handler = async (data) => {
             throw new Error(credsRes.error || "WhatsApp credentials not found");
         }
         const credentials = credsRes.data;
+        if (!credentials?.accessToken) {
+            throw new Error("Meta access token is missing or expired. Please check your account in Settings.");
+        }
 
-        // 3. Publish on Meta
-        console.log(`📢 Publishing flow ${flow.flowId} on Meta...`);
-        const publishRes = await cloudApi.publishFlowMeta(credentials, flow.flowId);
+        const metaId = flow.flowId;
+
+        // 3. Re-upload latest Flow JSON asset to ensure Meta has valid and updated schema before publishing
+        const flowJson = generateFlowDSL(flow.screens, { endpointUrl: flow.endpointUrl });
+        console.log(`📢 Syncing flow asset before publishing flow ${metaId}...`);
+        const assetRes = await cloudApi.updateFlowAssetMeta(credentials, metaId, flowJson);
+        if (!assetRes.success) {
+            const validationErrors = assetRes.validationErrors || assetRes.data?.error?.error_data?.validation_errors || [];
+            if (validationErrors.length > 0) {
+                await db.whatsAppFlow.update({
+                    where: { id: localFlowId },
+                    data: { metaValidationErrors: JSON.stringify(validationErrors) }
+                }).catch(() => {});
+            }
+            throw new Error(`Flow Asset Error: ${assetRes.error}`);
+        }
+
+        // 4. Publish on Meta
+        console.log(`📢 Publishing flow ${metaId} on Meta...`);
+        const publishRes = await cloudApi.publishFlowMeta(credentials, metaId);
         
         if (!publishRes.success) {
+            const validationErrors = publishRes.validationErrors || publishRes.data?.error?.error_data?.validation_errors || [];
+            if (validationErrors.length > 0) {
+                await db.whatsAppFlow.update({
+                    where: { id: localFlowId },
+                    data: { metaValidationErrors: JSON.stringify(validationErrors) }
+                }).catch(() => {});
+            }
             throw new Error(`Meta Publish Error: ${publishRes.error}`);
         }
 
-        // 4. Update Local DB
+        // 5. Update Local DB
         await db.whatsAppFlow.update({
             where: { id: localFlowId },
-            data: { status: 'PUBLISHED' }
+            data: { 
+                status: 'PUBLISHED',
+                definition: flowJson,
+                metaValidationErrors: null 
+            }
         });
 
-        revalidatePath(`/workspace/${workspaceId}/wa-cloud-api/flows`);
+        revalidatePath(`/workspace/${workspaceId}/konnectx/flows`);
         return { success: true };
 
     } catch (error) {

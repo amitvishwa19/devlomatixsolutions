@@ -1,5 +1,10 @@
+/**
+ * WhatsApp Flow JSON DSL Generator
+ * Adheres strictly to Meta WhatsApp Flows JSON Schema (v3.1 / v5.0 / v6.0)
+ */
+
 export function generateFlowDSL(screens, options = {}) {
-    const FLOW_VERSION = process.env.NEXT_PUBLIC_WA_FLOW_VERSION || "6.0";
+    const FLOW_VERSION = process.env.NEXT_PUBLIC_WA_FLOW_VERSION || "3.1";
     const { endpointUrl } = options;
 
     if (!screens || screens.length === 0) {
@@ -8,10 +13,20 @@ export function generateFlowDSL(screens, options = {}) {
             screens: [{
                 id: "WELCOME",
                 title: "Welcome",
+                terminal: true,
+                data: {},
                 layout: {
                     type: "SingleColumnLayout",
                     children: [
                         { type: "TextHeading", text: "Welcome" },
+                        {
+                            type: "Footer",
+                            label: "Finish",
+                            "on-click-action": {
+                                name: "complete",
+                                payload: {}
+                            }
+                        }
                     ]
                 }
             }],
@@ -19,197 +34,245 @@ export function generateFlowDSL(screens, options = {}) {
         };
     }
 
-    const flow = {
+    const sanitizedScreens = screens.map((s, index) => ({
+        ...s,
+        sanitizedId: sanitizeScreenId(s.id, index + 1)
+    }));
+
+    const validScreenIds = new Set(sanitizedScreens.map(s => s.sanitizedId));
+
+    const flowScreens = sanitizedScreens.map((s, index) => {
+        const isLast = index === sanitizedScreens.length - 1;
+        const safeId = s.sanitizedId;
+
+        // Determine if this screen is terminal
+        const wantsTerminal = s.terminal === true || (isLast && (!s.footerAction || s.footerAction.type === 'complete'));
+        const isTerminal = wantsTerminal || (isLast && screens.length === 1);
+
+        // Build component children
+        const rawChildren = (s.children || []).flatMap(c => buildComponentNode(c));
+
+        // Layout children must have at least one visible content element before Footer
+        if (rawChildren.length === 0) {
+            rawChildren.push({
+                type: "TextHeading",
+                text: s.title || `Screen ${index + 1}`
+            });
+        }
+
+        // Add Footer as the final child of SingleColumnLayout
+        const footer = buildFooter(s, index, sanitizedScreens, validScreenIds, endpointUrl, isTerminal);
+        rawChildren.push(footer);
+
+        return {
+            id: safeId,
+            title: s.title || `Screen ${index + 1}`,
+            terminal: isTerminal,
+            data: s.data || {},
+            layout: {
+                type: "SingleColumnLayout",
+                children: rawChildren
+            }
+        };
+    });
+
+    // Ensure at least one terminal screen exists in the entire flow
+    const hasTerminal = flowScreens.some(s => s.terminal);
+    if (!hasTerminal && flowScreens.length > 0) {
+        const last = flowScreens[flowScreens.length - 1];
+        last.terminal = true;
+        const lastChildren = last.layout.children;
+        const footerIdx = lastChildren.findIndex(c => c.type === 'Footer');
+        const terminalFooter = {
+            type: "Footer",
+            label: "Finish",
+            "on-click-action": {
+                name: "complete",
+                payload: {}
+            }
+        };
+        if (footerIdx >= 0) {
+            lastChildren[footerIdx] = terminalFooter;
+        } else {
+            lastChildren.push(terminalFooter);
+        }
+    }
+
+    return {
         version: FLOW_VERSION,
-        screens: screens.map((s, index) => {
-            const safeId = sanitizeScreenId(s.id, index);
-            const isLast = index === screens.length - 1;
-
-            const children = s.children.flatMap(c => buildComponentNode(c));
-
-            children.push(buildFooter(s, index, screens, endpointUrl));
-
-            return {
-                id: safeId,
-                title: s.title,
-                layout: {
-                    type: "SingleColumnLayout",
-                    children
-                }
-            };
-        }),
+        screens: flowScreens,
         ...(endpointUrl ? { endpoint_url: endpointUrl } : {})
     };
-
-    return flow;
 }
 
 function sanitizeScreenId(id, fallbackIndex) {
     return (id || '')
-        .replace(/[^a-zA-Z0-9_]/g, '')
-        .replace(/^[0-9]/, '_')
+        .toUpperCase()
+        .replace(/[^A-Z0-9_]/g, '')
+        .replace(/^[0-9]/, 'S_')
         || `SCREEN_${fallbackIndex}`;
 }
 
 function buildComponentNode(c) {
     if (!c || !c.type) return [];
 
-    const typeMap = {
-        TextItem: 'TextBody',
-        TextHeading: 'TextHeading',
-        TextCaption: 'TextCaption',
-        TextInput: 'TextInput',
-        Select: 'Dropdown',
-        RadioButtons: 'RadioButtons',
-        CheckboxGroup: 'CheckboxGroup',
-        DatePicker: 'DatePicker',
-        TimePicker: 'TimePicker',
-        FileInput: 'FileInput',
-        LocationPicker: 'LocationPicker',
-        ConsentCheckbox: 'ConsentCheckbox',
-        APIAction: 'APIAction',
-        DataGrid: 'DataGrid',
-    };
+    const safeName = (c.name || `field_${Date.now()}`)
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .replace(/^_+|_+$/g, '') || 'field';
 
-    const mappedType = typeMap[c.type];
-    if (!mappedType) return [];
+    switch (c.type) {
+        case 'TextHeading':
+            return [{
+                type: 'TextHeading',
+                text: String(c.text || c.label || 'Heading')
+            }];
 
-    const node = { type: mappedType };
+        case 'TextSubheading':
+            return [{
+                type: 'TextSubheading',
+                text: String(c.text || c.label || 'Subheading')
+            }];
 
-    if (c.text !== undefined) node.text = c.text;
-    if (c.label !== undefined) node.label = c.label;
-    if (c.name !== undefined) node.name = c.name;
-    if (c.required !== undefined) node.required = c.required;
-    if (c.placeholder !== undefined) node.placeholder = c.placeholder;
-    if (c.helperText !== undefined) node.helper_text = c.helperText;
-    if (c.style !== undefined && ['TextHeading', 'TextBody', 'TextCaption'].includes(mappedType)) {
-        // style is handled via type mapping
-    }
+        case 'TextBody':
+        case 'TextItem':
+            return [{
+                type: 'TextBody',
+                text: String(c.text || c.label || 'Body text')
+            }];
 
-    if (c.accept !== undefined) node.accept = c.accept;
-    if (c.multiple !== undefined) node.multiple = c.multiple;
+        case 'TextCaption':
+            return [{
+                type: 'TextCaption',
+                text: String(c.text || c.label || 'Caption')
+            }];
 
-    if (c.dataSourceUrl !== undefined) node.data_source_url = c.dataSourceUrl;
-    if (c.requestBody !== undefined) node.request_body = c.requestBody;
-    if (c.responseKey !== undefined) node.response_key = c.responseKey;
-    if (c.columns && Array.isArray(c.columns)) {
-        node.columns = c.columns.map(col => ({
-            key: col.key,
-            label: col.label,
-            type: col.type || 'text'
-        }));
-    }
+        case 'TextInput':
+            return [{
+                type: 'TextInput',
+                name: safeName,
+                label: String(c.label || 'Text Input'),
+                'input-type': c.inputType || 'text',
+                required: Boolean(c.required),
+                ...(c.placeholder ? { placeholder: c.placeholder } : {}),
+                ...(c.helperText ? { 'helper-text': c.helperText } : {})
+            }];
 
-    if (mappedType === 'RadioButtons' || mappedType === 'Dropdown' || mappedType === 'CheckboxGroup') {
-        if (c.options && Array.isArray(c.options)) {
-            node.options = c.options.map(o => ({
-                id: o.value || o.id || o.label?.toLowerCase().replace(/\s+/g, '_'),
-                title: o.label || o.title || o.id || 'Option',
-                ...(o.description ? { description: o.description } : {})
-            }));
+        case 'Select':
+        case 'Dropdown': {
+            const options = Array.isArray(c.options) && c.options.length > 0
+                ? c.options.map((o, idx) => ({
+                    id: String(o.value || o.id || `opt_${idx}`),
+                    title: String(o.label || o.title || `Option ${idx + 1}`),
+                    ...(o.description ? { description: o.description } : {})
+                }))
+                : [{ id: 'opt_1', title: 'Option 1' }];
+
+            return [{
+                type: 'Dropdown',
+                name: safeName,
+                label: String(c.label || 'Select Option'),
+                required: Boolean(c.required),
+                options
+            }];
         }
+
+        case 'RadioButtons':
+        case 'RadioButtonsGroup': {
+            const options = Array.isArray(c.options) && c.options.length > 0
+                ? c.options.map((o, idx) => ({
+                    id: String(o.value || o.id || `opt_${idx}`),
+                    title: String(o.label || o.title || `Option ${idx + 1}`),
+                    ...(o.description ? { description: o.description } : {})
+                }))
+                : [{ id: 'opt_1', title: 'Option 1' }];
+
+            return [{
+                type: 'RadioButtonsGroup',
+                name: safeName,
+                label: String(c.label || 'Choose One'),
+                required: Boolean(c.required),
+                options
+            }];
+        }
+
+        case 'CheckboxGroup': {
+            const options = Array.isArray(c.options) && c.options.length > 0
+                ? c.options.map((o, idx) => ({
+                    id: String(o.value || o.id || `opt_${idx}`),
+                    title: String(o.label || o.title || `Option ${idx + 1}`),
+                    ...(o.description ? { description: o.description } : {})
+                }))
+                : [{ id: 'opt_1', title: 'Option 1' }];
+
+            return [{
+                type: 'CheckboxGroup',
+                name: safeName,
+                label: String(c.label || 'Choose Options'),
+                required: Boolean(c.required),
+                options
+            }];
+        }
+
+        case 'DatePicker':
+            return [{
+                type: 'DatePicker',
+                name: safeName,
+                label: String(c.label || 'Select Date'),
+                required: Boolean(c.required)
+            }];
+
+        case 'ConsentCheckbox':
+            return [{
+                type: 'OptIn',
+                name: safeName,
+                label: String(c.label || 'I agree to the terms'),
+                required: Boolean(c.required)
+            }];
+
+        default:
+            return [{
+                type: 'TextBody',
+                text: String(c.label || c.text || 'Content')
+            }];
     }
-
-    const action = buildComponentAction(c);
-    if (action) node.on_click_action = action;
-
-    return [node];
 }
 
-function buildComponentAction(c) {
-    if (!c.action?.type) return null;
+function buildFooter(screen, index, sanitizedScreens, validScreenIds, endpointUrl, isTerminal) {
+    const isLast = index === sanitizedScreens.length - 1;
 
-    const actionMap = {
-        complete: { name: 'complete', payload: {} },
-        navigate: { name: 'navigate', payload: { screen: c.action.screen || '' } },
-        data_exchange: { name: 'data_exchange', payload: c.action.payload || {} },
-        open_url: { name: 'open_url', payload: { url: c.action.url || '' } },
-        close: { name: 'close', payload: {} },
-    };
-
-    const action = actionMap[c.action.type];
-    if (!action) return null;
-
-    if (c.action.type === 'data_exchange') {
-        return {
-            name: 'data_exchange',
-            payload: {
-                ...(c.action.payload || {}),
-                ...(c.action.method ? { method: c.action.method } : {}),
-                ...(c.action.response_key ? { response_key: c.action.response_key } : {}),
-            }
-        };
-    }
-
-    if (c.action.type === 'navigate') {
-        return {
-            name: 'navigate',
-            payload: {
-                screen: sanitizeScreenId(c.action.screen || '', 0),
-                ...(c.action.data ? { data: c.action.data } : {})
-            }
-        };
-    }
-
-    if (c.action.type === 'open_url') {
-        return {
-            name: 'open_url',
-            payload: c.action.payload || {}
-        };
-    }
-
-    return action;
-}
-
-function buildFooter(screen, index, allScreens, endpointUrl) {
-    const isLast = index === allScreens.length - 1;
-
-    if (screen.footerAction) {
-        const action = buildActionFromFooter(screen.footerAction, index, allScreens, endpointUrl);
-        return { type: "Footer", label: screen.footerAction.label || (isLast ? "Finish" : "Next"), on_click_action: action };
-    }
-
-    if (isLast) {
+    if (isTerminal) {
         const lastAction = endpointUrl
-            ? { name: "data_exchange", payload: { method: "POST" } }
+            ? { name: "data_exchange", payload: {} }
             : { name: "complete", payload: {} };
-        return { type: "Footer", label: "Finish", on_click_action: lastAction };
+
+        return {
+            type: "Footer",
+            label: screen.footerAction?.label || "Finish",
+            "on-click-action": lastAction
+        };
     }
 
-    const nextScreen = allScreens[index + 1];
+    // Navigation to next screen
+    let targetScreenId = screen.footerAction?.screen
+        ? sanitizeScreenId(screen.footerAction.screen, index + 2)
+        : null;
+
+    if (!targetScreenId || !validScreenIds.has(targetScreenId)) {
+        const nextScreen = sanitizedScreens[index + 1];
+        targetScreenId = nextScreen ? nextScreen.sanitizedId : sanitizedScreens[0]?.sanitizedId;
+    }
+
     return {
         type: "Footer",
-        label: "Continue",
-        on_click_action: {
+        label: screen.footerAction?.label || "Continue",
+        "on-click-action": {
             name: "navigate",
-            payload: { screen: sanitizeScreenId(nextScreen?.id || '', index + 1) }
+            next: {
+                type: "screen",
+                name: targetScreenId
+            },
+            payload: {}
         }
     };
-}
-
-function buildActionFromFooter(fa, index, allScreens, endpointUrl) {
-    switch (fa.type) {
-        case 'complete':
-            return { name: "complete", payload: {} };
-        case 'navigate':
-            return {
-                name: "navigate",
-                payload: { screen: sanitizeScreenId(fa.screen || allScreens[index + 1]?.id || '', index + 1) }
-            };
-        case 'data_exchange':
-            return {
-                name: "data_exchange",
-                payload: {
-                    method: fa.method || "POST",
-                    ...(fa.response_key ? { response_key: fa.response_key } : {}),
-                    ...(fa.data ? { data: fa.data } : {})
-                }
-            };
-        case 'open_url':
-            return { name: "open_url", payload: { url: fa.url || '', ...(fa.data || {}) } };
-        case 'close':
-            return { name: "close", payload: {} };
-        default:
-            return { name: "complete", payload: {} };
-    }
 }

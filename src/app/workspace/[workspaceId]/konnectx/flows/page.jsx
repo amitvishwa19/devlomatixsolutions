@@ -22,7 +22,8 @@ import {
     Eye,
     Globe,
     FileCode,
-    AlertTriangle
+    AlertTriangle,
+    MoreVertical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,6 +35,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { useAction } from "@/hooks/use-action";
 import { testMetaApi } from "../settings/_actions/test-meta-api";
@@ -50,6 +58,7 @@ import { cloneFlow } from "./_actions/clone-flow";
 
 // Components
 import FlowBuilder from "./_components/FlowBuilder";
+import AccountSwitcher from "../_components/AccountSwitcher";
 
 export default function FlowsPage() {
     const params = useParams();
@@ -179,6 +188,14 @@ export default function FlowsPage() {
             executeGetLocal({ workspaceId });
             executeGetDecrypted({ workspaceId });
         }
+
+        const handleAccountSwitch = () => {
+            executeGetLocal({ workspaceId });
+            executeGetDecrypted({ workspaceId });
+        };
+
+        window.addEventListener('wa-account-switched', handleAccountSwitch);
+        return () => window.removeEventListener('wa-account-switched', handleAccountSwitch);
     }, [workspaceId]);
 
     // --- Handlers ---
@@ -240,13 +257,29 @@ export default function FlowsPage() {
     const getStatusBadge = (status) => {
         switch (status?.toUpperCase()) {
             case 'PUBLISHED':
-                return <Badge className="bg-green-500/10 text-green-600 border-green-500/20 gap-1"><CheckCircle2 className="w-3 h-3" /> Published</Badge>;
+                return (
+                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] px-1.5 py-0 h-4.5 gap-1 font-medium shadow-none">
+                        <CheckCircle2 className="w-2.5 h-2.5" /> Published
+                    </Badge>
+                );
             case 'DRAFT':
-                return <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 border-amber-500/20 gap-1"><Clock className="w-3 h-3" /> Draft</Badge>;
+                return (
+                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 text-[10px] px-1.5 py-0 h-4.5 gap-1 font-medium shadow-none">
+                        <Clock className="w-2.5 h-2.5" /> Draft
+                    </Badge>
+                );
             case 'DEPRECATED':
-                return <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20 gap-1"><AlertCircle className="w-3 h-3" /> Deprecated</Badge>;
+                return (
+                    <Badge variant="outline" className="bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 text-[10px] px-1.5 py-0 h-4.5 gap-1 font-medium shadow-none">
+                        <AlertCircle className="w-2.5 h-2.5" /> Deprecated
+                    </Badge>
+                );
             default:
-                return <Badge variant="outline">{status}</Badge>;
+                return (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4.5 font-medium">
+                        {status || 'Draft'}
+                    </Badge>
+                );
         }
     };
 
@@ -320,9 +353,9 @@ export default function FlowsPage() {
     );
 
     return (
-        <div className="flex flex-col h-full bg-background animate-in fade-in duration-500">
+        <div className="flex flex-col h-full  animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-border/40 bg-background/50 backdrop-blur-md sticky top-0 z-20 gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between p-6 border-b border-border/40  backdrop-blur-md sticky top-0 z-20 gap-4">
                 <div className="flex items-center gap-5">
                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-[0_0_20px_rgba(var(--primary-rgb),0.1)]">
                         <Layers className="w-6 h-6 text-primary" />
@@ -334,6 +367,7 @@ export default function FlowsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <AccountSwitcher />
                     <Button
                         variant="outline"
                         size="sm"
@@ -382,136 +416,196 @@ export default function FlowsPage() {
 
                 {/* Content */}
                 <ScrollArea className="flex-1">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
                         {filteredFlows.length > 0 ? (
-                            filteredFlows.map((flow) => (
-                                <Card key={flow.id} className="group border shadow-sm hover:border-primary/20 transition-all overflow-hidden bg-card/50 backdrop-blur-sm relative">
-                                    <CardHeader className="pb-4">
-                                        <div className="flex items-start justify-between">
-                                            <div className="space-y-1 min-w-0">
-                                                <CardTitle className="text-base font-bold truncate group-hover:text-primary transition-colors">{flow.name}</CardTitle>
-                                                <CardDescription className="text-[10px] font-mono uppercase opacity-60">
-                                                    {activeTab === 'local' ? `Local ID: ${flow.id.slice(-8)}` : `Meta ID: ${flow.id}`}
-                                                </CardDescription>
-                                            </div>
-                                            {getStatusBadge(flow.status)}
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="flex flex-wrap gap-1.5 min-h-[20px]">
-                                            {flow.categories?.map((cat) => (
-                                                <Badge key={cat} variant="outline" className="text-[9px] font-bold py-0 h-5 bg-muted/20 border-muted-foreground/10">{cat}</Badge>
-                                            ))}
-                                        </div>
+                            filteredFlows.map((flow) => {
+                                const screenCount = flow.screens?.length || 0;
+                                const errs = (() => {
+                                    try {
+                                        const raw = flow.metaValidationErrors;
+                                        if (Array.isArray(raw)) return raw;
+                                        if (typeof raw === 'string') return JSON.parse(raw);
+                                        return [];
+                                    } catch { return []; }
+                                })();
 
-                                        {(() => {
-                                            const errs = (() => {
-                                                try {
-                                                    const raw = flow.metaValidationErrors;
-                                                    if (Array.isArray(raw)) return raw;
-                                                    if (typeof raw === 'string') return JSON.parse(raw);
-                                                    return [];
-                                                } catch { return []; }
-                                            })();
-                                            if (errs.length === 0) return null;
-                                            return (
-                                                <div className="space-y-1">
-                                                    {errs.slice(0, 2).map((err, i) => (
-                                                        <div key={i} className="flex items-start gap-1.5 text-[10px] text-red-500 bg-red-500/5 rounded-md p-2">
+                                return (
+                                    <Card 
+                                        key={flow.id} 
+                                        className="group border border-border/50 hover:border-primary/30 shadow-sm hover:shadow-md transition-all duration-200 bg-card/60 backdrop-blur-sm relative rounded-xl overflow-hidden flex flex-col justify-between"
+                                    >
+                                        <div className="p-3.5 space-y-2.5 min-w-0">
+                                            {/* Header: Title + Status */}
+                                            <div className="flex items-start justify-between gap-2 min-w-0">
+                                                <div className="min-w-0 flex-1">
+                                                    <h3 
+                                                        className="text-sm font-semibold text-foreground break-words whitespace-normal leading-snug group-hover:text-primary transition-colors cursor-pointer"
+                                                        title={flow.name}
+                                                        onClick={() => activeTab === 'local' && handleEditLocal(flow)}
+                                                    >
+                                                        {flow.name}
+                                                    </h3>
+                                                    <div className="flex items-center gap-1.5 mt-0.5 min-w-0">
+                                                        <span className="text-[10px] font-mono text-muted-foreground/70 truncate">
+                                                            {activeTab === 'local' ? `ID: ${flow.id.slice(-8)}` : `Meta: ${flow.id}`}
+                                                        </span>
+                                                        {activeTab === 'local' && (
+                                                            <span className="text-[10px] text-muted-foreground/60 shrink-0">
+                                                                • {screenCount} {screenCount === 1 ? 'screen' : 'screens'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="shrink-0">
+                                                    {getStatusBadge(flow.status)}
+                                                </div>
+                                            </div>
+
+                                            {/* Categories & Badges */}
+                                            {flow.categories && flow.categories.length > 0 && (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {flow.categories.map((cat) => (
+                                                        <Badge 
+                                                            key={cat} 
+                                                            variant="outline" 
+                                                            className="text-[9px] font-medium px-1.5 py-0 h-4 bg-muted/20 border-border/40 text-muted-foreground rounded"
+                                                        >
+                                                            {cat}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Validation Errors Banner */}
+                                            {errs.length > 0 && (
+                                                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 space-y-0.5">
+                                                    {errs.slice(0, 1).map((err, i) => (
+                                                        <div key={i} className="flex items-start gap-1.5 text-[11px] text-destructive leading-tight">
                                                             <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                                                            <span>{err.message || JSON.stringify(err)}</span>
+                                                            <span className="truncate flex-1" title={err.message || JSON.stringify(err)}>
+                                                                {err.message || JSON.stringify(err)}
+                                                            </span>
                                                         </div>
                                                     ))}
-                                                    {errs.length > 2 && (
-                                                        <p className="text-[10px] text-muted-foreground pl-5">+{errs.length - 2} more errors</p>
+                                                    {errs.length > 1 && (
+                                                        <p className="text-[10px] text-destructive/80 font-medium pl-4.5">
+                                                            +{errs.length - 1} more issue{errs.length - 1 === 1 ? '' : 's'}
+                                                        </p>
                                                     )}
                                                 </div>
-                                            );
-                                        })()}
+                                            )}
+                                        </div>
 
-                                        <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+                                        {/* Compact Footer Actions */}
+                                        <div className="px-3.5 py-2.5 bg-muted/10 border-t border-border/40 flex items-center justify-between gap-1.5">
                                             {activeTab === 'local' ? (
                                                 <>
-                                                    <Button
-                                                        variant="default"
-                                                        size="sm"
-                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 transition-all"
-                                                        onClick={() => handleEditLocal(flow)}
-                                                    >
-                                                        <Pencil className="w-3.5 h-3.5" />
-                                                        Design
-                                                    </Button>
-
-                                                    {!flow.flowId ? (
+                                                    <div className="flex items-center gap-1.5 min-w-0 flex-1">
                                                         <Button
-                                                            variant="outline"
+                                                            variant="default"
                                                             size="sm"
-                                                            className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-blue-500/5 text-blue-600 border-blue-500/20 hover:bg-blue-500/10"
-                                                            onClick={() => executePush({ workspaceId, id: flow.id })}
-                                                            disabled={isPushing}
+                                                            className="h-7 px-3 text-xs font-medium gap-1.5 rounded-md flex-1 min-w-0 truncate"
+                                                            onClick={() => handleEditLocal(flow)}
                                                         >
-                                                            <Globe className={`w-3.5 h-3.5 ${isPushing ? 'animate-spin' : ''}`} />
-                                                            Push
+                                                            <Pencil className="w-3 h-3 shrink-0" />
+                                                            <span className="truncate">Design</span>
                                                         </Button>
-                                                    ) : flow.status === 'DRAFT' ? (
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-green-500/5 text-green-600 border-green-500/20 hover:bg-green-500/10"
-                                                            onClick={() => executePublish({ workspaceId, id: flow.id })}
-                                                            disabled={isPublishing}
-                                                        >
-                                                            <CheckCircle2 className={`w-3.5 h-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
-                                                            Publish
-                                                        </Button>
-                                                    ) : null}
 
+                                                        {!flow.flowId ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-7 px-2.5 text-xs font-medium gap-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 hover:bg-blue-500/20 rounded-md shrink-0"
+                                                                onClick={() => executePush({ workspaceId, id: flow.id })}
+                                                                disabled={isPushing}
+                                                                title="Push flow to Meta"
+                                                            >
+                                                                <Globe className={`w-3 h-3 ${isPushing ? 'animate-spin' : ''}`} />
+                                                                <span>Push</span>
+                                                            </Button>
+                                                        ) : flow.status === 'DRAFT' ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-7 px-2.5 text-xs font-medium gap-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 rounded-md shrink-0"
+                                                                onClick={() => executePublish({ workspaceId, id: flow.id })}
+                                                                disabled={isPublishing}
+                                                                title="Publish live to Meta"
+                                                            >
+                                                                <CheckCircle2 className={`w-3 h-3 ${isPublishing ? 'animate-spin' : ''}`} />
+                                                                <span>Publish</span>
+                                                            </Button>
+                                                        ) : null}
+                                                    </div>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground shrink-0"
+                                                            >
+                                                                <MoreVertical className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-36">
+                                                            <DropdownMenuItem
+                                                                className="text-xs gap-2 cursor-pointer"
+                                                                onClick={() => executeClone({ workspaceId, id: flow.id })}
+                                                                disabled={isCloning}
+                                                            >
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                                Clone
+                                                            </DropdownMenuItem>
+                                                            {flow.flowId && (
+                                                                <DropdownMenuItem
+                                                                    className="text-xs gap-2 cursor-pointer"
+                                                                    onClick={() => executePush({ workspaceId, id: flow.id })}
+                                                                    disabled={isPushing}
+                                                                >
+                                                                    <Globe className="w-3.5 h-3.5" />
+                                                                    Re-push
+                                                                </DropdownMenuItem>
+                                                            )}
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                className="text-xs gap-2 text-destructive focus:text-destructive cursor-pointer"
+                                                                onClick={() => executeDeleteLocal({ workspaceId, id: flow.id })}
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center justify-between w-full gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        className="h-9 px-3 rounded-lg text-xs font-bold gap-2 bg-purple-500/5 text-purple-600 border-purple-500/20 hover:bg-purple-500/10"
-                                                        onClick={() => executeClone({ workspaceId, id: flow.id })}
-                                                        disabled={isCloning}
-                                                    >
-                                                        <Copy className={`w-3.5 h-3.5 ${isCloning ? 'animate-spin' : ''}`} />
-                                                        Clone
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-red-500/5 hover:text-red-500 transition-all"
-                                                        onClick={() => executeDeleteLocal({ workspaceId, id: flow.id })}
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="flex-1 h-9 rounded-lg text-xs font-bold gap-2 text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
+                                                        className="flex-1 h-7 text-xs font-medium gap-1.5 text-foreground hover:bg-primary/5 hover:text-primary rounded-md truncate"
                                                         onClick={() => window.open(`https://business.facebook.com/wa/manage/flows/${flow.id}`, '_blank')}
                                                     >
-                                                        <ExternalLink className="w-3.5 h-3.5" />
-                                                        Open in Meta
+                                                        <ExternalLink className="w-3 h-3 shrink-0" />
+                                                        <span className="truncate">Meta Manager</span>
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-9 w-9 rounded-lg text-muted-foreground hover:bg-primary/5 hover:text-primary transition-all"
-                                                        onClick={() => window.open(flow.preview_url, '_blank')}
-                                                        disabled={!flow.preview_url}
-                                                    >
-                                                        <Eye className="w-3.5 h-3.5" />
-                                                    </Button>
-                                                </>
+                                                    {flow.preview_url && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 rounded-md text-muted-foreground hover:text-foreground shrink-0"
+                                                            onClick={() => window.open(flow.preview_url, '_blank')}
+                                                            title="Preview Flow"
+                                                        >
+                                                            <Eye className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            ))
+                                    </Card>
+                                );
+                            })
                         ) : (
                             <div className="col-span-full flex flex-col items-center justify-center py-24 bg-card border border-dashed rounded-3xl gap-4 text-center">
                                 <div className="p-4 bg-primary/5 rounded-full border border-primary/10 text-primary/40">
