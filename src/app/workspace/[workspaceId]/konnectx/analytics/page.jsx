@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useAction } from "@/hooks/use-action";
 import { getAnalytics } from "./_actions/get-analytics";
 import { toast } from "sonner";
@@ -27,10 +28,15 @@ const COLORS = ['#10b981', '#3b82f6', '#94a3b8', '#ef4444', '#8b5cf6'];
 export default function AnalyticsPage() {
     const params = useParams();
     const workspaceId = params.workspaceId;
+    const [mounted, setMounted] = useState(false);
     const [data, setData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [range, setRange] = useState('30');
     const [isRefreshing, setIsRefreshing] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const { execute: executeGetAnalytics } = useAction(getAnalytics, {
         onSuccess: (result) => {
@@ -46,19 +52,22 @@ export default function AnalyticsPage() {
     });
 
     const fetchAnalytics = () => {
+        if (!workspaceId) return;
         setIsRefreshing(true);
         executeGetAnalytics({ workspaceId, range });
     };
 
     useEffect(() => {
-        fetchAnalytics();
+        if (mounted) {
+            fetchAnalytics();
+        }
 
         const handleSwitch = () => {
             fetchAnalytics();
         };
         window.addEventListener('wa-account-switched', handleSwitch);
         return () => window.removeEventListener('wa-account-switched', handleSwitch);
-    }, [range]);
+    }, [range, mounted]);
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -73,9 +82,10 @@ export default function AnalyticsPage() {
         visible: { y: 0, opacity: 1 }
     };
 
-    if (isLoading) {
+    if (!mounted || isLoading) {
         return (
-            <div className="p-6 space-y-8 bg-background h-screen overflow-y-auto pb-24 animate-in fade-in duration-500">
+            <ScrollArea className="h-full w-full">
+                <div className="p-6 space-y-8 bg-background pb-24 animate-in fade-in duration-500">
                 {/* Header Skeleton */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="space-y-3">
@@ -137,16 +147,19 @@ export default function AnalyticsPage() {
                     </Card>
                 </div>
             </div>
-        );
-    }
+            <ScrollBar orientation="vertical" />
+        </ScrollArea>
+    );
+}
 
     return (
-        <motion.div 
-            initial="hidden" 
-            animate="visible" 
-            variants={containerVariants}
-            className="p-6 space-y-8 bg-background h-screen overflow-y-auto custom-scrollbar pb-24"
-        >
+        <ScrollArea className="h-full w-full">
+            <motion.div 
+                initial="hidden" 
+                animate="visible" 
+                variants={containerVariants}
+                className="p-6 space-y-8 bg-background pb-24"
+            >
             {/* Header Content */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
@@ -297,7 +310,7 @@ export default function AnalyticsPage() {
                         </CardHeader>
                         <CardContent className="h-[350px] w-full pt-4">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data?.timeSeries}>
+                                <AreaChart data={data?.timeSeries || []}>
                                     <defs>
                                         <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
@@ -361,7 +374,7 @@ export default function AnalyticsPage() {
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={data?.distribution}
+                                        data={data?.distribution || []}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={80}
@@ -370,7 +383,7 @@ export default function AnalyticsPage() {
                                         dataKey="value"
                                         stroke="none"
                                     >
-                                        {data?.distribution.map((entry, index) => (
+                                        {(data?.distribution || []).map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
@@ -386,7 +399,7 @@ export default function AnalyticsPage() {
                             </div>
                         </CardContent>
                         <div className="px-6 space-y-3 pb-6">
-                            {data?.distribution.map((item, id) => (
+                            {(data?.distribution || []).map((item, id) => (
                                 <div key={id} className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
@@ -416,7 +429,7 @@ export default function AnalyticsPage() {
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="divide-y divide-border/50">
-                                {data?.templatePerformance.map((tmpl, idx) => (
+                                {(data?.templatePerformance || []).map((tmpl, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm border border-primary/20">
@@ -486,5 +499,7 @@ export default function AnalyticsPage() {
                 </motion.div>
             </div>
         </motion.div>
+        <ScrollBar orientation="vertical" />
+    </ScrollArea>
     );
 }

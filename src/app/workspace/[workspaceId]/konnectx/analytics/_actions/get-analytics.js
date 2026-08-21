@@ -18,65 +18,72 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        // 0. Find Default Credential
+        // Get all workspace users
+        const workspaceUsers = await db.workspaceUser.findMany({
+            where: { workspaceId },
+            select: { userId: true }
+        });
+        const workspaceUserIds = Array.from(new Set([userId, ...workspaceUsers.map(u => u.userId)]));
+
+        // Find Default Credential
         const defaultCredential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+            where: { 
+                userId: { in: workspaceUserIds },
+                platform: 'WHATSAPP_CLOUD',
+                isDefault: true 
+            }
         });
 
-        if (!defaultCredential) {
-            return { data: { success: true, timeSeries: [], templatePerformance: [], distribution: [], totalMessages: 0, overallReadRate: 0 } };
+        let activePhoneId = "";
+        if (defaultCredential) {
+            let cloudCreds = null;
+            const stored = defaultCredential.credentials;
+            if (typeof stored === 'string' && stored.includes(':')) {
+                try {
+                    const { symmetricDecrypt } = await import("@/lib/encryption");
+                    cloudCreds = JSON.parse(symmetricDecrypt(stored));
+                } catch (e) { }
+            } else if (typeof stored === 'string') {
+                try { cloudCreds = JSON.parse(stored); } catch (e) { }
+            } else { cloudCreds = stored; }
+            
+            if (cloudCreds?.enc) {
+                try {
+                    const { symmetricDecrypt } = await import("@/lib/encryption");
+                    cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
+                } catch (e) { }
+            }
+            activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
         }
 
-        // Extract Phone Number ID
-        let cloudCreds = null;
-        const stored = defaultCredential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            try {
-                const { symmetricDecrypt } = await import("@/lib/encryption");
-                cloudCreds = JSON.parse(symmetricDecrypt(stored));
-            } catch (e) { }
-        } else if (typeof stored === 'string') {
-            try { cloudCreds = JSON.parse(stored); } catch (e) { }
-        } else { cloudCreds = stored; }
-        
-        if (cloudCreds?.enc) {
-            try {
-                const { symmetricDecrypt } = await import("@/lib/encryption");
-                cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
-            } catch (e) { }
-        }
-        const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
-
-        const daysToSub = parseInt(range) - 1;
+        const daysToSub = parseInt(range || '30') - 1;
         const endDate = new Date();
-        const startDate = startOfDay(subDays(endDate, daysToSub));
+        const startDate = startOfDay(subDays(endDate, Math.max(0, daysToSub)));
 
-        // 1. Fetch Time-Series Data for active account
-        const [messages, deliveryLogs, templates] = await Promise.all([
+        // 1. Fetch Data
+        const [rawMessages, templates] = await Promise.all([
             db.whatsAppMessage.findMany({
                 where: { 
-                    userId, 
-                    createdAt: { gte: startDate },
-                    metadata: {
-                        path: ['phone_number_id'],
-                        equals: activePhoneId
-                    }
+                    userId: { in: workspaceUserIds }, 
+                    createdAt: { gte: startDate }
                 },
                 select: { status: true, fromMe: true, createdAt: true, metadata: true, text: true }
             }),
-            db.whatsAppDeliveryLog.findMany({
-                where: { 
-                    userId, 
-                    createdAt: { gte: startDate },
-                    // Assuming delivery logs might be tied to jobId which is tied to credential, 
-                    // but for direct messages we might need metadata filter if available.
-                    // For now, filtering messages is most important.
-                }
-            }),
             db.messageTemplate.findMany({
-                where: { userId, phoneNumberId: activePhoneId }
+                where: { 
+                    userId: { in: workspaceUserIds },
+                    ...(activePhoneId ? { phoneNumberId: activePhoneId } : {})
+                }
             })
         ]);
+
+        // Filter messages by activePhoneId if available and present in metadata
+        const messages = activePhoneId 
+            ? rawMessages.filter(m => {
+                const msgPhoneId = m.metadata?.phone_number_id || m.metadata?.phoneNumberId;
+                return !msgPhoneId || String(msgPhoneId) === activePhoneId;
+            })
+            : rawMessages;
 
         // 2. Prepare Time-Series Buckets
         const days = eachDayOfInterval({ start: startDate, end: endDate });
@@ -85,15 +92,19 @@ const handler = async (data) => {
             const dayStr = format(day, 'yyyy-MM-dd');
             
             const dayMessages = messages.filter(m => format(new Date(m.createdAt), 'yyyy-MM-dd') === dayStr);
-            const dayDeliveryLogs = deliveryLogs.filter(l => format(new Date(l.createdAt), 'yyyy-MM-dd') === dayStr);
+            const sentCount = dayMessages.filter(m => m.fromMe).length;
+            const recvCount = dayMessages.filter(m => !m.fromMe).length;
+            const readCount = dayMessages.filter(m => m.status === 'READ').length;
+            const failedCount = dayMessages.filter(m => m.status === 'FAILED').length;
             
             return {
                 date: dateStr,
-                sent: dayMessages.filter(m => m.fromMe).length,
-                received: dayMessages.filter(m => !m.fromMe).length,
-                delivered: dayDeliveryLogs.filter(l => l.status === 'DELIVERED').length,
-                read: dayDeliveryLogs.filter(l => l.status === 'READ').length,
-                failed: dayDeliveryLogs.filter(l => l.status === 'FAILED').length
+                sent: sentCount,
+                received: recvCount,
+                delivered: dayMessages.filter(m => m.status === 'DELIVERED' || m.status === 'READ').length,
+                read: readCount,
+                failed: failedCount,
+                total: dayMessages.length
             };
         });
 
@@ -107,17 +118,27 @@ const handler = async (data) => {
                 category: t.category,
                 sent: totalSent,
                 read: totalRead,
-                rate: totalSent > 0 ? ((totalRead / totalSent) * 100).toFixed(1) : 0
+                rate: totalSent > 0 ? ((totalRead / totalSent) * 100).toFixed(1) : "0.0"
             };
         }).sort((a, b) => b.sent - a.sent).slice(0, 5);
 
         // 4. Distribution Metrics
+        const readTotal = messages.filter(m => m.status === 'READ').length;
+        const delivTotal = messages.filter(m => m.status === 'DELIVERED').length;
+        const sentTotal = messages.filter(m => m.status === 'SENT').length;
+        const failedTotal = messages.filter(m => m.status === 'FAILED').length;
+
         const statusDistribution = [
-            { name: 'Read', value: messages.filter(m => m.status === 'READ').length, color: '#10b981' },
-            { name: 'Delivered', value: messages.filter(m => m.status === 'DELIVERED').length, color: '#3b82f6' },
-            { name: 'Sent', value: messages.filter(m => m.status === 'SENT').length, color: '#94a3b8' },
-            { name: 'Failed', value: messages.filter(m => m.status === 'FAILED').length, color: '#ef4444' }
+            { name: 'Read', value: readTotal, color: '#10b981' },
+            { name: 'Delivered', value: delivTotal, color: '#3b82f6' },
+            { name: 'Sent', value: sentTotal, color: '#94a3b8' },
+            { name: 'Failed', value: failedTotal, color: '#ef4444' }
         ];
+
+        const sentMessagesCount = messages.filter(m => m.fromMe).length;
+        const overallReadRate = sentMessagesCount > 0 
+            ? ((readTotal / sentMessagesCount) * 100).toFixed(1) 
+            : "0.0";
 
         return {
             data: {
@@ -126,9 +147,7 @@ const handler = async (data) => {
                 templatePerformance,
                 distribution: statusDistribution,
                 totalMessages: messages.length,
-                overallReadRate: messages.filter(m => m.fromMe).length > 0 
-                    ? ((messages.filter(m => m.fromMe && m.status === 'READ').length / messages.filter(m => m.fromMe).length) * 100).toFixed(1) 
-                    : 0
+                overallReadRate
             }
         };
     } catch (error) {
