@@ -203,7 +203,7 @@ export default function CatalogPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center flex-wrap gap-2.5">
+                <div className="flex flex-row items-center justify-between  gap-2.5">
                     <AccountSwitcher />
 
                     <Button
@@ -230,7 +230,7 @@ export default function CatalogPage() {
                         </Button>
                     )}
 
-                    <Button
+                    {/* <Button
                         variant="outline"
                         size="sm"
                         className="h-9 px-3 rounded-lg text-xs font-semibold gap-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
@@ -241,7 +241,7 @@ export default function CatalogPage() {
                     >
                         <Send className="w-3.5 h-3.5" />
                         <span>Send to WhatsApp</span>
-                    </Button>
+                    </Button> */}
 
                     <Button
                         size="sm"
