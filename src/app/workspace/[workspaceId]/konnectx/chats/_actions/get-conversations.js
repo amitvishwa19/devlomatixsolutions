@@ -122,12 +122,24 @@ const handler = async (data) => {
             }
         });
 
-        const [rawMessages, rawAssignedMsgs, contacts, shares] = await Promise.all([
+        const allProducts = db.eCommerceProduct.findMany({
+            where: { userId: { in: workspaceUserIds } }
+        }).catch(() => []);
+
+        const [rawMessages, rawAssignedMsgs, contacts, shares, products] = await Promise.all([
             ownMessages, 
             assignedMessages, 
             allContacts,
-            allShares
+            allShares,
+            allProducts
         ]);
+
+        const skuProductMap = new Map();
+        const titleProductMap = new Map();
+        (products || []).forEach(p => {
+            if (p.sku) skuProductMap.set(String(p.sku).toLowerCase().trim(), p);
+            if (p.title) titleProductMap.set(String(p.title).toLowerCase().trim(), p);
+        });
 
         // 5. Filter messages strictly by activePhoneId if available
         const filterByActivePhone = (msg) => {
@@ -192,11 +204,39 @@ const handler = async (data) => {
             const fullJid = cleanPhone.length === 10 ? `91${cleanPhone}@s.whatsapp.net` : `${cleanPhone}@s.whatsapp.net`;
             const msgTimestamp = Number(msg.timestamp) || Math.floor(new Date(msg.createdAt).getTime() / 1000);
 
+            let meta = JSON.parse(JSON.stringify(msg.metadata || {}));
+
+            // Auto-enrich product image and info if not present
+            if (!meta.productImageUrl && !meta.mediaUrl && !meta.imageUrl) {
+                const rawText = msg.text || '';
+                const skuMatch = meta.retailerId ||
+                    rawText.match(/SKU_([A-Za-z0-9_-]+)/i)?.[0] ||
+                    rawText.match(/SKU:\s*`?([A-Za-z0-9_-]+)`?/i)?.[1];
+                const titleMatch = meta.productTitle ||
+                    rawText.match(/\[Product:\s*([^\]]+)\]/i)?.[1] ||
+                    rawText.match(/🛍️\s*\*([^*]+)\*/)?.[1];
+
+                const matched = (skuMatch && skuProductMap.get(String(skuMatch).toLowerCase().trim())) ||
+                                (titleMatch && titleProductMap.get(String(titleMatch).toLowerCase().trim()));
+
+                if (matched) {
+                    const img = (Array.isArray(matched.imageUrls) ? matched.imageUrls[0] : matched.imageUrl) || matched.image_url;
+                    if (img) meta.productImageUrl = img;
+                    meta.productTitle = meta.productTitle || matched.title;
+                    meta.productPrice = meta.productPrice || matched.price;
+                    meta.productCurrency = meta.productCurrency || matched.currency || 'INR';
+                    meta.retailerId = meta.retailerId || matched.sku;
+                    if (!meta.interactiveType && (meta.type === 'interactive' || rawText.includes('[Product:'))) {
+                        meta.interactiveType = 'product';
+                    }
+                }
+            }
+
             const msgPreview = JSON.stringify({
                 text: msg.text || '',
-                type: msg.metadata?.type || 'text',
-                url: msg.metadata?.mediaUrl || msg.metadata?.raw?.[msg.metadata?.type]?.url || null,
-                caption: msg.metadata?.caption || msg.metadata?.raw?.[msg.metadata?.type]?.caption || null,
+                type: meta.type || 'text',
+                url: meta.productImageUrl || meta.mediaUrl || meta.raw?.[meta.type]?.url || null,
+                caption: meta.caption || meta.raw?.[meta.type]?.caption || null,
                 timestamp: msgTimestamp
             });
 
@@ -237,7 +277,7 @@ const handler = async (data) => {
                     fromMe: msg.fromMe,
                     timestamp: msgTimestamp,
                     status: msg.status,
-                    metadata: JSON.parse(JSON.stringify(msg.metadata || {})),
+                    metadata: meta,
                     createdAt: msg.createdAt ? new Date(msg.createdAt).toISOString() : new Date().toISOString()
                 });
             }

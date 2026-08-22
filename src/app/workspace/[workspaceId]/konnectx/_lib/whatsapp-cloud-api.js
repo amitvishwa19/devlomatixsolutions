@@ -244,15 +244,29 @@ async function uploadMetaMedia(credentials, mediaUrl) {
 /**
  * 7. Message Dispatch (Media)
  * Supports image, video, audio, document
+ * Accepts both (credentials, to, type, mediaUrl, caption) and (credentials, to, { type, url, caption, filename })
  */
-async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
+async function sendMediaMessage(credentials, to, typeOrOptions, mediaUrl, caption = "") {
+    let type = typeOrOptions;
+    let actualMediaUrl = mediaUrl;
+    let actualCaption = caption;
+    let actualFilename = null;
+
+    if (typeof typeOrOptions === 'object' && typeOrOptions !== null) {
+        type = typeOrOptions.type || 'image';
+        actualMediaUrl = typeOrOptions.url || typeOrOptions.mediaUrl || typeOrOptions.link || '';
+        actualCaption = typeOrOptions.caption || '';
+        actualFilename = typeOrOptions.filename || typeOrOptions.fileName || null;
+    }
+
+    const cleanType = String(type || 'image').toLowerCase();
     let mediaPayload = null;
 
-    // Check if mediaUrl is a remote URL
-    const isUrl = /^https?:\/\//i.test(String(mediaUrl));
+    // Check if actualMediaUrl is a remote URL
+    const isUrl = /^https?:\/\//i.test(String(actualMediaUrl));
     if (isUrl) {
         // Attempt to upload to Meta on-the-fly for guaranteed delivery
-        const mediaId = await uploadMetaMedia(credentials, mediaUrl);
+        const mediaId = await uploadMetaMedia(credentials, actualMediaUrl);
         if (mediaId) {
             mediaPayload = { id: mediaId };
         }
@@ -260,33 +274,49 @@ async function sendMediaMessage(credentials, to, type, mediaUrl, caption = "") {
 
     // Fallback: If not a URL, or upload failed, determine if it's a numeric ID or a link
     if (!mediaPayload) {
-        const isId = /^\d+$/.test(String(mediaUrl)) || String(mediaUrl).startsWith('4:');
-        mediaPayload = isId ? { id: String(mediaUrl) } : { link: String(mediaUrl) };
+        const isId = /^\d+$/.test(String(actualMediaUrl)) || String(actualMediaUrl).startsWith('4:');
+        mediaPayload = isId ? { id: String(actualMediaUrl) } : { link: String(actualMediaUrl) };
     }
 
-    if (caption && (type === 'image' || type === 'video' || type === 'document')) {
-        mediaPayload.caption = caption;
+    if (actualCaption && (cleanType === 'image' || cleanType === 'video' || cleanType === 'document')) {
+        mediaPayload.caption = actualCaption;
+    }
+    if (actualFilename && cleanType === 'document') {
+        mediaPayload.filename = actualFilename;
     }
 
     return metaPost(credentials, 'messages', {
         to: to,
-        type: type,
-        [type]: mediaPayload
+        type: cleanType,
+        [cleanType]: mediaPayload
     });
 }
 
 /**
  * 8. Message Dispatch (Location)
+ * Accepts both (credentials, to, latitude, longitude, name, address) and (credentials, to, { latitude, longitude, name, address })
  */
-async function sendLocationMessage(credentials, to, latitude, longitude, name, address) {
+async function sendLocationMessage(credentials, to, latitudeOrOptions, longitude, name, address) {
+    let lat = latitudeOrOptions;
+    let lng = longitude;
+    let locName = name;
+    let locAddress = address;
+
+    if (typeof latitudeOrOptions === 'object' && latitudeOrOptions !== null) {
+        lat = latitudeOrOptions.latitude || latitudeOrOptions.lat;
+        lng = latitudeOrOptions.longitude || latitudeOrOptions.lng || latitudeOrOptions.long;
+        locName = latitudeOrOptions.name;
+        locAddress = latitudeOrOptions.address;
+    }
+
     return metaPost(credentials, 'messages', {
         to: to,
         type: "location",
         location: {
-            latitude,
-            longitude,
-            name,
-            address
+            latitude: lat,
+            longitude: lng,
+            name: locName,
+            address: locAddress
         }
     });
 }

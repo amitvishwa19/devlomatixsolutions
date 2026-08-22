@@ -190,32 +190,50 @@ export async function POST(req) {
                             const loc = message.location || {};
                             textBody = `📍 Location: ${loc.name || loc.address || "Shared Location"} (${loc.latitude}, ${loc.longitude})`;
                             break;
-                        case "interactive":
-                            const interactive = message.interactive;
+                        case "order": {
+                            const order = message.order || {};
+                            const items = order.product_items || [];
+                            const itemsSummary = items.map(it => `${it.quantity || 1}x ${it.product_retailer_id || 'Product'} (${it.currency || 'INR'} ${it.item_price || 0})`).join(', ');
+                            textBody = `🛒 Order received: ${itemsSummary || 'Catalog Items'}${order.text ? ` — "${order.text}"` : ''}`;
+                            message.order_data = order;
+                            break;
+                        }
+                        case "interactive": {
+                            const interactive = message.interactive || {};
                             const iType = interactive?.type;
 
                             if (iType === "button_reply") {
-                                textBody = interactive.button_reply?.title;
+                                textBody = interactive.button_reply?.title || "[Button Selection]";
                             } else if (iType === "list_reply") {
-                                textBody = interactive.list_reply?.title;
+                                textBody = `${interactive.list_reply?.title || "[Menu Selection]"}${interactive.list_reply?.description ? ` — ${interactive.list_reply.description}` : ''}`;
                             } else if (iType === "nfm_reply") {
-                                // 🌟 FLOW COMPLETION HANDLING 🌟
-                                const nfmReply = interactive.nfm_reply;
-                                const flowData = JSON.parse(nfmReply.response_json || "{}");
-                                textBody = `[Flow: ${nfmReply.name}] Submitted`;
+                                // Flow completion
+                                const nfmReply = interactive.nfm_reply || {};
+                                let flowData = {};
+                                try {
+                                    flowData = JSON.parse(nfmReply.response_json || "{}");
+                                } catch (_) {}
+                                textBody = `[Flow: ${nfmReply.name || 'Form'}] Submitted`;
 
                                 console.log("✅ [Webhook] Flow Response Received:", {
                                     flowName: nfmReply.name,
                                     data: flowData
                                 });
 
-                                // Store flow data in metadata for later use
                                 message.flow_data = flowData;
                                 message.flow_name = nfmReply.name;
+                            } else if (iType === "product_inquiry") {
+                                const prodId = interactive.product_inquiry?.product_retailer_id || '';
+                                textBody = `🛍️ Inquiry for product: ${prodId}`;
+                            } else if (iType === "order_details") {
+                                textBody = `🛒 WhatsApp Order Details`;
+                            } else if (iType === "catalog_message") {
+                                textBody = `🛍️ WhatsApp Catalog Selected`;
                             } else {
-                                textBody = "[Interactive Message]";
+                                textBody = interactive.body?.text || interactive.header?.text || "[Interactive Message]";
                             }
                             break;
+                        }
                         case "button":
                             textBody = message.button?.text || "[Button Click]";
                             break;
@@ -308,6 +326,11 @@ export async function POST(req) {
                             status: "RECEIVED",
                             metadata: {
                                 type: message.type,
+                                interactiveType: message.interactive?.type || null,
+                                interactive: message.interactive || null,
+                                order: message.order_data || message.order || null,
+                                context: message.context || null,
+                                referred_product: message.context?.referred_product || null,
                                 mediaUrl: message[message.type]?.url,
                                 caption: message[message.type]?.caption,
                                 fileName: message[message.type]?.filename,

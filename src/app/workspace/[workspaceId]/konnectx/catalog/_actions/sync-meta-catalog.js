@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
 
@@ -21,24 +21,14 @@ const handler = async (data) => {
         const userId = session.user.userId || session.user.id;
 
         // Resolve credentials
-        const cred = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD' },
-            orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
-        }).catch(() => null);
+        const { credentials: decrypted } = await resolveWhatsAppCredentials({
+            workspaceId,
+            userId
+        });
 
-        if (!cred?.credentials) throw new Error("WhatsApp Cloud API credentials not found");
-
-        let decrypted = null;
-        const stored = cred.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            try { decrypted = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-        } else if (typeof stored === 'string') {
-            try { decrypted = JSON.parse(stored); } catch (e) { }
-        } else {
-            decrypted = stored;
+        if (!decrypted?.accessToken) {
+            throw new Error("WhatsApp Cloud API credentials not configured or missing Meta Access Token. Please check Settings.");
         }
-
-        if (!decrypted?.accessToken) throw new Error("Meta access token is missing");
 
         const metaProductsRes = await cloudApi.fetchCatalogProductsMeta(decrypted, catalogId);
         if (!metaProductsRes.success) throw new Error(metaProductsRes.error || "Failed to fetch products from Meta");

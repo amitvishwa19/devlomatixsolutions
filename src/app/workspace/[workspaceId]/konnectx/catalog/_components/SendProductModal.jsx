@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Send,
     ShoppingBag,
@@ -25,7 +26,10 @@ import {
     Users,
     UserCheck,
     Search,
-    X
+    X,
+    Sparkles,
+    Info,
+    CheckCircle2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
@@ -52,6 +56,7 @@ export default function SendProductModal({
     const [chosenProductId, setChosenProductId] = useState(selectedProduct?.id || products[0]?.id || '');
     const [bodyText, setBodyText] = useState('Check out this featured product from our store:');
     const [footerText, setFooterText] = useState('Devlomatix Store');
+    const [customCatalogId, setCustomCatalogId] = useState(catalogId || '');
 
     const { execute: executeGetContacts } = useAction(getContacts, {
         onSuccess: (data) => {
@@ -70,6 +75,12 @@ export default function SendProductModal({
             executeGetContacts({ workspaceId });
         }
     }, [isOpen, workspaceId]);
+
+    useEffect(() => {
+        if (catalogId) {
+            setCustomCatalogId(catalogId);
+        }
+    }, [catalogId, isOpen]);
 
     useEffect(() => {
         if (selectedProduct) {
@@ -106,24 +117,23 @@ export default function SendProductModal({
     const handleSubmit = (e) => {
         e.preventDefault();
         const cleanPhone = recipient.replace(/[^\d+]/g, '');
-        if (!cleanPhone || cleanPhone.length < 10) {
+        if (!cleanPhone || cleanPhone.length < 7) {
             toast.error("Please enter or select a valid WhatsApp phone number (e.g. +919876543210)");
             return;
         }
+
+        const effectiveCatalogId = customCatalogId?.trim() || catalogId || undefined;
 
         if (messageType === 'product') {
             if (!activeItem) {
                 toast.error("Please select a product to send");
                 return;
             }
-            if (!catalogId) {
-                toast.error("A linked Meta Catalog ID is required to send product cards");
-                return;
-            }
             onSend({
                 to: cleanPhone,
                 type: 'product',
-                catalogId,
+                catalogId: effectiveCatalogId,
+                productId: activeItem.id,
                 retailerId: activeItem.sku || activeItem.retailer_id,
                 bodyText: bodyText.trim(),
                 footerText: footerText.trim()
@@ -132,6 +142,7 @@ export default function SendProductModal({
             onSend({
                 to: cleanPhone,
                 type: 'catalog_message',
+                catalogId: effectiveCatalogId,
                 bodyText: bodyText.trim(),
                 footerText: footerText.trim()
             });
@@ -151,15 +162,40 @@ export default function SendProductModal({
                                 Send to WhatsApp
                             </DialogTitle>
                             <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                                Dispatch interactive product cards directly to your subscribers or custom contacts
+                                Dispatch product showcases directly to your subscribers or custom contacts
                             </DialogDescription>
                         </div>
                     </div>
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-                    <ScrollArea className="flex-1 px-6 py-4 max-h-[calc(90vh-140px)]">
+                    <ScrollArea className="flex-1 px-6 py-4 h-[60vh]">
                         <div className="space-y-4 pb-2">
+                            {/* Mode Notification Banner */}
+                            <div className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs ${customCatalogId ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' : 'bg-primary/5 border-primary/20 text-primary'}`}>
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <Sparkles className="w-4 h-4 shrink-0" />
+                                    <div className="min-w-0">
+                                        <span className="font-bold">
+                                            {customCatalogId ? "Meta Native Catalog Card" : "Rich Product Showcase Card"}
+                                        </span>
+                                        <p className="text-[10px] opacity-80 truncate">
+                                            {customCatalogId ? `Catalog ID: ${customCatalogId}` : "Delivers formatted image, price & checkout link directly to WhatsApp"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const entered = prompt("Enter Meta Commerce Catalog ID:", customCatalogId);
+                                        if (entered !== null) setCustomCatalogId(entered.trim());
+                                    }}
+                                    className="text-[10px] font-bold underline shrink-0 hover:opacity-80"
+                                >
+                                    {customCatalogId ? "Edit ID" : "+ Add Catalog ID"}
+                                </button>
+                            </div>
+
                             {/* Recipient Contact Selector */}
                             <div className="space-y-2 border border-border/50 rounded-xl p-3.5 bg-muted/10">
                                 <div className="flex items-center justify-between">
@@ -386,7 +422,7 @@ export default function SendProductModal({
                                     <div className="text-muted-foreground text-[11px]">{bodyText || 'Message content'}</div>
                                     {footerText && <div className="text-[9px] text-muted-foreground/60">{footerText}</div>}
                                     <div className="mt-1 pt-1 border-t border-emerald-500/20 text-center text-primary font-bold text-[11px]">
-                                        {messageType === 'product' ? '🛍️ View item' : '📖 View catalog'}
+                                        {customCatalogId ? '🛍️ View item' : '✨ View Product & Order'}
                                     </div>
                                 </div>
                             </div>

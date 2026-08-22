@@ -22,12 +22,14 @@ import {
     Sparkles,
     MessageSquare,
     Trash2, Share2, UserPlus, Eye, Mail, Tag, Info, X,
-    RefreshCw
+    RefreshCw,
+    Forward
 } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import { useAction } from "@/hooks/use-action";
 import { getConversations } from "./_actions/get-conversations";
 import { sendMessage } from "./_actions/send-message";
+import { forwardMessage } from "./_actions/forward-message";
 import { deleteConversation } from "./_actions/delete-conversation";
 import { assignConversation } from "./_actions/assign-conversation";
 import { removeConversationAssignment } from "./_actions/remove-conversation-assignment";
@@ -38,6 +40,7 @@ import { getGroups } from "../contacts/_actions/get-groups";
 import { getCategories } from "../contacts/_actions/get-categories";
 import { getTemplates } from "../template/_actions/get-templates";
 import ManageContactModal from "./_components/ManageContactModal";
+import ForwardMessageModal from "./_components/ForwardMessageModal";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -89,7 +92,7 @@ import AccountSwitcher from "../_components/AccountSwitcher";
 function renderMessagePreview(lastMessage) {
     if (!lastMessage) return "";
     try {
-        const parsed = JSON.parse(lastMessage);
+        const parsed = typeof lastMessage === 'string' ? JSON.parse(lastMessage) : lastMessage;
         if (typeof parsed === 'object' && parsed !== null) {
             const type = (parsed.type || 'text').toLowerCase();
             const text = parsed.text || "";
@@ -105,6 +108,11 @@ function renderMessagePreview(lastMessage) {
             if (type === 'location') return "📍 Location shared";
             if (type === 'contacts') return `👤 Contact: ${parsed.text || "Shared Contact"}`;
             if (type === 'poll') return `📊 Poll: ${parsed.text || "New Poll"}`;
+            if (type === 'order') return `🛒 Order: ${text || "Catalog Order"}`;
+            if (type === 'interactive' || type === 'product' || type === 'catalog_message') {
+                if (text && !text.includes('[Interactive Message]')) return text;
+                return "🛍️ Catalog / Interactive Message";
+            }
             if (type === 'unsupported') return "⚠️ WhatsApp System Message";
 
             return text || `[${type.toUpperCase()}]`;
@@ -183,6 +191,10 @@ export default function WhatsAppChatsPage() {
     // Manage Contact / Group / Tag Modal State
     const [isManageContactOpen, setIsManageContactOpen] = useState(false);
     const [manageContactJid, setManageContactJid] = useState(null);
+
+    // Forward Message Modal State
+    const [isForwardOpen, setIsForwardOpen] = useState(false);
+    const [forwardingMsg, setForwardingMsg] = useState(null);
 
     // Sidebar/Filter State
     const [groups, setGroups] = useState([]);
@@ -349,6 +361,20 @@ export default function WhatsAppChatsPage() {
             }));
         },
         onError: (err) => toast.error(err)
+    });
+
+    const { execute: executeForwardMessage, isLoading: isForwarding } = useAction(forwardMessage, {
+        onSuccess: (res) => {
+            if (res?.success) {
+                toast.success(`Message forwarded to ${res.sentCount} recipient${res.sentCount === 1 ? '' : 's'}`);
+                setIsForwardOpen(false);
+                setForwardingMsg(null);
+                executeConversations({ workspaceId, userId });
+            } else {
+                toast.error("Failed to forward message");
+            }
+        },
+        onError: (err) => toast.error(err || "Failed to forward message")
     });
 
     const handleAssignConversation = (jid) => {
@@ -1153,7 +1179,9 @@ export default function WhatsAppChatsPage() {
                                                 Boolean(msg.metadata?.originalPayload?.template?.name) ||
                                                 (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
                                             const type = msg.metadata?.type?.toLowerCase() || (isTemplate ? 'template' : 'text');
-                                            const isMedia = !isTemplate && ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'unsupported'].includes(type);
+                                            const isInteractiveOrProduct = type === 'interactive' || type === 'order' || type === 'product' || type === 'catalog_message' ||
+                                                (typeof msg.text === 'string' && (msg.text.startsWith('[Product:') || msg.text.startsWith('[Catalog]') || msg.text.startsWith('🛒 Order')));
+                                            const isMedia = !isTemplate && (isInteractiveOrProduct || ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'order', 'unsupported'].includes(type));
                                             const templateName = msg.metadata?.templateName ||
                                                 msg.metadata?.originalPayload?.template?.name ||
                                                 (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
@@ -1203,6 +1231,26 @@ export default function WhatsAppChatsPage() {
                                                                 )}
                                                             </div>
                                                         )}
+
+                                                        {/* Hover Action: Forward */}
+                                                        <div
+                                                            className={`absolute top-1 ${msg.fromMe ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1`}
+                                                        >
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 rounded-full bg-card/90 border border-border/60 shadow-xs hover:bg-muted text-muted-foreground hover:text-primary transition-all"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setForwardingMsg(msg);
+                                                                    setIsForwardOpen(true);
+                                                                }}
+                                                                title="Forward message"
+                                                            >
+                                                                <Forward className="w-3 h-3" />
+                                                            </Button>
+                                                        </div>
 
                                                         {/* Common Meta Info (Time & Status) */}
                                                         <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
@@ -1662,6 +1710,27 @@ export default function WhatsAppChatsPage() {
                     fetchConversations();
                 }}
             />
-        </div >
+
+            {/* Forward Message Modal */}
+            <ForwardMessageModal
+                isOpen={isForwardOpen}
+                onClose={() => {
+                    setIsForwardOpen(false);
+                    setForwardingMsg(null);
+                }}
+                message={forwardingMsg}
+                contacts={allContacts}
+                conversations={conversations}
+                workspaceId={workspaceId}
+                onForward={(recipients, msgPayload) => {
+                    executeForwardMessage({
+                        workspaceId,
+                        recipients,
+                        message: msgPayload
+                    });
+                }}
+                isLoading={isForwarding}
+            />
+        </div>
     );
 }

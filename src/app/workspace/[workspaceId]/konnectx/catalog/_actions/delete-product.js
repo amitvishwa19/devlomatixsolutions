@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
 
@@ -28,27 +28,15 @@ const handler = async (data) => {
 
         // If synced with Meta, delete from Meta
         if (product.externalProductId) {
-            const cred = await db.credentials.findFirst({
-                where: { userId, platform: 'WHATSAPP_CLOUD' },
-                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
-            }).catch(() => null);
+            const { credentials: decrypted } = await resolveWhatsAppCredentials({
+                workspaceId,
+                userId
+            });
 
-            if (cred?.credentials) {
-                let decrypted = null;
-                const stored = cred.credentials;
-                if (typeof stored === 'string' && stored.includes(':')) {
-                    try { decrypted = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-                } else if (typeof stored === 'string') {
-                    try { decrypted = JSON.parse(stored); } catch (e) { }
-                } else {
-                    decrypted = stored;
-                }
-
-                if (decrypted?.accessToken) {
-                    await cloudApi.deleteCatalogProductMeta(decrypted, product.externalProductId).catch(err => {
-                        console.warn("[deleteProduct] Meta delete failed:", err);
-                    });
-                }
+            if (decrypted?.accessToken) {
+                await cloudApi.deleteCatalogProductMeta(decrypted, product.externalProductId).catch(err => {
+                    console.warn("[deleteProduct] Meta delete failed:", err);
+                });
             }
         }
 

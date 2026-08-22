@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
 
@@ -104,47 +104,35 @@ const handler = async (data) => {
         let metaSyncResult = null;
         if (catalogId) {
             // Resolve credentials
-            const cred = await db.credentials.findFirst({
-                where: { userId, platform: 'WHATSAPP_CLOUD' },
-                orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }]
-            }).catch(() => null);
+            const { credentials: decrypted } = await resolveWhatsAppCredentials({
+                workspaceId,
+                userId
+            });
 
-            if (cred?.credentials) {
-                let decrypted = null;
-                const stored = cred.credentials;
-                if (typeof stored === 'string' && stored.includes(':')) {
-                    try { decrypted = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-                } else if (typeof stored === 'string') {
-                    try { decrypted = JSON.parse(stored); } catch (e) { }
-                } else {
-                    decrypted = stored;
-                }
+            if (decrypted?.accessToken) {
+                metaSyncResult = await cloudApi.createCatalogProductMeta(decrypted, catalogId, {
+                    sku: effectiveSku,
+                    title,
+                    description,
+                    price,
+                    currency,
+                    image_url: imageUrl,
+                    url,
+                    availability: status === 'ACTIVE' ? 'in stock' : 'out of stock'
+                });
 
-                if (decrypted?.accessToken) {
-                    metaSyncResult = await cloudApi.createCatalogProductMeta(decrypted, catalogId, {
-                        sku: effectiveSku,
-                        title,
-                        description,
-                        price,
-                        currency,
-                        image_url: imageUrl,
-                        url,
-                        availability: status === 'ACTIVE' ? 'in stock' : 'out of stock'
-                    });
-
-                    if (metaSyncResult.success && metaSyncResult.data?.id) {
-                        await db.eCommerceProduct.update({
-                            where: { id: savedProduct.id },
-                            data: {
-                                externalProductId: metaSyncResult.data.id,
-                                metadata: {
-                                    metaCatalogId: catalogId,
-                                    metaProductId: metaSyncResult.data.id,
-                                    lastSyncedAt: new Date().toISOString()
-                                }
+                if (metaSyncResult.success && metaSyncResult.data?.id) {
+                    await db.eCommerceProduct.update({
+                        where: { id: savedProduct.id },
+                        data: {
+                            externalProductId: metaSyncResult.data.id,
+                            metadata: {
+                                metaCatalogId: catalogId,
+                                metaProductId: metaSyncResult.data.id,
+                                lastSyncedAt: new Date().toISOString()
                             }
-                        }).catch(() => {});
-                    }
+                        }
+                    }).catch(() => {});
                 }
             }
         }

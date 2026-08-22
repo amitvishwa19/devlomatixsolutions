@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 
 const GetCatalogDataSchema = z.object({
@@ -32,50 +32,11 @@ const handler = async (data) => {
             ].filter(Boolean))
         ];
 
-        // 2. Resolve Active Default Credential (Prioritize user's switched default)
-        let defaultCredential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-        }).catch(() => null);
-
-        if (!defaultCredential) {
-            defaultCredential = await db.credentials.findFirst({
-                where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-            }).catch(() => null);
-        }
-
-        if (!defaultCredential) {
-            defaultCredential = await db.credentials.findFirst({
-                where: { userId: { in: workspaceUserIds }, platform: 'WHATSAPP_CLOUD', isDefault: true }
-            }).catch(() => null);
-        }
-
-        if (!defaultCredential) {
-            defaultCredential = await db.credentials.findFirst({
-                where: {
-                    OR: [
-                        { workspaceId, platform: 'WHATSAPP_CLOUD' },
-                        { userId: { in: workspaceUserIds }, platform: 'WHATSAPP_CLOUD' },
-                    ]
-                },
-                orderBy: { updatedAt: 'desc' }
-            }).catch(() => null);
-        }
-
-        let decryptedCreds = null;
-        if (defaultCredential?.credentials) {
-            let stored = defaultCredential.credentials;
-            if (typeof stored === 'string' && stored.includes(':')) {
-                try { decryptedCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-            } else if (typeof stored === 'string') {
-                try { decryptedCreds = JSON.parse(stored); } catch (e) { }
-            } else {
-                decryptedCreds = stored;
-            }
-
-            if (decryptedCreds?.enc) {
-                try { decryptedCreds = JSON.parse(symmetricDecrypt(decryptedCreds.enc)); } catch (e) { }
-            }
-        }
+        // 2. Resolve Active Default Credential
+        const { credential: defaultCredential, credentials: decryptedCreds } = await resolveWhatsAppCredentials({
+            workspaceId,
+            userId
+        });
 
         const credsPayload = decryptedCreds ? {
             accessToken: decryptedCreds.accessToken || '',
@@ -110,7 +71,10 @@ const handler = async (data) => {
             orderBy: { updatedAt: 'desc' }
         }).catch(() => []);
 
-        // 5. Compute Stats
+        // 5. Compute Stats & Active Catalog Resolution
+        const fallbackCatalogId = localProducts.find(p => p.metadata?.metaCatalogId)?.metadata?.metaCatalogId || null;
+        const resolvedCatalogId = commerceSettings?.catalog_id || (metaCatalogs[0]?.id || fallbackCatalogId || null);
+
         const totalProducts = localProducts.length;
         const inStockCount = localProducts.filter(p => p.status === 'ACTIVE' || p.status === 'in stock' || (p.inventoryCount && p.inventoryCount > 0)).length;
         const totalOrders = await db.eCommerceOrder.count({
@@ -127,7 +91,7 @@ const handler = async (data) => {
                 commerceSettings: commerceSettings || {
                     is_catalog_visible: false,
                     is_cart_enabled: false,
-                    catalog_id: null
+                    catalog_id: resolvedCatalogId
                 },
                 metaCatalogs,
                 products: JSON.parse(JSON.stringify(localProducts)),
@@ -135,7 +99,7 @@ const handler = async (data) => {
                     totalProducts,
                     inStockCount,
                     totalOrders,
-                    activeCatalogId: commerceSettings?.catalog_id || (metaCatalogs[0]?.id || null)
+                    activeCatalogId: resolvedCatalogId
                 }
             }
         };

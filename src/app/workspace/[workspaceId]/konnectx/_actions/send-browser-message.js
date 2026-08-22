@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from "../_lib/whatsapp-cloud-api";
 
 const SendBrowserMessageSchema = z.object({
@@ -22,25 +22,13 @@ const handler = async (data) => {
         const userId = session.user.userId || session.user.id;
 
         // 1. Fetch Default Credential
-        const credential = await db.credentials.findFirst({
-            where: { 
-                workspaceId, 
-                userId, 
-                platform: 'WHATSAPP_CLOUD',
-                isDefault: true 
-            }
+        const { credentials: cloudCreds } = await resolveWhatsAppCredentials({
+            workspaceId,
+            userId
         });
 
-        if (!credential) return { error: "No default WhatsApp Cloud account found. Please configure one in Settings." };
-
-        let cloudCreds = null;
-        const stored = credential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            cloudCreds = JSON.parse(symmetricDecrypt(stored));
-        } else if (typeof stored === 'string') {
-            cloudCreds = JSON.parse(stored);
-        } else {
-            cloudCreds = stored;
+        if (!cloudCreds?.accessToken || !cloudCreds?.phoneNumberId) {
+            return { error: "No active WhatsApp Cloud account found with Access Token and Phone Number ID. Please configure one in Settings." };
         }
 
         const phone = to.replace(/\D/g, '');

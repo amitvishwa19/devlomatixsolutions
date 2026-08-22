@@ -192,17 +192,17 @@ export default function ProductModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="px-6 pt-6 pb-3 border-b border-border/40">
+            <DialogContent className="max-w-xl max-h-[90vh] border flex flex-col p-0 overflow-hidden w-full">
+                <DialogHeader className="px-6 pt-6 pb-3 border-b border-border/40 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-sm">
+                        <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shadow-sm shrink-0">
                             <Package className="w-5 h-5" />
                         </div>
-                        <div>
-                            <DialogTitle className="text-lg font-bold text-foreground">
+                        <div className="min-w-0 flex-1">
+                            <DialogTitle className="text-lg font-bold text-foreground truncate">
                                 {product ? "Edit Product" : "Add Catalog Product"}
                             </DialogTitle>
-                            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                            <DialogDescription className="text-xs text-muted-foreground mt-0.5 truncate">
                                 {catalogId
                                     ? `Directly synchronized to Meta Catalog (${catalogId})`
                                     : "Saved to your local WhatsApp product vault"}
@@ -211,9 +211,9 @@ export default function ProductModal({
                     </div>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
-                    <ScrollArea className="flex-1 px-6 py-4 max-h-[calc(90vh-140px)]">
-                        <div className="space-y-4 pb-4">
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
+                    <ScrollArea className="h-[calc(85vh-140px)] w-full px-6 py-4">
+                        <div className="space-y-4 pb-6 w-full min-w-0 pr-2">
                             {/* Product Title */}
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold">Product Title *</Label>
@@ -401,14 +401,14 @@ export default function ProductModal({
                                     </TabsContent>
 
                                     {/* URL Tab */}
-                                    <TabsContent value="url" className="pt-2 space-y-1.5">
-                                        <div className="relative">
+                                    <TabsContent value="url" className="pt-2 space-y-1.5 w-full min-w-0">
+                                        <div className="relative w-full min-w-0">
                                             <LinkIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                             <Input
                                                 placeholder="https://images.unsplash.com/photo-..."
                                                 value={imageUrl}
                                                 onChange={(e) => setImageUrl(e.target.value)}
-                                                className="h-9 text-xs pl-8 font-mono"
+                                                className="h-9 text-xs pl-8 font-mono w-full min-w-0 break-all"
                                             />
                                         </div>
                                     </TabsContent>
@@ -416,8 +416,8 @@ export default function ProductModal({
 
                                 {/* Live Image Preview Card */}
                                 {imageUrl && (
-                                    <div className="flex items-center gap-3 p-2 bg-background/80 border border-border/60 rounded-xl mt-2">
-                                        <div className="w-12 h-12 rounded-lg bg-muted/40 overflow-hidden border shrink-0">
+                                    <div className="flex items-start gap-3 p-2.5 bg-background/80 border border-border/60 rounded-xl mt-2 w-full min-w-0 max-w-full overflow-hidden">
+                                        <div className="w-12 h-12 rounded-lg bg-muted/40 overflow-hidden border shrink-0 mt-0.5">
                                             <img
                                                 src={imageUrl}
                                                 alt="Selected Preview"
@@ -425,13 +425,15 @@ export default function ProductModal({
                                                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                             />
                                         </div>
-                                        <div className="min-w-0 flex-1 space-y-0.5">
-                                            <div className="text-[11px] font-semibold text-foreground truncate">
+                                        <div className="min-w-0 flex-1 space-y-1 overflow-hidden">
+                                            <div className="text-[11px] font-semibold text-foreground">
                                                 Active Image URL
                                             </div>
-                                            <div className="text-[10px] text-muted-foreground font-mono truncate" title={imageUrl}>
-                                                {imageUrl}
-                                            </div>
+                                            <ScrollArea className="max-h-20 w-full rounded pr-2">
+                                                <p className="text-[10px] text-muted-foreground font-mono break-all whitespace-normal select-all leading-relaxed" title={imageUrl}>
+                                                    {imageUrl}
+                                                </p>
+                                            </ScrollArea>
                                         </div>
                                         <Button
                                             type="button"
@@ -448,27 +450,27 @@ export default function ProductModal({
                             </div>
 
                             {/* Product Description */}
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 w-full min-w-0">
                                 <Label className="text-xs font-semibold">Product Description</Label>
                                 <Textarea
                                     rows={4}
                                     placeholder="Describe features, specifications, and warranty..."
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="text-xs min-h-[70px] resize-none"
+                                    className="text-xs min-h-[70px] resize-none w-full"
                                 />
                             </div>
 
                             {/* Store / Checkout URL */}
-                            <div className="space-y-1.5">
+                            <div className="space-y-1.5 w-full min-w-0">
                                 <Label className="text-xs font-semibold">Store / Checkout URL (Optional)</Label>
-                                <div className="relative">
+                                <div className="relative w-full min-w-0">
                                     <Globe className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                                     <Input
                                         placeholder="https://yourstore.com/products/item"
                                         value={url}
                                         onChange={(e) => setUrl(e.target.value)}
-                                        className="h-9 text-xs pl-8 font-mono"
+                                        className="h-9 text-xs pl-8 font-mono w-full min-w-0 break-all"
                                     />
                                 </div>
                             </div>
@@ -486,7 +488,7 @@ export default function ProductModal({
                         </div>
                     </ScrollArea>
 
-                    <DialogFooter className="px-6 py-3 border-t border-border/40 bg-muted/10 gap-2">
+                    <DialogFooter className="px-6 py-3 border-t border-border/40 bg-muted/10 gap-2 shrink-0">
                         <Button variant="outline" type="button" onClick={onClose} disabled={isLoading} className="h-9 text-xs">
                             Cancel
                         </Button>

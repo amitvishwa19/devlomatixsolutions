@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { safelyDecryptCredentials } from "@/lib/whatsapp-credentials";
 
 const TestCredentialSchema = z.object({
     workspaceId: z.string(),
@@ -26,14 +26,9 @@ const handler = async (data) => {
 
         if (!credential) return { error: "Credential not found" };
 
-        let cloudCreds = null;
-        const stored = credential.credentials;
-        if (typeof stored === 'string' && stored.includes(':')) {
-            cloudCreds = JSON.parse(symmetricDecrypt(stored));
-        } else if (typeof stored === 'string') {
-            cloudCreds = JSON.parse(stored);
-        } else {
-            cloudCreds = stored;
+        const cloudCreds = safelyDecryptCredentials(credential.credentials);
+        if (!cloudCreds?.accessToken) {
+            return { error: "Missing Access Token in credentials" };
         }
 
         // 2. If testNumber is provided, send a test message (Hello World)
