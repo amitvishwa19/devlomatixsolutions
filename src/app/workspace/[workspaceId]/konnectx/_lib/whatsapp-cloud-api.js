@@ -524,26 +524,123 @@ async function deleteFlowMeta(credentials, flowId) {
 }
 
 async function fetchAssignedCatalogs(credentials) {
-    const { accessToken, wabaId } = credentials;
+    const { accessToken, wabaId, businessId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
-    if (!wabaId) return response(false, null, 'Missing wabaId');
+    if (!wabaId && !businessId) return response(false, null, 'Missing wabaId or businessId');
 
-    const url = `${BASE_URL}/${version}/${wabaId}/assigned_product_catalogs`;
+    const catalogs = [];
+    const seenIds = new Set();
+
+    const addCatalogs = (data) => {
+        if (Array.isArray(data)) {
+            for (const cat of data) {
+                if (cat?.id && !seenIds.has(cat.id)) {
+                    seenIds.add(cat.id);
+                    catalogs.push(cat);
+                }
+            }
+        }
+    };
+
+    // 1. Fetch assigned catalogs to WABA
+    if (wabaId) {
+        try {
+            const url = `${BASE_URL}/${version}/${wabaId}/assigned_product_catalogs?fields=id,name,product_count,vertical`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            const data = await res.json();
+            if (res.ok) addCatalogs(data.data);
+        } catch (err) {
+            console.warn('[WA_ASSIGNED_CATALOGS_WARN]', err.message);
+        }
+
+        // Also check product_catalogs on WABA
+        try {
+            const url = `${BASE_URL}/${version}/${wabaId}/product_catalogs?fields=id,name,product_count,vertical`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            const data = await res.json();
+            if (res.ok) addCatalogs(data.data);
+        } catch (err) {
+            console.warn('[WA_WABA_CATALOGS_WARN]', err.message);
+        }
+    }
+
+    // 2. Fetch owned and client catalogs if businessId / wabaId exists
+    const bId = businessId || wabaId;
+    if (bId) {
+        try {
+            const url = `${BASE_URL}/${version}/${bId}/owned_product_catalogs?fields=id,name,product_count,vertical`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            const data = await res.json();
+            if (res.ok) addCatalogs(data.data);
+        } catch (err) {
+            console.warn('[WA_OWNED_CATALOGS_WARN]', err.message);
+        }
+
+        try {
+            const url = `${BASE_URL}/${version}/${bId}/client_product_catalogs?fields=id,name,product_count,vertical`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+            const data = await res.json();
+            if (res.ok) addCatalogs(data.data);
+        } catch (err) {
+            console.warn('[WA_CLIENT_CATALOGS_WARN]', err.message);
+        }
+    }
+
+    return response(true, catalogs);
+}
+
+/**
+ * Fetch Single Catalog details from Meta by catalog ID
+ */
+async function fetchCatalogDetailsMeta(credentials, catalogId) {
+    const { accessToken } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!catalogId) return response(false, null, 'Missing catalogId');
+
+    const url = `${BASE_URL}/${version}/${catalogId}?fields=id,name,product_count,vertical`;
     try {
         const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         const data = await res.json();
         if (!res.ok) {
-            console.error('[WA_COMMERCE_CATALOGS_ERROR]', data.error);
-            return response(false, null, data.error?.message || 'Failed to fetch assigned catalogs');
+            return response(false, null, data.error?.message || 'Failed to fetch catalog details');
         }
-        return response(true, data.data || []);
+        return response(true, data);
     } catch (err) {
         return response(false, null, err.message);
     }
 }
 
+/**
+ * Assign / Link a Meta Catalog to a WhatsApp Business Account (WABA)
+ */
+async function assignCatalogToWaba(credentials, catalogId) {
+    const { accessToken, wabaId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!wabaId) return response(false, null, 'Missing wabaId');
+    if (!catalogId) return response(false, null, 'Missing catalogId');
+
+    const url = `${BASE_URL}/${version}/${wabaId}/assigned_product_catalogs`;
+    try {
+        const res = await fetch(`${url}?catalog_id=${catalogId}`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_ASSIGN_CATALOG_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to assign catalog to WABA');
+        }
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+/**
+ * Get WhatsApp Commerce Settings (catalog visibility, cart, catalog_id)
+ */
 async function getCommerceSettings(credentials) {
     const { accessToken, phoneNumberId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
@@ -565,6 +662,9 @@ async function getCommerceSettings(credentials) {
     }
 }
 
+/**
+ * Update WhatsApp Commerce Settings
+ */
 async function updateCommerceSettings(credentials, settings) {
     const { accessToken, phoneNumberId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
@@ -585,6 +685,64 @@ async function updateCommerceSettings(credentials, settings) {
         if (!res.ok) {
             console.error('[WA_COMMERCE_SETTINGS_UPDATE_ERROR]', data.error);
             return response(false, null, data.error?.message || 'Failed to update commerce settings');
+        }
+        return response(true, data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+/**
+ * Get WhatsApp Business Profile (about, description, vertical, websites, email)
+ */
+async function getWhatsAppBusinessProfile(credentials) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!phoneNumberId) return response(false, null, 'Missing phoneNumberId');
+
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/whatsapp_business_profile?fields=about,address,description,email,profile_picture_url,websites,vertical`;
+    try {
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.warn('[WA_BUSINESS_PROFILE_GET_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to fetch business profile');
+        }
+        return response(true, data.data?.[0] || data);
+    } catch (err) {
+        return response(false, null, err.message);
+    }
+}
+
+/**
+ * Update WhatsApp Business Profile (description, vertical: 'RETAIL', websites, email, address, about)
+ */
+async function updateWhatsAppBusinessProfile(credentials, profileData) {
+    const { accessToken, phoneNumberId } = credentials;
+    const version = credentials.version || DEFAULT_VERSION;
+    if (!phoneNumberId) return response(false, null, 'Missing phoneNumberId');
+
+    const url = `${BASE_URL}/${version}/${phoneNumberId}/whatsapp_business_profile`;
+    const payload = {
+        messaging_product: "whatsapp",
+        ...profileData
+    };
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            console.error('[WA_BUSINESS_PROFILE_UPDATE_ERROR]', data.error);
+            return response(false, null, data.error?.message || 'Failed to update business profile');
         }
         return response(true, data);
     } catch (err) {
@@ -726,8 +884,12 @@ export {
     getFlowAssetMeta,
     uploadMetaMedia,
     fetchAssignedCatalogs,
+    fetchCatalogDetailsMeta,
+    assignCatalogToWaba,
     getCommerceSettings,
     updateCommerceSettings,
+    getWhatsAppBusinessProfile,
+    updateWhatsAppBusinessProfile,
     fetchCatalogProductsMeta,
     createCatalogProductMeta,
     deleteCatalogProductMeta,

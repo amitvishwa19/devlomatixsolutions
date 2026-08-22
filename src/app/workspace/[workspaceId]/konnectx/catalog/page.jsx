@@ -58,6 +58,7 @@ import { sendCatalogMessage } from "./_actions/send-catalog-message";
 import ProductModal from "./_components/ProductModal";
 import SendProductModal from "./_components/SendProductModal";
 import CommerceSettingsModal from "./_components/CommerceSettingsModal";
+import CatalogSwitcher from "./_components/CatalogSwitcher";
 
 export default function CatalogPage() {
     const params = useParams();
@@ -191,11 +192,16 @@ export default function CatalogPage() {
                         <ShoppingBag className="w-6 h-6 text-emerald-500" />
                     </div>
                     <div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                             <h1 className="text-xl font-bold tracking-tight text-foreground">WhatsApp Catalog</h1>
                             <Badge variant="outline" className={`h-5 px-2 text-[9px] font-bold uppercase tracking-widest ${activeCatalogId ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5' : 'border-amber-500/30 text-amber-500 bg-amber-500/5'}`}>
                                 {activeCatalogId ? 'Meta Catalog Linked' : 'Catalog Not Linked'}
                             </Badge>
+                            {activeCatalogId && catalogData.commerceSettings?.is_catalog_visible !== false && (
+                                <Badge variant="outline" className="h-5 px-2 text-[9px] font-bold uppercase tracking-widest border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 flex items-center gap-1">
+                                    <ShoppingBag className="w-3 h-3" /> Visible on Profile
+                                </Badge>
+                            )}
                         </div>
                         <p className="text-xs text-muted-foreground font-medium mt-0.5">
                             Manage inventory, interactive Single/Multi-Product messages & shopping carts.
@@ -205,6 +211,16 @@ export default function CatalogPage() {
 
                 <div className="flex flex-row items-center justify-between  gap-2.5">
                     <AccountSwitcher />
+
+                    <CatalogSwitcher
+                        activeCatalogId={activeCatalogId}
+                        metaCatalogs={catalogData.metaCatalogs || []}
+                        workspaceId={workspaceId}
+                        isCatalogVisible={catalogData.commerceSettings?.is_catalog_visible !== false}
+                        isCartEnabled={catalogData.commerceSettings?.is_cart_enabled !== false}
+                        onCatalogSwitched={() => executeGetData({ workspaceId })}
+                        onOpenSettings={() => setIsSettingsModalOpen(true)}
+                    />
 
                     <Button
                         variant="outline"
@@ -660,10 +676,15 @@ export default function CatalogPage() {
 
             <CommerceSettingsModal
                 isOpen={isSettingsModalOpen}
-                onClose={() => setIsSettingsModalOpen(false)}
+                onClose={() => {
+                    setIsSettingsModalOpen(false);
+                    executeGetData({ workspaceId });
+                }}
                 onSave={(data) => executeUpdateSettings({ ...data, workspaceId })}
                 settings={catalogData.commerceSettings}
                 metaCatalogs={catalogData.metaCatalogs || []}
+                workspaceId={workspaceId}
+                activePhoneId={catalogData.activePhoneId}
                 isLoading={isSavingSettings}
             />
         </div>
