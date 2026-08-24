@@ -24,7 +24,11 @@ export async function getCandidatesAction(workspaceId) {
             include: {
                 applications: {
                     where: { workspaceId },
-                    include: { job: true }
+                    include: { 
+                        job: {
+                            include: { category: true }
+                        }
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -50,7 +54,9 @@ export async function getCandidateByIdAction(workspaceId, candidateId) {
                 applications: {
                     where: { workspaceId },
                     include: { 
-                        job: true,
+                        job: {
+                            include: { category: true }
+                        },
                     }
                 },
                 scorecards: {
