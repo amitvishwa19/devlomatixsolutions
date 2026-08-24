@@ -104,11 +104,36 @@ const ventures = [
 ];
 
 const colorVariants = {
-    emerald: "from-emerald-500/15 via-emerald-500/5 to-transparent border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/60 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 bg-card",
-    blue: "from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/30 text-blue-600 dark:text-blue-400 hover:border-blue-500/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 bg-card",
-    amber: "from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30 text-amber-600 dark:text-amber-400 hover:border-amber-500/60 shadow-sm hover:shadow-xl hover:shadow-amber-500/10 bg-card",
-    purple: "from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30 text-purple-600 dark:text-purple-400 hover:border-purple-500/60 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 bg-card",
-    indigo: "from-indigo-500/15 via-indigo-500/5 to-transparent border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500/60 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 bg-card",
+    emerald: {
+        card: "from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-500/30 hover:border-emerald-500/60 shadow-xs hover:shadow-xl hover:shadow-emerald-500/15 bg-card",
+        icon: "from-emerald-500 to-teal-600 shadow-emerald-500/25",
+        bar: "from-emerald-500 via-teal-500 to-cyan-400",
+        tag: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
+    },
+    blue: {
+        card: "from-blue-500/10 via-sky-500/5 to-transparent border-blue-500/30 hover:border-blue-500/60 shadow-xs hover:shadow-xl hover:shadow-blue-500/15 bg-card",
+        icon: "from-blue-500 to-sky-600 shadow-blue-500/25",
+        bar: "from-blue-500 via-sky-500 to-indigo-400",
+        tag: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25",
+    },
+    amber: {
+        card: "from-amber-500/10 via-orange-500/5 to-transparent border-amber-500/30 hover:border-amber-500/60 shadow-xs hover:shadow-xl hover:shadow-amber-500/15 bg-card",
+        icon: "from-amber-500 to-orange-600 shadow-amber-500/25",
+        bar: "from-amber-500 via-orange-500 to-yellow-400",
+        tag: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
+    },
+    purple: {
+        card: "from-purple-500/10 via-pink-500/5 to-transparent border-purple-500/30 hover:border-purple-500/60 shadow-xs hover:shadow-xl hover:shadow-purple-500/15 bg-card",
+        icon: "from-purple-500 to-pink-600 shadow-purple-500/25",
+        bar: "from-purple-500 via-pink-500 to-rose-400",
+        tag: "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/25",
+    },
+    indigo: {
+        card: "from-indigo-500/10 via-violet-500/5 to-transparent border-indigo-500/30 hover:border-indigo-500/60 shadow-xs hover:shadow-xl hover:shadow-indigo-500/15 bg-card",
+        icon: "from-indigo-500 to-violet-600 shadow-indigo-500/25",
+        bar: "from-indigo-500 via-violet-500 to-blue-400",
+        tag: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25",
+    },
 };
 
 export default function VenturesPage() {
@@ -119,6 +144,7 @@ export default function VenturesPage() {
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-40">
                     <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] orb-primary rounded-full blur-[120px]" />
                     <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] orb-secondary rounded-full blur-[120px]" />
+                    <div className="absolute top-[40%] right-[-10%] w-[40%] h-[40%] orb-rose rounded-full blur-[120px]" />
                 </div>
 
                 <main className="container mx-auto px-6 pt-32 pb-24">
@@ -136,37 +162,42 @@ export default function VenturesPage() {
                                 <div className="h-px flex-1 bg-gradient-to-r from-primary/30 to-transparent" />
                             </div>
                             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-8 leading-[1.1]">
-                                Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Excellence</span> <br />
+                                Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600">Excellence</span> <br />
                                 Across Every Sector.
                             </h1>
-                            <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-2xl">
-                                Our ventures leverage a unified infrastructure to disrupt traditional markets through artificial intelligence, sustainability, and human-centric design.
+                            <p className="text-xl text-muted-foreground font-normal leading-relaxed max-w-2xl">
+                                Our ventures leverage unified digital architecture to disrupt traditional markets through artificial intelligence, sustainability, and human-centric product design.
                             </p>
                         </motion.div>
                     </div>
 
                     {/* Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {ventures.map((venture, index) => (
-                            <motion.div
-                                key={venture.name}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: index * 0.1 }}
-                            >
-                                <div className={`group relative h-full flex flex-col rounded-3xl border bg-gradient-to-br transition-all duration-500 p-8 ${colorVariants[venture.color]}`}>
-                                    {/* Icon & Label */}
-                                    <div className="flex items-start justify-between mb-8">
-                                        <div className="p-4 rounded-2xl bg-card border border-border/60 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-md">
-                                            <venture.icon className="w-8 h-8" />
+                        {ventures.map((venture, index) => {
+                            const variant = colorVariants[venture.color] || colorVariants.blue;
+                            return (
+                                <motion.div
+                                    key={venture.name}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                                >
+                                    <div className={`group relative h-full flex flex-col rounded-3xl border bg-gradient-to-br transition-all duration-500 p-8 overflow-hidden ${variant.card}`}>
+                                        {/* Top gradient accent */}
+                                        <div className={`h-1.5 w-full bg-gradient-to-r ${variant.bar} absolute top-0 left-0 opacity-80 group-hover:opacity-100 transition-opacity`} />
+
+                                        {/* Icon & Label */}
+                                        <div className="flex items-start justify-between mb-8">
+                                            <div className={`p-4 rounded-2xl bg-gradient-to-br ${variant.icon} text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-md`}>
+                                                <venture.icon className="w-8 h-8" />
+                                            </div>
+                                            <div className="text-right">
+                                                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${variant.tag}`}>
+                                                    {venture.tag}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest bg-secondary/80 border border-border/50 px-2.5 py-1">
-                                                {venture.tag}
-                                            </Badge>
-                                        </div>
-                                    </div>
 
                                     {/* Content */}
                                     <div className="flex-1 space-y-6">
