@@ -28,7 +28,8 @@ import {
     ExternalLink,
     Award,
     Play,
-    History
+    History,
+    Users
 } from 'lucide-react';
 import Scorecards from './Scorecards';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
@@ -58,6 +59,7 @@ import {
     SheetTitle
 } from '@/components/ui/sheet';
 import { OfferBuilderModal } from './OfferBuilderModal';
+import AddContactModal from './AddContactModal';
 import {
     getCandidateByIdAction,
     deleteCandidateAction,
@@ -87,6 +89,7 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
     const [isScoring, setIsScoring] = useState(false);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isAddContactOpen, setIsAddContactOpen] = useState(false);
 
     // Communication & WhatsApp State
     const [commChannel, setCommChannel] = useState('whatsapp');
@@ -296,6 +299,16 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                         >
                                             {isParsing ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
                                             Parse Resume (AI)
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setIsAddContactOpen(true)}
+                                            className="rounded-md text-[10px] bg-card/60 border-border/40 hover:bg-primary/10 hover:text-primary transition-all font-bold gap-1.5"
+                                            title="Save Candidate as CRM Contact"
+                                        >
+                                            <Users className="w-3.5 h-3.5 text-primary" />
+                                            <span>Add to Contact</span>
                                         </Button>
                                         <Button variant="ghost" size="icon" className="w-10 rounded-md opacity-60 hover:opacity-100" onClick={() => setActiveTab('emails')}>
                                             <Mail size={18} />
@@ -962,6 +975,14 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                     <OfferBuilderModal
                         isOpen={isOfferModalOpen}
                         onClose={() => setIsOfferModalOpen(false)}
+                        candidate={candidateData}
+                        workspaceId={workspaceId}
+                    />
+
+                    {/* Add Candidate to Contacts Modal */}
+                    <AddContactModal
+                        isOpen={isAddContactOpen}
+                        onOpenChange={setIsAddContactOpen}
                         candidate={candidateData}
                         workspaceId={workspaceId}
                     />

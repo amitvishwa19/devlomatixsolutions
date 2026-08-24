@@ -67,6 +67,7 @@ import {
 } from "@/components/ui/table";
 import { CandidateModal } from '../_components/CandidateModal';
 import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
+import AddContactModal from '../_components/AddContactModal';
 import { getCandidatesAction, deleteCandidateAction, aiParseResumeAction } from '../_actions/candidate-actions';
 import { getDepartmentsAction } from '../departments/_actions/department-actions';
 import { toast } from 'sonner';
@@ -110,10 +111,27 @@ export default function TalentDatabasePage() {
     );
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [isAddContactModalOpen, setIsAddContactModalOpen] = useState(false);
+    const [candidateForContact, setCandidateForContact] = useState(null);
     const [selectedCandidateId, setSelectedCandidateId] = useState(null);
     const [candidateToDelete, setCandidateToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [parsingCandidateId, setParsingCandidateId] = useState(null);
+
+    const handleOpenAddContact = (candidateItem) => {
+        const fullCand = candidates?.find(c => c.id === candidateItem.id) || candidateItem;
+        setCandidateForContact({
+            ...candidateItem,
+            ...fullCand,
+            phone: fullCand.phone || candidateItem.phone || '',
+            role: candidateItem.role || fullCand.applications?.[0]?.job?.title || 'Candidate',
+            departmentName: candidateItem.departmentName || fullCand.applications?.[0]?.job?.category?.name || '',
+            location: fullCand.location || candidateItem.location || '',
+            summary: fullCand.summary || fullCand.aiSummary || '',
+            tags: fullCand.skills || candidateItem.tags || []
+        });
+        setIsAddContactModalOpen(true);
+    };
 
     const handleParseResume = async (candidate) => {
         if (!candidate?.id) return;
@@ -524,12 +542,9 @@ export default function TalentDatabasePage() {
                                                         )}
                                                         <DropdownMenuItem
                                                             className="font-bold text-xs cursor-pointer"
-                                                            onClick={() => {
-                                                                setSelectedCandidateId(candidate.id);
-                                                                setIsDetailsModalOpen(true);
-                                                            }}
+                                                            onClick={() => handleOpenAddContact(candidate)}
                                                         >
-                                                            <Users size={13} className="mr-2" /> Add to Contact
+                                                            <Users size={13} className="mr-2 text-primary" /> Add to Contact
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
                                                             className="font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center cursor-pointer"
@@ -659,6 +674,12 @@ export default function TalentDatabasePage() {
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuItem
+                                                        className="font-bold text-xs cursor-pointer"
+                                                        onClick={() => handleOpenAddContact(candidate)}
+                                                    >
+                                                        <Users size={13} className="mr-2 text-primary" /> Add to Contact
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
                                                         className="font-bold text-xs text-destructive focus:text-destructive focus:bg-destructive/10 flex items-center cursor-pointer"
                                                         onClick={() => setCandidateToDelete(candidate)}
                                                     >
@@ -709,6 +730,13 @@ export default function TalentDatabasePage() {
                     setSelectedCandidateId(null);
                     mutate();
                 }}
+            />
+
+            <AddContactModal
+                isOpen={isAddContactModalOpen}
+                onOpenChange={setIsAddContactModalOpen}
+                candidate={candidateForContact}
+                workspaceId={workspaceId}
             />
 
             {/* Delete Candidate Confirmation Modal */}
