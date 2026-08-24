@@ -1,6 +1,6 @@
 import "@/css/globals.css";
 import "@/css/custom.css";
-import { Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -17,17 +17,7 @@ import CookieConsent from "@/components/global/CookieConsent";
 import { VisitorTracker } from "@/components/global/VisitorTracker";
 import { Suspense } from "react";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-    subsets: ["latin"],
-    variable: "--font-heading",
-    weight: ["400", "500", "600", "700", "800"]
-});
-
-const inter = Inter({
-    subsets: ["latin"],
-    variable: "--font-sans",
-    weight: ["300", "400", "500", "600", "700"]
-});
+const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = {
     title: {
@@ -47,7 +37,7 @@ export default async function RootLayout({ children }) {
 
     return (
         <html lang="en" data-scroll-behavior="smooth">
-            <body className={`${inter.className} ${plusJakartaSans.variable} ${inter.variable} antialiased`} suppressHydrationWarning={true}>
+            <body className={`${outfit.className}`} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     {/* <SocketProvider> */}
                     <QueryProvider>
