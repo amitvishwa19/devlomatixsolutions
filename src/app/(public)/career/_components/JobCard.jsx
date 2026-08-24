@@ -20,7 +20,7 @@ export const JobCard = ({ job, onApply }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             whileHover={{ y: -5 }}
-            className="group relative bg-card/60 backdrop-blur-xl border  rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/5 cursor-pointer overflow-hidden"
+            className="group relative bg-card backdrop-blur-xl border border-border/70 rounded-2xl p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 cursor-pointer overflow-hidden"
             onClick={() => onApply(job)}
         >
             {/* Background Glow */}
@@ -40,26 +40,26 @@ export const JobCard = ({ job, onApply }) => {
                                 </Badge>
                             )}
                         </div>
-                        <h3 className="text-xl tracking-tight group-hover:text-primary transition-colors line-clamp-1">{job.title}</h3>
+                        <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-1">{job.title}</h3>
                     </div>
                 </div>
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-2 gap-3 pt-2">
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
-                        <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
+                        <div className="p-1.5 bg-secondary/80 rounded-lg shrink-0">
                             <MapPin size={12} className="text-primary" />
                         </div>
                         <span className="truncate">{job.location}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
-                        <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
+                        <div className="p-1.5 bg-secondary/80 rounded-lg shrink-0">
                             <IndianRupee size={12} className="text-primary" />
                         </div>
                         <span>{job.salaryRange || job.salary || 'Competitive'} p/m</span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
-                        <div className="p-1.5 bg-muted/30 rounded-lg shrink-0">
+                        <div className="p-1.5 bg-secondary/80 rounded-lg shrink-0">
                             <Clock size={12} className="text-primary" />
                         </div>
                         <span>{job.createdAt ? formatDistanceToNow(new Date(job.createdAt), { addSuffix: true }) : (job.postedAt || 'Recently')}</span>
@@ -67,7 +67,7 @@ export const JobCard = ({ job, onApply }) => {
                 </div>
 
                 {/* Description Preview */}
-                <div className="text-xs font-medium text-muted-foreground/60 line-clamp-2 leading-relaxed pt-2">
+                <div className="text-xs font-normal text-muted-foreground line-clamp-2 leading-relaxed pt-2">
                     {job.description?.replace(/<[^>]*>/g, '')}
                 </div>
 

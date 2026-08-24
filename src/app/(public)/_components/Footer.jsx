@@ -51,7 +51,7 @@ const Footer = () => {
         : [];
 
     return (
-        <footer className="border-t border-border/50 bg-card/30">
+        <footer className="border-t border-border/60 bg-card/60 backdrop-blur-md">
             <div className="container mx-auto px-6 py-16">
                 <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12">
                     {/* Brand */}
@@ -59,12 +59,12 @@ const Footer = () => {
                         <div className="flex items-center gap-2 mb-4">
                             <AppLogo link={'/'} size={200} height={100} />
                         </div>
-                        <p className="text-muted-foreground max-w-sm mb-6 font-medium text-sm leading-relaxed">
+                        <p className="text-muted-foreground max-w-sm mb-6 font-normal text-sm leading-relaxed">
                             {settings?.branding?.appDescription || "Building innovative software solutions that drive business growth and digital transformation."}
                         </p>
 
                         {/* Dynamic Social Icons */}
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             {activeSocialLinks.length > 0 ? (
                                 activeSocialLinks.map((social) => (
                                     <a
@@ -72,10 +72,10 @@ const Footer = () => {
                                         href={social.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-secondary transition-all duration-300 group"
+                                        className="w-10 h-10 rounded-xl bg-card border border-border/70 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-card shadow-xs hover:shadow-md transition-all duration-300 group"
                                         title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
                                     >
-                                        <social.icon className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                        <social.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                     </a>
                                 ))
                             ) : (
@@ -83,9 +83,9 @@ const Footer = () => {
                                 [Twitter, Linkedin, Github].map((Icon, index) => (
                                     <div
                                         key={index}
-                                        className="w-10 h-10 rounded-lg bg-secondary/50 flex items-center justify-center text-muted-foreground/30 border border-dashed border-border/40"
+                                        className="w-10 h-10 rounded-xl bg-card border border-border/60 flex items-center justify-center text-muted-foreground/40 shadow-xs"
                                     >
-                                        <Icon className="w-5 h-5" />
+                                        <Icon className="w-4 h-4" />
                                     </div>
                                 ))
                             )}
@@ -94,11 +94,11 @@ const Footer = () => {
 
                     {/* Links */}
                     <div>
-                        <h4 className="font-display font-semibold text-foreground mb-4">Services</h4>
+                        <h4 className="font-display font-bold text-foreground mb-4 text-sm uppercase tracking-wider">Services</h4>
                         <ul className="space-y-3">
                             {links.services.map((link, index) => (
                                 <li key={index}>
-                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                    <Link href={link.href} className="text-muted-foreground hover:text-primary transition-colors duration-300 text-sm font-medium cursor-pointer">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -107,11 +107,11 @@ const Footer = () => {
                     </div>
 
                     <div>
-                        <h4 className="font-display font-semibold text-foreground mb-4">Company</h4>
+                        <h4 className="font-display font-bold text-foreground mb-4 text-sm uppercase tracking-wider">Company</h4>
                         <ul className="space-y-3">
                             {links.company.map((link, index) => (
                                 <li key={index}>
-                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                    <Link href={link.href} className="text-muted-foreground hover:text-primary transition-colors duration-300 text-sm font-medium cursor-pointer">
                                         {link.name}
                                     </Link>
                                 </li>
@@ -120,11 +120,11 @@ const Footer = () => {
                     </div>
 
                     <div>
-                        <h4 className="font-display font-semibold text-foreground mb-4">Resources</h4>
+                        <h4 className="font-display font-bold text-foreground mb-4 text-sm uppercase tracking-wider">Resources</h4>
                         <ul className="space-y-3">
                             {links.resources.map((link, index) => (
                                 <li key={index}>
-                                    <Link href={link.href} className="text-muted-foreground hover:text-foreground transition-colors duration-300 text-sm font-semibold cursor-pointer">
+                                    <Link href={link.href} className="text-muted-foreground hover:text-primary transition-colors duration-300 text-sm font-medium cursor-pointer">
                                         {link.name}
                                     </Link>
                                 </li>

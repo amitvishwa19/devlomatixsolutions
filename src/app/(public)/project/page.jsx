@@ -110,9 +110,9 @@ export default function ProjectPage() {
 
                 {/* Hero Section */}
                 <section className="relative pt-32 pb-20 overflow-hidden">
-                    <div className="absolute inset-0 grid-pattern opacity-30" />
-                    <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-primary/15 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[hsl(260,100%,65%,0.15)] rounded-full blur-[100px]" />
+                    <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
+                    <div className="absolute top-1/3 left-1/4 w-80 h-80 orb-primary rounded-full blur-[120px] pointer-events-none" />
+                    <div className="absolute bottom-1/4 right-1/4 w-64 h-64 orb-secondary rounded-full blur-[100px] pointer-events-none" />
 
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
@@ -121,10 +121,10 @@ export default function ProjectPage() {
                             transition={{ duration: 0.6 }}
                             className="max-w-3xl mx-auto text-center"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Work</span>
-                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20">Our Work</span>
+                            <h1 className="font-display text-4xl md:text-6xl font-extrabold mt-6 mb-6 text-foreground">
                                 Featured{" "}
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Projects</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Projects</span>
                             </h1>
                             <p className="text-xl text-muted-foreground leading-relaxed">
                                 Explore our portfolio of successful projects across various industries.
@@ -155,15 +155,15 @@ export default function ProjectPage() {
                                             alt={project.title}
                                             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent" />
-                                        <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium backdrop-blur-sm">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-background/90 to-transparent pointer-events-none" />
+                                        <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs">
                                             {project.category}
                                         </span>
                                     </div>
                                     <div className="p-6">
-                                        <h3 className="font-display text-xl font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                                        <h3 className="font-display text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
                                             {project.title}
-                                            {project.link && <span className="ml-2 text-xs text-muted-foreground">↗</span>}
+                                            {project.link && <span className="ml-2 text-xs text-primary font-bold">↗</span>}
                                         </h3>
                                         <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">
                                             {project.description}
@@ -172,16 +172,16 @@ export default function ProjectPage() {
                                             {project.tech.slice(0, 4).map((tech, i) => (
                                                 <span
                                                     key={i}
-                                                    className="px-2 py-1 rounded-md bg-secondary/50 text-xs text-muted-foreground"
+                                                    className="px-2.5 py-1 rounded-md bg-secondary/80 border border-border/50 text-xs font-medium text-muted-foreground"
                                                 >
                                                     {tech}
                                                 </span>
                                             ))}
                                         </div>
                                         <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-                                            <p className="text-xs text-primary font-medium">{project.results}</p>
+                                            <p className="text-xs text-primary font-semibold">{project.results}</p>
                                             {project.link && (
-                                                <span className="text-xs text-primary font-medium">Visit Site ↗</span>
+                                                <span className="text-xs text-primary font-bold hover:underline">Visit Site ↗</span>
                                             )}
                                         </div>
                                     </div>
@@ -193,8 +193,8 @@ export default function ProjectPage() {
 
                 {/* CTA Section */}
                 <section className="py-20 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-b from-background via-card/50 to-background" />
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[150px]" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-background via-card/50 to-background pointer-events-none" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] orb-primary rounded-full blur-[150px] pointer-events-none" />
 
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
@@ -204,11 +204,11 @@ export default function ProjectPage() {
                             viewport={{ once: true }}
                             className="max-w-2xl mx-auto text-center"
                         >
-                            <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
+                            <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-6 text-foreground">
                                 Ready to Build Your{" "}
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Next Project?</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Next Project?</span>
                             </h2>
-                            <p className="text-muted-foreground text-lg mb-8">
+                            <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                                 Let's discuss how we can help bring your vision to life with our expertise.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

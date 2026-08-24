@@ -144,9 +144,9 @@ export default function AboutPage() {
 
                 {/* Hero Section */}
                 <section className="relative pt-32 pb-20 overflow-hidden">
-                    <div className="absolute inset-0 grid-pattern opacity-30" />
-                    <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-primary/15 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-[hsl(260,100%,65%,0.15)] rounded-full blur-[100px]" />
+                    <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
+                    <div className="absolute top-1/3 left-1/4 w-80 h-80 orb-primary rounded-full blur-[120px] pointer-events-none" />
+                    <div className="absolute bottom-1/4 right-1/4 w-64 h-64 orb-secondary rounded-full blur-[100px] pointer-events-none" />
 
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
@@ -155,10 +155,10 @@ export default function AboutPage() {
                             transition={{ duration: 0.6 }}
                             className="max-w-3xl mx-auto text-center"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">About Us</span>
-                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20">About Us</span>
+                            <h1 className="font-display text-4xl md:text-6xl font-extrabold mt-6 mb-6 text-foreground">
                                 Driving Digital{" "}
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Transformation</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Transformation</span>
                             </h1>
                             <p className="text-xl text-muted-foreground leading-relaxed">
                                 We're a team of passionate technologists, designers, and strategists
@@ -179,9 +179,9 @@ export default function AboutPage() {
                                 transition={{ duration: 0.6 }}
                                 viewport={{ once: true }}
                             >
-                                <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Story</span>
-                                <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                    From Vision to <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Reality</span>
+                                <span className="text-primary text-sm font-semibold tracking-wider uppercase">Our Story</span>
+                                <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-6 text-foreground">
+                                    From Vision to <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Reality</span>
                                 </h2>
                                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                                     <p>
@@ -211,12 +211,12 @@ export default function AboutPage() {
                                 {stats.map((stat, index) => (
                                     <div
                                         key={index}
-                                        className="glass-card p-6 text-center hover:border-primary/50 transition-colors duration-300"
+                                        className="glass-card p-6 text-center hover:border-primary/50 transition-all duration-300"
                                     >
-                                        <div className="font-display text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent mb-2">
+                                        <div className="font-display text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600 mb-2">
                                             {stat.value}
                                         </div>
-                                        <div className="text-sm text-muted-foreground">{stat.label}</div>
+                                        <div className="text-sm font-medium text-muted-foreground">{stat.label}</div>
                                     </div>
                                 ))}
                             </motion.div>
@@ -225,7 +225,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Timeline Section */}
-                <section className="py-20 bg-card/30">
+                <section className="py-20 bg-secondary/30 dark:bg-card/30">
                     <div className="container mx-auto px-6">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -234,9 +234,9 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="text-center mb-16"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Journey</span>
-                            <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Key <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Milestones</span>
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase">Our Journey</span>
+                            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-6 text-foreground">
+                                Key <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Milestones</span>
                             </h2>
                         </motion.div>
 
@@ -251,19 +251,19 @@ export default function AboutPage() {
                                     className="flex gap-6 mb-8 last:mb-0"
                                 >
                                     <div className="flex flex-col items-center">
-                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-[hsl(260,100%,65%)] flex items-center justify-center flex-shrink-0">
-                                            <Calendar className="w-5 h-5 text-primary-foreground" />
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary via-blue-600 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                                            <Calendar className="w-5 h-5 text-white" />
                                         </div>
                                         {index < timeline.length - 1 && (
-                                            <div className="w-0.5 h-full bg-border/50 mt-2" />
+                                            <div className="w-0.5 h-full bg-border/80 mt-2" />
                                         )}
                                     </div>
                                     <div className="glass-card p-6 flex-1 hover:border-primary/50 transition-colors duration-300">
                                         <span className="text-primary font-display font-bold">{item.year}</span>
-                                        <h3 className="font-display text-xl font-semibold text-foreground mt-1">
+                                        <h3 className="font-display text-xl font-bold text-foreground mt-1">
                                             {item.title}
                                         </h3>
-                                        <p className="text-muted-foreground mt-2">{item.description}</p>
+                                        <p className="text-muted-foreground mt-2 leading-relaxed text-sm">{item.description}</p>
                                     </div>
                                 </motion.div>
                             ))}
@@ -281,11 +281,11 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="text-center mb-16"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Values</span>
-                            <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                What <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Drives Us</span>
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase">Our Values</span>
+                            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-6 text-foreground">
+                                What <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Drives Us</span>
                             </h2>
-                            <p className="text-muted-foreground max-w-2xl mx-auto">
+                            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                                 Our core values shape every decision we make and every solution we build.
                             </p>
                         </motion.div>
@@ -300,10 +300,10 @@ export default function AboutPage() {
                                     viewport={{ once: true }}
                                     className="glass-card p-6 text-center hover:border-primary/50 transition-all duration-300"
                                 >
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mx-auto mb-4">
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 via-blue-500/10 to-accent/15 border border-primary/20 flex items-center justify-center mx-auto mb-4 shadow-xs">
                                         <value.icon className="w-7 h-7 text-primary" />
                                     </div>
-                                    <h3 className="font-display text-lg font-semibold mb-2 text-foreground">
+                                    <h3 className="font-display text-lg font-bold mb-2 text-foreground">
                                         {value.title}
                                     </h3>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
@@ -316,7 +316,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Team Section */}
-                <section id="about" className="py-20 bg-card/30">
+                <section id="about" className="py-20 bg-secondary/30 dark:bg-card/30">
                     <div className="container mx-auto px-6">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -325,11 +325,11 @@ export default function AboutPage() {
                             viewport={{ once: true }}
                             className="text-center mb-16"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Team</span>
-                            <h2 className="font-display text-3xl md:text-4xl font-bold mt-4 mb-6">
-                                Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Experts</span>
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase">Our Team</span>
+                            <h2 className="font-display text-3xl md:text-4xl font-extrabold mt-3 mb-6 text-foreground">
+                                Meet the <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Experts</span>
                             </h2>
-                            <p className="text-muted-foreground max-w-2xl mx-auto">
+                            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                                 A diverse team of talented individuals united by a passion for technology and innovation.
                             </p>
                         </motion.div>
@@ -345,15 +345,15 @@ export default function AboutPage() {
                                     whileHover={{ y: -8 }}
                                     className="glass-card p-6 group hover:border-primary/50 transition-all duration-300"
                                 >
-                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-[hsl(260,100%,65%)] flex items-center justify-center mb-4 group-hover:shadow-[0_0_30px_hsl(192,100%,50%,0.3)] transition-shadow duration-300">
-                                        <span className="font-display text-2xl font-bold text-primary-foreground">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-blue-600 to-indigo-600 flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform">
+                                        <span className="font-display text-xl font-bold text-white">
                                             {member.name.split(" ").map(n => n[0]).join("")}
                                         </span>
                                     </div>
-                                    <h3 className="font-display text-xl font-semibold text-foreground">
+                                    <h3 className="font-display text-xl font-bold text-foreground">
                                         {member.name}
                                     </h3>
-                                    <p className="text-primary text-sm font-medium mb-2">{member.role}</p>
+                                    <p className="text-primary text-sm font-semibold mb-2">{member.role}</p>
                                     <p className="text-muted-foreground text-sm leading-relaxed">
                                         {member.bio}
                                     </p>

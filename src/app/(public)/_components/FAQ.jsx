@@ -34,8 +34,8 @@ const FAQ = () => {
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
-    <section className="py-32 relative">
-      <div className="absolute inset-0 grid-pattern opacity-20" />
+    <section className="py-32 relative overflow-hidden">
+      <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         <motion.div
@@ -47,16 +47,15 @@ const FAQ = () => {
         >
           <Tagline text="FAQ" icon={<Sparkles className="w-4 h-4 text-primary" />} />
 
-
-          <h2 className="text-primary text-4xl md:text-5xl font-bold mt-4 mb-6">
-            Frequently Asked <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Questions</span>
+          <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-4 mb-6 text-foreground">
+            Frequently Asked <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Questions</span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Get answers to common questions about our services and process.
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
+            Get transparent answers to common questions about our software development lifecycle and engagement models.
           </p>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-3.5">
           {faqs.map((faq, index) => (
             <motion.div
               key={index}
@@ -68,16 +67,16 @@ const FAQ = () => {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-secondary/30 transition-colors duration-300"
+                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-primary/5 transition-colors duration-300 cursor-pointer"
               >
-                <span className="font-display font-semibold text-foreground pr-4">
+                <span className="font-display font-bold text-foreground pr-4 text-base">
                   {faq.question}
                 </span>
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-secondary/50 flex items-center justify-center">
+                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-secondary/70 text-muted-foreground'}`}>
                   {openIndex === index ? (
                     <Minus className="w-4 h-4 text-primary" />
                   ) : (
-                    <Plus className="w-4 h-4 text-muted-foreground" />
+                    <Plus className="w-4 h-4" />
                   )}
                 </div>
               </button>
@@ -87,9 +86,9 @@ const FAQ = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="px-6 pb-5"
+                  className="px-6 pb-5 pt-1 border-t border-border/30"
                 >
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                     {faq.answer}
                   </p>
                 </motion.div>

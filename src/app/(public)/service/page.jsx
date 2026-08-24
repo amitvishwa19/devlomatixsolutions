@@ -50,8 +50,9 @@ export default function ServicePage() {
 
 
                 {/* Hero Section */}
-                <section className="pt-32 pb-20 relative">
-                    <div className="absolute inset-0 grid-pattern opacity-20" />
+                <section className="pt-32 pb-20 relative overflow-hidden">
+                    <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
+                    <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] orb-primary rounded-full blur-[100px] opacity-40 pointer-events-none" />
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -59,11 +60,11 @@ export default function ServicePage() {
                             transition={{ duration: 0.6 }}
                             className="text-center max-w-3xl mx-auto"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">Our Services</span>
-                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Tech Solutions</span>
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20">Our Services</span>
+                            <h1 className="font-display text-4xl md:text-6xl font-extrabold mt-6 mb-6 text-foreground">
+                                End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Tech Solutions</span>
                             </h1>
-                            <p className="text-muted-foreground text-lg md:text-xl">
+                            <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
                                 From ideation to deployment, we provide comprehensive software services
                                 that empower businesses to thrive in the digital age.
                             </p>
@@ -85,20 +86,20 @@ export default function ServicePage() {
                                     whileHover={{ y: -8, transition: { duration: 0.2 } }}
                                     className="group glass-card p-8 hover:border-primary/50 transition-all duration-300"
                                 >
-                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mb-6 group-hover:shadow-[0_0_30px_hsl(192,100%,50%,0.3)] transition-shadow duration-300">
+                                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/15 via-blue-500/10 to-accent/15 border border-primary/20 flex items-center justify-center mb-6 shadow-xs group-hover:scale-110 group-hover:shadow-[0_0_25px_hsl(var(--primary)/0.25)] transition-all duration-300">
                                         <service.icon className="w-7 h-7 text-primary" />
                                     </div>
-                                    <h3 className="font-display text-xl font-semibold mb-3 text-foreground">
+                                    <h3 className="font-display text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors">
                                         {service.title}
                                     </h3>
-                                    <p className="text-muted-foreground leading-relaxed mb-6">
+                                    <p className="text-muted-foreground leading-relaxed mb-6 text-sm md:text-base">
                                         {service.description}
                                     </p>
-                                    <ul className="space-y-2">
+                                    <ul className="space-y-2.5 pt-4 border-t border-border/40">
                                         {service.features.map((feature, featureIndex) => (
                                             <li key={featureIndex} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <ArrowRight className="w-4 h-4 text-primary" />
-                                                {feature}
+                                                <ArrowRight className="w-3.5 h-3.5 text-primary shrink-0" />
+                                                <span>{feature}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -118,13 +119,13 @@ export default function ServicePage() {
                             viewport={{ once: true }}
                             className="glass-card p-12 text-center"
                         >
-                            <h2 className="font-display text-3xl md:text-4xl font-bold mb-4">
-                                Ready to Start Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Project</span>?
+                            <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-4 text-foreground">
+                                Ready to Start Your <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Project</span>?
                             </h2>
-                            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
+                            <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto leading-relaxed">
                                 Let's discuss how we can help transform your business with our technology solutions.
                             </p>
-                            <Button variant="hero" size="lg">
+                            <Button variant="hero" size="xl">
                                 Get in Touch
                             </Button>
                         </motion.div>

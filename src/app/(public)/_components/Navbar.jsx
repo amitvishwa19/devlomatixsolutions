@@ -158,22 +158,15 @@ const Navbar = () => {
                     </div>
 
 
-                    {/* <ThemeSwitcher /> */}
+                    <div className="hidden md:flex items-center gap-3">
 
-
-
-                    {
-                        session &&
-                        <div className="flex items-center gap-3">
-                            <AuthSelector />
-                        </div>
-                    }
-
+                        {session && <AuthSelector />}
+                    </div>
 
                     {/* Mobile */}
-                    <div className="flex md:hidden items-center gap-3">
-                        {/* <ThemeToggle /> */}
-                        <button className="text-foreground" onClick={() => setIsOpen(!isOpen)}>
+                    <div className="flex md:hidden items-center gap-2">
+
+                        <button className="text-foreground p-1.5 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                             {isOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>
                     </div>

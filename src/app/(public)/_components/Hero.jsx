@@ -17,30 +17,30 @@ const Hero = () => {
 
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 w-full ">
                 {/* Background gradient for light theme */}
-                <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-accent/5 to-background dark:from-background dark:via-background dark:to-background" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-accent/5 to-background dark:from-background dark:via-background dark:to-background pointer-events-none" />
 
                 {/* Background Effects */}
-                <div className="absolute inset-0 grid-pattern opacity-40" />
+                <div className="absolute inset-0 grid-pattern opacity-40 pointer-events-none" />
 
                 {/* Colorful orbs */}
-                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] orb-primary rounded-full blur-[80px] animate-pulse-glow" />
-                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] orb-secondary rounded-full blur-[60px] animate-pulse-glow" style={{ animationDelay: "1.5s" }} />
-                <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] orb-tertiary rounded-full blur-[70px] animate-pulse-glow" style={{ animationDelay: "0.8s" }} />
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] orb-primary rounded-full blur-[80px] animate-pulse-glow pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] orb-secondary rounded-full blur-[60px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "1.5s" }} />
+                <div className="absolute top-1/2 right-1/3 w-[300px] h-[300px] orb-tertiary rounded-full blur-[70px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "0.8s" }} />
 
                 {/* Dark theme fallback orbs */}
-                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse-glow dark:block hidden" />
-                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[hsl(260,100%,65%,0.2)] rounded-full blur-[100px] animate-pulse-glow dark:block hidden" style={{ animationDelay: "1.5s" }} />
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[120px] animate-pulse-glow dark:block hidden pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[hsl(260,100%,65%,0.2)] rounded-full blur-[100px] animate-pulse-glow dark:block hidden pointer-events-none" style={{ animationDelay: "1.5s" }} />
 
                 {/* Floating Elements */}
                 <motion.div
-                    className="absolute top-32 right-20 w-20 h-20 glass-card  items-center justify-center hidden lg:flex"
+                    className="absolute top-32 right-20 w-20 h-20 glass-card items-center justify-center hidden lg:flex shadow-lg shadow-primary/5"
                     animate={{ y: [0, -20, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
                 >
                     <span className="text-3xl">⚡</span>
                 </motion.div>
                 <motion.div
-                    className="absolute bottom-40 left-20 w-16 h-16 glass-card  items-center justify-center hidden lg:flex"
+                    className="absolute bottom-40 left-20 w-16 h-16 glass-card items-center justify-center hidden lg:flex shadow-lg shadow-primary/5"
                     animate={{ y: [0, -15, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 >
@@ -52,8 +52,6 @@ const Hero = () => {
                         {/* Left Content */}
                         <div className="text-center lg:text-left">
                             {/* Badge */}
-
-
                             <Tagline text="Transforming Ideas into Digital Reality" icon={<Sparkles className="w-4 h-4 text-primary" />} />
 
                             {/* Main Heading */}
@@ -61,10 +59,10 @@ const Hero = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.1 }}
-                                className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-primary "
+                                className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6 text-foreground"
                             >
                                 We Build{" "}
-                                <span className="bg-clip-text text-transparent bg-linear-to-r from-primary via-blue-500 to-indigo-500">Software</span>
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Software</span>
                                 <br />
                                 That Drives Growth
                             </motion.h1>
@@ -74,7 +72,7 @@ const Hero = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.2 }}
-                                className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8"
+                                className="text-lg text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed font-normal"
                             >
                                 From custom software development to intelligent automation, we deliver
                                 end-to-end tech solutions that scale your business and streamline operations.
@@ -105,7 +103,7 @@ const Hero = () => {
                                 initial={{ opacity: 0, y: 40 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.5 }}
-                                className="grid grid-cols-3 gap-6 mt-12"
+                                className="grid grid-cols-3 gap-6 mt-12 pt-6 border-t border-border/40"
                             >
                                 {[
                                     { value: "150+", label: "Projects Delivered" },
@@ -121,14 +119,14 @@ const Hero = () => {
                                         whileHover={{ scale: 1.05, y: -2 }}
                                     >
                                         <motion.div
-                                            className="font-display text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-linear-to-r from-primary to-accent"
+                                            className="font-display text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600"
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             transition={{ delay: 0.8 + index * 0.1 }}
                                         >
                                             {stat.value}
                                         </motion.div>
-                                        <div className="text-xs md:text-sm text-muted-foreground mt-1">{stat.label}</div>
+                                        <div className="text-xs md:text-sm font-medium text-muted-foreground mt-1">{stat.label}</div>
                                     </motion.div>
                                 ))}
                             </motion.div>
@@ -143,23 +141,23 @@ const Hero = () => {
                         >
                             <div className="relative">
                                 {/* Glow effect behind image */}
-                                <div className="absolute -inset-4 bg-gradient-to-r from-primary/40 to-accent/40 rounded-3xl blur-2xl opacity-60 dark:opacity-40" />
+                                <div className="absolute -inset-4 bg-gradient-to-r from-primary/30 to-blue-600/30 rounded-3xl blur-2xl opacity-70 dark:opacity-40" />
 
                                 <img
                                     src={heroDashboard.src}
                                     alt="Modern tech dashboard with data visualizations"
-                                    className="relative rounded-2xl border border-border/50 shadow-2xl shadow-primary/10 w-full h-auto"
+                                    className="relative rounded-2xl border border-border/60 shadow-2xl shadow-primary/10 w-full h-auto"
                                 />
 
                                 {/* Floating card overlay */}
                                 <motion.div
-                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl shadow-primary/10 bg-red-500 rounded-lg"
+                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl shadow-primary/10 rounded-xl"
                                     animate={{ y: [0, -10, 0] }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 >
-                                    <div className="flex items-center gap-3 ">
-                                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                                            <span className="text-emerald-600 text-lg">✓</span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-emerald-500/15 flex items-center justify-center border border-emerald-500/30">
+                                            <span className="text-emerald-600 dark:text-emerald-400 font-bold text-base">✓</span>
                                         </div>
                                         <div>
                                             <div className="text-sm font-bold text-foreground">Project Delivered</div>

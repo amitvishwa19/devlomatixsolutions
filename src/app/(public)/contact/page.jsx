@@ -90,8 +90,9 @@ export default function ContactPage() {
 
 
                 {/* Hero Section */}
-                <section className="pt-32 pb-20 relative">
-                    <div className="absolute inset-0 grid-pattern opacity-20" />
+                <section className="pt-32 pb-20 relative overflow-hidden">
+                    <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
+                    <div className="absolute top-1/4 right-1/4 w-80 h-80 orb-primary rounded-full blur-[120px] pointer-events-none" />
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -99,15 +100,15 @@ export default function ContactPage() {
                             transition={{ duration: 0.6 }}
                             className="text-center max-w-3xl mx-auto"
                         >
-                            <span className="text-primary text-sm font-medium tracking-wider uppercase">
+                            <span className="text-primary text-sm font-semibold tracking-wider uppercase bg-primary/10 px-3.5 py-1 rounded-full border border-primary/20">
                                 Contact Us
                             </span>
-                            <h1 className="font-display text-4xl md:text-6xl font-bold mt-4 mb-6">
-                                Let's Start a <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Conversation</span>
+                            <h1 className="font-display text-4xl md:text-6xl font-extrabold mt-6 mb-6 text-foreground">
+                                Let's Start a <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Conversation</span>
                             </h1>
-                            <p className="text-muted-foreground text-lg md:text-xl">
+                            <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
                                 Have a project in mind? We'd love to hear from you. Send us a message
-                                and we'll respond as soon as possible.
+                                and our team will respond within 24 hours.
                             </p>
                         </motion.div>
                     </div>
@@ -124,16 +125,16 @@ export default function ContactPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
                                     viewport={{ once: true }}
-                                    className="glass-card p-6 text-center"
+                                    className="glass-card p-6 text-center hover:border-primary/50 transition-all duration-300"
                                 >
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-[hsl(260,100%,65%,0.2)] flex items-center justify-center mx-auto mb-4">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 via-blue-500/10 to-accent/15 border border-primary/20 flex items-center justify-center mx-auto mb-4 shadow-xs">
                                         <info.icon className="w-6 h-6 text-primary" />
                                     </div>
-                                    <h3 className="font-display font-semibold text-foreground mb-1">
+                                    <h3 className="font-display font-bold text-foreground mb-1">
                                         {info.title}
                                     </h3>
-                                    <p className="text-foreground font-medium">{info.details}</p>
-                                    <p className="text-sm text-muted-foreground">{info.description}</p>
+                                    <p className="text-foreground font-semibold">{info.details}</p>
+                                    <p className="text-sm text-muted-foreground mt-1">{info.description}</p>
                                 </motion.div>
                             ))}
                         </div>
@@ -151,11 +152,11 @@ export default function ContactPage() {
                                 transition={{ duration: 0.6 }}
                                 viewport={{ once: true }}
                             >
-                                <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
+                                <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-6 text-foreground">
                                     Ready to Transform Your{" "}
-                                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Business</span>?
+                                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Business</span>?
                                 </h2>
-                                <p className="text-muted-foreground text-lg mb-8">
+                                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                                     Whether you're looking to build a new product, automate processes,
                                     or modernize your existing systems, we're here to help you succeed.
                                 </p>

@@ -106,9 +106,9 @@ export default function CaseStudyPage() {
 
                 {/* Hero Section */}
                 <section className="pt-32 pb-20 relative overflow-hidden">
-                    <div className="absolute inset-0 grid-pattern opacity-30" />
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+                    <div className="absolute inset-0 grid-pattern opacity-25 pointer-events-none" />
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 orb-primary rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 orb-secondary rounded-full blur-3xl pointer-events-none" />
 
                     <div className="container mx-auto px-6 relative z-10">
                         <motion.div
@@ -117,14 +117,14 @@ export default function CaseStudyPage() {
                             transition={{ duration: 0.6 }}
                             className="text-center max-w-4xl mx-auto"
                         >
-                            <Badge variant="secondary" className="mb-6">
+                            <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25 font-bold px-3 py-1 text-xs uppercase tracking-wider mb-6">
                                 Success Stories
                             </Badge>
-                            <h1 className="text-4xl md:text-6xl font-display font-bold mb-6">
-                                Real Results for
-                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent"> Real Businesses</span>
+                            <h1 className="text-4xl md:text-6xl font-display font-extrabold mb-6 text-foreground">
+                                Real Results for{" "}
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Real Businesses</span>
                             </h1>
-                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                                 Explore how we've helped companies transform their operations,
                                 scale their platforms, and achieve measurable business outcomes.
                             </p>
@@ -149,14 +149,14 @@ export default function CaseStudyPage() {
                                     {/* Image */}
                                     <div className={index % 2 === 1 ? "lg:col-start-2" : ""}>
                                         <div className="relative group">
-                                            <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                            <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 to-accent/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
                                             <img
                                                 src={study.image}
                                                 alt={study.title}
-                                                className="relative rounded-2xl w-full h-80 object-cover"
+                                                className="relative rounded-2xl w-full h-80 object-cover shadow-lg"
                                             />
                                             <div className="absolute top-4 left-4">
-                                                <Badge className="bg-primary text-primary-foreground">
+                                                <Badge className="bg-primary text-primary-foreground font-semibold">
                                                     {study.industry}
                                                 </Badge>
                                             </div>
@@ -165,59 +165,59 @@ export default function CaseStudyPage() {
 
                                     {/* Content */}
                                     <div className="space-y-6">
-                                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-4 h-4" /> {study.duration}
+                                        <div className="flex items-center gap-4 text-sm font-medium text-muted-foreground">
+                                            <span className="flex items-center gap-1.5">
+                                                <Clock className="w-4 h-4 text-primary" /> {study.duration}
                                             </span>
-                                            <span className="flex items-center gap-1">
-                                                <Users className="w-4 h-4" /> {study.teamSize}
+                                            <span className="flex items-center gap-1.5">
+                                                <Users className="w-4 h-4 text-primary" /> {study.teamSize}
                                             </span>
                                         </div>
 
-                                        <h2 className="text-3xl md:text-4xl font-display font-bold">
+                                        <h2 className="text-3xl md:text-4xl font-display font-extrabold text-foreground">
                                             {study.title}
                                         </h2>
-                                        <p className="text-lg text-muted-foreground">{study.client}</p>
+                                        <p className="text-lg font-semibold text-primary">{study.client}</p>
 
                                         <div className="space-y-4">
                                             <div>
-                                                <h4 className="font-semibold text-foreground mb-2">The Challenge</h4>
-                                                <p className="text-muted-foreground">{study.challenge}</p>
+                                                <h4 className="font-bold text-foreground mb-1">The Challenge</h4>
+                                                <p className="text-muted-foreground leading-relaxed text-sm md:text-base">{study.challenge}</p>
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-foreground mb-2">Our Solution</h4>
-                                                <p className="text-muted-foreground">{study.solution}</p>
+                                                <h4 className="font-bold text-foreground mb-1">Our Solution</h4>
+                                                <p className="text-muted-foreground leading-relaxed text-sm md:text-base">{study.solution}</p>
                                             </div>
                                         </div>
 
                                         {/* Technologies */}
                                         <div className="flex flex-wrap gap-2">
                                             {study.technologies.map((tech) => (
-                                                <Badge key={tech} variant="outline" className="text-xs">
+                                                <Badge key={tech} variant="outline" className="text-xs bg-secondary/60 border-border/70 font-medium">
                                                     {tech}
                                                 </Badge>
                                             ))}
                                         </div>
 
                                         {/* Results */}
-                                        <div className="grid grid-cols-3 gap-4 py-6 border-y border-border">
+                                        <div className="grid grid-cols-3 gap-4 py-6 border-y border-border/60">
                                             {study.results.map((result) => (
                                                 <div key={result.metric} className="text-center">
                                                     <result.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                                                    <div className="text-2xl font-bold text-primary">{result.value}</div>
-                                                    <div className="text-xs text-muted-foreground">{result.metric}</div>
+                                                    <div className="text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">{result.value}</div>
+                                                    <div className="text-xs font-medium text-muted-foreground mt-1">{result.metric}</div>
                                                 </div>
                                             ))}
                                         </div>
 
                                         {/* Testimonial */}
-                                        <blockquote className="glass-card p-4 rounded-xl">
-                                            <p className="text-sm italic text-muted-foreground mb-2">
+                                        <blockquote className="glass-card p-5 rounded-2xl">
+                                            <p className="text-sm italic text-foreground/90 mb-3 leading-relaxed">
                                                 "{study.testimonial.quote}"
                                             </p>
                                             <footer className="text-sm">
-                                                <span className="font-semibold text-foreground">{study.testimonial.author}</span>
-                                                <span className="text-muted-foreground"> — {study.testimonial.role}</span>
+                                                <span className="font-bold text-foreground">{study.testimonial.author}</span>
+                                                <span className="text-muted-foreground font-medium"> — {study.testimonial.role}</span>
                                             </footer>
                                         </blockquote>
                                     </div>
@@ -236,24 +236,19 @@ export default function CaseStudyPage() {
                             viewport={{ once: true }}
                             className="glass-card p-12 rounded-3xl text-center relative overflow-hidden"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 pointer-events-none" />
                             <div className="relative z-10">
-                                <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                                    Ready to Be Our Next Success Story?
+                                <h2 className="text-3xl md:text-4xl font-display font-extrabold mb-4 text-foreground">
+                                    Ready to Be Our Next <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Success Story</span>?
                                 </h2>
-                                <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
+                                <p className="text-muted-foreground max-w-2xl mx-auto mb-8 text-lg leading-relaxed">
                                     Let's discuss how we can help transform your business with custom software solutions.
                                 </p>
                                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                                    <Link href="/calculator">
-                                        <Button variant="hero" size="lg">
-                                            Get Project Estimate
+                                    <Link href="/contact">
+                                        <Button variant="hero" size="xl">
+                                            Start Your Project
                                             <ArrowRight className="ml-2 w-5 h-5" />
-                                        </Button>
-                                    </Link>
-                                    <Link href="/consultation">
-                                        <Button variant="outline" size="lg">
-                                            Book Free Consultation
                                         </Button>
                                     </Link>
                                 </div>

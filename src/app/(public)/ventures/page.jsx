@@ -104,11 +104,11 @@ const ventures = [
 ];
 
 const colorVariants = {
-    emerald: "from-emerald-500/20 to-emerald-500/0 border-emerald-500/20 text-emerald-500 hover:border-emerald-500/40 shadow-emerald-500/5",
-    blue: "from-blue-500/20 to-blue-500/0 border-blue-500/20 text-blue-500 hover:border-blue-500/40 shadow-blue-500/5",
-    amber: "from-amber-500/20 to-amber-500/0 border-amber-500/20 text-amber-500 hover:border-amber-500/40 shadow-amber-500/5",
-    purple: "from-purple-500/20 to-purple-500/0 border-purple-500/20 text-purple-500 hover:border-purple-500/40 shadow-purple-500/5",
-    indigo: "from-indigo-500/20 to-indigo-500/0 border-indigo-500/20 text-indigo-500 hover:border-indigo-500/40 shadow-indigo-500/5",
+    emerald: "from-emerald-500/15 via-emerald-500/5 to-transparent border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:border-emerald-500/60 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 bg-card",
+    blue: "from-blue-500/15 via-blue-500/5 to-transparent border-blue-500/30 text-blue-600 dark:text-blue-400 hover:border-blue-500/60 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 bg-card",
+    amber: "from-amber-500/15 via-amber-500/5 to-transparent border-amber-500/30 text-amber-600 dark:text-amber-400 hover:border-amber-500/60 shadow-sm hover:shadow-xl hover:shadow-amber-500/10 bg-card",
+    purple: "from-purple-500/15 via-purple-500/5 to-transparent border-purple-500/30 text-purple-600 dark:text-purple-400 hover:border-purple-500/60 shadow-sm hover:shadow-xl hover:shadow-purple-500/10 bg-card",
+    indigo: "from-indigo-500/15 via-indigo-500/5 to-transparent border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:border-indigo-500/60 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 bg-card",
 };
 
 export default function VenturesPage() {
@@ -117,8 +117,8 @@ export default function VenturesPage() {
             <div className="w-full min-h-screen bg-background relative overflow-hidden">
                 {/* Background Decor */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-40">
-                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[120px]" />
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] orb-primary rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] orb-secondary rounded-full blur-[120px]" />
                 </div>
 
                 <main className="container mx-auto px-6 pt-32 pb-24">
@@ -130,16 +130,16 @@ export default function VenturesPage() {
                             transition={{ duration: 0.6 }}
                         >
                             <div className="flex items-center gap-3 mb-6">
-                                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
+                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25 font-bold px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
                                     Active Ecosystem
                                 </Badge>
-                                <div className="h-px flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
+                                <div className="h-px flex-1 bg-gradient-to-r from-primary/30 to-transparent" />
                             </div>
-                            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-8 leading-[1.1]">
-                                Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-indigo-400">Excellence</span> <br />
+                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-8 leading-[1.1]">
+                                Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Excellence</span> <br />
                                 Across Every Sector.
                             </h1>
-                            <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-2xl opacity-80">
+                            <p className="text-xl text-muted-foreground font-medium leading-relaxed max-w-2xl">
                                 Our ventures leverage a unified infrastructure to disrupt traditional markets through artificial intelligence, sustainability, and human-centric design.
                             </p>
                         </motion.div>
@@ -155,14 +155,14 @@ export default function VenturesPage() {
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.5, delay: index * 0.1 }}
                             >
-                                <div className={`group relative h-full flex flex-col rounded-3xl border bg-gradient-to-br transition-all duration-500 p-8 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] ${colorVariants[venture.color]}`}>
+                                <div className={`group relative h-full flex flex-col rounded-3xl border bg-gradient-to-br transition-all duration-500 p-8 ${colorVariants[venture.color]}`}>
                                     {/* Icon & Label */}
                                     <div className="flex items-start justify-between mb-8">
-                                        <div className="p-4 rounded-2xl bg-background border border-border/50 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
+                                        <div className="p-4 rounded-2xl bg-card border border-border/60 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-md">
                                             <venture.icon className="w-8 h-8" />
                                         </div>
                                         <div className="text-right">
-                                            <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest bg-muted/40 backdrop-blur-md px-2.5 py-1">
+                                            <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest bg-secondary/80 border border-border/50 px-2.5 py-1">
                                                 {venture.tag}
                                             </Badge>
                                         </div>
@@ -174,7 +174,7 @@ export default function VenturesPage() {
                                             <h3 className="text-3xl font-bold text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">
                                                 {venture.name}
                                             </h3>
-                                            <p className="text-sm text-muted-foreground font-medium leading-relaxed opacity-70 group-hover:opacity-100 transition-opacity">
+                                            <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                                                 {venture.description}
                                             </p>
                                         </div>
@@ -182,18 +182,18 @@ export default function VenturesPage() {
                                         {/* Core Features */}
                                         <div className="flex flex-wrap gap-2 py-2">
                                             {venture.features.map(feature => (
-                                                <Badge key={feature} variant="outline" className="rounded-md border-border/40 text-[9px] font-bold bg-background/30 backdrop-blur-sm px-2 py-0.5">
+                                                <Badge key={feature} variant="outline" className="rounded-md border-border/60 text-[9px] font-bold bg-background/60 backdrop-blur-sm px-2 py-0.5">
                                                     {feature}
                                                 </Badge>
                                             ))}
                                         </div>
 
                                         {/* Metrics Grid */}
-                                        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-background/20 border border-white/5 backdrop-blur-md">
+                                        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-secondary/40 border border-border/50 backdrop-blur-md">
                                             {venture.metrics.map(metric => (
                                                 <div key={metric.label}>
                                                     <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                                                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest opacity-50">{metric.label}</p>
+                                                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">{metric.label}</p>
                                                 </div>
                                             ))}
                                         </div>

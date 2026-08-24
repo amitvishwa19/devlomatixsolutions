@@ -16,29 +16,29 @@ const CTA = () => {
         <>
             <section id="contact" className="py-32 relative overflow-hidden">
                 {/* Rich gradient background for light theme */}
-                <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-background to-primary/10 dark:from-background dark:via-background dark:to-background" />
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-primary/10 dark:from-background dark:via-background dark:to-background pointer-events-none" />
 
                 {/* Background Image with Overlay */}
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 pointer-events-none">
                     <img
-                        src={techPattern}
+                        src={techPattern.src || techPattern}
                         alt=""
                         className="w-full h-full object-cover opacity-10 dark:opacity-20"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background/80 dark:from-background dark:via-background/90 dark:to-background" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background dark:from-background dark:via-background/90 dark:to-background" />
                 </div>
 
                 {/* Colorful orbs */}
-                <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] orb-primary rounded-full blur-[100px] opacity-60" />
-                <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] orb-secondary rounded-full blur-[120px] opacity-50" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] orb-tertiary rounded-full blur-[150px] opacity-40" />
+                <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] orb-primary rounded-full blur-[100px] opacity-60 pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] orb-secondary rounded-full blur-[120px] opacity-50 pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] orb-tertiary rounded-full blur-[150px] opacity-40 pointer-events-none" />
 
                 {/* Animated rings */}
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-0 overflow-hidden">
                     {[...Array(3)].map((_, i) => (
                         <motion.div
                             key={i}
-                            className={`absolute rounded-full border-2 ${i === 1 ? "border-dashed border-primary/40 dark:border-primary/50" : "border-primary/30 dark:border-primary/40"
+                            className={`absolute rounded-full border-2 ${i === 1 ? "border-dashed border-primary/30 dark:border-primary/50" : "border-primary/20 dark:border-primary/40"
                                 }`}
                             style={{
                                 width: 350 + i * 180,
@@ -69,7 +69,7 @@ const CTA = () => {
                         <Tagline text="Ready to Start?" icon={<Sparkles className="w-4 h-4 text-primary" />} />
 
                         <motion.h2
-                            className="text-primary text-4xl md:text-6xl font-bold mt-4 mb-6"
+                            className="text-foreground text-4xl md:text-6xl font-extrabold mt-4 mb-6"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
@@ -77,7 +77,7 @@ const CTA = () => {
                         >
                             Let's Build Something{" "}
                             <motion.span
-                                className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent inline-block"
+                                className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600 inline-block"
                                 animate={{
                                     backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                                 }}
@@ -88,13 +88,13 @@ const CTA = () => {
                             </motion.span>
                         </motion.h2>
                         <motion.p
-                            className="text-muted-foreground text-xl max-w-2xl mx-auto mb-10"
+                            className="text-muted-foreground text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-normal"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.3 }}
                             viewport={{ once: true }}
                         >
-                            Whether you need a complete digital transformation or a focused solution,
+                            Whether you need a complete digital transformation or a focused custom application,
                             our team is ready to bring your vision to life.
                         </motion.p>
 
