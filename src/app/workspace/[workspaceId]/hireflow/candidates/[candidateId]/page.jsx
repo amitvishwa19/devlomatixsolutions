@@ -57,6 +57,14 @@ import {
 } from '../../_actions/candidate-actions';
 import useSWR from 'swr';
 
+const getInitials = (name) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 export default function CandidateDetailPage() {
     const { workspaceId, candidateId } = useParams();
     const router = useRouter();
@@ -210,7 +218,9 @@ export default function CandidateDetailPage() {
  </Button>
  <div className="flex items-center gap-4">
  <Avatar className="h-16 w-16 border-4 border-primary/20 shadow-2xl">
- <AvatarFallback className="bg-primary/10 text-primary text-xl">RS</AvatarFallback>
+ <AvatarFallback className="bg-primary/10 text-primary text-xl">
+ {getInitials(candidate.name)}
+ </AvatarFallback>
  </Avatar>
  <div>
  <h1 className="text-4xl tracking-tighter">{candidate.name}</h1>

@@ -69,6 +69,14 @@ import { toast } from 'sonner';
 
 import useSWR from 'swr';
 
+const getInitials = (name) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 export default function TalentDatabasePage() {
     const { workspaceId } = useParams();
     const router = useRouter();
@@ -235,7 +243,7 @@ export default function TalentDatabasePage() {
  <div className="flex items-center gap-3">
  <Avatar className="h-9 w-9 border border-primary/20">
  <AvatarFallback className="bg-primary/5 text-primary text-[10px]">
- {candidate.name.split('').map(n => n[0]).join('')}
+ {getInitials(candidate.name)}
  </AvatarFallback>
  </Avatar>
  <div>
@@ -351,7 +359,7 @@ export default function TalentDatabasePage() {
  <div className="flex items-center gap-4">
  <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-lg">
  <AvatarFallback className="bg-primary/5 text-primary text-lg">
- {candidate.name.split('').map(n => n[0]).join('')}
+ {getInitials(candidate.name)}
  </AvatarFallback>
  </Avatar>
  <div>

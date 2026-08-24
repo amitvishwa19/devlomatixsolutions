@@ -792,243 +792,247 @@ export default function WhatsAppChatsPage() {
                             </TabsList>
                         </div>
 
-                        <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
-                            {/* Segment Filters Inside Tab */}
-                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
-                                <Badge
-                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                    onClick={() => setActiveSegment('all')}
-                                >
-                                    All Chats
-                                </Badge>
-                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                        <ScrollArea className="h-[81vh]">
+
+                            <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                                {/* Segment Filters Inside Tab */}
+                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
                                     <Badge
-                                        key={catName}
-                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
-                                        onClick={() => setActiveSegment(`category:${catName}`)}
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/80 shrink-0" />
-                                        <span>{catName}</span>
-                                    </Badge>
-                                ))}
-                                {groups.map(group => (
-                                    <Badge
-                                        key={group.id}
-                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                        variant={activeSegment === 'all' ? 'default' : 'outline'}
                                         className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                        onClick={() => setActiveSegment(`group:${group.id}`)}
+                                        onClick={() => setActiveSegment('all')}
                                     >
-                                        {group.name}
+                                        All Chats
                                     </Badge>
-                                ))}
-                            </div>
-
-                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
-                                <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
-                                    {filteredConversations.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
-                                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
-                                                <MessageSquare className="w-8 h-8 text-primary/60" />
-                                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
-                                            </div>
-                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Found</h3>
-                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                {activeSegment === 'all' ? "Your message history will appear here." : "No chats match the selected filter."}
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        filteredConversations.map((chat) => (
-                                            <div
-                                                id='chatinfoblock'
-                                                key={chat.jid}
-                                                onClick={() => setSelectedJid(chat.jid)}
-                                                className={`flex items-start gap-2.5 p-3 w-full border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
-                                            >
-                                                {/* Left: Avatar */}
-                                                <Avatar className="w-10 h-10 border-2 border-background shadow-xs shrink-0 mt-0.5">
-                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                        {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-
-                                                {/* Middle: Name, Category, Phone, Message Snippet */}
-                                                <div className="flex-1 min-w-0 w-0 overflow-hidden">
-                                                    <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
-                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">
-                                                            {chat.name || chat.jid.split('@')[0]}
-                                                        </h3>
-                                                        {getContactForJid(chat.jid)?.category && (
-                                                            <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 shrink-0 max-w-[65px] truncate border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-normal">
-                                                                {getContactForJid(chat.jid).category}
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-
-                                                    <p className="text-[9px] text-muted-foreground/60 truncate font-mono mb-1">
-                                                        {getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}
-                                                    </p>
-
-                                                    <div className="flex items-center gap-1 min-w-0 w-full overflow-hidden">
-                                                        {chat.fromMe && <span className="text-[9px] uppercase font-bold text-primary/70 shrink-0">You:</span>}
-                                                        <p className="text-[11px] text-muted-foreground truncate opacity-70 min-w-0 flex-1 block overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
-                                                            {renderMessagePreview(chat.lastMessage)}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                {/* Right: Timestamp & DropdownMenu Action */}
-                                                <div id='dropdownoptions' className="flex flex-col items-end justify-between shrink-0 ml-auto pl-1 self-stretch gap-1">
-                                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap shrink-0">
-                                                        {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
-                                                    </span>
-
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all shrink-0"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                                title="More options"
-                                                            >
-                                                                <MoreVertical className="w-3.5 h-3.5" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="w-48 z-50 shadow-xl border-border/60 bg-popover">
-                                                            <DropdownMenuItem
-                                                                className="gap-2 cursor-pointer text-emerald-600 focus:text-emerald-700 focus:bg-emerald-500/10 font-medium"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setManageContactJid(chat.jid);
-                                                                    setIsManageContactOpen(true);
-                                                                }}
-                                                            >
-                                                                <UserPlus className="w-3.5 h-3.5" /> {getContactForJid(chat.jid) ? "Edit Contact & Tags" : "Add to Contacts"}
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                className="gap-2 cursor-pointer"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setViewContactJid(chat.jid);
-                                                                    setIsViewContactOpen(true);
-                                                                }}
-                                                            >
-                                                                <Eye className="w-3.5 h-3.5" /> View Contact
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem
-                                                                className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleAssignConversation(chat.jid);
-                                                                }}
-                                                            >
-                                                                <Share2 className="w-3.5 h-3.5" /> Share / Delegate
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteConversation(e, chat.jid);
-                                                                }}
-                                                            >
-                                                                <Trash2 className="w-3.5 h-3.5" /> Delete Chat
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div>
-                                            </div>
-                                        ))
-                                    )}
+                                    {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                        <Badge
+                                            key={catName}
+                                            variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
+                                            onClick={() => setActiveSegment(`category:${catName}`)}
+                                        >
+                                            <div className="w-1.5 h-1.5 rounded-full bg-primary/80 shrink-0" />
+                                            <span>{catName}</span>
+                                        </Badge>
+                                    ))}
+                                    {groups.map(group => (
+                                        <Badge
+                                            key={group.id}
+                                            variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                            className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                            onClick={() => setActiveSegment(`group:${group.id}`)}
+                                        >
+                                            {group.name}
+                                        </Badge>
+                                    ))}
                                 </div>
-                            </ScrollArea>
-                        </TabsContent>
 
-                        <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
-                            {/* Segment Filters Inside Tab */}
-                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
-                                <Badge
-                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                    onClick={() => setActiveSegment('all')}
-                                >
-                                    All Contacts
-                                </Badge>
-                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
-                                    <Badge
-                                        key={catName}
-                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
-                                        onClick={() => setActiveSegment(`category:${catName}`)}
-                                    >
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shrink-0" />
-                                        <span>{catName}</span>
-                                    </Badge>
-                                ))}
-                                {groups.map(group => (
-                                    <Badge
-                                        key={group.id}
-                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                        onClick={() => setActiveSegment(`group:${group.id}`)}
-                                    >
-                                        {group.name}
-                                    </Badge>
-                                ))}
-                            </div>
-
-                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
-                                <div className="flex flex-col w-full min-w-0">
-                                    {filteredContacts.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
-                                            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
-                                                <Users className="w-8 h-8 text-emerald-500/60" />
-                                                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
+                                <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
+                                    <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
+                                        {filteredConversations.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
+                                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                    <MessageSquare className="w-8 h-8 text-primary/60" />
+                                                    <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
+                                                </div>
+                                                <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Found</h3>
+                                                <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                    {activeSegment === 'all' ? "Your message history will appear here." : "No chats match the selected filter."}
+                                                </p>
                                             </div>
-                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
-                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                We couldn&apos;t find any contacts matching the selected filter.
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        filteredContacts.map((contact) => {
-                                            const contactLast10 = getPhoneLast10(contact.phone);
-                                            const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
-                                            const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
-                                            const normalizedJid = existingConv ? existingConv.jid : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
-                                            const isSelected = getPhoneLast10(selectedJid) === contactLast10;
-                                            return (
+                                        ) : (
+                                            filteredConversations.map((chat) => (
                                                 <div
-                                                    key={contact.id}
-                                                    onClick={() => setSelectedJid(normalizedJid)}
-                                                    className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                    id='chatinfoblock'
+                                                    key={chat.jid}
+                                                    onClick={() => setSelectedJid(chat.jid)}
+                                                    className={`flex items-start gap-2.5 p-3 w-full border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                                 >
-                                                    <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
-                                                        <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">
-                                                            {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                    {/* Left: Avatar */}
+                                                    <Avatar className="w-10 h-10 border-2 border-background shadow-xs shrink-0 mt-0.5">
+                                                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                            {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
 
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center justify-between mb-0.5">
-                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
-                                                            <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
-                                                                {contact.category || contact.type || "Contact"}
-                                                            </Badge>
+                                                    {/* Middle: Name, Category, Phone, Message Snippet */}
+                                                    <div className="flex-1 min-w-0 w-0 overflow-hidden">
+                                                        <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
+                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">
+                                                                {chat.name || chat.jid.split('@')[0]}
+                                                            </h3>
+                                                            {getContactForJid(chat.jid)?.category && (
+                                                                <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 shrink-0 max-w-[65px] truncate border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-normal">
+                                                                    {getContactForJid(chat.jid).category}
+                                                                </Badge>
+                                                            )}
                                                         </div>
-                                                        <p className="text-[11px] text-muted-foreground truncate opacity-70">
-                                                            {contact.phone}
+
+                                                        <p className="text-[9px] text-muted-foreground/60 truncate font-mono mb-1">
+                                                            {getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}
                                                         </p>
+
+                                                        <div className="flex items-center gap-1 min-w-0 w-full overflow-hidden">
+                                                            {chat.fromMe && <span className="text-[9px] uppercase font-bold text-primary/70 shrink-0">You:</span>}
+                                                            <p className="text-[11px] text-muted-foreground truncate opacity-70 min-w-0 flex-1 block overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
+                                                                {renderMessagePreview(chat.lastMessage)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Right: Timestamp & DropdownMenu Action */}
+                                                    <div id='dropdownoptions' className="flex flex-col items-end justify-between shrink-0 ml-auto pl-1 self-stretch gap-1">
+                                                        <span className="text-[9px] text-muted-foreground whitespace-nowrap shrink-0">
+                                                            {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
+                                                        </span>
+
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all shrink-0"
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    title="More options"
+                                                                >
+                                                                    <MoreVertical className="w-3.5 h-3.5" />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className="w-48 z-50 shadow-xl border-border/60 bg-popover">
+                                                                <DropdownMenuItem
+                                                                    className="gap-2 cursor-pointer text-emerald-600 focus:text-emerald-700 focus:bg-emerald-500/10 font-medium"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setManageContactJid(chat.jid);
+                                                                        setIsManageContactOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <UserPlus className="w-3.5 h-3.5" /> {getContactForJid(chat.jid) ? "Edit Contact & Tags" : "Add to Contacts"}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    className="gap-2 cursor-pointer"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setViewContactJid(chat.jid);
+                                                                        setIsViewContactOpen(true);
+                                                                    }}
+                                                                >
+                                                                    <Eye className="w-3.5 h-3.5" /> View Contact
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleAssignConversation(chat.jid);
+                                                                    }}
+                                                                >
+                                                                    <Share2 className="w-3.5 h-3.5" /> Share / Delegate
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuSeparator />
+                                                                <DropdownMenuItem
+                                                                    className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        handleDeleteConversation(e, chat.jid);
+                                                                    }}
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </div>
-                                            );
-                                        })
-                                    )}
+                                            ))
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </TabsContent>
+
+                            <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                                {/* Segment Filters Inside Tab */}
+                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+                                    <Badge
+                                        variant={activeSegment === 'all' ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                        onClick={() => setActiveSegment('all')}
+                                    >
+                                        All Contacts
+                                    </Badge>
+                                    {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                        <Badge
+                                            key={catName}
+                                            variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
+                                            onClick={() => setActiveSegment(`category:${catName}`)}
+                                        >
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shrink-0" />
+                                            <span>{catName}</span>
+                                        </Badge>
+                                    ))}
+                                    {groups.map(group => (
+                                        <Badge
+                                            key={group.id}
+                                            variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                            className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                            onClick={() => setActiveSegment(`group:${group.id}`)}
+                                        >
+                                            {group.name}
+                                        </Badge>
+                                    ))}
                                 </div>
-                            </ScrollArea>
-                        </TabsContent>
+
+                                <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
+                                    <div className="flex flex-col w-full min-w-0">
+                                        {filteredContacts.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
+                                                <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                    <Users className="w-8 h-8 text-emerald-500/60" />
+                                                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
+                                                </div>
+                                                <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
+                                                <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                    We couldn&apos;t find any contacts matching the selected filter.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            filteredContacts.map((contact) => {
+                                                const contactLast10 = getPhoneLast10(contact.phone);
+                                                const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
+                                                const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
+                                                const normalizedJid = existingConv ? existingConv.jid : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
+                                                const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                return (
+                                                    <div
+                                                        key={contact.id}
+                                                        onClick={() => setSelectedJid(normalizedJid)}
+                                                        className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                    >
+                                                        <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
+                                                            <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">
+                                                                {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between mb-0.5">
+                                                                <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
+                                                                <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
+                                                                    {contact.category || contact.type || "Contact"}
+                                                                </Badge>
+                                                            </div>
+                                                            <p className="text-[11px] text-muted-foreground truncate opacity-70">
+                                                                {contact.phone}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </TabsContent>
+
+                        </ScrollArea>
                     </Tabs>
                 </div>
 

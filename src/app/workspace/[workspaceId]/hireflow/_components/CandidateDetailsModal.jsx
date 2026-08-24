@@ -70,6 +70,14 @@ import {
 
 import useSWR from 'swr';
 
+const getInitials = (name) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "";
+    if (parts.length === 1) return parts[0][0].toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
 export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceId, onDeleteSuccess }) => {
     const [activeTab, setActiveTab] = useState('overview');
     const [isScorecardOpen, setIsScorecardOpen] = useState(false);
@@ -257,7 +265,7 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                 <div className="flex items-center gap-4">
                                     <Avatar className="h-16 w-16 border-4 border-primary/20 shadow-2xl">
                                         <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                                            {candidateData.name.split('').map(n => n[0]).join('')}
+                                            {getInitials(candidateData.name)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div>
