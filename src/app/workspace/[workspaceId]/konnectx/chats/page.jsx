@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams } from "next/navigation";
 import {
     Search,
@@ -316,8 +316,12 @@ export default function WhatsAppChatsPage() {
                 setSelectedJid(currentJid => {
                     if (currentJid && currentJid.startsWith('segment:')) return currentJid;
                     if (!currentJid && data.conversations.length > 0) return data.conversations[0].jid;
-                    if (currentJid && !data.conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(currentJid))) {
-                        return data.conversations.length > 0 ? data.conversations[0].jid : null;
+                    if (currentJid) {
+                        const existsInConv = data.conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(currentJid));
+                        if (existsInConv) return currentJid;
+                        const existsInContacts = allContacts.some(c => getPhoneLast10(c.phone) === getPhoneLast10(currentJid));
+                        if (existsInContacts) return currentJid;
+                        return data.conversations.length > 0 ? data.conversations[0].jid : currentJid;
                     }
                     return currentJid;
                 });
@@ -876,6 +880,7 @@ export default function WhatsAppChatsPage() {
             ? existingConv.jid
             : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
         setSelectedJid(normalizedJid);
+        setActiveTab('chats');
     };
 
 
@@ -900,6 +905,29 @@ export default function WhatsAppChatsPage() {
         return matchesSearch && matchesSegment;
     });
 
+    const displayConversations = useMemo(() => {
+        let list = [...filteredConversations];
+        if (selectedJid && !selectedJid.startsWith('segment:')) {
+            const hasConv = list.some(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
+            if (!hasConv) {
+                const contact = getContactForJid(selectedJid) || allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
+                if (contact) {
+                    const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
+                    const jid = cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`;
+                    list.unshift({
+                        jid: selectedJid || jid,
+                        name: contact.name,
+                        lastMessage: "New Conversation",
+                        timestamp: Math.floor(Date.now() / 1000),
+                        unreadCount: 0,
+                        messages: []
+                    });
+                }
+            }
+        }
+        return list;
+    }, [filteredConversations, selectedJid, allContacts]);
+
     const filteredContacts = allContacts.filter(contact => {
         const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             contact.phone.includes(searchTerm);
@@ -921,18 +949,6 @@ export default function WhatsAppChatsPage() {
 
     const handleTabChange = (value) => {
         setActiveTab(value);
-
-        // If switching back to "chats" and the current selectedJid doesn't exist in conversations or isn't a segment,
-        if (value === "chats" && selectedJid && !selectedJid.startsWith('segment:')) {
-            const exists = conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
-            if (!exists) {
-                if (conversations.length > 0) {
-                    setSelectedJid(conversations[0].jid);
-                } else {
-                    setSelectedJid(null);
-                }
-            }
-        }
     };
 
     if (isLoading && conversations.length === 0) {
@@ -1044,7 +1060,7 @@ export default function WhatsAppChatsPage() {
 
                                 <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
                                     <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
-                                        {filteredConversations.length === 0 ? (
+                                        {displayConversations.length === 0 ? (
                                             <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
                                                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
                                                     <MessageSquare className="w-8 h-8 text-primary/60" />
@@ -1056,7 +1072,7 @@ export default function WhatsAppChatsPage() {
                                                 </p>
                                             </div>
                                         ) : (
-                                            filteredConversations.map((chat) => (
+                                            displayConversations.map((chat) => (
                                                 <div
                                                     id='chatinfoblock'
                                                     key={chat.jid}
@@ -1230,7 +1246,7 @@ export default function WhatsAppChatsPage() {
                                                 return (
                                                     <div
                                                         key={contact.id}
-                                                        onClick={() => setSelectedJid(normalizedJid)}
+                                                        onClick={() => handleSelectContactChat(contact)}
                                                         className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                                     >
                                                         <Avatar className="w-10 h-10 border-2 border-background shadow-sm">

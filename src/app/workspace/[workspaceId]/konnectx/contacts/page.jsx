@@ -303,7 +303,6 @@ export default function ContactsPage() {
             toast.success("Message delivery initiated", { id: 'send-message' });
             setIsSendingMessage(false);
             setIsMessageOpen(false);
-            setMessageText('');
         },
         onError: (err) => {
             const errorMsg = typeof err === 'string' ? err : (err?.message || "Failed to send message");
@@ -449,11 +448,27 @@ export default function ContactsPage() {
         toast.info("Export Started", { description: `Exporting ${contacts.length} contacts.` });
     };
 
-    const handleSendMessage = () => {
-        if (!activeContact || !messageText) return;
+    const handleSendMessage = (payload) => {
+        if (!activeContact) return;
         setIsSendingMessage(true);
         toast.loading("Sending message...", { id: 'send-message' });
-        executeSendMessage({ workspaceId, phone: activeContact.phone, message: messageText });
+        if (typeof payload === 'string') {
+            executeSendMessage({ workspaceId, phone: activeContact.phone, type: 'text', message: payload });
+        } else if (payload && payload.type === 'template') {
+            executeSendMessage({
+                workspaceId,
+                phone: activeContact.phone,
+                type: 'template',
+                template: payload.template
+            });
+        } else if (payload && payload.message) {
+            executeSendMessage({
+                workspaceId,
+                phone: activeContact.phone,
+                type: 'text',
+                message: payload.message
+            });
+        }
     };
 
     const handleBulkFormat = () => {
@@ -1004,7 +1019,9 @@ export default function ContactsPage() {
                     isOpen={isMessageOpen}
                     onOpenChange={setIsMessageOpen}
                     onSend={handleSendMessage}
+                    activeContact={activeContact}
                     contactName={activeContact?.name}
+                    workspaceId={workspaceId}
                     isSending={isSendingMessage}
                 />
 

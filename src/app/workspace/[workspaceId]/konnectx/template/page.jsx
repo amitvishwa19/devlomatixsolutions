@@ -379,16 +379,16 @@ export default function TemplatePage() {
     const handleSendTest = async () => {
         const manualNumbers = testRecipient.split(',').map(n => n.trim()).filter(n => n);
         const contactRecipients = allContacts.filter(c => selectedContactIds.includes(c.id));
-        
+
         const recipientList = [];
-        
+
         // Prioritize CRM contacts so they have their context attached
         contactRecipients.forEach(contact => {
             if (!recipientList.find(r => r.phone === contact.phone)) {
                 recipientList.push({ phone: contact.phone, contact });
             }
         });
-        
+
         // Add manual numbers, looking up CRM contact if possible
         manualNumbers.forEach(phone => {
             if (!recipientList.find(r => r.phone === phone)) {
@@ -447,7 +447,7 @@ export default function TemplatePage() {
 
                 cardsData.forEach((card, index) => {
                     const cardComps = [];
-                    
+
                     const cMediaUrl = card.mediaUrl || fallbackImageUrl;
                     const isHandle = /^\d+$/.test(cMediaUrl.toString()) || cMediaUrl.toString().startsWith('4');
                     cardComps.push({
@@ -459,7 +459,7 @@ export default function TemplatePage() {
                             }
                         ]
                     });
-                    
+
                     carouselCards.push({
                         card_index: index,
                         components: cardComps
@@ -501,7 +501,7 @@ export default function TemplatePage() {
                 const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
                 if (finalMediaUrl) {
                     const mediaType = testingTemplate.type.toLowerCase();
-                    const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4'); 
+                    const isHandle = /^\d+$/.test(finalMediaUrl.toString()) || finalMediaUrl.toString().startsWith('4');
 
                     components.push({
                         type: 'header',
@@ -617,7 +617,7 @@ export default function TemplatePage() {
                     </div>
                     <div className='flex flex-row gap-2'>
                         <AccountSwitcher />
-                        <Button onClick={handleSyncCloud} variant="outline" className="border-primary/20 text-primary hover:bg-primary/5 shadow-sm gap-2" disabled={isSyncing}>
+                        <Button onClick={handleSyncCloud} variant="outline" className="border-primary/20 text-primary  shadow-sm gap-2" disabled={isSyncing}>
                             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Sync Meta
                         </Button>
                         <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
@@ -644,45 +644,45 @@ export default function TemplatePage() {
                     <div className="space-y-4 pr-4">
                         {isLoading ? (
                             <div className="flex-1 flex flex-col items-center justify-center h-64 opacity-50"><Loader2 className="w-10 h-10 animate-spin text-primary mb-4" /><p className="text-sm font-medium">Loading templates...</p></div>
-                    ) : filteredTemplates.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10"><MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6" /><h3 className="text-xl font-bold text-foreground">No templates found</h3><Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2"><Plus className="w-4 h-4" /> Create Custom Template</Button></div>
-                    ) : (
-                        <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" : "flex flex-col gap-3 pb-12"}>
-                            {filteredTemplates.map((template) => (
-                                viewMode === 'grid' ? (
-                                    <TemplatePreviewCard
-                                        key={template.id}
-                                        template={template}
-                                        onEdit={handleOpenBuilder}
-                                        onDelete={handleDelete}
-                                        onClone={handleClone}
-                                        onTest={openTestModal}
-                                        onPreview={openPreviewModal}
-                                        onSubmit={handleSubmitToMeta}
-                                        onCheckStatus={handleCheckStatus}
-                                        onShare={handleShare}
-                                        isSubmittingId={isSubmittingId}
-                                        isDeletingId={isDeletingId}
-                                    />
-                                ) : (
-                                    <TemplateListRow
-                                        key={template.id}
-                                        template={template}
-                                        onEdit={handleOpenBuilder}
-                                        onDelete={handleDelete}
-                                        onClone={handleClone}
-                                        onTest={openTestModal}
-                                        onPreview={openPreviewModal}
-                                        onSubmit={handleSubmitToMeta}
-                                        onCheckStatus={handleCheckStatus}
-                                        onShare={handleShare}
-                                        isSubmittingId={isSubmittingId}
-                                        isDeletingId={isDeletingId}
-                                    />
-                                )
-                            ))}
-                        </div>
-                    )}
+                        ) : filteredTemplates.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10"><MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6" /><h3 className="text-xl font-bold text-foreground">No templates found</h3><Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2"><Plus className="w-4 h-4" /> Create Custom Template</Button></div>
+                        ) : (
+                            <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" : "flex flex-col gap-3 pb-12"}>
+                                {filteredTemplates.map((template) => (
+                                    viewMode === 'grid' ? (
+                                        <TemplatePreviewCard
+                                            key={template.id}
+                                            template={template}
+                                            onEdit={handleOpenBuilder}
+                                            onDelete={handleDelete}
+                                            onClone={handleClone}
+                                            onTest={openTestModal}
+                                            onPreview={openPreviewModal}
+                                            onSubmit={handleSubmitToMeta}
+                                            onCheckStatus={handleCheckStatus}
+                                            onShare={handleShare}
+                                            isSubmittingId={isSubmittingId}
+                                            isDeletingId={isDeletingId}
+                                        />
+                                    ) : (
+                                        <TemplateListRow
+                                            key={template.id}
+                                            template={template}
+                                            onEdit={handleOpenBuilder}
+                                            onDelete={handleDelete}
+                                            onClone={handleClone}
+                                            onTest={openTestModal}
+                                            onPreview={openPreviewModal}
+                                            onSubmit={handleSubmitToMeta}
+                                            onCheckStatus={handleCheckStatus}
+                                            onShare={handleShare}
+                                            isSubmittingId={isSubmittingId}
+                                            isDeletingId={isDeletingId}
+                                        />
+                                    )
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </ScrollArea>
 
@@ -750,12 +750,12 @@ export default function TemplatePage() {
                     description={
                         deleteTargetTemplate?.templateId ? (
                             <>
-                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>? 
+                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>?
                                 This will remove the template from your workspace and submit a deletion request to <strong>Meta Cloud API</strong>. This action cannot be undone.
                             </>
                         ) : (
                             <>
-                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>? 
+                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>?
                                 This action cannot be undone and will permanently remove this draft template.
                             </>
                         )

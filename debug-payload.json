@@ -1,16 +1,36 @@
 {
-  "templateName": "devloatix_office_v4",
-  "components": [],
+  "templateName": "job_application_technical_error",
+  "components": [
+    {
+      "type": "body",
+      "parameters": [
+        {
+          "type": "text",
+          "text": "-"
+        }
+      ]
+    }
+  ],
   "fullRequestData": {
     "workspaceId": "cmsbcq4mq0002z0ik2kxdh31f",
-    "to": "9724656328",
+    "to": "9712340450",
     "type": "template",
     "template": {
-      "name": "devloatix_office_v4",
+      "name": "job_application_technical_error",
       "language": {
-        "code": "en"
+        "code": "en_US"
       },
-      "components": []
+      "components": [
+        {
+          "type": "body",
+          "parameters": [
+            {
+              "type": "text",
+              "text": "-"
+            }
+          ]
+        }
+      ]
     }
   }
 }
