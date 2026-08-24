@@ -38,6 +38,14 @@ export const WorkspaceProvider = ({ children }) => {
     const [accessLoading, setAccessLoading] = useState(true);
     const [previewRole, setPreviewRole] = useState(null);
 
+    const DEFAULT_BRANDING = {
+        primaryColor: "#3b82f6",
+        logoUrl: "",
+        appName: "Devlomatix",
+        appDescription: "Your Productivity Platform",
+        workspaceUrl: "http://localhost:3000"
+    };
+
     // --- Fetch Settings ---
     const fetchSettings = useCallback(async () => {
         setSettingsLoading(true);
@@ -45,49 +53,41 @@ export const WorkspaceProvider = ({ children }) => {
             if (workspaceId && workspaceId !== '[workspaceId]' && workspaceId !== 'undefined' && workspaceId !== 'null') {
                 const response = await fetch(`/api/workspace/${workspaceId}/system/settings`, { cache: 'no-store' });
                 
-                if (!response.ok) {
-                    console.warn(`Settings for workspace ${workspaceId} returned status ${response.status}. Falling back to branding.`);
-                    const brandingRes = await fetch('/api/branding', { cache: 'no-store' });
-                    if (brandingRes.ok) {
+                if (response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const data = await response.json();
+                        setSettings(data);
+                        return;
+                    }
+                }
+                
+                // Fallback to branding endpoint if workspace settings endpoint is unavailable / unauthorized
+                const brandingRes = await fetch('/api/branding', { cache: 'no-store' });
+                if (brandingRes.ok) {
+                    const contentType = brandingRes.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
                         const brandingData = await brandingRes.json();
                         setSettings({ branding: brandingData });
                         return;
                     }
-                    throw new Error(`Failed to fetch settings: ${response.status}`);
                 }
-                
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    console.error("Expected JSON (settings) but received:", text.substring(0, 100));
-                    return;
-                }
-                const data = await response.json();
-                setSettings(data);
+                setSettings({ branding: DEFAULT_BRANDING });
             } else {
                 const response = await fetch('/api/branding', { cache: 'no-store' });
-                if (!response.ok) throw new Error(`Failed to fetch branding: ${response.status}`);
-                
-                const contentType = response.headers.get("content-type");
-                if (!contentType || !contentType.includes("application/json")) {
-                    const text = await response.text();
-                    console.error("Expected JSON (branding) but received:", text.substring(0, 100));
-                    return;
+                if (response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const data = await response.json();
+                        setSettings({ branding: data });
+                        return;
+                    }
                 }
-                const data = await response.json();
-                setSettings({ branding: data });
+                setSettings({ branding: DEFAULT_BRANDING });
             }
         } catch (error) {
-            console.error('Fetch Settings Error:', error);
-            try {
-                const brandingRes = await fetch('/api/branding', { cache: 'no-store' });
-                if (brandingRes.ok) {
-                    const brandingData = await brandingRes.json();
-                    setSettings(prev => prev || { branding: brandingData });
-                }
-            } catch (fallbackError) {
-                console.error('Fallback Branding Fetch Error:', fallbackError);
-            }
+            console.warn('Fetch Settings fallback activated:', error?.message || error);
+            setSettings(prev => prev || { branding: DEFAULT_BRANDING });
         } finally {
             setSettingsLoading(false);
         }

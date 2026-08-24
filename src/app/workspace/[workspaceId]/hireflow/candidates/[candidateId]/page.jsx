@@ -235,6 +235,16 @@ export default function CandidateDetailPage() {
  </div>
  </div>
  <div className="flex items-center gap-3 bg-card/30 backdrop-blur-xl p-2 rounded-md border border-border/40">
+ <Button 
+      variant="outline" 
+      size="sm"
+      onClick={handleAiParse}
+      disabled={isParsing}
+      className="rounded-md text-[10px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-all font-bold"
+  >
+      {isParsing ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1.5" />}
+      Parse Resume (AI)
+  </Button>
  <Button variant="ghost"size="icon"className="w-10 rounded-md opacity-60 hover:opacity-100"onClick={() => setActiveTab('emails')}>
  <Mail size={18} />
  </Button>

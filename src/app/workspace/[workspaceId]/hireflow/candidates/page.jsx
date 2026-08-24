@@ -64,7 +64,7 @@ import {
 } from "@/components/ui/table";
 import { CandidateModal } from '../_components/CandidateModal';
 import { CandidateDetailsModal } from '../_components/CandidateDetailsModal';
-import { getCandidatesAction, deleteCandidateAction } from '../_actions/candidate-actions';
+import { getCandidatesAction, deleteCandidateAction, aiParseResumeAction } from '../_actions/candidate-actions';
 import { toast } from 'sonner';
 
 import useSWR from 'swr';
@@ -94,6 +94,24 @@ export default function TalentDatabasePage() {
     const [selectedCandidateId, setSelectedCandidateId] = useState(null);
     const [candidateToDelete, setCandidateToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [parsingCandidateId, setParsingCandidateId] = useState(null);
+
+    const handleParseResume = async (candidate) => {
+        if (!candidate?.id) return;
+        setParsingCandidateId(candidate.id);
+        const toastId = toast.loading(`Parsing resume for ${candidate.name}...`);
+        try {
+            const res = await aiParseResumeAction(workspaceId, { candidateId: candidate.id });
+            if (!res.success) throw new Error(res.error);
+            toast.success(`Resume parsed successfully for ${candidate.name}!`, { id: toastId });
+            mutate();
+        } catch (error) {
+            console.error("[PARSE_RESUME_ERROR]", error);
+            toast.error(error.message || "Failed to parse resume", { id: toastId });
+        } finally {
+            setParsingCandidateId(null);
+        }
+    };
 
     const handleConfirmDelete = async () => {
         if (!candidateToDelete) return;

@@ -73,6 +73,19 @@ export const getSidebarNavItems = (workspaceId) => {
             permission: `navbar:KonnectX:Parent`
         },
         {
+            parent: { title: "HireFlow", icon: "user", url: baseAtsPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseAtsPath },
+                { title: "Departments", icon: "briefcase", url: `${baseAtsPath}/departments` },
+                { title: "Jobs", icon: "handshake", url: `${baseAtsPath}/jobs` },
+                { title: "Candidates", icon: "user-search", url: `${baseAtsPath}/candidates` },
+                { title: "Pipeline", icon: "git-merge", url: `${baseAtsPath}/pipeline` },
+                { title: "Settings", icon: "settings", url: `${baseAtsPath}/settings` },
+            ],
+            baseUrl: baseAtsPath,
+            permission: `navbar:ATS:Parent`
+        },
+        {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },
             child: [],
             baseUrl: baseFlowgenixPath,
@@ -165,19 +178,6 @@ export const getSidebarNavItems = (workspaceId) => {
             child: [],
             baseUrl: baseDocPath,
             permission: `navbar:Documents:Parent`
-        },
-        {
-            parent: { title: "HireFlow", icon: "user", url: baseAtsPath },
-            child: [
-                { title: "Dashboard", icon: "layout-grid", url: baseAtsPath },
-                { title: "Departments", icon: "briefcase", url: `${baseAtsPath}/departments` },
-                { title: "Jobs", icon: "handshake", url: `${baseAtsPath}/jobs` },
-                { title: "Candidates", icon: "user-search", url: `${baseAtsPath}/candidates` },
-                { title: "Pipeline", icon: "git-merge", url: `${baseAtsPath}/pipeline` },
-                { title: "Settings", icon: "settings", url: `${baseAtsPath}/settings` },
-            ],
-            baseUrl: baseAtsPath,
-            permission: `navbar:ATS:Parent`
         },
         {
             parent: { title: "Productivity", icon: "folder-kanban", url: baseProductivityPath },

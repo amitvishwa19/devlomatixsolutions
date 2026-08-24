@@ -218,7 +218,14 @@ export async function aiParseResumeAction(workspaceId, { candidateId, resumeText
         await ensureWorkspaceAccess(workspaceId);
 
         const candidate = await prisma.candidate.findUnique({
-            where: { id: candidateId }
+            where: { id: candidateId },
+            include: {
+                applications: {
+                    include: {
+                        job: true
+                    }
+                }
+            }
         });
 
         if (!candidate) return { success: false, error: "Candidate not found" };
@@ -233,31 +240,61 @@ export async function aiParseResumeAction(workspaceId, { candidateId, resumeText
         });
 
         const prompt = `
-            You are an expert recruitment AI. Analyze the following candidate and resume context to extract structured information.
+            You are an expert recruitment AI. Thoroughly analyze this candidate's resume/profile.
             Candidate Name: ${candidate.name}
             Candidate Email: ${candidate.email}
-            Candidate Phone: ${candidate.phone}
-            Resume Text: ${resumeText || candidate.summary || 'Senior engineer with proven experience.'}
+            Candidate Phone: ${candidate.phone || 'N/A'}
+            Current Job/Target Role: ${candidate.applications?.[0]?.job?.title || candidate.summary || 'Applicant'}
+            ${resumeText ? `Additional Resume Text: ${resumeText}` : ''}
 
-            Return JSON strictly with:
+            Extract and return structured JSON strictly with:
             {
-                "summary": "Short professional summary",
-                "skills": ["Array of skills"],
-                "pros": ["Key strength 1", "Key strength 2"],
-                "cons": ["Potential gap 1", "Potential gap 2"],
-                "aiMatchScore": 85
+                "summary": "Concise 2-3 sentence executive summary of candidate experience, achievements, and core value.",
+                "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"],
+                "pros": ["Key strength 1", "Key strength 2", "Key strength 3"],
+                "cons": ["Potential gap or area to probe 1", "Potential gap 2"],
+                "aiMatchScore": 85,
+                "experienceYears": "Estimated years of experience (e.g. 5+ years)",
+                "suggestedRole": "Best fitting job title based on resume"
             }
         `;
 
-        const result = await model.generateContent(prompt);
+        const contentParts = [];
+
+        // If candidate has an attached resume URL (PDF / Doc / Image), fetch and attach as inlineData
+        const resumeUrl = candidate.resumeUrl || candidate.applications?.[0]?.resumeUrl;
+        if (resumeUrl && !resumeText) {
+            try {
+                const fileRes = await fetch(resumeUrl);
+                if (fileRes.ok) {
+                    const arrayBuf = await fileRes.arrayBuffer();
+                    const base64Data = Buffer.from(arrayBuf).toString("base64");
+                    const contentType = fileRes.headers.get("content-type") || "application/pdf";
+                    const mimeType = contentType.includes("pdf") ? "application/pdf" : (contentType.split(';')[0] || "application/pdf");
+                    
+                    contentParts.push({
+                        inlineData: {
+                            mimeType,
+                            data: base64Data
+                        }
+                    });
+                }
+            } catch (fetchError) {
+                console.warn("[AI_PARSE_RESUME_FETCH_WARNING] Could not fetch attached resume file, falling back to text prompt:", fetchError);
+            }
+        }
+
+        contentParts.push(prompt);
+
+        const result = await model.generateContent(contentParts);
         const parsed = JSON.parse(result.response.text());
 
         const updated = await prisma.candidate.update({
             where: { id: candidateId },
             data: {
                 summary: parsed.summary || candidate.summary,
-                skills: parsed.skills?.length ? parsed.skills : candidate.skills,
-                aiMatchScore: parsed.aiMatchScore || 85,
+                skills: Array.isArray(parsed.skills) && parsed.skills.length ? parsed.skills : candidate.skills,
+                aiMatchScore: Number(parsed.aiMatchScore) || candidate.aiMatchScore || 85,
                 aiSummary: parsed.summary || candidate.aiSummary,
                 parsedData: parsed
             }
