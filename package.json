@@ -4,13 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next dev --turbo",
-    "build": "next build --webpack",
+    "dev": "next dev --turbo",
+    "build": "next build --turbo",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "email": "email dev --dir src/emails",
-    "fast": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next dev --turbo",
+    "fast": "next dev --turbo",
     "env:setup": "node scripts/manage-env.cjs --install",
     "env:switch": "node scripts/manage-env.cjs --switch"
   },
