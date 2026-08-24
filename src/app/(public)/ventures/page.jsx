@@ -156,14 +156,17 @@ export default function VenturesPage() {
                             transition={{ duration: 0.6 }}
                         >
                             <div className="flex items-center gap-3 mb-6">
-                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/25 font-bold px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
+                                <Badge variant="outline" className="bg-red-500/10 text-[#ffd4c5] border-red-500/30 font-bold px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
                                     Active Ecosystem
                                 </Badge>
-                                <div className="h-px flex-1 bg-gradient-to-r from-primary/30 to-transparent" />
+                                <div className="h-px flex-1 bg-gradient-to-r from-orange-500/30 to-transparent" />
                             </div>
                             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-8 leading-[1.1]">
-                                Engineering <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600">Excellence</span> <br />
-                                Across Every Sector.
+                                Engineering Digital Workplaces <br />
+                                Across{" "}
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                                    Every Industry Sector.
+                                </span>
                             </h1>
                             <p className="text-xl text-muted-foreground font-normal leading-relaxed max-w-2xl">
                                 Our ventures leverage unified digital architecture to disrupt traditional markets through artificial intelligence, sustainability, and human-centric product design.

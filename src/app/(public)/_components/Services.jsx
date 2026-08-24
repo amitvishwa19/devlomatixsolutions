@@ -80,7 +80,7 @@ const services = [
 const Services = () => {
     return (
         <section id="services" className="py-32 relative overflow-hidden">
-            {/* Light theme multi-color background */}
+            {/* Light/Dark theme ambient background */}
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/6 via-indigo-500/4 to-rose-500/6 dark:from-background dark:via-background dark:to-background pointer-events-none" />
 
             {/* Decorative orbs */}
@@ -99,19 +99,21 @@ const Services = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 border border-indigo-500/25 shadow-xs mb-4">
-                        <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 dark:from-blue-400 dark:to-violet-400">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+                        <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                        <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-red-400 dark:to-amber-400">
                             Our Core Capabilities
                         </span>
                     </div>
 
                     <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
-                        End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-500">Tech Solutions</span>
+                        Built for Performance. Engineered for the{" "}
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                            Next Decade.
+                        </span>
                     </h2>
                     <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-normal">
-                        From initial blueprint to global cloud deployment, we deliver high-impact software engineering
-                        tailored to scale modern businesses.
+                        From cloud-native distributed backends to intelligent AI workflows, we deliver battle-tested software engineering designed for complete digital sovereignty and growth.
                     </p>
                 </motion.div>
 
@@ -124,7 +126,7 @@ const Services = () => {
                             transition={{ duration: 0.5, delay: index * 0.08 }}
                             viewport={{ once: true }}
                             whileHover={{ y: -6, transition: { duration: 0.2 } }}
-                            className={`group relative glass-card p-8 rounded-2xl overflow-hidden transition-all duration-300 ${service.hoverBorder} hover:shadow-xl ${service.hoverGlow}`}
+                            className={`group relative glass-card dark:zx-card p-8 rounded-2xl overflow-hidden transition-all duration-300 ${service.hoverBorder} hover:shadow-xl ${service.hoverGlow}`}
                         >
                             {/* Top decorative gradient bar */}
                             <div className={`h-1.5 w-full bg-gradient-to-r ${service.topBar} absolute top-0 left-0 opacity-80 group-hover:opacity-100 transition-opacity`} />
@@ -140,14 +142,22 @@ const Services = () => {
                                 </span>
                             </div>
 
-                            <h3 className="font-display text-xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors duration-200">
+                            <h3 className="text-2xl font-bold mb-3 text-foreground tracking-tight group-hover:text-primary transition-colors">
                                 {service.title}
                             </h3>
-                            <p className="text-muted-foreground leading-relaxed text-sm md:text-base font-normal">
+                            <p className="text-muted-foreground text-sm font-normal leading-relaxed">
                                 {service.description}
                             </p>
                         </motion.div>
                     ))}
+                </div>
+
+                {/* Section Bottom CTA */}
+                <div className="flex justify-center mt-14">
+                    <a href="/service" className="zx-btn-pill">
+                        Explore Full Architecture Specs
+                        <span className="zx-arrow">→</span>
+                    </a>
                 </div>
             </div>
         </section>

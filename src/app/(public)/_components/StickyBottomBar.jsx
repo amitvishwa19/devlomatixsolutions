@@ -40,7 +40,7 @@ const StickyBottomBar = () => {
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className={cn(
                     "container mx-auto rounded-2xl transition-all duration-500 ease-out",
-                    "bg-card/90 dark:bg-background/85 backdrop-blur-2xl border border-border/80 dark:border-border/60 shadow-xl shadow-indigo-500/10 dark:shadow-primary/5 px-6 py-3 pointer-events-auto"
+                    "bg-card/90 dark:bg-[#0f161a]/90 backdrop-blur-2xl border border-border/80 dark:border-white/10 shadow-xl shadow-indigo-500/10 dark:shadow-black/50 px-6 py-3 pointer-events-auto"
                 )}
             >
                 <div id='bottombar' className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -50,7 +50,7 @@ const StickyBottomBar = () => {
                         </p>
 
                         {/* App Version */}
-                        <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/25 shadow-xs">
+                        <span className="text-[11px] font-bold text-primary dark:text-[#ffd4c5] bg-primary/10 dark:bg-red-500/15 px-2.5 py-0.5 rounded-full border border-primary/25 dark:border-red-500/30 shadow-xs font-mono">
                             v{packageJson.version}
                         </span>
 
@@ -66,14 +66,14 @@ const StickyBottomBar = () => {
                         <div>
                             {/* Dynamic Social Links */}
                             {activeSocialLinks.length > 0 && (
-                                <div className="flex items-center gap-2 pl-4 border-l border-border/60">
+                                <div className="flex items-center gap-2 pl-4 border-l border-border/60 dark:border-white/10">
                                     {activeSocialLinks.map((social) => (
                                         <a
                                             key={social.id}
                                             href={social.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-8 h-8 rounded-lg bg-secondary/80 hover:bg-primary/10 border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-primary transition-all flex items-center justify-center hover:scale-110 active:scale-95 shadow-xs"
+                                            className="w-8 h-8 rounded-lg bg-secondary/80 dark:bg-white/[0.04] hover:bg-primary/10 dark:hover:bg-red-500/15 border border-border/60 dark:border-white/10 hover:border-primary/40 dark:hover:border-orange-500/40 text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-all flex items-center justify-center hover:scale-110 active:scale-95 shadow-xs"
                                             title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
                                         >
                                             <social.icon className="w-4 h-4" />
@@ -82,10 +82,10 @@ const StickyBottomBar = () => {
                                 </div>
                             )}
                         </div>
-                        <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                        <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-colors cursor-pointer">
                             Privacy Policy
                         </Link>
-                        <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                        <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-colors cursor-pointer">
                             Terms of Service
                         </Link>
 

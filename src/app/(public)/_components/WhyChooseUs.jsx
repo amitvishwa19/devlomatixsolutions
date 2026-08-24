@@ -55,12 +55,13 @@ const features = [
 const WhyChooseUs = () => {
     return (
         <section id="why-choose-us" className="py-32 relative overflow-hidden">
-            {/* Rich gradient background for light theme */}
-            <div className="absolute inset-0 bg-gradient-to-tl from-indigo-500/6 via-background to-cyan-500/6 dark:from-card/30 dark:via-card/30 dark:to-card/30 pointer-events-none" />
+            {/* Rich gradient background for dark/light */}
+            <div className="absolute inset-0 bg-gradient-to-tl from-indigo-500/6 via-background to-cyan-500/6 dark:bg-[radial-gradient(circle_at_bottom_left,rgba(229,26,26,0.10),transparent_40%),radial-gradient(circle_at_top_right,rgba(253,131,11,0.10),transparent_35%)] pointer-events-none" />
 
             {/* Decorative orbs */}
             <div className="absolute top-1/3 right-0 w-[500px] h-[500px] orb-secondary rounded-full blur-[100px] opacity-70 pointer-events-none" />
             <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] orb-primary rounded-full blur-[90px] opacity-60 pointer-events-none" />
+            
             <div className="container mx-auto px-6 relative z-10">
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
                     {/* Left Content */}
@@ -70,33 +71,35 @@ const WhyChooseUs = () => {
                         transition={{ duration: 0.6 }}
                         viewport={{ once: true }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-teal-500/25 shadow-xs mb-4">
-                            <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+                            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
                                 Unrivaled Strategic Advantage
                             </span>
                         </div>
 
                         <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
-                            Your Success Is <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600">Our Priority</span>
+                            Six Core Reasons Enterprise Teams{" "}
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                                Scale With Us.
+                            </span>
                         </h2>
                         <p className="text-muted-foreground text-lg mb-8 leading-relaxed font-normal">
-                            We're not just outside contractors – we become your dedicated technology co-pilots.
-                            Our relentless engineering rigor sets us apart in shipping software that produces concrete ROI.
+                            We don't just build code; we engineer sustained technological advantage. Our architecture principles ensure extreme fault-tolerance, zero vendor lock-in, and measurable ROI.
                         </p>
 
                         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-border/60">
                             <div className="text-center lg:text-left">
-                                <div className="font-display text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 to-blue-600">98%</div>
+                                <div className="zx-stat-num font-display">98%</div>
                                 <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Client Retention</div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <div className="font-display text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-500 to-orange-500">4.9★</div>
-                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Avg Rating</div>
+                                <div className="zx-stat-num font-display">4.9★</div>
+                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Avg Partner Rating</div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <div className="font-display text-3xl md:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-teal-600">2x</div>
-                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Faster Delivery</div>
+                                <div className="zx-stat-num font-display">2x</div>
+                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Faster Time to Market</div>
                             </div>
                         </div>
                     </motion.div>
@@ -115,14 +118,19 @@ const WhyChooseUs = () => {
                                     scale: 1.02,
                                     transition: { duration: 0.2 }
                                 }}
-                                className={`glass-card p-5.5 rounded-2xl transition-all duration-300 ${feature.hoverBorder} hover:shadow-lg group`}
+                                className={`glass-card dark:zx-card p-6 rounded-2xl transition-all duration-300 ${feature.hoverBorder} hover:shadow-lg group relative overflow-hidden`}
                             >
-                                <div
-                                    className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} text-white flex items-center justify-center mb-3.5 shadow-md ${feature.shadow} group-hover:scale-110 transition-transform duration-300`}
-                                >
-                                    <feature.icon className="w-5 h-5 text-white" />
+                                <div className="flex items-center justify-between mb-4">
+                                    <div
+                                        className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} text-white flex items-center justify-center shadow-md ${feature.shadow} group-hover:scale-110 transition-transform duration-300`}
+                                    >
+                                        <feature.icon className="w-5 h-5 text-white" />
+                                    </div>
+                                    <span className="zx-badge font-mono">
+                                        0{index + 1}
+                                    </span>
                                 </div>
-                                <h3 className="font-display font-bold text-foreground mb-1 group-hover:text-primary transition-colors text-base">
+                                <h3 className="font-display font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors text-base">
                                     {feature.title}
                                 </h3>
                                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-normal">

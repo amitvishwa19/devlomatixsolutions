@@ -55,19 +55,21 @@ const Process = () => {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border border-violet-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
               Execution Methodology
             </span>
           </div>
 
           <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
-            Our Proven <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-500 via-indigo-600 to-purple-600">Development Process</span>
+            Four Structured Phases to{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+              Ship Without Disruption.
+            </span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-normal">
-            A structured, high-velocity methodology that transforms raw ideas into powerful,
-            scalable digital products.
+            A battle-tested, parallel-deployment methodology designed for complete continuity, predictable milestones, and rapid rollout.
           </p>
         </motion.div>
 
@@ -75,9 +77,9 @@ const Process = () => {
         <div className="relative">
           {/* Full-width connecting line through circles with flowing animation */}
           <div className="hidden lg:block absolute top-[44px] left-[12.5%] right-[12.5%] h-[3px] z-0 overflow-hidden rounded-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/30 via-violet-500/30 via-amber-500/30 to-emerald-500/30" />
+            <div className="absolute inset-0 bg-gradient-to-r from-red-500/30 via-orange-500/30 via-amber-500/30 to-emerald-500/30" />
             <div
-              className="absolute inset-0 bg-gradient-to-r from-sky-500 via-violet-500 via-amber-500 to-emerald-500 animate-flow-line"
+              className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 via-amber-500 to-emerald-500 animate-flow-line"
               style={{ backgroundSize: '200% 100%' }}
             />
           </div>
@@ -93,10 +95,15 @@ const Process = () => {
                 className="relative group"
               >
                 <div className="text-center px-4">
+                  {/* Phase Label */}
+                  <div className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-amber-500/90 dark:text-[#ffd4c5] mb-2">
+                    PHASE 0{index + 1}
+                  </div>
+
                   {/* Circle container */}
                   <div className="relative inline-flex items-center justify-center mb-6">
                     {/* Main circle */}
-                    <div className={`w-22 h-22 rounded-3xl bg-card border-2 ${step.border} flex items-center justify-center relative z-10 transition-all duration-300 group-hover:scale-110 shadow-lg ${step.shadow}`}>
+                    <div className={`w-22 h-22 rounded-3xl bg-card dark:bg-[#11171d] border-2 ${step.border} flex items-center justify-center relative z-10 transition-all duration-300 group-hover:scale-110 shadow-lg ${step.shadow}`}>
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${step.gradient} text-white flex items-center justify-center shadow-md`}>
                         <step.icon className="w-7 h-7 text-white" />
                       </div>

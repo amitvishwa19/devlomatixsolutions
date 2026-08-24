@@ -51,18 +51,21 @@ const Testimonials = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400">
-              Client Testimonials
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
+              Partner Testimonials
             </span>
           </div>
 
           <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
-            What Our <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-500">Clients Say</span>
+            Validated by Teams Who{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+              Demand Excellence.
+            </span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-normal">
-            Don't just take our word for it. Here's how we've helped founders and enterprises scale their technology.
+            Real feedback from technical directors, product leaders, and enterprise partners who bet their digital practice on our platform.
           </p>
         </motion.div>
 
@@ -75,7 +78,7 @@ const Testimonials = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ y: -6 }}
-              className="glass-card p-8 rounded-2xl relative overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between group"
+              className="glass-card dark:zx-card p-8 rounded-2xl relative overflow-hidden hover:shadow-xl hover:border-orange-500/50 transition-all duration-300 flex flex-col justify-between group"
             >
               {/* Top gradient accent */}
               <div className={`h-1.5 w-full bg-gradient-to-r ${testimonial.topBar} absolute top-0 left-0 opacity-80 group-hover:opacity-100 transition-opacity`} />

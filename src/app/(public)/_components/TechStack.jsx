@@ -77,19 +77,21 @@ const TechStack = () => {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-sky-500/10 to-indigo-500/10 border border-sky-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-indigo-600 dark:from-sky-400 dark:to-indigo-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
               Modern Tech Infrastructure
             </span>
           </div>
 
           <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
-            Technologies We <span className="bg-clip-text text-transparent bg-gradient-to-r from-sky-500 via-blue-600 to-purple-600">Master</span>
+            Under the Hood. Technologies We{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+              Master & Deploy.
+            </span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-normal">
-            We stay ahead of the curve with deep expertise in modern cloud architectures, frontend performance,
-            microservices, and intelligent AI frameworks.
+            We build on standard Linux and modern cloud primitives. Standard open-source tooling, microservices, and battle-tested distributed backends.
           </p>
         </motion.div>
 

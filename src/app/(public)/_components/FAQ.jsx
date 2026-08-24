@@ -45,13 +45,21 @@ const FAQ = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <Tagline text="FAQ" icon={<Sparkles className="w-4 h-4 text-primary" />} />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
+              Clear & Transparent
+            </span>
+          </div>
 
-          <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-4 mb-6 text-foreground">
-            Frequently Asked <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-600 to-indigo-600">Questions</span>
+          <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
+            Common Questions From{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+              Partners Like You.
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed">
-            Get transparent answers to common questions about our software development lifecycle and engagement models.
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg leading-relaxed font-normal">
+            Direct answers on architecture, migration timelines, support SLAs, and dedicated engineering models.
           </p>
         </motion.div>
 
@@ -63,18 +71,18 @@ const FAQ = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="glass-card overflow-hidden"
+              className="glass-card dark:zx-card overflow-hidden"
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-primary/5 transition-colors duration-300 cursor-pointer"
+                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-orange-500/5 transition-colors duration-300 cursor-pointer"
               >
                 <span className="font-display font-bold text-foreground pr-4 text-base">
                   {faq.question}
                 </span>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-primary/15 text-primary border border-primary/30' : 'bg-secondary/70 text-muted-foreground'}`}>
+                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-red-500/15 text-[#ffd4c5] border border-red-500/30' : 'bg-secondary/70 text-muted-foreground'}`}>
                   {openIndex === index ? (
-                    <Minus className="w-4 h-4 text-primary" />
+                    <Minus className="w-4 h-4 text-orange-500" />
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
@@ -86,7 +94,7 @@ const FAQ = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="px-6 pb-5 pt-1 border-t border-border/30"
+                  className="px-6 pb-5 pt-1 border-t border-border/30 dark:border-white/10"
                 >
                   <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
                     {faq.answer}

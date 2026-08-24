@@ -63,50 +63,53 @@ html {
   --radius: 0.55rem;
 }
 
-/* Dark theme (default) */
+/* Dark theme (Zextras-inspired deep carbon & vivid flame/electric accents) */
 :root,
 .dark {
-  --background: hsl(220 40% 6%);
-  --foreground: hsl(200 20% 90%);
-  --card: hsl(220 35% 9%);
-  --card-foreground: hsl(200 20% 90%);
-  --popover: hsl(220 35% 9%);
-  --popover-foreground: hsl(200 20% 90%);
-  --primary: hsl(203 89% 53%);
-  --primary-foreground: hsl(220 40% 6%);
-  --secondary: hsl(220 30% 12%);
-  --secondary-foreground: hsl(200 20% 90%);
-  --muted: hsl(220 25% 14%);
-  --muted-foreground: hsl(210 15% 50%);
-  --accent: hsl(203 89% 53%);
-  --accent-foreground: hsl(220 40% 6%);
+  --background: #0b1014;
+  --foreground: #f5f7fb;
+  --card: #11171d;
+  --card-foreground: #f5f7fb;
+  --popover: #11171d;
+  --popover-foreground: #f5f7fb;
+  --primary: #e51a1a;
+  --primary-foreground: #ffffff;
+  --secondary: #162027;
+  --secondary-foreground: #f5f7fb;
+  --muted: #162027;
+  --muted-foreground: #aeb9cc;
+  --accent: #fd830b;
+  --accent-foreground: #ffffff;
+  --accent-soft: #ffd4c5;
   --destructive: hsl(0 84% 60%);
   --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(220 25% 14%);
-  --input: hsl(220 25% 14%);
-  --ring: hsl(203 89% 53%);
-  --chart-1: hsl(203 89% 53%);
-  --chart-2: hsl(170 80% 45%);
-  --chart-3: hsl(210 60% 50%);
-  --chart-4: hsl(150 70% 45%);
-  --chart-5: hsl(200 80% 55%);
-  --sidebar: hsl(220 35% 8%);
-  --sidebar-foreground: hsl(200 20% 90%);
-  --sidebar-primary: hsl(203 89% 53%);
-  --sidebar-primary-foreground: hsl(220 40% 6%);
-  --sidebar-accent: hsl(220 30% 12%);
-  --sidebar-accent-foreground: hsl(200 20% 90%);
-  --sidebar-border: hsl(220 25% 14%);
-  --sidebar-ring: hsl(203 89% 53%);
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #fd830b;
+  --chart-1: #e51a1a;
+  --chart-2: #fd830b;
+  --chart-3: #ffd4c5;
+  --chart-4: #3ecf8e;
+  --chart-5: #38bdf8;
+  --sidebar: #090d10;
+  --sidebar-foreground: #f5f7fb;
+  --sidebar-primary: #e51a1a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #162027;
+  --sidebar-accent-foreground: #f5f7fb;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #fd830b;
 
-  --gradient-sun: linear-gradient(135deg, hsl(203 89% 53%), hsl(190 90% 50%));
-  --gradient-hero: linear-gradient(180deg, hsl(220 40% 6% / 0.85), hsl(220 40% 6% / 0.98));
-  --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.06), hsl(0 0% 100% / 0.02));
-  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(203 89% 53% / 0.04) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, hsl(190 90% 50% / 0.03) 0%, transparent 50%);
-  --shadow-card: 0 1px 3px hsl(220 40% 4% / 0.3), 0 4px 16px hsl(220 40% 4% / 0.2);
-  --shadow-elevated: 0 4px 12px hsl(220 40% 4% / 0.4), 0 16px 48px hsl(220 40% 4% / 0.3);
-  --shadow-glow: 0 0 30px hsl(203 89% 53% / 0.15);
-  --shadow-glow-lg: 0 0 60px hsl(203 89% 53% / 0.25), 0 0 120px hsl(203 89% 53% / 0.1);
+  --gradient-accent: linear-gradient(135deg, #e51a1a, #fd830b);
+  --gradient-stat: linear-gradient(135deg, #ffd4c5, #fd830b);
+  --gradient-sun: linear-gradient(135deg, #e51a1a, #fd830b);
+  --gradient-hero: linear-gradient(180deg, rgba(15, 22, 26, 0.95), rgba(6, 10, 13, 0.98));
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  --gradient-mesh: radial-gradient(circle at top right, rgba(253, 131, 11, 0.12), transparent 35%), radial-gradient(circle at left top, rgba(229, 26, 26, 0.14), transparent 30%), linear-gradient(180deg, #0f161a 0%, #060a0d 100%);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.5), 0 24px 60px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 35px rgba(229, 26, 26, 0.25);
+  --shadow-glow-lg: 0 0 60px rgba(229, 26, 26, 0.30), 0 0 120px rgba(253, 131, 11, 0.15);
 
   /* Brand Colors */
   --kx-cyan: 203 89% 53%;
@@ -478,5 +481,132 @@ html {
     to {
       transform: translateX(-50%);
     }
+  }
+
+  /* ============================================================
+     Zextras-Inspired Dark Mode System & Micro-Interactions
+     ============================================================ */
+
+
+
+  /* Zextras-style Card System */
+  .dark .zx-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.015) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .dark .zx-card:hover {
+    border-color: rgba(253, 131, 11, 0.45);
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px -8px rgba(229, 26, 26, 0.18);
+  }
+
+  /* Zextras Pain Card with Top Gradient Stripe */
+  .dark .zx-pain-card {
+    background: linear-gradient(180deg, rgba(229, 26, 26, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(229, 26, 26, 0.25);
+    border-radius: 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .dark .zx-pain-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(135deg, #e51a1a, #fd830b);
+    opacity: 0.85;
+  }
+
+  /* Zextras Number / Category Badge */
+  .zx-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem 0.65rem;
+    border-radius: 0.5rem;
+    font-weight: 900;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    background: rgba(229, 26, 26, 0.18);
+    border: 1px solid rgba(229, 26, 26, 0.4);
+    color: #ffd4c5;
+  }
+  .light .zx-badge {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #2563eb;
+  }
+
+  /* Zextras Pill Secondary Button with Circle Arrow */
+  .zx-btn-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #f5f7fb;
+    transition: all 0.25s ease;
+  }
+  .dark .zx-btn-pill:hover {
+    background: rgba(229, 26, 26, 0.12);
+    border-color: rgba(253, 131, 11, 0.5);
+    color: #ffd4c5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(229, 26, 26, 0.2);
+  }
+  .zx-btn-pill .zx-arrow {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e51a1a, #fd830b);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+  }
+  .zx-btn-pill:hover .zx-arrow {
+    transform: translateX(3px);
+  }
+
+  /* Zextras Stat Gradient Text */
+  .zx-stat-num {
+    display: block;
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    line-height: 0.9;
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffd4c5, #fd830b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.04em;
+  }
+  .light .zx-stat-num {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Zextras Cinematic Dark Canvas Mesh */
+  .dark-canvas-zextras {
+    background:
+      radial-gradient(circle at top right, rgba(253, 131, 11, 0.13), transparent 35%),
+      radial-gradient(circle at left top, rgba(229, 26, 26, 0.15), transparent 30%),
+      radial-gradient(circle at 50% 60%, rgba(14, 165, 233, 0.08), transparent 45%),
+      linear-gradient(180deg, #0d1318 0%, #060a0d 100%);
   }
 }

@@ -69,8 +69,8 @@ const Navbar = () => {
                 className={cn(
                     "container mx-auto rounded-2xl transition-all duration-500 ease-out",
                     scrolled
-                        ? "bg-card/90 dark:bg-background/80 backdrop-blur-2xl border border-border/80 dark:border-border/50 shadow-xl shadow-indigo-500/10 dark:shadow-primary/5"
-                        : "bg-card/80 dark:bg-background/40 backdrop-blur-xl border border-border/70 dark:border-border/30 shadow-md shadow-indigo-500/5 dark:shadow-none"
+                        ? "bg-card/90 dark:bg-[#0f161a]/85 backdrop-blur-2xl border border-border/80 dark:border-white/10 shadow-xl shadow-indigo-500/10 dark:shadow-black/40"
+                        : "bg-card/80 dark:bg-[#0f161a]/60 backdrop-blur-xl border border-border/70 dark:border-white/10 shadow-md shadow-indigo-500/5 dark:shadow-none"
                 )}
             >
                 <div className="px-4 py-2.5 flex items-center justify-between">
@@ -80,7 +80,7 @@ const Navbar = () => {
                     </motion.div>
 
                     {/* Center: Nav Links */}
-                    <div className="hidden md:flex items-center gap-1 bg-secondary/40 dark:bg-transparent p-1 rounded-full border border-border/50 dark:border-transparent">
+                    <div className="hidden md:flex items-center gap-1 bg-secondary/40 dark:bg-white/[0.03] p-1 rounded-full border border-border/50 dark:border-white/10">
                         {navLinks.map((link) =>
                             link.hasDropdown ? (
                                 <div key={link.name} className="relative" ref={servicesRef}>
@@ -89,14 +89,14 @@ const Navbar = () => {
                                         className={cn(
                                             "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200 flex items-center gap-1",
                                             isActive(link.href)
-                                                ? "text-primary font-bold"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-card/60"
+                                                ? "text-primary dark:text-[#ffd4c5] font-bold"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-card/60 dark:hover:bg-white/[0.04]"
                                         )}
                                     >
                                         {isActive(link.href) && (
                                             <motion.div
                                                 layoutId="activeTab"
-                                                className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10 shadow-xs"
+                                                className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-red-500/10 shadow-xs"
                                                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                             />
                                         )}
@@ -115,7 +115,7 @@ const Navbar = () => {
                                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                                 exit={{ opacity: 0, y: 8, scale: 0.96 }}
                                                 transition={{ duration: 0.2, ease: "easeOut" }}
-                                                className="absolute top-full left-0 mt-2 w-52 z-50 rounded-xl bg-popover border border-border shadow-lg shadow-black/10 overflow-hidden"
+                                                className="absolute top-full left-0 mt-2 w-52 z-50 rounded-xl bg-popover dark:bg-[#11171d] border border-border dark:border-white/10 shadow-lg shadow-black/20 overflow-hidden"
                                             >
                                                 <div className="py-1.5">
                                                     {serviceLinks.map((item) => (
@@ -140,14 +140,14 @@ const Navbar = () => {
                                     className={cn(
                                         "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200",
                                         isActive(link.href)
-                                            ? "text-primary font-bold"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-card/60"
+                                            ? "text-primary dark:text-[#ffd4c5] font-bold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-card/60 dark:hover:bg-white/[0.04]"
                                     )}
                                 >
                                     {isActive(link.href) && (
                                         <motion.div
                                             layoutId="activeTab"
-                                            className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10 shadow-xs"
+                                            className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-red-500/10 shadow-xs"
                                             transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                         />
                                     )}
@@ -165,7 +165,7 @@ const Navbar = () => {
                                 <Button variant="ghost" size="sm" asChild className="rounded-full font-semibold hover:text-primary">
                                     <Link href="/login">Sign In</Link>
                                 </Button>
-                                <Button variant="hero" size="sm" asChild className="rounded-full shadow-md shadow-primary/20 px-4 font-bold">
+                                <Button variant="hero" size="sm" asChild className="rounded-full shadow-md shadow-red-500/20 px-4 font-bold bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 text-white border-0 hover:brightness-110">
                                     <Link href="/contact">Get in Touch</Link>
                                 </Button>
                             </div>
