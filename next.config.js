@@ -47,33 +47,8 @@ const nextConfig = {
       }
     ]
   },
-  serverExternalPackages: [
-    'puppeteer',
-    '@whiskeysockets/baileys',
-    'livekit-server-sdk',
-    'firebase-admin',
-    'googleapis',
-    'cheerio',
-    'pino',
-    'handlebars',
-    'xlsx',
-    '@prisma/client',
-    'prisma',
-    'jspdf',
-    'html2canvas',
-  ],
-  productionBrowserSourceMaps: false,
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   turbopack: {},
   experimental: {
-    cpus: 1,
-    workerThreads: false,
-    webpackBuildWorker: false,
     turbopackFileSystemCacheForDev: false,
     optimizePackageImports: [
       'lucide-react',
