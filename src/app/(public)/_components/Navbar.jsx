@@ -67,10 +67,10 @@ const Navbar = () => {
                 animate={{ y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 className={cn(
-                    "container mx-auto rounded-2xl transition-all duration-500 ease-out border",
+                    "container mx-auto rounded-2xl transition-all duration-500 ease-out",
                     scrolled
-                        ? "bg-background/80 backdrop-blur-2xl border border-border/50 shadow-xl shadow-primary/5"
-                        : "bg-transparent border border-transparent shadow-none "
+                        ? "bg-card/90 dark:bg-background/80 backdrop-blur-2xl border border-border/80 dark:border-border/50 shadow-xl shadow-indigo-500/10 dark:shadow-primary/5"
+                        : "bg-card/80 dark:bg-background/40 backdrop-blur-xl border border-border/70 dark:border-border/30 shadow-md shadow-indigo-500/5 dark:shadow-none"
                 )}
             >
                 <div className="px-4 py-2.5 flex items-center justify-between">
@@ -80,23 +80,23 @@ const Navbar = () => {
                     </motion.div>
 
                     {/* Center: Nav Links */}
-                    <div className="hidden md:flex items-center gap-0.5">
+                    <div className="hidden md:flex items-center gap-1 bg-secondary/40 dark:bg-transparent p-1 rounded-full border border-border/50 dark:border-transparent">
                         {navLinks.map((link) =>
                             link.hasDropdown ? (
                                 <div key={link.name} className="relative" ref={servicesRef}>
                                     <button
                                         onClick={() => setServicesOpen(!servicesOpen)}
                                         className={cn(
-                                            "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300 flex items-center gap-1",
+                                            "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200 flex items-center gap-1",
                                             isActive(link.href)
-                                                ? "text-primary"
-                                                : "text-muted-foreground hover:text-foreground"
+                                                ? "text-primary font-bold"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-card/60"
                                         )}
                                     >
                                         {isActive(link.href) && (
                                             <motion.div
                                                 layoutId="activeTab"
-                                                className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10"
+                                                className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10 shadow-xs"
                                                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                             />
                                         )}
@@ -123,7 +123,7 @@ const Navbar = () => {
                                                             key={item.name}
                                                             href={item.href}
                                                             onClick={() => setServicesOpen(false)}
-                                                            className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors"
+                                                            className="block px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/10 transition-colors font-medium"
                                                         >
                                                             {item.name}
                                                         </Link>
@@ -138,16 +138,16 @@ const Navbar = () => {
                                     key={link.name}
                                     href={link.href}
                                     className={cn(
-                                        "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-300",
+                                        "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200",
                                         isActive(link.href)
-                                            ? "text-primary"
-                                            : "text-muted-foreground hover:text-foreground"
+                                            ? "text-primary font-bold"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-card/60"
                                     )}
                                 >
                                     {isActive(link.href) && (
                                         <motion.div
                                             layoutId="activeTab"
-                                            className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10"
+                                            className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10 shadow-xs"
                                             transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                         />
                                     )}
@@ -157,15 +157,23 @@ const Navbar = () => {
                         )}
                     </div>
 
-
                     <div className="hidden md:flex items-center gap-3">
-
-                        {session && <AuthSelector />}
+                        {session ? (
+                            <AuthSelector />
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" asChild className="rounded-full font-semibold hover:text-primary">
+                                    <Link href="/login">Sign In</Link>
+                                </Button>
+                                <Button variant="hero" size="sm" asChild className="rounded-full shadow-md shadow-primary/20 px-4 font-bold">
+                                    <Link href="/contact">Get in Touch</Link>
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Mobile */}
                     <div className="flex md:hidden items-center gap-2">
-
                         <button className="text-foreground p-1.5 rounded-lg hover:bg-secondary cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                             {isOpen ? <X size={22} /> : <Menu size={22} />}
                         </button>

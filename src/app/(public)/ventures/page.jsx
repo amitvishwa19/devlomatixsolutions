@@ -199,83 +199,84 @@ export default function VenturesPage() {
                                             </div>
                                         </div>
 
-                                    {/* Content */}
-                                    <div className="flex-1 space-y-6">
-                                        <div>
-                                            <h3 className="text-3xl font-bold text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">
-                                                {venture.name}
-                                            </h3>
-                                            <p className="text-sm text-muted-foreground font-medium leading-relaxed">
-                                                {venture.description}
-                                            </p>
-                                        </div>
+                                        {/* Content */}
+                                        <div className="flex-1 space-y-6">
+                                            <div>
+                                                <h3 className="text-3xl font-bold text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">
+                                                    {venture.name}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                                                    {venture.description}
+                                                </p>
+                                            </div>
 
-                                        {/* Core Features */}
-                                        <div className="flex flex-wrap gap-2 py-2">
-                                            {venture.features.map(feature => (
-                                                <Badge key={feature} variant="outline" className="rounded-md border-border/60 text-[9px] font-bold bg-background/60 backdrop-blur-sm px-2 py-0.5">
-                                                    {feature}
-                                                </Badge>
-                                            ))}
-                                        </div>
-
-                                        {/* Metrics Grid */}
-                                        <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-secondary/40 border border-border/50 backdrop-blur-md">
-                                            {venture.metrics.map(metric => (
-                                                <div key={metric.label}>
-                                                    <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                                                    <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">{metric.label}</p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Actions & Tech */}
-                                    <div className="pt-8 mt-8 border-t border-border/10">
-                                        <div className="flex items-center justify-between gap-4 mb-6">
-                                            <div className="flex gap-2">
-                                                {venture.tech.map(t => (
-                                                    <Tooltip key={t}>
-                                                        <TooltipTrigger asChild>
-                                                            <div className="w-7 h-7 rounded-md border border-border/40 bg-background/50 flex items-center justify-center cursor-help hover:border-primary/40 transition-colors">
-                                                                <span className="text-[8px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
-                                                                    {t.substring(0, 2).toUpperCase()}
-                                                                </span>
-                                                            </div>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent className="text-[10px] font-bold uppercase tracking-wider">{t}</TooltipContent>
-                                                    </Tooltip>
+                                            {/* Core Features */}
+                                            <div className="flex flex-wrap gap-2 py-2">
+                                                {venture.features.map(feature => (
+                                                    <Badge key={feature} variant="outline" className="rounded-md border-border/60 text-[9px] font-bold bg-background/60 backdrop-blur-sm px-2 py-0.5">
+                                                        {feature}
+                                                    </Badge>
                                                 ))}
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <button 
-                                                    onClick={() => toast.info(`Initializing ${venture.name} demo...`)}
-                                                    className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-110"
-                                                >
-                                                    <Play className="w-3.5 h-3.5 fill-current" />
-                                                </button>
-                                                <a 
-                                                    href={`mailto:${venture.email}`}
-                                                    className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-indigo-500 hover:border-indigo-500/30 transition-all hover:scale-110"
-                                                >
-                                                    <Mail className="w-3.5 h-3.5" />
-                                                </a>
+
+                                            {/* Metrics Grid */}
+                                            <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-secondary/40 border border-border/50 backdrop-blur-md">
+                                                {venture.metrics.map(metric => (
+                                                    <div key={metric.label}>
+                                                        <p className="text-xl font-bold text-foreground">{metric.value}</p>
+                                                        <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">{metric.label}</p>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
 
-                                        <Button 
-                                            asChild
-                                            className="w-full rounded-xl font-bold h-12 bg-foreground text-background hover:bg-primary transition-all duration-300 group/btn shadow-lg"
-                                        >
-                                            <a href={venture.website} target="_blank" rel="noopener noreferrer">
-                                                Go to Platform
-                                                <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                                            </a>
-                                        </Button>
+                                        {/* Actions & Tech */}
+                                        <div className="pt-8 mt-8 border-t border-border/10">
+                                            <div className="flex items-center justify-between gap-4 mb-6">
+                                                <div className="flex gap-2">
+                                                    {venture.tech.map(t => (
+                                                        <Tooltip key={t}>
+                                                            <TooltipTrigger asChild>
+                                                                <div className="w-7 h-7 rounded-md border border-border/40 bg-background/50 flex items-center justify-center cursor-help hover:border-primary/40 transition-colors">
+                                                                    <span className="text-[8px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                                        {t.substring(0, 2).toUpperCase()}
+                                                                    </span>
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent className="text-[10px] font-bold uppercase tracking-wider">{t}</TooltipContent>
+                                                        </Tooltip>
+                                                    ))}
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <button 
+                                                        onClick={() => toast.info(`Initializing ${venture.name} demo...`)}
+                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-110"
+                                                    >
+                                                        <Play className="w-3.5 h-3.5 fill-current" />
+                                                    </button>
+                                                    <a 
+                                                        href={`mailto:${venture.email}`}
+                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-indigo-500 hover:border-indigo-500/30 transition-all hover:scale-110"
+                                                    >
+                                                        <Mail className="w-3.5 h-3.5" />
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <Button 
+                                                asChild
+                                                className="w-full rounded-xl font-bold h-12 bg-foreground text-background hover:bg-primary transition-all duration-300 group/btn shadow-lg"
+                                            >
+                                                <a href={venture.website} target="_blank" rel="noopener noreferrer">
+                                                    Go to Platform
+                                                    <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
 
                         {/* Partnership Placeholder */}
                         <motion.div
