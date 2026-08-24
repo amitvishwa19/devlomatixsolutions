@@ -185,20 +185,12 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Dashboard", icon: "layout-grid", url: `${baseProductivityPath}/` },
                 { title: "Kanban", icon: "columns-3", url: `${baseProductivityPath}/kanban` },
                 { title: "Mailbox", icon: "mail", url: `${baseProductivityPath}/mailbox` },
-                { title: "Message", icon: "message-square-more", url: `${baseProductivityPath}/message` },
+                { title: "Discord Server", icon: "message-square-more", url: `${baseProductivityPath}/message` },
+                { title: "Quotation", icon: "file-spreadsheet", url: `${baseProductivityPath}/quotation` },
+                { title: "Lead Generation", icon: "user-plus", url: `${baseProductivityPath}/leads` },
             ],
             baseUrl: baseProductivityPath,
             permission: `navbar:Productivity:Parent`
-        },
-        {
-            parent: { title: "Miscellaneous", icon: "blocks", url: baseMiscellaneousPath },
-            child: [
-                { title: "Quotation", icon: "file-spreadsheet", url: `${baseMiscellaneousPath}/quotation` },
-                { title: "Lead Generation", icon: "user-plus", url: `${baseMiscellaneousPath}/leads` },
-                { title: "Playground", icon: "user-check", url: `${baseMiscellaneousPath}/playground` },
-            ],
-            baseUrl: baseMiscellaneousPath,
-            permission: `navbar:Miscellaneous:Parent`
         },
         {
             parent: { title: "System", icon: "monitor-cog", url: basePath },

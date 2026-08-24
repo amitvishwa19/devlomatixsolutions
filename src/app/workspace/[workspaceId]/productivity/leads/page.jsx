@@ -41,8 +41,9 @@ import { useParams } from 'next/navigation';
 import { Country, State, City } from 'country-state-city';
 import SaveContact from './_components/SaveContact';
 import BulkActionBar from './_components/BulkActionBar';
+import LeadApiKeyModal from './_components/LeadApiKeyModal';
 import { bulkSaveLeadsAction } from './_actions/bulk-save';
-import { Loader2, Save, ExternalLink } from 'lucide-react';
+import { Loader2, Save, ExternalLink, Key, ShieldCheck } from 'lucide-react';
 
 export default function LeadsPage() {
     const params = useParams();
@@ -80,6 +81,9 @@ export default function LeadsPage() {
         toggleModal: (data = null) => setSaveLeadsModal(prev => ({ ...prev, open: !prev.open, leads: data ? data : [], selectedLeadIds: data ? data.map(l => l.id) : [] }))
     });
 
+    const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+    const [hasApiKey, setHasApiKey] = useState(null);
+
     const [searchHistory, setSearchHistory] = useState([]);
 
     // Calculate displayed leads (10 per page)
@@ -89,7 +93,7 @@ export default function LeadsPage() {
     const totalPages = Math.ceil((leads.length + (nextPageToken ? 10 : 0)) / itemsPerPage); // Heuristic total pages
 
 
-    // Load search history from localStorage on mount
+    // Load search history from localStorage and check credential status on mount
     useEffect(() => {
         const saved = localStorage.getItem('leads_search_history');
         if (saved) {
@@ -100,6 +104,28 @@ export default function LeadsPage() {
             }
         }
     }, []);
+
+    const checkCredentialStatus = async () => {
+        if (!workspaceId) return;
+        try {
+            const res = await fetch(`/api/workspace/${workspaceId}/social/accounts`);
+            const accounts = await res.json();
+            if (Array.isArray(accounts)) {
+                const placesCred = accounts.find(a => 
+                    a.platform?.toUpperCase() === 'GOOGLE_PLACES' || 
+                    a.platform?.toUpperCase() === 'GOOGLE PLACES'
+                );
+                const hasKey = !!(placesCred && (placesCred.details?.apiKey || placesCred.details?.['api-key'] || placesCred.details?.api_key || placesCred.status === 'connected'));
+                setHasApiKey(hasKey);
+            }
+        } catch (e) {
+            console.error("[LEADS] Error checking API key status:", e);
+        }
+    };
+
+    useEffect(() => {
+        checkCredentialStatus();
+    }, [workspaceId]);
 
     const saveSearchEntry = (newFilters) => {
         if (!newFilters.keyword.trim()) return;
@@ -304,6 +330,12 @@ export default function LeadsPage() {
                 return;
             }
 
+            if (res.status === 404 || data.message?.includes('No Google Places API Key') || data.message?.includes('Credentials')) {
+                toast.error(data.message || "Google Places API Key missing. Please configure your API key.", { id: toastId });
+                setApiKeyModalOpen(true);
+                return;
+            }
+
             if (data.success) {
                 if (isNewSearch) {
                     console.log(data.leads)
@@ -315,6 +347,9 @@ export default function LeadsPage() {
                 }
                 setNextPageToken(data.nextPageToken);
             } else {
+                if (data.message?.toLowerCase().includes('google places api key') || data.message?.toLowerCase().includes('credentials')) {
+                    setApiKeyModalOpen(true);
+                }
                 toast.error(data.message || "Extraction failed", { id: toastId });
             }
         } catch (error) {
@@ -433,7 +468,22 @@ export default function LeadsPage() {
                     </div>
 
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex flex-wrap gap-2 w-full md:w-auto">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-card/50 border text-xs font-bold gap-2 flex-1 md:flex-initial rounded-md relative hover:bg-card/80 transition-all"
+                        onClick={() => setApiKeyModalOpen(true)}
+                    >
+                        <Key className="w-3.5 h-3.5 text-primary" />
+                        <span>API Key</span>
+                        {hasApiKey === true && (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]" title="API Key Configured in Credentials Vault" />
+                        )}
+                        {hasApiKey === false && (
+                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_6px_rgba(245,158,11,0.8)]" title="No API Key Configured" />
+                        )}
+                    </Button>
                     <Button
                         variant="outline"
                         size="sm"
@@ -505,6 +555,22 @@ export default function LeadsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
+                    {hasApiKey === false && (
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 mb-4 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs">
+                            <div className="flex items-center gap-2.5">
+                                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                                <span>No Google Places API Key found in your Credentials module. Add your key to enable live lead extraction.</span>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setApiKeyModalOpen(true)}
+                                className="h-7 px-3 text-[11px] font-bold border-amber-500/30 text-amber-400 hover:bg-amber-500/10 shrink-0 rounded-md"
+                            >
+                                <Key className="w-3 h-3 mr-1.5" /> Add API Key
+                            </Button>
+                        </div>
+                    )}
                     <div className="flex flex-col gap-4">
                         <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-2">
                             <div className="space-y-2">
@@ -1001,6 +1067,15 @@ export default function LeadsPage() {
                 onSuccess={() => {
                     setSelectedLeadIds([]);
                     handleFindLeads(false); // Refresh badges without clearing results
+                }}
+            />
+
+            <LeadApiKeyModal
+                open={apiKeyModalOpen}
+                setOpen={setApiKeyModalOpen}
+                workspaceId={workspaceId}
+                onKeySaved={() => {
+                    checkCredentialStatus();
                 }}
             />
 

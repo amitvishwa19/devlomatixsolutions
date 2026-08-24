@@ -44,34 +44,45 @@ export async function POST(req, { params }) {
         let apiKey = "";
         try {
             const creds = credentialRecord.credentials;
-            // Support multiple possible field names, including 'enc' for fully encrypted objects
-            let encryptedValue = creds.apiKey || creds['api-key'] || creds.api_key || creds.enc;
             
-            if (!encryptedValue) {
-                console.error("[LEADS_API] Incomplete Credentials object found:", JSON.stringify(creds));
-                const availableKeys = Object.keys(creds).filter(k => k !== 'profileName').join(", ");
+            // Check if object is wrapped in enc
+            if (creds?.enc && typeof creds.enc === 'string' && creds.enc.includes(':')) {
+                const decryptedValue = symmetricDecrypt(creds.enc);
+                try {
+                    const parsed = JSON.parse(decryptedValue);
+                    apiKey = parsed.apiKey || parsed['api-key'] || parsed.api_key || decryptedValue;
+                } catch {
+                    apiKey = decryptedValue;
+                }
+            } else {
+                let potentialKey = creds.apiKey || creds['api-key'] || creds.api_key || creds.enc;
+                if (typeof potentialKey === 'string' && potentialKey.includes(':')) {
+                    try {
+                        const decrypted = symmetricDecrypt(potentialKey);
+                        try {
+                            const parsed = JSON.parse(decrypted);
+                            apiKey = parsed.apiKey || parsed['api-key'] || parsed.api_key || decrypted;
+                        } catch {
+                            apiKey = decrypted;
+                        }
+                    } catch {
+                        apiKey = potentialKey;
+                    }
+                } else if (potentialKey) {
+                    apiKey = potentialKey;
+                }
+            }
+
+            if (!apiKey) {
+                const availableKeys = Object.keys(creds || {}).filter(k => k !== 'profileName').join(", ");
                 throw new Error(availableKeys ? `API Key field not found. Available fields: ${availableKeys}` : "Credential object is empty. Please re-save your Google Places credentials.");
             }
-            
-            // Decrypt the value
-            const decryptedValue = symmetricDecrypt(encryptedValue);
-
-            // If it's a JSON string (sometimes the whole object is encrypted into 'enc'), parse it
-            try {
-                const parsed = JSON.parse(decryptedValue);
-                apiKey = parsed.apiKey || parsed['api-key'] || parsed.api_key || decryptedValue;
-            } catch (e) {
-                // If not JSON, it's likely the raw API key
-                apiKey = decryptedValue;
-            }
-
-            if (!apiKey) throw new Error("Could not extract API Key from decrypted credentials.");
 
         } catch (decryptError) {
             console.error("[LEADS_API] Decryption failed:", decryptError);
             return NextResponse.json({
                 success: false,
-                message: 'Failed to decrypt API Key. Please re-save your Google Places credentials.'
+                message: decryptError.message || 'Failed to decrypt API Key. Please re-save your Google Places credentials.'
             }, { status: 500 });
         }
 
