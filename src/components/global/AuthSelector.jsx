@@ -23,9 +23,10 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/AuthProvider'
 import { UserAvatar } from './UseAvatar'
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
-import { LogOut, Rocket, Settings, User } from 'lucide-react'
+import { LogOut, Moon, Rocket, Settings, Sun, User } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { useModal } from '@/hooks/useModal'
+import { useApp } from '@/providers/AppProvider'
 import { cn } from '@/lib/utils'
 
 
@@ -35,6 +36,7 @@ export function AuthSelector({ name = false, classname }) {
     const { data: session, status } = useSession()
     const { onOpen } = useModal()
     const { orgId } = useParams()
+    const { theme, themeToggle } = useApp()
 
     const handleOrg = () => {
         router.push('/workspace')
@@ -109,6 +111,23 @@ export function AuthSelector({ name = false, classname }) {
                             <DropdownMenuItem onSelect={handleOrg} className=' cursor-pointer aria-selected:bg-transparent '>
                                 <Rocket className="mr-2 h-4 w-4" />
                                 <span>Workspaces</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                                onSelect={(e) => {
+                                    e.preventDefault()
+                                    themeToggle()
+                                }}
+                                className='cursor-pointer aria-selected:bg-transparent hover:bg-accent flex items-center justify-between'
+                            >
+                                <div className='flex items-center'>
+                                    {theme === 'dark' ? (
+                                        <Sun className="mr-2 h-4 w-4" />
+                                    ) : (
+                                        <Moon className="mr-2 h-4 w-4" />
+                                    )}
+                                    <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+                                </div>
                             </DropdownMenuItem>
 
                             {

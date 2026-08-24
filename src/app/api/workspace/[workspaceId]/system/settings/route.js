@@ -109,6 +109,8 @@ export async function GET(req, { params }) {
         const defaultBranding = {
             primaryColor: "#3b82f6",
             logoUrl: workspace.imageUrl || "",
+            logoLightUrl: "",
+            logoDarkUrl: "",
             appName: "Devlomatix",
             appDescription: "Your Productivity Platform",
             workspaceUrl: `http://localhost:3000`

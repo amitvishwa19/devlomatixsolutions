@@ -23,12 +23,20 @@ import {
     MessageSquare,
     Trash2, Share2, UserPlus, Eye, Mail, Tag, Info, X,
     RefreshCw,
-    Forward
+    Forward,
+    ChevronDown,
+    ChevronRight,
+    FolderPlus,
+    Hash,
+    Filter,
+    Radio,
+    Megaphone
 } from "lucide-react";
 import { useSession } from 'next-auth/react';
 import { useAction } from "@/hooks/use-action";
 import { getConversations } from "./_actions/get-conversations";
 import { sendMessage } from "./_actions/send-message";
+import { sendBroadcastMessage } from "./_actions/send-broadcast-message";
 import { forwardMessage } from "./_actions/forward-message";
 import { deleteConversation } from "./_actions/delete-conversation";
 import { assignConversation } from "./_actions/assign-conversation";
@@ -196,10 +204,24 @@ export default function WhatsAppChatsPage() {
     const [isForwardOpen, setIsForwardOpen] = useState(false);
     const [forwardingMsg, setForwardingMsg] = useState(null);
 
+    // Broadcast & Segment State
+    const [broadcastHistory, setBroadcastHistory] = useState({});
+    const [isRecipientsDialogOpen, setIsRecipientsDialogOpen] = useState(false);
+    const [recipientSearchTerm, setRecipientSearchTerm] = useState('');
+
     // Sidebar/Filter State
     const [groups, setGroups] = useState([]);
     const [categories, setCategories] = useState([]);
-    const [activeSegment, setActiveSegment] = useState('all'); // all, group:[id], category:[name]
+    const [activeSegment, setActiveSegment] = useState('all'); // all, group:[id], category:[name], tag:[name]
+    const [segmentViewFilter, setSegmentViewFilter] = useState('all'); // all, categories, groups, tags
+    const [expandedSegments, setExpandedSegments] = useState({});
+
+    const toggleSegmentExpand = (key) => {
+        setExpandedSegments(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
 
     const scrollRef = useRef(null);
 
@@ -210,12 +232,68 @@ export default function WhatsAppChatsPage() {
         return digits.length >= 10 ? digits.slice(-10) : digits;
     };
 
+    // Derived State: Check if a Segment (Group / Category / Tag) is selected
+    const isSegmentChat = Boolean(selectedJid?.startsWith('segment:'));
+
+    // Compute unique categories combining DB categories and contact categories
+    const uniqueCategories = Array.from(
+        new Map([
+            ...categories.map(c => [c.name, { name: c.name, color: c.color || '#3b82f6', id: c.id }]),
+            ...allContacts.filter(c => c.category).map(c => [c.category, { name: c.category, color: '#3b82f6', id: c.category }])
+        ]).values()
+    );
+
+    // Compute unique tags from all contacts
+    const uniqueTags = Array.from(
+        new Set(allContacts.flatMap(c => c.tags || []).filter(Boolean))
+    ).sort();
+
+    let activeSegmentData = null;
+    if (isSegmentChat) {
+        const parts = selectedJid.split(':');
+        const sType = parts[1]; // 'group', 'category', 'tag'
+        const sId = parts.slice(2).join(':');
+
+        if (sType === 'group') {
+            const grp = groups.find(g => g.id === sId);
+            const recipients = allContacts.filter(c => c.groups?.some(g => g.id === sId));
+            activeSegmentData = {
+                type: 'group',
+                id: sId,
+                name: grp?.name || 'Broadcast Group',
+                description: grp?.description || '',
+                recipients
+            };
+        } else if (sType === 'category') {
+            const cat = uniqueCategories.find(c => c.name === sId);
+            const recipients = allContacts.filter(c => c.category === sId);
+            activeSegmentData = {
+                type: 'category',
+                id: sId,
+                name: sId,
+                color: cat?.color || '#3b82f6',
+                recipients
+            };
+        } else if (sType === 'tag') {
+            const recipients = allContacts.filter(c => c.tags?.includes(sId));
+            activeSegmentData = {
+                type: 'tag',
+                id: sId,
+                name: sId,
+                color: '#f59e0b',
+                recipients
+            };
+        }
+    }
+
     // Derived State: Get the actual chat object based on selectedJid
-    const selectedChat = conversations.find(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
-    const selectedContact = allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
+    const selectedChat = isSegmentChat ? null : conversations.find(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
+    const selectedContact = isSegmentChat ? null : allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
 
     // Display name for the header
-    const activeName = selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0];
+    const activeName = isSegmentChat 
+        ? activeSegmentData?.name 
+        : (selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0]);
 
     // Server Action Hooks
     const { execute: executeConversations } = useAction(getConversations, {
@@ -236,6 +314,7 @@ export default function WhatsAppChatsPage() {
                 });
 
                 setSelectedJid(currentJid => {
+                    if (currentJid && currentJid.startsWith('segment:')) return currentJid;
                     if (!currentJid && data.conversations.length > 0) return data.conversations[0].jid;
                     if (currentJid && !data.conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(currentJid))) {
                         return data.conversations.length > 0 ? data.conversations[0].jid : null;
@@ -292,6 +371,32 @@ export default function WhatsAppChatsPage() {
                     return { ...conv, messages: conv.messages.filter(m => m.id !== context.tempId) };
                 }
                 return conv;
+            }));
+        },
+        onComplete: () => setIsSending(false)
+    });
+
+    const { execute: executeSendBroadcastMessage } = useAction(sendBroadcastMessage, {
+        onSuccess: (data, context) => {
+            if (data?.success) {
+                toast.success(`Broadcast delivered to ${data.sentCount} contact${data.sentCount === 1 ? '' : 's'}!`);
+                if (data.failedCount > 0) {
+                    toast.warning(`${data.failedCount} recipient${data.failedCount === 1 ? '' : 's'} failed`);
+                }
+                setBroadcastHistory(prev => ({
+                    ...prev,
+                    [context.segmentKey]: (prev[context.segmentKey] || []).map(m => m.id === context.tempId ? { ...m, status: 'SENT', sentCount: data.sentCount } : m)
+                }));
+                fetchConversations();
+            } else {
+                toast.error("Failed to send broadcast");
+            }
+        },
+        onError: (err, context) => {
+            toast.error(err || "Failed to send broadcast");
+            setBroadcastHistory(prev => ({
+                ...prev,
+                [context.segmentKey]: (prev[context.segmentKey] || []).filter(m => m.id !== context.tempId)
             }));
         },
         onComplete: () => setIsSending(false)
@@ -477,17 +582,55 @@ export default function WhatsAppChatsPage() {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        const textToSend = newMessage.trim();
-        if (!textToSend || !selectedJid) return;
+        if (!newMessage.trim() || !selectedJid || isSending) return;
+
+        const textToSend = newMessage;
+
+        // Handle Broadcast Mode for Group / Category / Tag
+        if (isSegmentChat && activeSegmentData) {
+            if (activeSegmentData.recipients.length === 0) {
+                toast.error(`No contacts found in this ${activeSegmentData.type}. Add contacts first.`);
+                return;
+            }
+
+            const tempId = `temp_bc_${Date.now()}`;
+            const optimisticMsg = {
+                id: tempId,
+                text: textToSend,
+                fromMe: true,
+                timestamp: Math.floor(Date.now() / 1000),
+                status: 'PENDING',
+                recipientCount: activeSegmentData.recipients.length
+            };
+
+            setBroadcastHistory(prev => ({
+                ...prev,
+                [selectedJid]: [...(prev[selectedJid] || []), optimisticMsg]
+            }));
+
+            setNewMessage("");
+            setIsSending(true);
+
+            executeSendBroadcastMessage({
+                workspaceId,
+                segmentType: activeSegmentData.type,
+                segmentId: activeSegmentData.id,
+                segmentName: activeSegmentData.name,
+                recipients: activeSegmentData.recipients.map(r => r.phone),
+                type: 'text',
+                body: textToSend
+            }, { segmentKey: selectedJid, tempId });
+            return;
+        }
 
         const tempId = `temp_${Date.now()}`;
         const optimisticMsg = {
             id: tempId,
-            waId: tempId,
             text: textToSend,
             fromMe: true,
             timestamp: Math.floor(Date.now() / 1000),
             status: 'PENDING',
+            waId: tempId,
             metadata: { type: 'text' }
         };
 
@@ -606,6 +749,50 @@ export default function WhatsAppChatsPage() {
             previewText = previewText.replace(key, val || key);
         });
 
+        // Handle Broadcast Mode Template Sending
+        if (isSegmentChat && activeSegmentData) {
+            if (activeSegmentData.recipients.length === 0) {
+                toast.error(`No contacts found in this ${activeSegmentData.type}`);
+                return;
+            }
+
+            const tempId = `temp_bc_${Date.now()}`;
+            const optimisticMsg = {
+                id: tempId,
+                text: previewText,
+                fromMe: true,
+                timestamp: Math.floor(Date.now() / 1000),
+                status: 'PENDING',
+                metadata: { type: 'template', templateName },
+                recipientCount: activeSegmentData.recipients.length
+            };
+
+            setBroadcastHistory(prev => ({
+                ...prev,
+                [selectedJid]: [...(prev[selectedJid] || []), optimisticMsg]
+            }));
+
+            setIsTemplateDrawerOpen(false);
+            setSelectedTemplateForSend(null);
+            setTemplateVars({});
+            setIsSending(true);
+
+            executeSendBroadcastMessage({
+                workspaceId,
+                segmentType: activeSegmentData.type,
+                segmentId: activeSegmentData.id,
+                segmentName: activeSegmentData.name,
+                recipients: activeSegmentData.recipients.map(r => r.phone),
+                type: 'template',
+                template: {
+                    name: templateName,
+                    language: { code: selectedTemplateForSend.language || 'en_US' },
+                    components
+                }
+            }, { segmentKey: selectedJid, tempId });
+            return;
+        }
+
         const tempId = `temp_${Date.now()}`;
         const optimisticMsg = {
             id: tempId,
@@ -681,6 +868,17 @@ export default function WhatsAppChatsPage() {
         return allContacts.find(c => getPhoneLast10(c.phone) === jidLast10);
     };
 
+    const handleSelectContactChat = (contact) => {
+        const contactLast10 = getPhoneLast10(contact.phone);
+        const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
+        const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
+        const normalizedJid = existingConv
+            ? existingConv.jid
+            : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
+        setSelectedJid(normalizedJid);
+    };
+
+
     const filteredConversations = conversations.filter(c => {
         const matchesSearch = c.jid.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (c.name || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -694,6 +892,9 @@ export default function WhatsAppChatsPage() {
         } else if (activeSegment.startsWith('category:')) {
             const catName = activeSegment.split(':')[1];
             matchesSegment = contact?.category === catName;
+        } else if (activeSegment.startsWith('tag:')) {
+            const tagName = activeSegment.split(':')[1];
+            matchesSegment = contact?.tags?.includes(tagName);
         }
 
         return matchesSearch && matchesSegment;
@@ -710,6 +911,9 @@ export default function WhatsAppChatsPage() {
         } else if (activeSegment.startsWith('category:')) {
             const catName = activeSegment.split(':')[1];
             matchesSegment = contact.category === catName;
+        } else if (activeSegment.startsWith('tag:')) {
+            const tagName = activeSegment.split(':')[1];
+            matchesSegment = contact.tags?.includes(tagName);
         }
 
         return matchesSearch && matchesSegment;
@@ -718,9 +922,8 @@ export default function WhatsAppChatsPage() {
     const handleTabChange = (value) => {
         setActiveTab(value);
 
-        // If switching back to "chats" and the current selectedJid doesn't exist in conversations,
-        // either select the first active conversation or clear the selection
-        if (value === "chats" && selectedJid) {
+        // If switching back to "chats" and the current selectedJid doesn't exist in conversations or isn't a segment,
+        if (value === "chats" && selectedJid && !selectedJid.startsWith('segment:')) {
             const exists = conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
             if (!exists) {
                 if (conversations.length > 0) {
@@ -782,13 +985,14 @@ export default function WhatsAppChatsPage() {
 
             <div className="flex h-full overflow-hidden">
 
-                <div className="w-[320px] md:w-[350px] border-r border-border/50 flex flex-col shrink-0">
+                <div className="w-[320px] md:w-[360px] border-r border-border/50 flex flex-col shrink-0">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col h-full min-w-0">
 
-                        <div className="px-4 h-14 py-2 border-b border-border/50 bg-muted/5">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="chats" className="text-xs h-7">Chats</TabsTrigger>
-                                <TabsTrigger value="contacts" className="text-xs h-7">Contacts</TabsTrigger>
+                        <div className="px-3 h-14 py-2 border-b border-border/50 bg-muted/5 flex items-center">
+                            <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/40 p-0.5 rounded-lg border border-border/40">
+                                <TabsTrigger value="chats" className="text-xs h-7.5 rounded-md font-medium">Chats</TabsTrigger>
+                                <TabsTrigger value="contacts" className="text-xs h-7.5 rounded-md font-medium">Contacts</TabsTrigger>
+                                <TabsTrigger value="segments" className="text-[10.5px] px-1 h-7.5 rounded-md font-medium truncate" title="Group/Category/Tags">Group/Category</TabsTrigger>
                             </TabsList>
                         </div>
 
@@ -804,6 +1008,17 @@ export default function WhatsAppChatsPage() {
                                     >
                                         All Chats
                                     </Badge>
+                                    {activeSegment.startsWith('tag:') && (
+                                        <Badge
+                                            variant="default"
+                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
+                                            onClick={() => setActiveSegment('all')}
+                                        >
+                                            <Tag className="w-2.5 h-2.5" />
+                                            <span>#{activeSegment.split(':')[1]}</span>
+                                            <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
+                                        </Badge>
+                                    )}
                                     {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
                                         <Badge
                                             key={catName}
@@ -958,6 +1173,17 @@ export default function WhatsAppChatsPage() {
                                     >
                                         All Contacts
                                     </Badge>
+                                    {activeSegment.startsWith('tag:') && (
+                                        <Badge
+                                            variant="default"
+                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
+                                            onClick={() => setActiveSegment('all')}
+                                        >
+                                            <Tag className="w-2.5 h-2.5" />
+                                            <span>#{activeSegment.split(':')[1]}</span>
+                                            <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
+                                        </Badge>
+                                    )}
                                     {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
                                         <Badge
                                             key={catName}
@@ -1032,6 +1258,382 @@ export default function WhatsAppChatsPage() {
                                 </ScrollArea>
                             </TabsContent>
 
+                            <TabsContent value="segments" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                                {/* Sub Segment Filter Badges */}
+                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+                                    <div className="flex items-center gap-1">
+                                        {[
+                                            { id: 'all', label: 'All' },
+                                            { id: 'categories', label: `Categories (${uniqueCategories.length})` },
+                                            { id: 'groups', label: `Groups (${groups.length})` },
+                                            { id: 'tags', label: `Tags (${uniqueTags.length})` },
+                                        ].map(tab => (
+                                            <Badge
+                                                key={tab.id}
+                                                variant={segmentViewFilter === tab.id ? 'default' : 'outline'}
+                                                className={`cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2 transition-all ${segmentViewFilter === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                                                    }`}
+                                                onClick={() => setSegmentViewFilter(tab.id)}
+                                            >
+                                                {tab.label}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                    {activeSegment !== 'all' && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground hover:text-destructive shrink-0 gap-0.5"
+                                            onClick={() => setActiveSegment('all')}
+                                            title="Clear active filter"
+                                        >
+                                            <X className="w-2.5 h-2.5" /> Clear
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
+                                    <div className="flex flex-col p-2.5 space-y-3 w-full">
+                                        {/* 1. CATEGORIES SECTION */}
+                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'categories') && (
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5 text-blue-400">
+                                                        <FolderPlus className="w-3.5 h-3.5" />
+                                                        <span>Categories</span>
+                                                    </span>
+                                                    <span className="text-[10px] opacity-70 font-mono">
+                                                        {uniqueCategories.length}
+                                                    </span>
+                                                </div>
+
+                                                {uniqueCategories.length === 0 ? (
+                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                        No categories created yet.
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-1">
+                                                        {uniqueCategories.map(cat => {
+                                                            const catContacts = allContacts.filter(c => c.category === cat.name);
+                                                            const isExpanded = !!expandedSegments[`category:${cat.name}`];
+                                                            const isFilterActive = activeSegment === `category:${cat.name}`;
+                                                            const isSelectedSegment = selectedJid === `segment:category:${cat.name}`;
+
+                                                            return (
+                                                                <div key={cat.name} className={`rounded-lg border transition-all ${
+                                                                    isSelectedSegment 
+                                                                        ? 'border-primary ring-1 ring-primary/40 bg-primary/10' 
+                                                                        : isFilterActive 
+                                                                        ? 'border-primary/50 bg-primary/5' 
+                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                    <div
+                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                        onClick={() => setSelectedJid(`segment:category:${cat.name}`)}
+                                                                    >
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color || '#3b82f6' }} />
+                                                                            <span className="text-xs font-semibold truncate text-foreground">{cat.name}</span>
+                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                                {catContacts.length}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                                                                                    }`}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setActiveSegment(isFilterActive ? 'all' : `category:${cat.name}`);
+                                                                                    setActiveTab('chats');
+                                                                                }}
+                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this category"}
+                                                                            >
+                                                                                <Filter className="w-2.5 h-2.5" />
+                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    toggleSegmentExpand(`category:${cat.name}`);
+                                                                                }}
+                                                                            >
+                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {isExpanded && (
+                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                            {catContacts.length === 0 ? (
+                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this category</p>
+                                                                            ) : (
+                                                                                catContacts.map(contact => {
+                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={contact.id}
+                                                                                            onClick={() => handleSelectContactChat(contact)}
+                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-primary/10 ${isSelected ? 'bg-primary/15 font-semibold text-primary' : 'text-foreground/90'
+                                                                                                }`}
+                                                                                        >
+                                                                                            <div className="flex items-center gap-2 truncate">
+                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                    <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-bold">
+                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                    </AvatarFallback>
+                                                                                                </Avatar>
+                                                                                                <span className="truncate text-xs">{contact.name}</span>
+                                                                                            </div>
+                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                        </div>
+                                                                                    );
+                                                                                })
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* 2. BROADCAST GROUPS SECTION */}
+                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'groups') && (
+                                            <div className="space-y-1.5 pt-1 border-t border-border/20">
+                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5 text-emerald-400">
+                                                        <Users className="w-3.5 h-3.5" />
+                                                        <span>Broadcast Groups</span>
+                                                    </span>
+                                                    <span className="text-[10px] opacity-70 font-mono">
+                                                        {groups.length}
+                                                    </span>
+                                                </div>
+
+                                                {groups.length === 0 ? (
+                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                        No broadcast groups created yet.
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-1">
+                                                        {groups.map(group => {
+                                                            const groupContacts = allContacts.filter(c => c.groups?.some(g => g.id === group.id));
+                                                            const isExpanded = !!expandedSegments[`group:${group.id}`];
+                                                            const isFilterActive = activeSegment === `group:${group.id}`;
+                                                            const isSelectedSegment = selectedJid === `segment:group:${group.id}`;
+
+                                                            return (
+                                                                <div key={group.id} className={`rounded-lg border transition-all ${
+                                                                    isSelectedSegment 
+                                                                        ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-emerald-500/10' 
+                                                                        : isFilterActive 
+                                                                        ? 'border-emerald-500/50 bg-emerald-500/5' 
+                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                    <div
+                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                        onClick={() => setSelectedJid(`segment:group:${group.id}`)}
+                                                                    >
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                                                                            <span className="text-xs font-semibold truncate text-foreground">{group.name}</span>
+                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                                {groupContacts.length}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-emerald-500 text-white' : 'text-muted-foreground hover:text-foreground'
+                                                                                    }`}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setActiveSegment(isFilterActive ? 'all' : `group:${group.id}`);
+                                                                                    setActiveTab('chats');
+                                                                                }}
+                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this group"}
+                                                                            >
+                                                                                <Filter className="w-2.5 h-2.5" />
+                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    toggleSegmentExpand(`group:${group.id}`);
+                                                                                }}
+                                                                            >
+                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {isExpanded && (
+                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                            {groupContacts.length === 0 ? (
+                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this group</p>
+                                                                            ) : (
+                                                                                groupContacts.map(contact => {
+                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={contact.id}
+                                                                                            onClick={() => handleSelectContactChat(contact)}
+                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-emerald-500/10 ${isSelected ? 'bg-emerald-500/15 font-semibold text-emerald-600' : 'text-foreground/90'
+                                                                                                }`}
+                                                                                        >
+                                                                                            <div className="flex items-center gap-2 truncate">
+                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                    <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-500 font-bold">
+                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                    </AvatarFallback>
+                                                                                                </Avatar>
+                                                                                                <span className="truncate text-xs">{contact.name}</span>
+                                                                                            </div>
+                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                        </div>
+                                                                                    );
+                                                                                })
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* 3. TAGS & BADGES SECTION */}
+                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'tags') && (
+                                            <div className="space-y-1.5 pt-1 border-t border-border/20">
+                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                    <span className="flex items-center gap-1.5 text-amber-400">
+                                                        <Tag className="w-3.5 h-3.5" />
+                                                        <span>Tags & Badges</span>
+                                                    </span>
+                                                    <span className="text-[10px] opacity-70 font-mono">
+                                                        {uniqueTags.length}
+                                                    </span>
+                                                </div>
+
+                                                {uniqueTags.length === 0 ? (
+                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                        No tags assigned to contacts yet.
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-1">
+                                                        {uniqueTags.map(tagName => {
+                                                            const taggedContacts = allContacts.filter(c => c.tags?.includes(tagName));
+                                                            const isExpanded = !!expandedSegments[`tag:${tagName}`];
+                                                            const isFilterActive = activeSegment === `tag:${tagName}`;
+                                                            const isSelectedSegment = selectedJid === `segment:tag:${tagName}`;
+
+                                                            return (
+                                                                <div key={tagName} className={`rounded-lg border transition-all ${
+                                                                    isSelectedSegment 
+                                                                        ? 'border-amber-500 ring-1 ring-amber-500/40 bg-amber-500/10' 
+                                                                        : isFilterActive 
+                                                                        ? 'border-amber-500/50 bg-amber-500/5' 
+                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                    <div
+                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                        onClick={() => setSelectedJid(`segment:tag:${tagName}`)}
+                                                                    >
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <Badge variant="outline" className="text-[10px] font-semibold border-amber-500/30 text-amber-500 bg-amber-500/10 px-1.5 py-0 h-4">
+                                                                                #{tagName}
+                                                                            </Badge>
+                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                                {taggedContacts.length}
+                                                                            </Badge>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1">
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-amber-500 text-white' : 'text-muted-foreground hover:text-foreground'
+                                                                                    }`}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setActiveSegment(isFilterActive ? 'all' : `tag:${tagName}`);
+                                                                                    setActiveTab('chats');
+                                                                                }}
+                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this tag"}
+                                                                            >
+                                                                                <Filter className="w-2.5 h-2.5" />
+                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="ghost"
+                                                                                size="sm"
+                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    toggleSegmentExpand(`tag:${tagName}`);
+                                                                                }}
+                                                                            >
+                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                            </Button>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {isExpanded && (
+                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                            {taggedContacts.length === 0 ? (
+                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts with this tag</p>
+                                                                            ) : (
+                                                                                taggedContacts.map(contact => {
+                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={contact.id}
+                                                                                            onClick={() => handleSelectContactChat(contact)}
+                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-amber-500/10 ${isSelected ? 'bg-amber-500/15 font-semibold text-amber-600' : 'text-foreground/90'
+                                                                                                }`}
+                                                                                        >
+                                                                                            <div className="flex items-center gap-2 truncate">
+                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                    <AvatarFallback className="text-[8px] bg-amber-500/10 text-amber-500 font-bold">
+                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                    </AvatarFallback>
+                                                                                                </Avatar>
+                                                                                                <span className="truncate text-xs">{contact.name}</span>
+                                                                                            </div>
+                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                        </div>
+                                                                                    );
+                                                                                })
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </ScrollArea>
+                            </TabsContent>
+
                         </ScrollArea>
                     </Tabs>
                 </div>
@@ -1040,235 +1642,365 @@ export default function WhatsAppChatsPage() {
                     {selectedJid ? (
                         <>
                             {/* Chat Header */}
-                            <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <Button variant="ghost" size="icon" className="md:hidden">
-                                        <ArrowLeft className="w-4 h-4" />
-                                    </Button>
-                                    <Avatar className="w-10 h-10 border border-border/50">
-                                        <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold">
-                                            {(activeName || '??').substring(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h2 className="text-sm font-bold">{activeName}</h2>
-                                            {getContactForJid(selectedJid)?.category && (
-                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-medium">
-                                                    {getContactForJid(selectedJid).category}
+                            {isSegmentChat ? (
+                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedJid(null)}>
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </Button>
+                                        <Avatar className="w-10 h-10 border border-border/50 shadow-xs">
+                                            <AvatarFallback className={`font-bold ${
+                                                activeSegmentData?.type === 'group' 
+                                                    ? 'bg-emerald-500/15 text-emerald-500' 
+                                                    : activeSegmentData?.type === 'category' 
+                                                    ? 'bg-blue-500/15 text-blue-500' 
+                                                    : 'bg-amber-500/15 text-amber-500'
+                                            }`}>
+                                                {activeSegmentData?.type === 'group' ? <Users className="w-5 h-5" /> : activeSegmentData?.type === 'category' ? <FolderPlus className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-sm font-bold">{activeSegmentData?.name}</h2>
+                                                <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-primary/30 text-primary bg-primary/10 font-semibold uppercase tracking-wider">
+                                                    Broadcast Channel
                                                 </Badge>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
-                                                {selectedChat ? "Active Conversation" : "New Chat"}
-                                            </p>
-                                            {getContactForJid(selectedJid)?.groups?.map(g => (
-                                                <Badge key={g.id} variant="secondary" className="text-[8px] px-1 py-0 h-3.5 opacity-80 bg-muted/60">
-                                                    {g.name}
-                                                </Badge>
-                                            ))}
-                                            {getContactForJid(selectedJid)?.tags?.slice(0, 2).map(t => (
-                                                <Badge key={t} variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal text-muted-foreground">
-                                                    #{t}
-                                                </Badge>
-                                            ))}
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    {activeSegmentData?.recipients?.length || 0} recipient{activeSegmentData?.recipients?.length === 1 ? '' : 's'}
+                                                </p>
+                                                <span className="text-muted-foreground/40">•</span>
+                                                <span className="text-[10px] text-emerald-500 font-medium flex items-center gap-1">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                    Live Broadcast
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className={`h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-lg transition-all ${getContactForJid(selectedJid)
-                                            ? "border-border/60 hover:bg-muted/50 text-foreground"
-                                            : "border-emerald-500/30 bg-emerald-500/10  hover:bg-emerald-500/20 text-foreground"
-                                            }`}
-                                        onClick={() => {
-                                            setManageContactJid(selectedJid);
-                                            setIsManageContactOpen(true);
-                                        }}
-                                        title={getContactForJid(selectedJid) ? "Manage Contact, Groups & Tags" : "Add user to Contacts"}
-                                    >
-                                        {getContactForJid(selectedJid) ? (
-                                            <>
-                                                <Tag className="w-3.5 h-3.5 text-amber-400" />
-                                                <span className="hidden sm:inline">Tags & Groups</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <UserPlus className="w-3.5 h-3.5" />
-                                                <span>Add Contact</span>
-                                            </>
-                                        )}
-                                    </Button>
 
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="rounded-full h-8 px-3 gap-1.5 text-xs opacity-80 hover:opacity-100 hover:bg-purple-100 hover:text-purple-700 transition-colors"
-                                        onClick={() => selectedJid && handleAssignConversation(selectedJid)}
-                                        title="Share this conversation"
-                                    >
-                                        <Share2 className="w-3.5 h-3.5" />
-                                        <span className="hidden sm:inline">Share</span>
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                        <Video className="w-4 h-4" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                        <Phone className="w-4 h-4" />
-                                    </Button>
-
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
-                                                <MoreVertical className="w-4 h-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="w-52">
-                                            <DropdownMenuItem
-                                                className="gap-2 cursor-pointer text-emerald-500 focus:text-emerald-400 focus:bg-emerald-500/10 font-medium"
-                                                onClick={() => {
-                                                    setManageContactJid(selectedJid);
-                                                    setIsManageContactOpen(true);
-                                                }}
-                                            >
-                                                <UserPlus size={14} />
-                                                {getContactForJid(selectedJid) ? "Edit Contact, Tags & Groups" : "Add to Contacts"}
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="gap-2 cursor-pointer"
-                                                onClick={() => {
-                                                    setViewContactJid(selectedJid);
-                                                    setIsViewContactOpen(true);
-                                                }}
-                                            >
-                                                <Eye size={14} /> View Contact Details
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                className="gap-2 cursor-pointer text-purple-400 focus:text-purple-300 focus:bg-purple-500/10"
-                                                onClick={() => handleAssignConversation(selectedJid)}
-                                            >
-                                                <Share2 size={14} /> Share / Delegate
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem
-                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                onClick={(e) => handleDeleteConversation(e, selectedJid)}
-                                            >
-                                                <Trash2 size={14} /> Delete Conversation
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 px-3 gap-1.5 text-xs font-medium rounded-lg border-border/60 hover:bg-muted/50 text-foreground"
+                                            onClick={() => setIsRecipientsDialogOpen(true)}
+                                            title="View all recipients in this segment"
+                                        >
+                                            <Users className="w-3.5 h-3.5 text-primary" />
+                                            <span className="hidden sm:inline">Recipients ({activeSegmentData?.recipients?.length || 0})</span>
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <Button variant="ghost" size="icon" className="md:hidden">
+                                            <ArrowLeft className="w-4 h-4" />
+                                        </Button>
+                                        <Avatar className="w-10 h-10 border border-border/50">
+                                            <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold">
+                                                {(activeName || '??').substring(0, 2).toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-sm font-bold">{activeName}</h2>
+                                                {getContactForJid(selectedJid)?.category && (
+                                                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-medium">
+                                                        {getContactForJid(selectedJid).category}
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
+                                                    {selectedChat ? "Active Conversation" : "New Chat"}
+                                                </p>
+                                                {getContactForJid(selectedJid)?.groups?.map(g => (
+                                                    <Badge key={g.id} variant="secondary" className="text-[8px] px-1 py-0 h-3.5 opacity-80 bg-muted/60">
+                                                        {g.name}
+                                                    </Badge>
+                                                ))}
+                                                {getContactForJid(selectedJid)?.tags?.slice(0, 2).map(t => (
+                                                    <Badge key={t} variant="outline" className="text-[8px] px-1 py-0 h-3.5 font-normal text-muted-foreground">
+                                                        #{t}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className={`h-8 px-2.5 gap-1.5 text-xs font-semibold rounded-lg transition-all text-foreground hover:text-foreground ${getContactForJid(selectedJid)
+                                                ? "border-border/60 hover:bg-muted/50"
+                                                : "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20"
+                                                }`}
+                                            onClick={() => {
+                                                setManageContactJid(selectedJid);
+                                                setIsManageContactOpen(true);
+                                            }}
+                                            title={getContactForJid(selectedJid) ? "Manage Contact, Groups & Tags" : "Add user to Contacts"}
+                                        >
+                                            {getContactForJid(selectedJid) ? (
+                                                <>
+                                                    <Tag className="w-3.5 h-3.5 text-amber-400" />
+                                                    <span className="hidden sm:inline text-foreground">Tags & Groups</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <UserPlus className="w-3.5 h-3.5" />
+                                                    <span className="text-foreground">Add Contact</span>
+                                                </>
+                                            )}
+                                        </Button>
+
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="rounded-full h-8 px-3 gap-1.5 text-xs opacity-80 hover:opacity-100 hover:bg-purple-100 hover:text-purple-700 transition-colors"
+                                            onClick={() => selectedJid && handleAssignConversation(selectedJid)}
+                                            title="Share this conversation"
+                                        >
+                                            <Share2 className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">Share</span>
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                            <Video className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                            <Phone className="w-4 h-4" />
+                                        </Button>
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon" className="rounded-full w-9 h-9 opacity-60 hover:opacity-100">
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-52">
+                                                <DropdownMenuItem
+                                                    className="gap-2 cursor-pointer text-emerald-500 focus:text-emerald-400 focus:bg-emerald-500/10 font-medium"
+                                                    onClick={() => {
+                                                        setManageContactJid(selectedJid);
+                                                        setIsManageContactOpen(true);
+                                                    }}
+                                                >
+                                                    <UserPlus size={14} />
+                                                    {getContactForJid(selectedJid) ? "Edit Contact, Tags & Groups" : "Add to Contacts"}
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="gap-2 cursor-pointer"
+                                                    onClick={() => {
+                                                        setViewContactJid(selectedJid);
+                                                        setIsViewContactOpen(true);
+                                                    }}
+                                                >
+                                                    <Eye size={14} /> View Contact Details
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="gap-2 cursor-pointer text-purple-400 focus:text-purple-300 focus:bg-purple-500/10"
+                                                    onClick={() => handleAssignConversation(selectedJid)}
+                                                >
+                                                    <Share2 size={14} /> Share / Delegate
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                    onClick={(e) => handleDeleteConversation(e, selectedJid)}
+                                                >
+                                                    <Trash2 size={14} /> Delete Conversation
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Chat Messages */}
-                            <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
-                                {/* WhatsApp-style Background Pattern Overlay */}
-                                <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+                            {isSegmentChat ? (
+                                <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
+                                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
 
-                                <div className="flex flex-col gap-3 relative z-10 pb-12">
-                                    {!selectedChat || selectedChat.messages.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center py-20 opacity-40">
-                                            <MessageSquare className="w-12 h-12 mb-4" />
-                                            <p className="text-sm font-medium italic">Starting a new conversation...</p>
-                                        </div>
-                                    ) : (
-                                        selectedChat.messages.map((msg, i) => {
-                                            const isTemplate = msg.metadata?.type === 'template' ||
-                                                msg.metadata?.type === 'TEMPLATE' ||
-                                                Boolean(msg.metadata?.templateName) ||
-                                                Boolean(msg.metadata?.originalPayload?.template?.name) ||
-                                                (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
-                                            const type = msg.metadata?.type?.toLowerCase() || (isTemplate ? 'template' : 'text');
-                                            const isInteractiveOrProduct = type === 'interactive' || type === 'order' || type === 'product' || type === 'catalog_message' ||
-                                                (typeof msg.text === 'string' && (msg.text.startsWith('[Product:') || msg.text.startsWith('[Catalog]') || msg.text.startsWith('🛒 Order')));
-                                            const isMedia = !isTemplate && (isInteractiveOrProduct || ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'order', 'unsupported'].includes(type));
-                                            const templateName = msg.metadata?.templateName ||
-                                                msg.metadata?.originalPayload?.template?.name ||
-                                                (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
-                                                    ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
-                                                    : null);
-                                            const templateDef = (isTemplate && templateName)
-                                                ? templates.find(t => t.templateName === templateName || t.name === templateName)
-                                                : null;
-
-                                            return (
-                                                <div
-                                                    key={msg.id}
-                                                    className={`flex w-full mb-4 ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
-                                                >
-                                                    <div className={`relative group max-w-[85%] ${msg.fromMe ? 'mr-2' : 'ml-2'}`}>
-                                                        {isTemplate ? (
-                                                            <div
-                                                                onClick={() => handleTemplateClick(msg)}
-                                                                className="cursor-pointer transition-transform active:scale-[0.98]"
+                                    <div className="flex flex-col gap-4 relative z-10 pb-12 max-w-3xl mx-auto">
+                                        {/* Broadcast Information Card */}
+                                        <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-xs flex items-start gap-3.5 shadow-xs">
+                                            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                                <Radio className="w-4 h-4 text-primary animate-pulse" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-xs font-bold text-foreground mb-0.5">
+                                                    Broadcast Channel • {activeSegmentData?.name} ({activeSegmentData?.recipients?.length || 0} Members)
+                                                </h4>
+                                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                    Messages and templates sent here will be delivered simultaneously to all {activeSegmentData?.recipients?.length || 0} members. Each contact receives a personal direct message from your WhatsApp number.
+                                                </p>
+                                                {activeSegmentData?.recipients?.length > 0 && (
+                                                    <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                                                        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-tight mr-1">Recipients:</span>
+                                                        {activeSegmentData.recipients.slice(0, 4).map(r => (
+                                                            <Badge key={r.id} variant="secondary" className="text-[9px] px-1.5 py-0 h-4 bg-background/60 border border-border/40">
+                                                                {r.name} ({r.phone})
+                                                            </Badge>
+                                                        ))}
+                                                        {activeSegmentData.recipients.length > 4 && (
+                                                            <Badge
+                                                                variant="outline"
+                                                                className="text-[9px] px-1.5 py-0 h-4 cursor-pointer hover:bg-muted font-mono"
+                                                                onClick={() => setIsRecipientsDialogOpen(true)}
                                                             >
-                                                                <TemplateMessage
-                                                                    msg={msg}
-                                                                    templateDefinition={templateDef}
-                                                                />
-                                                            </div>
-                                                        ) : isMedia ? (
-                                                            <div className={`relative px-1 py-1 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
-                                                                ? 'bg-primary/5 border border-primary/20 rounded-tr-none'
-                                                                : 'bg-card border border-border/50 rounded-tl-none'
-                                                                }`}>
-                                                                <MediaBubble msg={msg} workspaceId={workspaceId} />
-                                                            </div>
-                                                        ) : (
-                                                            <div
-                                                                className={`relative px-4 py-2.5 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
-                                                                    ? 'bg-primary text-primary-foreground rounded-tr-none'
-                                                                    : 'bg-card border border-border/50 rounded-tl-none'
-                                                                    }`}
-                                                            >
-                                                                <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
-
-                                                                {/* Source Tail (Bubble Hook) for regular text */}
-                                                                {msg.fromMe ? (
-                                                                    <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
-                                                                ) : (
-                                                                    <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
-                                                                )}
-                                                            </div>
+                                                                +{activeSegmentData.recipients.length - 4} more
+                                                            </Badge>
                                                         )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
-                                                        {/* Hover Action: Forward */}
-                                                        <div
-                                                            className={`absolute top-1 ${msg.fromMe ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1`}
-                                                        >
-                                                            <Button
-                                                                type="button"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-6 w-6 rounded-full bg-card/90 border border-border/60 shadow-xs hover:bg-muted text-muted-foreground hover:text-primary transition-all"
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setForwardingMsg(msg);
-                                                                    setIsForwardOpen(true);
-                                                                }}
-                                                                title="Forward message"
-                                                            >
-                                                                <Forward className="w-3 h-3" />
-                                                            </Button>
+                                        {/* Broadcast Messages Feed */}
+                                        {(!broadcastHistory[selectedJid] || broadcastHistory[selectedJid].length === 0) ? (
+                                            <div className="flex flex-col items-center justify-center py-16 text-center opacity-70">
+                                                <div className="w-12 h-12 rounded-full bg-muted/40 flex items-center justify-center mb-3">
+                                                    <Megaphone className="w-6 h-6 text-muted-foreground" />
+                                                </div>
+                                                <h3 className="text-xs font-bold mb-1">No Broadcast Messages Sent Yet</h3>
+                                                <p className="text-[11px] text-muted-foreground max-w-xs leading-relaxed">
+                                                    Type a message or select a WhatsApp template below to broadcast to all {activeSegmentData?.recipients?.length || 0} members.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            broadcastHistory[selectedJid].map((msg) => (
+                                                <div key={msg.id} className="flex justify-end w-full">
+                                                    <div className="max-w-[85%] relative bg-primary text-primary-foreground p-3.5 rounded-2xl rounded-tr-none shadow-sm space-y-1.5">
+                                                        <div className="flex items-center justify-between gap-4 text-[10px] opacity-80 border-b border-primary-foreground/20 pb-1">
+                                                            <span className="font-semibold flex items-center gap-1">
+                                                                <Radio className="w-2.5 h-2.5" /> Broadcast Message
+                                                            </span>
+                                                            <span>Sent to {msg.recipientCount || activeSegmentData?.recipients?.length} members</span>
                                                         </div>
-
-                                                        {/* Common Meta Info (Time & Status) */}
-                                                        <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
-                                                            {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
-                                                            {msg.fromMe && <MessageStatus status={msg.status} />}
+                                                        <p className="text-xs whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                                        <div className="flex items-center justify-end gap-1.5 text-[9px] opacity-75 pt-0.5">
+                                                            <span>{formatDistanceToNow(new Date(msg.timestamp * 1000))} ago</span>
+                                                            {msg.status === 'PENDING' ? (
+                                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                            ) : (
+                                                                <CheckCheck className="w-3 h-3 text-emerald-300" />
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
-                                            );
-                                        })
-                                    )}
-                                    <div ref={scrollRef} className="h-8 w-full shrink-0" />
-                                </div>
-                            </ScrollArea>
+                                            ))
+                                        )}
+                                        <div ref={scrollRef} className="h-4 w-full shrink-0" />
+                                    </div>
+                                </ScrollArea>
+                            ) : (
+                                <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
+                                    {/* WhatsApp-style Background Pattern Overlay */}
+                                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
+
+                                    <div className="flex flex-col gap-3 relative z-10 pb-12">
+                                        {!selectedChat || selectedChat.messages.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center py-20 opacity-40">
+                                                <MessageSquare className="w-12 h-12 mb-4" />
+                                                <p className="text-sm font-medium italic">Starting a new conversation...</p>
+                                            </div>
+                                        ) : (
+                                            selectedChat.messages.map((msg, i) => {
+                                                const isTemplate = msg.metadata?.type === 'template' ||
+                                                    msg.metadata?.type === 'TEMPLATE' ||
+                                                    Boolean(msg.metadata?.templateName) ||
+                                                    Boolean(msg.metadata?.originalPayload?.template?.name) ||
+                                                    (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
+                                                const type = msg.metadata?.type?.toLowerCase() || (isTemplate ? 'template' : 'text');
+                                                const isInteractiveOrProduct = type === 'interactive' || type === 'order' || type === 'product' || type === 'catalog_message' ||
+                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Product:') || msg.text.startsWith('[Catalog]') || msg.text.startsWith('🛒 Order')));
+                                                const isMedia = !isTemplate && (isInteractiveOrProduct || ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'order', 'unsupported'].includes(type));
+                                                const templateName = msg.metadata?.templateName ||
+                                                    msg.metadata?.originalPayload?.template?.name ||
+                                                    (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
+                                                        ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
+                                                        : null);
+                                                const templateDef = (isTemplate && templateName)
+                                                    ? templates.find(t => t.templateName === templateName || t.name === templateName)
+                                                    : null;
+
+                                                return (
+                                                    <div
+                                                        key={msg.id}
+                                                        className={`flex w-full mb-4 ${msg.fromMe ? 'justify-end' : 'justify-start'}`}
+                                                    >
+                                                        <div className={`relative group max-w-[85%] ${msg.fromMe ? 'mr-2' : 'ml-2'}`}>
+                                                            {isTemplate ? (
+                                                                <div
+                                                                    onClick={() => handleTemplateClick(msg)}
+                                                                    className="cursor-pointer transition-transform active:scale-[0.98]"
+                                                                >
+                                                                    <TemplateMessage
+                                                                        msg={msg}
+                                                                        templateDefinition={templateDef}
+                                                                    />
+                                                                </div>
+                                                            ) : isMedia ? (
+                                                                <div className={`relative px-1 py-1 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
+                                                                    ? 'bg-primary/5 border border-primary/20 rounded-tr-none'
+                                                                    : 'bg-card border border-border/50 rounded-tl-none'
+                                                                    }`}>
+                                                                    <MediaBubble msg={msg} workspaceId={workspaceId} />
+                                                                </div>
+                                                            ) : (
+                                                                <div
+                                                                    className={`relative px-4 py-2.5 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
+                                                                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                                                                        : 'bg-card border border-border/50 rounded-tl-none'
+                                                                        }`}
+                                                                >
+                                                                    <p className="leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
+
+                                                                    {/* Source Tail (Bubble Hook) for regular text */}
+                                                                    {msg.fromMe ? (
+                                                                        <div className="absolute -right-[6px] top-0 w-0 h-0 border-t-8 border-t-primary border-r-8 border-r-transparent" />
+                                                                    ) : (
+                                                                        <div className="absolute -left-[6px] top-0 w-0 h-0 border-t-8 border-t-card border-l-8 border-l-transparent" />
+                                                                    )}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Hover Action: Forward */}
+                                                            <div
+                                                                className={`absolute top-1 ${msg.fromMe ? '-left-8' : '-right-8'} opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center gap-1`}
+                                                            >
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 rounded-full bg-card/90 border border-border/60 shadow-xs hover:bg-muted text-muted-foreground hover:text-primary transition-all"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setForwardingMsg(msg);
+                                                                        setIsForwardOpen(true);
+                                                                    }}
+                                                                    title="Forward message"
+                                                                >
+                                                                    <Forward className="w-3 h-3" />
+                                                                </Button>
+                                                            </div>
+
+                                                            {/* Common Meta Info (Time & Status) */}
+                                                            <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
+                                                                {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
+                                                                {msg.fromMe && <MessageStatus status={msg.status} />}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                        <div ref={scrollRef} className="h-8 w-full shrink-0" />
+                                    </div>
+                                </ScrollArea>
+                            )}
 
                             {/* Chat Input */}
                             <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3">
@@ -1316,14 +2048,14 @@ export default function WhatsAppChatsPage() {
                                         <div className="flex-1 relative">
                                             <Input
                                                 className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20 w-full"
-                                                placeholder="Type a message..."
+                                                placeholder={isSegmentChat ? `Broadcast to all ${activeSegmentData?.recipients?.length || 0} members of ${activeSegmentData?.name || 'group'}...` : "Type a message..."}
                                                 value={newMessage}
                                                 onChange={(e) => setNewMessage(e.target.value)}
                                             />
                                             <Button
                                                 type="button"
                                                 onClick={handleGetAiSuggestions}
-                                                disabled={isAiLoading || !selectedChat}
+                                                disabled={isAiLoading || (!selectedChat && !isSegmentChat)}
                                                 variant="ghost"
                                                 size="icon"
                                                 className="absolute right-1 top-1 w-8 h-8 rounded-full text-primary hover:bg-primary/10"
@@ -1335,6 +2067,7 @@ export default function WhatsAppChatsPage() {
                                             type="submit"
                                             disabled={!newMessage.trim() || isSending}
                                             className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
+                                            title={isSegmentChat ? `Broadcast message to ${activeSegmentData?.recipients?.length || 0} members` : "Send message"}
                                         >
                                             {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
                                         </Button>
@@ -1735,6 +2468,71 @@ export default function WhatsAppChatsPage() {
                 }}
                 isLoading={isForwarding}
             />
+            {/* Segment Recipients Dialog */}
+            <Dialog open={isRecipientsDialogOpen} onOpenChange={setIsRecipientsDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-base">
+                            <Users className="w-4 h-4 text-primary" />
+                            <span>{activeSegmentData?.name} Recipients ({activeSegmentData?.recipients?.length || 0})</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-xs">
+                            Contacts who will receive messages sent in this {activeSegmentData?.type}.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-2">
+                        <div className="relative">
+                            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Search recipients by name or phone..."
+                                className="h-8 pl-8 text-xs bg-muted/20"
+                                value={recipientSearchTerm}
+                                onChange={(e) => setRecipientSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <ScrollArea className="h-64 rounded-lg border border-border/40 p-2">
+                            {(!activeSegmentData?.recipients || activeSegmentData.recipients.length === 0) ? (
+                                <p className="text-xs text-muted-foreground text-center py-8">No contacts found in this {activeSegmentData?.type}.</p>
+                            ) : (
+                                <div className="space-y-1">
+                                    {activeSegmentData.recipients
+                                        .filter(r => (r.name || '').toLowerCase().includes(recipientSearchTerm.toLowerCase()) || (r.phone || '').includes(recipientSearchTerm))
+                                        .map(r => (
+                                            <div key={r.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/40 transition-colors text-xs">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <Avatar className="w-7 h-7 border border-border/40">
+                                                        <AvatarFallback className="text-[9px] bg-primary/10 text-primary font-bold">
+                                                            {(r.name || r.phone).substring(0, 2).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="min-w-0">
+                                                        <p className="font-semibold truncate text-xs">{r.name}</p>
+                                                        <p className="text-[10px] text-muted-foreground font-mono">{r.phone}</p>
+                                                    </div>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-6 px-2 text-[10px] gap-1 shrink-0"
+                                                    onClick={() => {
+                                                        handleSelectContactChat(r);
+                                                        setIsRecipientsDialogOpen(false);
+                                                    }}
+                                                >
+                                                    <MessageSquare className="w-2.5 h-2.5" />
+                                                    <span>Chat 1-on-1</span>
+                                                </Button>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            )}
+                        </ScrollArea>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

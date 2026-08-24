@@ -4,6 +4,8 @@ import { db as prisma } from "@/lib/db";
 const DEFAULT_BRANDING = {
     primaryColor: "#3b82f6",
     logoUrl: "",
+    logoLightUrl: "",
+    logoDarkUrl: "",
     appName: "Devlomatix",
     appDescription: "Your Productivity Platform",
 };

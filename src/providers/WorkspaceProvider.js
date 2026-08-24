@@ -41,6 +41,8 @@ export const WorkspaceProvider = ({ children }) => {
     const DEFAULT_BRANDING = {
         primaryColor: "#3b82f6",
         logoUrl: "",
+        logoLightUrl: "",
+        logoDarkUrl: "",
         appName: "Devlomatix",
         appDescription: "Your Productivity Platform",
         workspaceUrl: "http://localhost:3000"

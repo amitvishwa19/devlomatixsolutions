@@ -16,13 +16,23 @@ export function AppLogo({ size = 130, width, height, link = '/', className, bord
     const [logo, setLogo] = useState(lightLogo)
 
     useEffect(() => {
-        // Priority 1: Custom Logo from settings
+        // Priority 1: Theme-specific custom logo from settings
+        if (theme === 'dark' && (settings?.branding?.logoDarkUrl || settings?.branding?.darkLogoUrl)) {
+            setLogo(settings.branding.logoDarkUrl || settings.branding.darkLogoUrl)
+            return
+        }
+        if (theme === 'light' && (settings?.branding?.logoLightUrl || settings?.branding?.lightLogoUrl)) {
+            setLogo(settings.branding.logoLightUrl || settings.branding.lightLogoUrl)
+            return
+        }
+
+        // Priority 2: Generic custom logo from settings
         if (settings?.branding?.logoUrl) {
             setLogo(settings.branding.logoUrl)
             return
         }
 
-        // Priority 2: Hardcoded theme-based logo
+        // Priority 3: Hardcoded theme-based logo
         theme === 'dark' ? setLogo(darkLogo) : setLogo(lightLogo)
 
     }, [theme, settings])

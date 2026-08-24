@@ -26,7 +26,10 @@ import {
     Github,
     Eye,
     Check,
-    RotateCcw
+    RotateCcw,
+    Sun,
+    Moon,
+    Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -45,8 +48,10 @@ const COLOR_PRESETS = [
 
 export const GeneralSettings = () => {
     const { settings, updateSettings, saving } = useSettings();
-    const fileInputRef = useRef(null);
-    const [uploading, setUploading] = useState(false);
+    const lightFileInputRef = useRef(null);
+    const darkFileInputRef = useRef(null);
+    const [uploadingMode, setUploadingMode] = useState(null); // 'light' | 'dark' | null
+    const [previewTheme, setPreviewTheme] = useState('dark');
 
     const [localGeneral, setLocalGeneral] = useState({
         name: '',
@@ -57,6 +62,8 @@ export const GeneralSettings = () => {
     const [localBranding, setLocalBranding] = useState({
         primaryColor: '#3b82f6',
         logoUrl: '',
+        logoLightUrl: '',
+        logoDarkUrl: '',
         appName: '',
         appDescription: '',
         socialLinks: {
@@ -81,6 +88,8 @@ export const GeneralSettings = () => {
             setLocalBranding({
                 primaryColor: settings.branding.primaryColor || '#3b82f6',
                 logoUrl: settings.branding.logoUrl || '',
+                logoLightUrl: settings.branding.logoLightUrl || settings.branding.lightLogoUrl || '',
+                logoDarkUrl: settings.branding.logoDarkUrl || settings.branding.darkLogoUrl || '',
                 appName: settings.branding.appName || '',
                 appDescription: settings.branding.appDescription || '',
                 socialLinks: settings.branding.socialLinks || {
@@ -107,6 +116,8 @@ export const GeneralSettings = () => {
             localBranding.appName !== (settings?.branding?.appName || '') ||
             localBranding.appDescription !== (settings?.branding?.appDescription || '') ||
             localBranding.logoUrl !== (settings?.branding?.logoUrl || '') ||
+            localBranding.logoLightUrl !== (settings?.branding?.logoLightUrl || settings?.branding?.lightLogoUrl || '') ||
+            localBranding.logoDarkUrl !== (settings?.branding?.logoDarkUrl || settings?.branding?.darkLogoUrl || '') ||
             JSON.stringify(localBranding.socialLinks) !== JSON.stringify(settings?.branding?.socialLinks || {});
 
         return generalChanged || brandingChanged;
@@ -132,6 +143,8 @@ export const GeneralSettings = () => {
             setLocalBranding({
                 primaryColor: settings.branding.primaryColor || '#3b82f6',
                 logoUrl: settings.branding.logoUrl || '',
+                logoLightUrl: settings.branding.logoLightUrl || settings.branding.lightLogoUrl || '',
+                logoDarkUrl: settings.branding.logoDarkUrl || settings.branding.darkLogoUrl || '',
                 appName: settings.branding.appName || '',
                 appDescription: settings.branding.appDescription || '',
                 socialLinks: settings.branding.socialLinks || {}
@@ -152,8 +165,7 @@ export const GeneralSettings = () => {
         }));
     };
 
-    const handleLogoUpload = async (e) => {
-        const file = e.target.files?.[0];
+    const handleLogoUpload = async (file, mode = 'light') => {
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
@@ -164,9 +176,9 @@ export const GeneralSettings = () => {
         }
 
         try {
-            setUploading(true);
+            setUploadingMode(mode);
             const fileExt = file.name.split('.').pop();
-            const fileName = `logo-${Date.now()}.${fileExt}`;
+            const fileName = `logo-${mode}-${Date.now()}.${fileExt}`;
             const filePath = `branding/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
@@ -179,20 +191,39 @@ export const GeneralSettings = () => {
                 .from('system')
                 .getPublicUrl(filePath);
 
-            const updatedBranding = { ...localBranding, logoUrl: publicUrl };
+            const updatedBranding = {
+                ...localBranding,
+                ...(mode === 'dark' ? { logoDarkUrl: publicUrl } : { logoLightUrl: publicUrl }),
+                logoUrl: mode === 'light' ? publicUrl : (localBranding.logoLightUrl || publicUrl)
+            };
             setLocalBranding(updatedBranding);
 
             updateSettings({
                 branding: updatedBranding
             });
 
-            toast.success("App logo updated successfully");
+            toast.success(`${mode === 'dark' ? 'Dark' : 'Light'} mode logo updated successfully`);
         } catch (error) {
             console.error("Logo upload error:", error);
-            toast.error("Failed to upload logo");
+            toast.error(`Failed to upload ${mode} mode logo`);
         } finally {
-            setUploading(false);
+            setUploadingMode(null);
         }
+    };
+
+    const handleRemoveLogo = (mode = 'light') => {
+        const updatedBranding = {
+            ...localBranding,
+            ...(mode === 'dark' ? { logoDarkUrl: '' } : { logoLightUrl: '' })
+        };
+        if (mode === 'light') {
+            updatedBranding.logoUrl = updatedBranding.logoDarkUrl || '';
+        } else if (mode === 'dark' && !updatedBranding.logoLightUrl) {
+            updatedBranding.logoUrl = '';
+        }
+        setLocalBranding(updatedBranding);
+        updateSettings({ branding: updatedBranding });
+        toast.info(`${mode === 'dark' ? 'Dark' : 'Light'} mode logo removed`);
     };
 
     const socialPlatforms = [
@@ -206,6 +237,10 @@ export const GeneralSettings = () => {
 
     const activeSocialList = socialPlatforms.filter(p => localBranding.socialLinks?.[p.id]?.active);
 
+    const previewLogo = previewTheme === 'dark'
+        ? (localBranding.logoDarkUrl || localBranding.logoUrl || localBranding.logoLightUrl)
+        : (localBranding.logoLightUrl || localBranding.logoUrl || localBranding.logoDarkUrl);
+
     return (
         <div className="space-y-3 relative pb-8">
             {/* Live Interactive Branding Preview Canvas */}
@@ -216,17 +251,37 @@ export const GeneralSettings = () => {
                             <Eye className="w-3.5 h-3.5 text-primary" />
                             <CardTitle className="text-xs font-bold text-foreground">Live Branding Preview</CardTitle>
                         </div>
-                        <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">
-                            INTERACTIVE PREVIEW
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPreviewTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+                                className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border/60 bg-background/80 hover:bg-accent text-[9px] font-medium text-foreground transition-colors cursor-pointer"
+                                title={`Switch preview to ${previewTheme === 'dark' ? 'Light' : 'Dark'} mode`}
+                            >
+                                {previewTheme === 'dark' ? (
+                                    <>
+                                        <Moon className="w-3 h-3 text-indigo-400" />
+                                        <span>Dark Mode</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sun className="w-3 h-3 text-amber-500" />
+                                        <span>Light Mode</span>
+                                    </>
+                                )}
+                            </button>
+                            <Badge variant="outline" className="text-[9px] font-mono px-1.5 py-0">
+                                PREVIEW
+                            </Badge>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent className="p-3.5 bg-gradient-to-br from-card to-secondary/15">
                     {/* Simulated Mini App Navigation Header */}
-                    <div className="p-2.5 rounded-lg border border-border/60 bg-background/80 flex items-center justify-between shadow-xs">
+                    <div className={`p-2.5 rounded-lg border transition-all flex items-center justify-between shadow-xs ${previewTheme === 'dark' ? 'bg-zinc-900 border-zinc-700 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'}`}>
                         <div className="flex items-center gap-2.5">
-                            {localBranding.logoUrl ? (
-                                <img src={localBranding.logoUrl} alt="Logo" className="w-6 h-6 object-contain rounded" />
+                            {previewLogo ? (
+                                <img src={previewLogo} alt="Logo" className="w-6 h-6 object-contain rounded" />
                             ) : (
                                 <div 
                                     className="w-6 h-6 rounded flex items-center justify-center text-white text-[10px] font-black"
@@ -236,10 +291,10 @@ export const GeneralSettings = () => {
                                 </div>
                             )}
                             <div>
-                                <span className="text-xs font-bold text-foreground block leading-none">
+                                <span className={`text-xs font-bold block leading-none ${previewTheme === 'dark' ? 'text-white' : 'text-zinc-900'}`}>
                                     {localBranding.appName || 'Devlomatix Platform'}
                                 </span>
-                                <span className="text-[9px] text-muted-foreground block truncate max-w-[200px]">
+                                <span className={`text-[9px] block truncate max-w-[200px] ${previewTheme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>
                                     {localBranding.appDescription || 'Next-Gen Workspace'}
                                 </span>
                             </div>
@@ -328,44 +383,143 @@ export const GeneralSettings = () => {
 
                 {/* Visual Identity & Palette Presets */}
                 <Card className="bg-card border-border/50 transition-colors shadow-xs">
-                    <CardHeader className="p-3 pb-2 border-b border-border/40">
+                    <CardHeader className="py-2.5 px-3 border-b border-border/40 space-y-0">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-blue-500/10 rounded-md border border-blue-500/20">
                                 <Palette className="w-3.5 h-3.5 text-blue-500" />
                             </div>
                             <div>
-                                <CardTitle className="text-xs font-bold text-foreground">Visual Identity</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground">
-                                    Brand colors and logo.
+                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Visual Identity & Logos</CardTitle>
+                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
+                                    Upload brand logos for light & dark modes.
                                 </CardDescription>
                             </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-2.5 p-3 pt-2.5">
-                        <div className="flex gap-3 items-center">
-                            <div
-                                onClick={() => !uploading && fileInputRef.current?.click()}
-                                className={`relative w-14 h-14 rounded-lg border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/50 transition-all shrink-0 overflow-hidden ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                                {localBranding.logoUrl ? (
-                                    <img src={localBranding.logoUrl} alt="Logo" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
-                                ) : (
-                                    <>
-                                        <UploadCloud className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                        <span className="text-[8px] font-semibold text-muted-foreground">Logo</span>
-                                    </>
-                                )}
-                                {uploading && (
-                                    <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center">
-                                        <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                    <CardContent className="space-y-3 p-3 pt-2.5">
+                        {/* Dual Logo Uploaders: Light & Dark Mode */}
+                        <div className="space-y-1.5">
+                            <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Mode Logos
+                            </Label>
+                            <div className="grid grid-cols-2 gap-2.5">
+                                {/* Light Mode Logo Box */}
+                                <div className="space-y-1 p-2 rounded-lg border border-border/60 bg-secondary/15">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1 text-[11px] font-semibold text-foreground">
+                                            <Sun className="w-3 h-3 text-amber-500" />
+                                            <span>Light Mode</span>
+                                        </div>
+                                        {localBranding.logoLightUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveLogo('light')}
+                                                className="text-[9px] text-destructive hover:underline flex items-center gap-0.5 cursor-pointer"
+                                                title="Remove light mode logo"
+                                            >
+                                                <Trash2 className="w-2.5 h-2.5" />
+                                                <span>Clear</span>
+                                            </button>
+                                        )}
                                     </div>
-                                )}
+                                    <div
+                                        onClick={() => !uploadingMode && lightFileInputRef.current?.click()}
+                                        className={`relative w-full h-16 rounded-md border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-white flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/60 transition-all overflow-hidden shadow-xs ${uploadingMode === 'light' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {localBranding.logoLightUrl ? (
+                                            <img
+                                                src={localBranding.logoLightUrl}
+                                                alt="Light Logo"
+                                                className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
+                                            />
+                                        ) : (
+                                            <>
+                                                <UploadCloud className="w-3.5 h-3.5 text-zinc-400 group-hover:text-primary transition-colors" />
+                                                <span className="text-[9px] font-medium text-zinc-600 group-hover:text-zinc-900">
+                                                    Upload Light
+                                                </span>
+                                            </>
+                                        )}
+                                        {uploadingMode === 'light' && (
+                                            <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center">
+                                                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        ref={lightFileInputRef}
+                                        onChange={(e) => {
+                                            if (e.target.files?.[0]) handleLogoUpload(e.target.files[0], 'light');
+                                            e.target.value = '';
+                                        }}
+                                        accept="image/*"
+                                        className="hidden"
+                                    />
+                                </div>
+
+                                {/* Dark Mode Logo Box */}
+                                <div className="space-y-1 p-2 rounded-lg border border-border/60 bg-secondary/15">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1 text-[11px] font-semibold text-foreground">
+                                            <Moon className="w-3 h-3 text-indigo-400" />
+                                            <span>Dark Mode</span>
+                                        </div>
+                                        {localBranding.logoDarkUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveLogo('dark')}
+                                                className="text-[9px] text-destructive hover:underline flex items-center gap-0.5 cursor-pointer"
+                                                title="Remove dark mode logo"
+                                            >
+                                                <Trash2 className="w-2.5 h-2.5" />
+                                                <span>Clear</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div
+                                        onClick={() => !uploadingMode && darkFileInputRef.current?.click()}
+                                        className={`relative w-full h-16 rounded-md border-2 border-dashed border-zinc-700 bg-zinc-950 flex flex-col items-center justify-center gap-0.5 group cursor-pointer hover:border-primary/60 transition-all overflow-hidden shadow-xs ${uploadingMode === 'dark' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {localBranding.logoDarkUrl ? (
+                                            <img
+                                                src={localBranding.logoDarkUrl}
+                                                alt="Dark Logo"
+                                                className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform"
+                                            />
+                                        ) : (
+                                            <>
+                                                <UploadCloud className="w-3.5 h-3.5 text-zinc-500 group-hover:text-primary transition-colors" />
+                                                <span className="text-[9px] font-medium text-zinc-400 group-hover:text-zinc-100">
+                                                    Upload Dark
+                                                </span>
+                                            </>
+                                        )}
+                                        {uploadingMode === 'dark' && (
+                                            <div className="absolute inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center">
+                                                <Loader2 className="w-3.5 h-3.5 text-primary animate-spin" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="file"
+                                        ref={darkFileInputRef}
+                                        onChange={(e) => {
+                                            if (e.target.files?.[0]) handleLogoUpload(e.target.files[0], 'dark');
+                                            e.target.value = '';
+                                        }}
+                                        accept="image/*"
+                                        className="hidden"
+                                    />
+                                </div>
                             </div>
+                        </div>
 
-                            <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
+                        {/* Quick Color Palette Presets */}
+                        <div className="pt-0.5">
+                            <Label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Primary Accent Color:</Label>
 
-                            <div className="flex-1 space-y-1">
-                                <Label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Primary Accent Color</Label>
+                            <div className='flex flex-col gap-2'>
                                 <div className="flex gap-2 items-center">
                                     <div className="w-8 h-8 rounded-md border border-border/60 shrink-0 shadow-xs" style={{ backgroundColor: localBranding.primaryColor }} />
                                     <Input
@@ -374,25 +528,21 @@ export const GeneralSettings = () => {
                                         className="bg-secondary/30 border-border/50 text-foreground font-mono text-xs h-8"
                                     />
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Quick Color Palette Presets */}
-                        <div className="pt-1">
-                            <Label className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground block mb-1.5">Presets:</Label>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                                {COLOR_PRESETS.map((p) => (
-                                    <button
-                                        key={p.hex}
-                                        type="button"
-                                        onClick={() => setLocalBranding(prev => ({ ...prev, primaryColor: p.hex }))}
-                                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 flex items-center justify-center cursor-pointer ${localBranding.primaryColor === p.hex ? 'ring-2 ring-primary ring-offset-1 border-white' : 'border-border/60'}`}
-                                        style={{ backgroundColor: p.hex }}
-                                        title={p.name}
-                                    >
-                                        {localBranding.primaryColor === p.hex && <Check className="w-2.5 h-2.5 text-white" />}
-                                    </button>
-                                ))}
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    {COLOR_PRESETS.map((p) => (
+                                        <button
+                                            key={p.hex}
+                                            type="button"
+                                            onClick={() => setLocalBranding(prev => ({ ...prev, primaryColor: p.hex }))}
+                                            className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 flex items-center justify-center cursor-pointer ${localBranding.primaryColor === p.hex ? 'ring-2 ring-primary ring-offset-1 border-white' : 'border-border/60'}`}
+                                            style={{ backgroundColor: p.hex }}
+                                            title={p.name}
+                                        >
+                                            {localBranding.primaryColor === p.hex && <Check className="w-2.5 h-2.5 text-white" />}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </CardContent>
