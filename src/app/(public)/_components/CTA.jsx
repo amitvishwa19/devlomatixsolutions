@@ -63,15 +63,15 @@ const CTA = () => {
                         viewport={{ once: true }}
                         className="max-w-4xl mx-auto text-center"
                     >
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
                             <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400 animate-pulse" />
-                            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-red-400 dark:to-amber-400">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
                                 Take The Next Step
                             </span>
                         </div>
 
                         <motion.h2
-                            className="text-foreground text-4xl md:text-6xl font-extrabold mt-2 mb-6 tracking-tight leading-[1.12]"
+                            className="text-foreground text-3xl md:text-5xl font-bold mt-2 mb-6 tracking-tight leading-[1.15]"
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.2 }}
@@ -95,19 +95,19 @@ const CTA = () => {
                         {/* 3-Step Trust Roadmap */}
                         <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-12 text-left">
                             <div className="glass-card dark:zx-card p-5">
-                                <div className="zx-badge mb-3 font-mono">STEP 01</div>
-                                <h4 className="text-foreground font-bold text-sm mb-1">Discovery & Scope</h4>
-                                <p className="text-muted-foreground text-xs leading-relaxed">Structured architecture assessment and blueprint alignment.</p>
+                                <div className="zx-badge mb-3 font-mono text-[11px]">STEP 01</div>
+                                <h4 className="text-foreground font-bold text-sm mb-1 tracking-tight">Discovery & Scope</h4>
+                                <p className="text-muted-foreground text-xs leading-relaxed font-normal">Structured architecture assessment and blueprint alignment.</p>
                             </div>
                             <div className="glass-card dark:zx-card p-5">
-                                <div className="zx-badge mb-3 font-mono">STEP 02</div>
-                                <h4 className="text-foreground font-bold text-sm mb-1">Sprint Kickoff</h4>
-                                <p className="text-muted-foreground text-xs leading-relaxed">Dedicated senior engineers with continuous staging access.</p>
+                                <div className="zx-badge mb-3 font-mono text-[11px]">STEP 02</div>
+                                <h4 className="text-foreground font-bold text-sm mb-1 tracking-tight">Sprint Kickoff</h4>
+                                <p className="text-muted-foreground text-xs leading-relaxed font-normal">Dedicated senior engineers with continuous staging access.</p>
                             </div>
                             <div className="glass-card dark:zx-card p-5">
-                                <div className="zx-badge mb-3 font-mono">STEP 03</div>
-                                <h4 className="text-foreground font-bold text-sm mb-1">Launch & Scale</h4>
-                                <p className="text-muted-foreground text-xs leading-relaxed">Zero-downtime cutover backed by SLA observability.</p>
+                                <div className="zx-badge mb-3 font-mono text-[11px]">STEP 03</div>
+                                <h4 className="text-foreground font-bold text-sm mb-1 tracking-tight">Launch & Scale</h4>
+                                <p className="text-muted-foreground text-xs leading-relaxed font-normal">Zero-downtime cutover backed by SLA observability.</p>
                             </div>
                         </div>
 
@@ -122,7 +122,7 @@ const CTA = () => {
                                 variant="hero"
                                 size="xl"
                                 onClick={() => setIsProjectInquiryOpen(true)}
-                                className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-bold shadow-xl shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
+                                className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-red-500/25 hover:shadow-red-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
                             >
                                 Start Your Project
                                 <ArrowRight className="w-5 h-5 ml-1" />
@@ -131,7 +131,7 @@ const CTA = () => {
                                 variant="heroOutline"
                                 size="xl"
                                 onClick={() => setIsContactOpen(true)}
-                                className="rounded-full px-8 font-bold border-border/80 dark:border-white/15 hover:border-orange-500/50"
+                                className="rounded-full px-8 font-semibold border-border/80 dark:border-white/15 hover:border-orange-500/50 cursor-pointer"
                             >
                                 <Mail className="w-4 h-4 mr-2 text-orange-500" />
                                 Start a Conversation

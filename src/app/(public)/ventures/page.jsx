@@ -149,26 +149,26 @@ export default function VenturesPage() {
 
                 <main className="container mx-auto px-6 pt-32 pb-24">
                     {/* Header */}
-                    <div className="max-w-4xl mb-24">
+                    <div className="max-w-4xl mb-20">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                         >
                             <div className="flex items-center gap-3 mb-6">
-                                <Badge variant="outline" className="bg-red-500/10 text-[#ffd4c5] border-red-500/30 font-bold px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
+                                <Badge variant="outline" className="bg-orange-500/10 text-orange-400 dark:text-orange-300 border-orange-500/30 font-semibold px-3 py-1 text-[11px] uppercase tracking-wider">
                                     Active Ecosystem
                                 </Badge>
-                                <div className="h-px flex-1 bg-gradient-to-r from-orange-500/30 to-transparent" />
+                                <div className="h-px flex-1 bg-gradient-to-r from-orange-500/25 to-transparent" />
                             </div>
-                            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-foreground mb-8 leading-[1.1]">
+                            <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 leading-[1.15]">
                                 Engineering Digital Workplaces <br />
                                 Across{" "}
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
                                     Every Industry Sector.
                                 </span>
                             </h1>
-                            <p className="text-xl text-muted-foreground font-normal leading-relaxed max-w-2xl">
+                            <p className="text-lg text-muted-foreground font-normal leading-relaxed max-w-2xl">
                                 Our ventures leverage unified digital architecture to disrupt traditional markets through artificial intelligence, sustainability, and human-centric product design.
                             </p>
                         </motion.div>
@@ -192,11 +192,11 @@ export default function VenturesPage() {
 
                                         {/* Icon & Label */}
                                         <div className="flex items-start justify-between mb-8">
-                                            <div className={`p-4 rounded-2xl bg-gradient-to-br ${variant.icon} text-white group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-md`}>
-                                                <venture.icon className="w-8 h-8" />
+                                            <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${variant.icon} text-white group-hover:scale-105 group-hover:rotate-2 transition-all duration-500 shadow-md`}>
+                                                <venture.icon className="w-7 h-7" />
                                             </div>
                                             <div className="text-right">
-                                                <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${variant.tag}`}>
+                                                <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border ${variant.tag}`}>
                                                     {venture.tag}
                                                 </span>
                                             </div>
@@ -205,61 +205,61 @@ export default function VenturesPage() {
                                         {/* Content */}
                                         <div className="flex-1 space-y-6">
                                             <div>
-                                                <h3 className="text-3xl font-bold text-foreground mb-3 tracking-tight group-hover:text-primary transition-colors">
+                                                <h3 className="text-2xl font-bold text-foreground mb-2.5 tracking-tight group-hover:text-primary transition-colors">
                                                     {venture.name}
                                                 </h3>
-                                                <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                                                <p className="text-sm text-muted-foreground font-normal leading-relaxed">
                                                     {venture.description}
                                                 </p>
                                             </div>
 
                                             {/* Core Features */}
-                                            <div className="flex flex-wrap gap-2 py-2">
+                                            <div className="flex flex-wrap gap-2 py-1">
                                                 {venture.features.map(feature => (
-                                                    <Badge key={feature} variant="outline" className="rounded-md border-border/60 text-[9px] font-bold bg-background/60 backdrop-blur-sm px-2 py-0.5">
+                                                    <Badge key={feature} variant="outline" className="rounded-md border-border/70 text-[10px] font-medium bg-background/80 backdrop-blur-sm px-2.5 py-0.5 text-foreground/80">
                                                         {feature}
                                                     </Badge>
                                                 ))}
                                             </div>
 
                                             {/* Metrics Grid */}
-                                            <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-secondary/40 border border-border/50 backdrop-blur-md">
+                                            <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-secondary/30 border border-border/40 backdrop-blur-md">
                                                 {venture.metrics.map(metric => (
                                                     <div key={metric.label}>
-                                                        <p className="text-xl font-bold text-foreground">{metric.value}</p>
-                                                        <p className="text-[9px] uppercase font-bold text-muted-foreground tracking-widest">{metric.label}</p>
+                                                        <p className="text-lg font-bold text-foreground tracking-tight">{metric.value}</p>
+                                                        <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">{metric.label}</p>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
 
                                         {/* Actions & Tech */}
-                                        <div className="pt-8 mt-8 border-t border-border/10">
-                                            <div className="flex items-center justify-between gap-4 mb-6">
+                                        <div className="pt-6 mt-6 border-t border-border/20">
+                                            <div className="flex items-center justify-between gap-4 mb-5">
                                                 <div className="flex gap-2">
                                                     {venture.tech.map(t => (
                                                         <Tooltip key={t}>
                                                             <TooltipTrigger asChild>
-                                                                <div className="w-7 h-7 rounded-md border border-border/40 bg-background/50 flex items-center justify-center cursor-help hover:border-primary/40 transition-colors">
-                                                                    <span className="text-[8px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                                                                <div className="w-7 h-7 rounded-md border border-border/40 bg-background/60 flex items-center justify-center cursor-help hover:border-primary/40 transition-colors">
+                                                                    <span className="text-[9px] font-semibold text-muted-foreground group-hover:text-primary transition-colors">
                                                                         {t.substring(0, 2).toUpperCase()}
                                                                     </span>
                                                                 </div>
                                                             </TooltipTrigger>
-                                                            <TooltipContent className="text-[10px] font-bold uppercase tracking-wider">{t}</TooltipContent>
+                                                            <TooltipContent className="text-[10px] font-semibold uppercase tracking-wider">{t}</TooltipContent>
                                                         </Tooltip>
                                                     ))}
                                                 </div>
-                                                <div className="flex items-center gap-3">
+                                                <div className="flex items-center gap-2.5">
                                                     <button 
                                                         onClick={() => toast.info(`Initializing ${venture.name} demo...`)}
-                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-110"
+                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-105 cursor-pointer"
                                                     >
                                                         <Play className="w-3.5 h-3.5 fill-current" />
                                                     </button>
                                                     <a 
                                                         href={`mailto:${venture.email}`}
-                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-indigo-500 hover:border-indigo-500/30 transition-all hover:scale-110"
+                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-orange-500 hover:border-orange-500/30 transition-all hover:scale-105 cursor-pointer"
                                                     >
                                                         <Mail className="w-3.5 h-3.5" />
                                                     </a>
@@ -268,7 +268,7 @@ export default function VenturesPage() {
 
                                             <Button 
                                                 asChild
-                                                className="w-full rounded-xl font-bold h-12 bg-foreground text-background hover:bg-primary transition-all duration-300 group/btn shadow-lg"
+                                                className="w-full rounded-xl font-semibold h-11 bg-primary text-white hover:bg-primary/90 transition-all duration-300 group/btn shadow-md shadow-primary/20 cursor-pointer"
                                             >
                                                 <a href={venture.website} target="_blank" rel="noopener noreferrer">
                                                     Go to Platform

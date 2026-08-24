@@ -87,16 +87,16 @@ const Navbar = () => {
                                     <button
                                         onClick={() => setServicesOpen(!servicesOpen)}
                                         className={cn(
-                                            "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200 flex items-center gap-1",
+                                            "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-1",
                                             isActive(link.href)
-                                                ? "text-primary dark:text-[#ffd4c5] font-bold"
+                                                ? "text-primary dark:text-orange-400 font-semibold"
                                                 : "text-muted-foreground hover:text-foreground hover:bg-card/60 dark:hover:bg-white/[0.04]"
                                         )}
                                     >
                                         {isActive(link.href) && (
                                             <motion.div
                                                 layoutId="activeTab"
-                                                className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-red-500/10 shadow-xs"
+                                                className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-orange-500/10 shadow-xs"
                                                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                             />
                                         )}
@@ -138,16 +138,16 @@ const Navbar = () => {
                                     key={link.name}
                                     href={link.href}
                                     className={cn(
-                                        "relative px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-200",
+                                        "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200",
                                         isActive(link.href)
-                                            ? "text-primary dark:text-[#ffd4c5] font-bold"
+                                            ? "text-primary dark:text-orange-400 font-semibold"
                                             : "text-muted-foreground hover:text-foreground hover:bg-card/60 dark:hover:bg-white/[0.04]"
                                     )}
                                 >
                                     {isActive(link.href) && (
                                         <motion.div
                                             layoutId="activeTab"
-                                            className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-red-500/10 shadow-xs"
+                                            className="absolute inset-0 rounded-full border border-primary/30 dark:border-orange-500/30 bg-primary/10 dark:bg-orange-500/10 shadow-xs"
                                             transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                         />
                                     )}

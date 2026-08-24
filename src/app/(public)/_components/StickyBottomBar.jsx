@@ -50,14 +50,14 @@ const StickyBottomBar = () => {
                         </p>
 
                         {/* App Version */}
-                        <span className="text-[11px] font-bold text-primary dark:text-[#ffd4c5] bg-primary/10 dark:bg-red-500/15 px-2.5 py-0.5 rounded-full border border-primary/25 dark:border-red-500/30 shadow-xs font-mono">
+                        <span className="text-[11px] font-semibold text-primary dark:text-orange-400 bg-primary/10 dark:bg-orange-500/10 px-2.5 py-0.5 rounded-full border border-primary/25 dark:border-orange-500/25 shadow-xs font-mono">
                             v{packageJson.version}
                         </span>
 
                         {!loading && activeSocialLinks.length === 0 && (
                             <div className="hidden group-hover:flex items-center gap-2 pl-4 border-l border-border/50 opacity-20">
                                 <Share2 className="w-3 h-3" />
-                                <span className="text-[10px] font-bold">Manage links in settings</span>
+                                <span className="text-[10px] font-medium">Manage links in settings</span>
                             </div>
                         )}
                     </div>
@@ -73,7 +73,7 @@ const StickyBottomBar = () => {
                                             href={social.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-8 h-8 rounded-lg bg-secondary/80 dark:bg-white/[0.04] hover:bg-primary/10 dark:hover:bg-red-500/15 border border-border/60 dark:border-white/10 hover:border-primary/40 dark:hover:border-orange-500/40 text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-all flex items-center justify-center hover:scale-110 active:scale-95 shadow-xs"
+                                            className="w-8 h-8 rounded-lg bg-secondary/80 dark:bg-white/[0.04] hover:bg-primary/10 dark:hover:bg-orange-500/10 border border-border/60 dark:border-white/10 hover:border-primary/40 dark:hover:border-orange-500/40 text-muted-foreground hover:text-primary dark:hover:text-orange-400 transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-xs"
                                             title={social.id.charAt(0).toUpperCase() + social.id.slice(1)}
                                         >
                                             <social.icon className="w-4 h-4" />
@@ -82,10 +82,10 @@ const StickyBottomBar = () => {
                                 </div>
                             )}
                         </div>
-                        <Link href="/privacy" className="text-xs font-bold text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-colors cursor-pointer">
+                        <Link href="/privacy" className="text-xs font-medium text-muted-foreground hover:text-primary dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Privacy Policy
                         </Link>
-                        <Link href="/terms" className="text-xs font-bold text-muted-foreground hover:text-primary dark:hover:text-[#ffd4c5] transition-colors cursor-pointer">
+                        <Link href="/terms" className="text-xs font-medium text-muted-foreground hover:text-primary dark:hover:text-orange-400 transition-colors cursor-pointer">
                             Terms of Service
                         </Link>
 

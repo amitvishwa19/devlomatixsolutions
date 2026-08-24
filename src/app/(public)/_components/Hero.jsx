@@ -61,9 +61,9 @@ const Hero = () => {
                         {/* Left Content */}
                         <div className="text-center lg:text-left">
                             {/* Badge */}
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-6">
-                                <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400 animate-pulse" />
-                                <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-red-400 dark:to-amber-400">
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-6">
+                                <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                                <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
                                     Digital Sovereignty & Enterprise Workplaces
                                 </span>
                             </div>
@@ -73,7 +73,7 @@ const Hero = () => {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: 0.1 }}
-                                className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.12] mb-6 text-foreground tracking-tight"
+                                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.14] mb-6 text-foreground tracking-tight"
                             >
                                 We Build Digital Systems <br />
                                 That{" "}
@@ -103,7 +103,7 @@ const Hero = () => {
                                     variant="hero"
                                     size="xl"
                                     onClick={() => setIsProjectInquiryOpen(true)}
-                                    className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-bold shadow-xl shadow-red-500/25 hover:shadow-red-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
+                                    className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-red-500/25 hover:shadow-red-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
                                 >
                                     Start Your Project
                                     <ArrowRight className="w-5 h-5 ml-1" />
@@ -134,10 +134,10 @@ const Hero = () => {
                                         transition={{ duration: 0.4, delay: 0.6 + index * 0.1, type: "spring" }}
                                         whileHover={{ scale: 1.05, y: -2 }}
                                     >
-                                        <div className="zx-stat-num font-display">
+                                        <div className="zx-stat-num">
                                             {stat.value}
                                         </div>
-                                        <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">{stat.label}</div>
+                                        <div className="text-xs md:text-sm font-medium text-muted-foreground mt-1">{stat.label}</div>
                                     </motion.div>
                                 ))}
                             </motion.div>
@@ -152,7 +152,7 @@ const Hero = () => {
                         >
                             <div className="relative">
                                 {/* Flame/Orange ambient glow effect behind image */}
-                                <div className="absolute -inset-4 bg-gradient-to-r from-red-500/30 via-orange-500/30 to-amber-500/20 rounded-3xl blur-2xl opacity-70 dark:opacity-60" />
+                                <div className="absolute -inset-4 bg-gradient-to-r from-red-500/25 via-orange-500/25 to-amber-500/15 rounded-3xl blur-2xl opacity-60 dark:opacity-50" />
 
                                 <div className="relative rounded-2xl border border-border/80 dark:border-white/15 shadow-2xl overflow-hidden bg-card dark:bg-[#11171d]">
                                     {/* Top decorative gradient bar */}
@@ -167,7 +167,7 @@ const Hero = () => {
 
                                 {/* Floating card overlay 1: Project Delivered */}
                                 <motion.div
-                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl border border-emerald-500/30 bg-white/95 rounded-2xl"
+                                    className="absolute -bottom-6 -left-6 glass-card p-4 shadow-xl border border-emerald-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md rounded-2xl"
                                     animate={{ y: [0, -10, 0] }}
                                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 >
@@ -184,7 +184,7 @@ const Hero = () => {
 
                                 {/* Floating card overlay 2: System Live Status */}
                                 <motion.div
-                                    className="absolute -top-6 -right-4 glass-card px-4 py-3 shadow-xl border border-blue-500/30 bg-white/95 rounded-2xl"
+                                    className="absolute -top-6 -right-4 glass-card px-4 py-3 shadow-xl border border-blue-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md rounded-2xl"
                                     animate={{ y: [0, 8, 0] }}
                                     transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                                 >

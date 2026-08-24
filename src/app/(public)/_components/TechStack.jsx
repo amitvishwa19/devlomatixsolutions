@@ -77,14 +77,14 @@ const TechStack = () => {
           viewport={{ once: true }}
           className="text-center mb-14"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
             <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
               Modern Tech Infrastructure
             </span>
           </div>
 
-          <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
+          <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
             Under the Hood. Technologies We{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
               Master & Deploy.
@@ -100,7 +100,7 @@ const TechStack = () => {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-3.5 max-w-4xl mx-auto"
+          className="flex flex-wrap justify-center gap-3 max-w-4xl mx-auto"
         >
           {technologies.map((tech, index) => {
             const style = categoryStyles[tech.category] || categoryStyles.Frontend;
@@ -117,17 +117,17 @@ const TechStack = () => {
                 }}
                 viewport={{ once: true }}
                 whileHover={{
-                  scale: 1.06,
-                  y: -3,
+                  scale: 1.04,
+                  y: -2,
                 }}
                 whileTap={{ scale: 0.96 }}
-                className={`px-4.5 py-2.5 rounded-2xl glass-card border border-border/80 ${style.hoverBorder} shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-2.5 group`}
+                className={`px-4 py-2 rounded-2xl glass-card border border-border/80 ${style.hoverBorder} shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer flex items-center gap-2.5 group`}
               >
                 <span className={`w-2 h-2 rounded-full ${style.dot} group-hover:scale-125 transition-transform`} />
-                <span className="font-bold text-foreground text-sm group-hover:text-primary transition-colors">
+                <span className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors">
                   {tech.name}
                 </span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${style.badge}`}>
+                <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${style.badge}`}>
                   {tech.category}
                 </span>
               </motion.div>

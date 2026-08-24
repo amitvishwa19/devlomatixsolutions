@@ -45,14 +45,14 @@ const FAQ = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
             <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
               Clear & Transparent
             </span>
           </div>
 
-          <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
+          <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
             Common Questions From{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
               Partners Like You.
@@ -77,10 +77,10 @@ const FAQ = () => {
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-orange-500/5 transition-colors duration-300 cursor-pointer"
               >
-                <span className="font-display font-bold text-foreground pr-4 text-base">
+                <span className="font-bold text-foreground pr-4 text-base tracking-tight">
                   {faq.question}
                 </span>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-red-500/15 text-[#ffd4c5] border border-red-500/30' : 'bg-secondary/70 text-muted-foreground'}`}>
+                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-orange-500/10 text-orange-400 border border-orange-500/25' : 'bg-secondary/70 text-muted-foreground'}`}>
                   {openIndex === index ? (
                     <Minus className="w-4 h-4 text-orange-500" />
                   ) : (
@@ -96,7 +96,7 @@ const FAQ = () => {
                   transition={{ duration: 0.3 }}
                   className="px-6 pb-5 pt-1 border-t border-border/30 dark:border-white/10"
                 >
-                  <p className="text-muted-foreground leading-relaxed text-sm md:text-base">
+                  <p className="text-muted-foreground leading-relaxed text-sm md:text-base font-normal">
                     {faq.answer}
                   </p>
                 </motion.div>

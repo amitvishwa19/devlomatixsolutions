@@ -99,14 +99,14 @@ const Services = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
                         <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-                        <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 dark:from-red-400 dark:to-amber-400">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
                             Our Core Capabilities
                         </span>
                     </div>
 
-                    <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
+                    <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
                         Built for Performance. Engineered for the{" "}
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
                             Next Decade.
@@ -133,16 +133,16 @@ const Services = () => {
 
                             <div className="flex items-center justify-between mb-6">
                                 <div
-                                    className={`w-13 h-13 rounded-2xl bg-gradient-to-br ${service.gradient} text-white flex items-center justify-center shadow-md ${service.shadow} group-hover:scale-110 transition-transform duration-300`}
+                                    className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${service.gradient} text-white flex items-center justify-center shadow-md ${service.shadow} group-hover:scale-105 transition-transform duration-300`}
                                 >
-                                    <service.icon className="w-6 h-6 text-white" />
+                                    <service.icon className="w-5 h-5 text-white" />
                                 </div>
-                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${service.tagColor}`}>
+                                <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full border ${service.tagColor}`}>
                                     {service.tag}
                                 </span>
                             </div>
 
-                            <h3 className="text-2xl font-bold mb-3 text-foreground tracking-tight group-hover:text-primary transition-colors">
+                            <h3 className="text-xl font-bold mb-2.5 text-foreground tracking-tight group-hover:text-primary transition-colors">
                                 {service.title}
                             </h3>
                             <p className="text-muted-foreground text-sm font-normal leading-relaxed">

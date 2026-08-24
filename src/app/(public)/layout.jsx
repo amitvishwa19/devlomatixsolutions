@@ -1,19 +1,12 @@
-//import 'aos/dist/aos.css';
 import "@/css/public.css";
-import { Unbounded, Inter, Poppins, Roboto } from "next/font/google";
 import Navbar from "./_components/Navbar";
 import Footer from "./_components/Footer";
 import StickyBottomBar from "./_components/StickyBottomBar";
-import { Chatbot } from "./_components/Chatbot";
-
-
-const unbounded = Unbounded({ subsets: ["latin"] });
-const font = Inter({ subsets: ["latin"] });
 
 export default function PublicLayout({ children }) {
     return (
-        <div className={`${font.className} flex flex-col min-h-screen pb-24`} >
-            <div className=''>
+        <div className="flex flex-col min-h-screen pb-24 font-sans selection:bg-orange-500/20 selection:text-orange-300" >
+            <div>
                 <Navbar />
             </div>
 

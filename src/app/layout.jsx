@@ -1,6 +1,6 @@
 import "@/css/globals.css";
 import "@/css/custom.css";
-import { Inter, Unbounded, Geist, Geist_Mono, Outfit } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
@@ -17,21 +17,16 @@ import CookieConsent from "@/components/global/CookieConsent";
 import { VisitorTracker } from "@/components/global/VisitorTracker";
 import { Suspense } from "react";
 
-
-
-
-const unbounded = Unbounded({ subsets: ["latin"] });
-const outfit = Outfit({ subsets: ["latin"] });
-const inter = Inter({ subsets: ["latin"] });
-
-const geistSans = Geist({
-    variable: "--font-geist-sans",
+const plusJakartaSans = Plus_Jakarta_Sans({
     subsets: ["latin"],
+    variable: "--font-heading",
+    weight: ["400", "500", "600", "700", "800"]
 });
 
-const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
+const inter = Inter({
     subsets: ["latin"],
+    variable: "--font-sans",
+    weight: ["300", "400", "500", "600", "700"]
 });
 
 export const metadata = {
@@ -52,7 +47,7 @@ export default async function RootLayout({ children }) {
 
     return (
         <html lang="en" data-scroll-behavior="smooth">
-            <body className={`${outfit.className} `} suppressHydrationWarning={true}>
+            <body className={`${inter.className} ${plusJakartaSans.variable} ${inter.variable} antialiased`} suppressHydrationWarning={true}>
                 <SessionWrapper>
                     {/* <SocketProvider> */}
                     <QueryProvider>

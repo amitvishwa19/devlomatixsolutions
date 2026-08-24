@@ -71,14 +71,14 @@ const WhyChooseUs = () => {
                         transition={{ duration: 0.6 }}
                         viewport={{ once: true }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-red-500/10 via-orange-500/10 to-amber-500/10 border border-orange-500/30 shadow-xs mb-4">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
                             <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-                            <span className="text-xs font-bold uppercase tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-orange-500 dark:from-red-400 dark:to-orange-400">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
                                 Unrivaled Strategic Advantage
                             </span>
                         </div>
 
-                        <h2 className="font-display text-4xl md:text-5xl font-extrabold mt-2 mb-6 text-foreground">
+                        <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
                             Six Core Reasons Enterprise Teams{" "}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
                                 Scale With Us.
@@ -90,16 +90,16 @@ const WhyChooseUs = () => {
 
                         <div className="grid grid-cols-3 gap-6 pt-6 border-t border-border/60">
                             <div className="text-center lg:text-left">
-                                <div className="zx-stat-num font-display">98%</div>
-                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Client Retention</div>
+                                <div className="zx-stat-num">98%</div>
+                                <div className="text-xs md:text-sm font-medium text-muted-foreground mt-1">Client Retention</div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <div className="zx-stat-num font-display">4.9★</div>
-                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Avg Partner Rating</div>
+                                <div className="zx-stat-num">4.9★</div>
+                                <div className="text-xs md:text-sm font-medium text-muted-foreground mt-1">Avg Partner Rating</div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <div className="zx-stat-num font-display">2x</div>
-                                <div className="text-xs md:text-sm font-semibold text-muted-foreground mt-1">Faster Time to Market</div>
+                                <div className="zx-stat-num">2x</div>
+                                <div className="text-xs md:text-sm font-medium text-muted-foreground mt-1">Faster Time to Market</div>
                             </div>
                         </div>
                     </motion.div>
@@ -122,15 +122,15 @@ const WhyChooseUs = () => {
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div
-                                        className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} text-white flex items-center justify-center shadow-md ${feature.shadow} group-hover:scale-110 transition-transform duration-300`}
+                                        className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} text-white flex items-center justify-center shadow-md ${feature.shadow} group-hover:scale-105 transition-transform duration-300`}
                                     >
                                         <feature.icon className="w-5 h-5 text-white" />
                                     </div>
-                                    <span className="zx-badge font-mono">
+                                    <span className="zx-badge font-mono text-[11px]">
                                         0{index + 1}
                                     </span>
                                 </div>
-                                <h3 className="font-display font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors text-base">
+                                <h3 className="font-bold text-foreground mb-1.5 group-hover:text-primary transition-colors text-base tracking-tight">
                                     {feature.title}
                                 </h3>
                                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed font-normal">
