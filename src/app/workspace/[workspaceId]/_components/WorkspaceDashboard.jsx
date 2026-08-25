@@ -180,7 +180,7 @@ export default function WorkspaceDashboard({ workspaceId }) {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => router.push(action.href)}
-                                className={`h-8 text-xs font-semibold gap-1.5 rounded-lg border border-border/60 hover:bg-secondary/60 cursor-pointer shadow-2xs transition-all`}
+                                className={`h-8 text-xs font-semibold gap-1.5 rounded-sm border border-border/60  cursor-pointer shadow-2xs transition-all`}
                             >
                                 <action.icon className="w-3.5 h-3.5" />
                                 <span>{action.label}</span>
