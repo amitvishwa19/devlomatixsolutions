@@ -5,8 +5,12 @@ export async function DELETE(request, { params }) {
   try {
     const { searchParams } = new URL(request.url);
     const { id } = await params;
+    const userId = searchParams.get("userId");
 
-    const group = await db.contactGroup.findFirst({ where: { id } });
+    const where = { id };
+    if (userId) where.userId = userId;
+
+    const group = await db.contactGroup.findFirst({ where });
     if (!group) return NextResponse.json({ error: "Group not found" }, { status: 404 });
 
     await db.contactGroup.delete({ where: { id } });
@@ -22,6 +26,13 @@ export async function PATCH(request, { params }) {
     const body = await request.json();
     const { searchParams } = new URL(request.url);
     const { id } = await params;
+    const userId = searchParams.get("userId");
+
+    const where = { id };
+    if (userId) where.userId = userId;
+
+    const existing = await db.contactGroup.findFirst({ where });
+    if (!existing) return NextResponse.json({ error: "Group not found" }, { status: 404 });
 
     const updateData = {};
     if (body.name !== undefined) updateData.name = body.name;

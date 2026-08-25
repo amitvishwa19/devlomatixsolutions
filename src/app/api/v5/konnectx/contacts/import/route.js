@@ -11,25 +11,26 @@ export async function POST(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") || bodyUserId;
 
     let created = 0;
     const errors = [];
 
     for (const contact of contactsData) {
       try {
-    const { searchParams } = new URL(request.url);
         const phone = String(contact.phone || "").replace(/[\s().-]/g, "");
         if (!phone) continue;
 
-        const existing = await db.contact.findUnique({ where: { phone } });
+        const existing = await db.contact.findFirst({
+          where: { phone, userId },
+        });
         if (existing) continue;
 
         const tags = contact.tags ? String(contact.tags).split("|").map(t => t.trim()).filter(Boolean) : [];
 
         await db.contact.create({
           data: {
-...(userId && { userId }),
+            ...(userId && { userId }),
             name: contact.name || phone,
             phone,
             email: contact.email || null,

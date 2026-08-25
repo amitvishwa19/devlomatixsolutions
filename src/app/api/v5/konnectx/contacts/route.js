@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-        const search = searchParams.get("search");
+    const search = searchParams.get("search");
     const groupId = searchParams.get("groupId");
     const type = searchParams.get("type");
     const page = parseInt(searchParams.get("page") || "1");
@@ -50,9 +50,11 @@ export async function POST(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") || bodyUserId;
 
-    const existing = await db.contact.findFirst({ where: { phone } });
+    const existing = await db.contact.findFirst({
+      where: { phone, userId },
+    });
 
     const contact = await db.contact.create({
       data: {

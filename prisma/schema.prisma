@@ -447,6 +447,7 @@ model Contact {
   id              String           @id @default(cuid())
   workspaceId     String?          @default("cmnbhifag000458ikwhv1zso2")
   userId          String
+  credentialId    String?
   title           String?
   name            String
   phone           String
@@ -463,6 +464,7 @@ model Contact {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credential      Credentials?     @relation(fields: [credentialId], references: [id], onDelete: SetNull)
   groups          ContactGroup[]   @relation("ContactToGroup")
   ecommerceOrders ECommerceOrder[]
   address         String?
@@ -471,9 +473,10 @@ model Contact {
   verified        Boolean          @default(false)
   sharedWith      ContactShare[]
 
-  @@unique([workspaceId, phone])
+  @@unique([workspaceId, credentialId, phone])
   @@index([userId])
   @@index([workspaceId])
+  @@index([credentialId])
   @@index([phone])
 }
 
@@ -612,19 +615,22 @@ model WhatsAppFlow {
 }
 
 model ContactGroup {
-  id          String    @id @default(cuid())
-  workspaceId String?   @default("cmnbhifag000458ikwhv1zso2")
-  userId      String
-  name        String
-  description String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  contacts    Contact[] @relation("ContactToGroup")
+  id           String       @id @default(cuid())
+  workspaceId  String?      @default("cmnbhifag000458ikwhv1zso2")
+  userId       String
+  credentialId String?
+  name         String
+  description  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credential   Credentials? @relation(fields: [credentialId], references: [id], onDelete: SetNull)
+  contacts     Contact[]    @relation("ContactToGroup")
 
-  @@unique([workspaceId, name])
+  @@unique([workspaceId, credentialId, name])
   @@index([userId])
   @@index([workspaceId])
+  @@index([credentialId])
 }
 
 model WorkspaceDocument {
@@ -719,6 +725,8 @@ model Credentials {
   verified    Boolean    @default(false)
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   campaigns   Campaign[]
+  contacts    Contact[]
+  groups       ContactGroup[]
 
   @@index([userId])
   @@index([workspaceId])
