@@ -54,13 +54,19 @@ export default function Users() {
     };
 
     const handleEditUser = (user) => {
-        setEditingUser(user);
-        setIsUserFormOpen(true);
+        setEditingUser({
+            isOpen: true,
+            mode: 'edit',
+            user
+        });
     };
 
     const handleAddNewUser = () => {
-        setEditingUser(null);
-        setIsUserFormOpen(true);
+        setEditingUser({
+            isOpen: true,
+            mode: 'add',
+            user: null
+        });
     };
 
     const handleDeleteUser = () => {
@@ -327,7 +333,7 @@ export default function Users() {
                     })
                 }}
                 user={editingUser.user}
-                mode={deletingUser.mode}
+                mode={editingUser.mode}
                 roles={roles}
                 onSubmit={(user) => {
                     if (user) {
@@ -344,8 +350,18 @@ export default function Users() {
 
             {/* User Delete Confirmation */}
             <UserDelete
+                open={deletingUser.isOpen}
+                onClose={(user) => {
+                    setDeletingUser({
+                        isOpen: false,
+                        mode: 'delete',
+                        user: null
+                    });
+                    if (user) {
+                        setUsers(prev => prev.filter(u => u.id !== user.id));
+                    }
+                }}
                 data={deletingUser.user}
-                onConfirm={handleDeleteUser}
             />
 
             <UserFcmDialog

@@ -3,10 +3,11 @@ import { db } from "@/lib/db";
 
 export async function GET(request, { params }) {
   try {
+    const { jid: rawJid } = await params;
     const { searchParams } = new URL(request.url);
         const limit = parseInt(searchParams.get("limit") || "50");
     const before = searchParams.get("before");
-    const jid = decodeURIComponent(params.jid);
+    const jid = decodeURIComponent(rawJid);
     const cleanPhone = jid.replace(/\D/g, '').split('@')[0];
     const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
 
@@ -38,8 +39,9 @@ export async function GET(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
+    const { jid: rawJid } = await params;
     const { searchParams } = new URL(request.url);
-    const jid = decodeURIComponent(params.jid);
+    const jid = decodeURIComponent(rawJid);
     const cleanPhone = jid.replace(/\D/g, '').split('@')[0];
     const last10 = cleanPhone.length >= 10 ? cleanPhone.slice(-10) : cleanPhone;
 

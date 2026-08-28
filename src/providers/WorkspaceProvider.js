@@ -5,6 +5,8 @@ import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
+import { getAccessData } from '@/app/workspace/[workspaceId]/system/access/_actions/get-access-data';
+
 const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
@@ -95,47 +97,24 @@ export const WorkspaceProvider = ({ children }) => {
         }
     }, [workspaceId]);
 
-    // --- Fetch Access Management Data ---
+    // --- Fetch Access Management Data (Server Action) ---
     const fetchAccessData = useCallback(async () => {
         if (!workspaceId || workspaceId === '[workspaceId]' || workspaceId === 'undefined') return;
         try {
             setAccessLoading(true);
 
-            const fetchJson = async (url) => {
-                try {
-                    const res = await fetch(url, { cache: 'no-store' });
-                    if (!res.ok) {
-                        console.warn(`Failed to fetch ${url}: ${res.status}`);
-                        return null;
-                    }
-                    const contentType = res.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
-                        const text = await res.text();
-                        console.warn(`Non-JSON response from ${url}:`, text.substring(0, 100));
-                        return null;
-                    }
-                    return await res.json();
-                } catch (e) {
-                    console.warn(`Error fetching ${url}:`, e);
-                    return null;
-                }
-            };
-
-            const [usersData, rolesData, permissionsData] = await Promise.all([
-                fetchJson(`/api/workspace/${workspaceId}/management/user`),
-                fetchJson(`/api/workspace/${workspaceId}/management/role`),
-                fetchJson(`/api/workspace/${workspaceId}/management/permission`)
-            ]);
-
-            if (usersData) setUsers(usersData);
-            if (rolesData) setRoles(rolesData);
-            if (permissionsData) {
-                setPermissions(permissionsData.all || permissionsData);
+            const result = await getAccessData({ workspaceId });
+            if (result?.data) {
+                const { users: usersData, roles: rolesData, permissions: permissionsData, departments: departmentsData } = result.data;
+                if (usersData) setUsers(usersData);
+                if (rolesData) setRoles(rolesData);
+                if (permissionsData) setPermissions(permissionsData);
+                setDepartments(departmentsData || []);
+            } else if (result?.error || result?.message) {
+                console.warn('[WorkspaceProvider] Failed to fetch access data via Server Action:', result.message || result.error);
             }
-            setDepartments([]);
-
         } catch (error) {
-            console.error('Error fetching access data:', error);
+            console.error('Error fetching access data via Server Action:', error);
         } finally {
             setAccessLoading(false);
         }

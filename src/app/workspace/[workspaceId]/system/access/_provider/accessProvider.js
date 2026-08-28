@@ -1,53 +1,45 @@
 'use client'
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from'react'
-import { useParams } from'next/navigation'
-import { toast } from'sonner'
-
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { toast } from 'sonner'
+import { getAccessData } from '../_actions/get-access-data'
 
 export const AccessContext = createContext()
 
-
 export const AccessProvider = ({ children }) => {
- const { workspaceId } = useParams()
- const [users, setUsers] = useState([])
- const [roles, setRoles] = useState([])
- const [permissions, setPermissions] = useState([])
- const [departments, setDepartments] = useState([])
- const [loading, setLoading] = useState(true)
- const [previewRole, setPreviewRole] = useState(null)
+  const { workspaceId } = useParams()
+  const [users, setUsers] = useState([])
+  const [roles, setRoles] = useState([])
+  const [permissions, setPermissions] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [previewRole, setPreviewRole] = useState(null)
 
- const fetchAccessData = useCallback(async () => {
- try {
- setLoading(true)
-  const response = await fetch(`/api/workspace/${workspaceId}/access`)
-  if (!response.ok) throw new Error(`Failed to fetch access data: ${response.status}`)
-  
-  const contentType = response.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    const text = await response.text();
-    console.error("Expected JSON but received:", text.substring(0, 100));
-    return;
-  }
+  const fetchAccessData = useCallback(async () => {
+    try {
+      setLoading(true)
+      const result = await getAccessData({ workspaceId })
+      if (result?.data) {
+        setUsers(result.data.users || [])
+        setRoles(result.data.roles || [])
+        setPermissions(result.data.permissions || [])
+        setDepartments(result.data.departments || [])
+      } else {
+        throw new Error(result?.message || 'Failed to load access data')
+      }
+    } catch (error) {
+      console.error('Error fetching access data via server action:', error)
+      toast.error('Failed to load access management data')
+    } finally {
+      setLoading(false)
+    }
+  }, [workspaceId])
 
-  const data = await response.json()
- 
- setUsers(data.users || [])
- setRoles(data.roles || [])
- setPermissions(data.permissions || [])
- setDepartments(data.departments || [])
- } catch (error) {
- console.error('Error fetching access data:', error)
- toast.error('Failed to load access management data')
- } finally {
- setLoading(false)
- }
- }, [workspaceId])
-
- useEffect(() => {
- if (workspaceId) {
- fetchAccessData()
- }
- }, [workspaceId, fetchAccessData])
+  useEffect(() => {
+    if (workspaceId) {
+      fetchAccessData()
+    }
+  }, [workspaceId, fetchAccessData])
 
   const resolveRolePermissions = useCallback((roleId) => {
     if (!roleId) return [];
@@ -74,12 +66,11 @@ export const AccessProvider = ({ children }) => {
     if (previewRole) {
       return resolveRolePermissions(previewRole.id);
     }
-    // Fallback to real user roles logic (needs user integration)
     return [];
   }, [previewRole, resolveRolePermissions]);
 
- return (
- <AccessContext.Provider value={{ 
+  return (
+    <AccessContext.Provider value={{ 
       users, setUsers, 
       permissions, setPermissions, 
       roles, setRoles, 
@@ -87,12 +78,12 @@ export const AccessProvider = ({ children }) => {
       loading, 
       previewRole, setPreviewRole,
       resolveRolePermissions,
-      activePermissions
+      activePermissions,
+      fetchAccessData
     }}>
- {children}
- </AccessContext.Provider>
- )
-
+      {children}
+    </AccessContext.Provider>
+  )
 }
 
 export const useAccess = () => useContext(AccessContext)
