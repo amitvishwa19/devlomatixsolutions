@@ -67,26 +67,35 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
     const isInteractiveGroup = templateDefinition?.type === 'interactive-group' ||
         meta.type === 'interactive-group';
 
+    const effectiveDef = templateDefinition || meta.templateDefinition || null;
+
     // Interpolate & Format Template Body
     const getRenderedBody = () => {
-        let bodyTemplate = templateDefinition?.body;
+        // 1. If msg.text has clean rendered body (not starting with raw [Template: ...])
+        if (typeof msg.text === 'string' && msg.text.trim()) {
+            const clean = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
+            if (clean && !clean.startsWith('[Template:') && !clean.includes('{{1}}')) {
+                return clean;
+            }
+        }
 
+        // 2. If effective template definition body is available
+        const bodyTemplate = effectiveDef?.body || meta.templateBody;
         if (bodyTemplate) {
             let text = bodyTemplate;
 
-            // Extract potential parameter values
-            const candidateName = meta.candidateName || meta.name || meta.originalPayload?.candidateName;
-            const jobTitle = meta.jobTitle || meta.originalPayload?.jobTitle;
-            const companyName = meta.companyName || meta.originalPayload?.companyName;
+            // Extract parameters from originalPayload or components
+            const payloadComponents =
+                meta.originalPayload?.template?.components ||
+                meta.originalPayload?.components ||
+                meta.components ||
+                [];
+            const bodyComp = payloadComponents.find(c => (c.type || '').toLowerCase() === 'body');
+            const params = bodyComp?.parameters || meta.parameters || meta.vars || [];
 
-            // Extract parameters from originalPayload components
-            const payloadComponents = meta.originalPayload?.template?.components || meta.components || [];
-            const bodyComp = payloadComponents.find(c => c.type?.toLowerCase() === 'body');
-            const params = bodyComp?.parameters || [];
-
-            if (params.length > 0) {
+            if (Array.isArray(params)) {
                 params.forEach((p, idx) => {
-                    const val = p.text || p.value || (p.type === 'text' ? p.text : '');
+                    const val = typeof p === 'object' ? (p.text || p.value || '') : String(p || '');
                     if (val) {
                         text = text.replace(new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'), val);
                     }
@@ -94,6 +103,10 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
             }
 
             // Interpolate named parameters or positional fallbacks
+            const candidateName = meta.candidateName || meta.name || meta.originalPayload?.candidateName;
+            const jobTitle = meta.jobTitle || meta.originalPayload?.jobTitle;
+            const companyName = meta.companyName || meta.originalPayload?.companyName;
+
             if (candidateName) {
                 text = text.replace(/\{\{1\}\}/g, candidateName)
                     .replace(/\{\{name\}\}/gi, candidateName)
@@ -112,37 +125,20 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
 
             // Clean any remaining unfilled {{N}} tags gracefully
             text = text.replace(/\{\{\d+\}\}/g, '').trim();
-            return text;
+            if (text) return text;
         }
 
-        // Fallback: If raw text was stored with clean body
-        if (msg.text && !msg.text.startsWith('[Template:')) {
+        // 3. Fallback: Extract descriptive content after [Template: ...]
+        if (typeof msg.text === 'string' && msg.text.startsWith('[Template:')) {
+            const afterTag = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
+            if (afterTag) return afterTag;
+        }
+
+        if (typeof msg.text === 'string' && msg.text.trim()) {
             return msg.text;
         }
 
-        // Fallback: Extract descriptive content after [Template: ...]
-        if (typeof msg.text === 'string' && msg.text.startsWith('[Template:')) {
-            const afterTag = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
-            if (afterTag) {
-                return (
-                    <div className="space-y-1.5">
-                        <p className="text-[14px] leading-relaxed font-medium">{afterTag}</p>
-                        {meta.candidateName && (
-                            <p className="text-[11px] opacity-80">
-                                <strong>Candidate:</strong> {meta.candidateName}
-                            </p>
-                        )}
-                        {meta.jobTitle && (
-                            <p className="text-[11px] opacity-80">
-                                <strong>Position:</strong> {meta.jobTitle}
-                            </p>
-                        )}
-                    </div>
-                );
-            }
-        }
-
-        return `Template notification: ${templateName}`;
+        return `WhatsApp Template: ${templateName}`;
     };
 
     const renderedBody = getRenderedBody();
@@ -326,22 +322,40 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
                 )}
 
                 {/* Body */}
-                <div className="py-1.5 px-3">
+                <div className="py-2 px-3.5">
                     <div className="text-[14.5px] leading-relaxed break-words whitespace-pre-wrap text-[#111b21] dark:text-[#e9edef]">
                         {typeof renderedBody === 'string' ? renderedBody : renderedBody}
                     </div>
 
-                    {templateDefinition?.footer && (
+                    {/* Structured Details Micro-Chips (if available) */}
+                    {(meta.candidateName || meta.jobTitle) && (
+                        <div className="mt-2 pt-2 flex flex-wrap gap-1.5 border-t border-black/5 dark:border-white/10">
+                            {meta.candidateName && (
+                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-black/5 dark:bg-black/20 text-[#111b21] dark:text-[#e9edef]">
+                                    <span className="text-[#00a884] dark:text-[#53bdeb] font-semibold">Candidate:</span>
+                                    {meta.candidateName}
+                                </div>
+                            )}
+                            {meta.jobTitle && (
+                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-black/5 dark:bg-black/20 text-[#111b21] dark:text-[#e9edef]">
+                                    <span className="text-[#00a884] dark:text-[#53bdeb] font-semibold">Position:</span>
+                                    {meta.jobTitle}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {(effectiveDef?.footer || meta.footer) && (
                         <div className="text-[12px] mt-1.5 text-[#667781] dark:text-[#8696a0] italic">
-                            {templateDefinition.footer}
+                            {effectiveDef?.footer || meta.footer}
                         </div>
                     )}
 
                     {/* Time + Status inside bubble (WhatsApp style) */}
-                    <div className="flex justify-end items-center gap-1 mt-1">
+                    <div className="flex justify-end items-center gap-1 mt-1.5">
                         <span className="text-[10px] text-[#667781] dark:text-[#8696a0] font-mono uppercase">
                             {timeStr}
-                            {isOutgoing && <span className="ml-0.5 inline-flex align-middle"><CheckTick status={msg.status} /></span>}
+                            {isOutgoing && <span className="ml-1 inline-flex align-middle"><CheckTick status={msg.status} /></span>}
                         </span>
                     </div>
                 </div>
