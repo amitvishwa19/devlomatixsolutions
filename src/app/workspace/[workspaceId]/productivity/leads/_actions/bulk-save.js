@@ -61,37 +61,44 @@ export async function bulkSaveLeadsAction(workspaceId, leads, globalData = {}) {
                     raw: lead // Store the full original lead data here
                 };
 
-                await db.contact.upsert({
+                const existingContact = await db.contact.findFirst({
                     where: {
-                        workspaceId_phone: {
-                            workspaceId,
-                            phone: cleanPhone
-                        }
-                    },
-                    update: {
-                        name: lead.name,
-                        title: cleanBusinessName(lead.name),
-                        address: lead.address || undefined,
-                        location: lead.location || undefined,
-                        category: globalData.category || undefined,
-                        tags: globalData.tags || [],
-                        info: info,
-                        type: 'GOOGLE_PLACE'
-                    },
-                    create: {
                         workspaceId,
-                        userId,
-                        name: lead.name,
-                        phone: cleanPhone,
-                        title: cleanBusinessName(lead.name),
-                        address: lead.address || undefined,
-                        location: lead.location || undefined,
-                        category: globalData.category || "Google Places",
-                        tags: globalData.tags || [],
-                        info: info,
-                        type: 'GOOGLE_PLACE'
+                        phone: cleanPhone
                     }
                 });
+
+                if (existingContact) {
+                    await db.contact.update({
+                        where: { id: existingContact.id },
+                        data: {
+                            name: lead.name,
+                            title: cleanBusinessName(lead.name),
+                            address: lead.address || undefined,
+                            location: lead.location || undefined,
+                            category: globalData.category || undefined,
+                            tags: globalData.tags || [],
+                            info: info,
+                            type: 'GOOGLE_PLACE'
+                        }
+                    });
+                } else {
+                    await db.contact.create({
+                        data: {
+                            workspaceId,
+                            userId,
+                            name: lead.name,
+                            phone: cleanPhone,
+                            title: cleanBusinessName(lead.name),
+                            address: lead.address || undefined,
+                            location: lead.location || undefined,
+                            category: globalData.category || "Google Places",
+                            tags: globalData.tags || [],
+                            info: info,
+                            type: 'GOOGLE_PLACE'
+                        }
+                    });
+                }
                 results.saved++;
             } catch (err) {
                 console.error(`[BULK_SAVE] Error saving lead ${lead.id}:`, err);

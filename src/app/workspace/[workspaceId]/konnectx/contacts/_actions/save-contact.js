@@ -83,41 +83,49 @@ const handler = async (data) => {
             console.log('[SAVE_CONTACT] Update successful');
             return { data: updated };
         } else {
-            console.log('[SAVE_CONTACT] Upserting contact...');
-            // Create or Upsert based on workspace/phone unique constraint
-            const contact = await db.contact.upsert({
+            console.log('[SAVE_CONTACT] Finding or creating contact...');
+            const existingContact = await db.contact.findFirst({
                 where: {
-                    workspaceId_phone: { 
-                        workspaceId, 
-                        phone: cleanPhone 
-                    }
-                },
-                update: {
-                    name,
-                    email: email || null,
-                    category: category || null,
-                    tags: tags || [],
-                    info: info || undefined,
-                    type: type || 'CONTACT',
-                    groups: {
-                        set: groupIds?.map(id => ({ id })) || []
-                    }
-                },
-                create: {
-                    name,
-                    phone: cleanPhone,
-                    email: email || null,
-                    userId,
                     workspaceId,
-                    category: category || null,
-                    tags: tags || [],
-                    type: type || 'CONTACT',
-                    groups: {
-                        connect: groupIds?.map(id => ({ id })) || []
-                    }
-                },
-                include: { groups: true }
+                    phone: cleanPhone
+                }
             });
+
+            let contact;
+            if (existingContact) {
+                contact = await db.contact.update({
+                    where: { id: existingContact.id },
+                    data: {
+                        name,
+                        email: email || null,
+                        category: category || null,
+                        tags: tags || [],
+                        info: info || undefined,
+                        type: type || 'CONTACT',
+                        groups: {
+                            set: groupIds?.map(id => ({ id })) || []
+                        }
+                    },
+                    include: { groups: true }
+                });
+            } else {
+                contact = await db.contact.create({
+                    data: {
+                        name,
+                        phone: cleanPhone,
+                        email: email || null,
+                        userId,
+                        workspaceId,
+                        category: category || null,
+                        tags: tags || [],
+                        type: type || 'CONTACT',
+                        groups: {
+                            connect: groupIds?.map(id => ({ id })) || []
+                        }
+                    },
+                    include: { groups: true }
+                });
+            }
 
             await db.contactShare.upsert({
                 where: {
@@ -133,7 +141,7 @@ const handler = async (data) => {
                 }
             });
 
-            console.log('[SAVE_CONTACT] Upsert successful');
+            console.log('[SAVE_CONTACT] Save successful');
             return { data: contact };
         }
     } catch (error) {

@@ -54,25 +54,35 @@ export async function POST(request) {
             source: "LeadGen",
           };
 
-          const contact = await tx.contact.upsert({
-            where: { workspaceId_phone: { workspaceId: wsId, phone: cleanPhone } },
-            update: {
-              name: lead.name,
-              email: lead.email || undefined,
-              info,
-              userId,
-              type: "LEAD",
-            },
-            create: {
-              name: lead.name,
-              phone: cleanPhone,
-              email: lead.email || undefined,
-              info,
-              userId,
-              workspaceId: wsId,
-              type: "LEAD",
-            },
+          const existingContact = await tx.contact.findFirst({
+            where: { workspaceId: wsId, phone: cleanPhone }
           });
+
+          let contact;
+          if (existingContact) {
+            contact = await tx.contact.update({
+              where: { id: existingContact.id },
+              data: {
+                name: lead.name,
+                email: lead.email || undefined,
+                info,
+                userId,
+                type: "LEAD",
+              }
+            });
+          } else {
+            contact = await tx.contact.create({
+              data: {
+                name: lead.name,
+                phone: cleanPhone,
+                email: lead.email || undefined,
+                info,
+                userId,
+                workspaceId: wsId,
+                type: "LEAD",
+              }
+            });
+          }
 
           results.saved++;
         } catch (err) {

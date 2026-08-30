@@ -291,8 +291,8 @@ export default function WhatsAppChatsPage() {
     const selectedContact = isSegmentChat ? null : allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
 
     // Display name for the header
-    const activeName = isSegmentChat 
-        ? activeSegmentData?.name 
+    const activeName = isSegmentChat
+        ? activeSegmentData?.name
         : (selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0]);
 
     // Server Action Hooks
@@ -885,11 +885,18 @@ export default function WhatsAppChatsPage() {
 
 
     const filteredConversations = conversations.filter(c => {
-        const matchesSearch = c.jid.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (c.name || "").toLowerCase().includes(searchTerm.toLowerCase());
+        const contact = getContactForJid(c.jid);
+        const contactName = contact?.name || "";
+        const contactPhone = contact?.phone || "";
+        const searchLower = searchTerm.toLowerCase();
+
+        const matchesSearch = !searchTerm ||
+            c.jid.toLowerCase().includes(searchLower) ||
+            (c.name || "").toLowerCase().includes(searchLower) ||
+            contactName.toLowerCase().includes(searchLower) ||
+            contactPhone.includes(searchTerm);
 
         let matchesSegment = true;
-        const contact = getContactForJid(c.jid);
 
         if (activeSegment.startsWith('group:')) {
             const groupId = activeSegment.split(':')[1];
@@ -963,7 +970,7 @@ export default function WhatsAppChatsPage() {
         <div id='main-content-container' className="h-full flex flex-col overflow-hidden shadow-2xl transition-all ">
 
 
-            <div className=" border-b border-border/50 bg-card/20 backdrop-blur-sm">
+            <div className="border-b border-border/50 bg-card/20 backdrop-blur-sm shrink-0">
                 <div className="flex items-center justify-between gap-2 py-2 px-4">
                     <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-primary" />
@@ -999,12 +1006,12 @@ export default function WhatsAppChatsPage() {
             </div>
 
 
-            <div className="flex h-full overflow-hidden">
+            <div className="flex-1 min-h-0 flex overflow-hidden">
 
-                <div className="w-[320px] md:w-[360px] border-r border-border/50 flex flex-col shrink-0">
-                    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col h-full min-w-0">
+                <div className="w-[320px] md:w-[360px] border-r border-border/50 flex flex-col h-full shrink-0 overflow-hidden bg-card/5">
+                    <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0 w-full overflow-hidden">
 
-                        <div className="px-3 h-14 py-2 border-b border-border/50 bg-muted/5 flex items-center">
+                        <div className="px-3 h-12 py-1.5 border-b border-border/50 bg-muted/5 flex items-center shrink-0">
                             <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/40 p-0.5 rounded-lg border border-border/40">
                                 <TabsTrigger value="chats" className="text-xs h-7.5 rounded-md font-medium">Chats</TabsTrigger>
                                 <TabsTrigger value="contacts" className="text-xs h-7.5 rounded-md font-medium">Contacts</TabsTrigger>
@@ -1012,666 +1019,658 @@ export default function WhatsAppChatsPage() {
                             </TabsList>
                         </div>
 
-                        <ScrollArea className="h-[81vh]">
-
-                            <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
-                                {/* Segment Filters Inside Tab */}
-                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+                        <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col overflow-hidden">
+                            {/* Segment Filters Inside Tab */}
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
+                                <Badge
+                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
+                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                    onClick={() => setActiveSegment('all')}
+                                >
+                                    All Chats
+                                </Badge>
+                                {activeSegment.startsWith('tag:') && (
                                     <Badge
-                                        variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                        variant="default"
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
                                         onClick={() => setActiveSegment('all')}
                                     >
-                                        All Chats
+                                        <Tag className="w-2.5 h-2.5" />
+                                        <span>#{activeSegment.split(':')[1]}</span>
+                                        <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
                                     </Badge>
-                                    {activeSegment.startsWith('tag:') && (
-                                        <Badge
-                                            variant="default"
-                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
-                                            onClick={() => setActiveSegment('all')}
-                                        >
-                                            <Tag className="w-2.5 h-2.5" />
-                                            <span>#{activeSegment.split(':')[1]}</span>
-                                            <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
-                                        </Badge>
-                                    )}
-                                    {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
-                                        <Badge
-                                            key={catName}
-                                            variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
-                                            onClick={() => setActiveSegment(`category:${catName}`)}
-                                        >
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary/80 shrink-0" />
-                                            <span>{catName}</span>
-                                        </Badge>
-                                    ))}
-                                    {groups.map(group => (
-                                        <Badge
-                                            key={group.id}
-                                            variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
-                                            className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                            onClick={() => setActiveSegment(`group:${group.id}`)}
-                                        >
-                                            {group.name}
-                                        </Badge>
-                                    ))}
-                                </div>
+                                )}
+                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                    <Badge
+                                        key={catName}
+                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
+                                        onClick={() => setActiveSegment(`category:${catName}`)}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary/80 shrink-0" />
+                                        <span>{catName}</span>
+                                    </Badge>
+                                ))}
+                                {groups.map(group => (
+                                    <Badge
+                                        key={group.id}
+                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                        onClick={() => setActiveSegment(`group:${group.id}`)}
+                                    >
+                                        {group.name}
+                                    </Badge>
+                                ))}
+                            </div>
 
-                                <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
-                                    <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
-                                        {displayConversations.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
-                                                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
-                                                    <MessageSquare className="w-8 h-8 text-primary/60" />
-                                                    <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
-                                                </div>
-                                                <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Found</h3>
-                                                <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                    {activeSegment === 'all' ? "Your message history will appear here." : "No chats match the selected filter."}
-                                                </p>
+                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                                <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
+                                    {displayConversations.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
+                                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                <MessageSquare className="w-8 h-8 text-primary/60" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-3000" />
                                             </div>
-                                        ) : (
-                                            displayConversations.map((chat) => (
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Conversations Found</h3>
+                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                {activeSegment === 'all' ? "Your message history will appear here." : "No chats match the selected filter."}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        displayConversations.map((chat) => (
+                                            <div
+                                                id='chatinfoblock'
+                                                key={chat.jid}
+                                                onClick={() => setSelectedJid(chat.jid)}
+                                                className={`flex items-start gap-2.5 p-3 w-full border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 ' : ''}`}
+                                            >
+                                                {/* Left: Avatar */}
+                                                <Avatar className="w-10 h-10 border-2 border-background shadow-xs shrink-0 mt-0.5">
+                                                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                                                        {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                {/* Middle: Name, Category, Phone, Message Snippet */}
+                                                <div className="flex-1 min-w-0 w-0 overflow-hidden">
+                                                    <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
+                                                        <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">
+                                                            {chat.name || chat.jid.split('@')[0]}
+                                                        </h3>
+                                                        {getContactForJid(chat.jid)?.category && (
+                                                            <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 shrink-0 max-w-[65px] truncate border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-normal">
+                                                                {getContactForJid(chat.jid).category}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+
+                                                    <p className="text-[9px] text-muted-foreground/60 truncate font-mono mb-1">
+                                                        {getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}
+                                                    </p>
+
+                                                    <div className="flex items-center gap-1 min-w-0 w-full overflow-hidden">
+                                                        {chat.fromMe && <span className="text-[9px] uppercase font-bold text-primary/70 shrink-0">You:</span>}
+                                                        <p className="text-[11px] text-muted-foreground truncate opacity-70 min-w-0 flex-1 block overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
+                                                            {renderMessagePreview(chat.lastMessage)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Right: Timestamp & DropdownMenu Action */}
+                                                <div id='dropdownoptions' className="flex flex-col items-end justify-between shrink-0 ml-auto pl-1 self-stretch gap-1">
+                                                    <span className="text-[9px] text-muted-foreground whitespace-nowrap shrink-0">
+                                                        {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
+                                                    </span>
+
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all shrink-0"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                                title="More options"
+                                                            >
+                                                                <MoreVertical className="w-3.5 h-3.5" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className="w-48 z-50 shadow-xl border-border/60 bg-popover">
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-emerald-600 focus:text-emerald-700 focus:bg-emerald-500/10 font-medium"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setManageContactJid(chat.jid);
+                                                                    setIsManageContactOpen(true);
+                                                                }}
+                                                            >
+                                                                <UserPlus className="w-3.5 h-3.5" /> {getContactForJid(chat.jid) ? "Edit Contact & Tags" : "Add to Contacts"}
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setViewContactJid(chat.jid);
+                                                                    setIsViewContactOpen(true);
+                                                                }}
+                                                            >
+                                                                <Eye className="w-3.5 h-3.5" /> View Contact
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAssignConversation(chat.jid);
+                                                                }}
+                                                            >
+                                                                <Share2 className="w-3.5 h-3.5" /> Share / Delegate
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem
+                                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleDeleteConversation(e, chat.jid);
+                                                                }}
+                                                            >
+                                                                <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
+
+                        <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                            {/* Segment Filters Inside Tab */}
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+                                <Badge
+                                    variant={activeSegment === 'all' ? 'default' : 'outline'}
+                                    className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                    onClick={() => setActiveSegment('all')}
+                                >
+                                    All Contacts
+                                </Badge>
+                                {activeSegment.startsWith('tag:') && (
+                                    <Badge
+                                        variant="default"
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
+                                        onClick={() => setActiveSegment('all')}
+                                    >
+                                        <Tag className="w-2.5 h-2.5" />
+                                        <span>#{activeSegment.split(':')[1]}</span>
+                                        <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
+                                    </Badge>
+                                )}
+                                {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
+                                    <Badge
+                                        key={catName}
+                                        variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
+                                        onClick={() => setActiveSegment(`category:${catName}`)}
+                                    >
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shrink-0" />
+                                        <span>{catName}</span>
+                                    </Badge>
+                                ))}
+                                {groups.map(group => (
+                                    <Badge
+                                        key={group.id}
+                                        variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
+                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                                        onClick={() => setActiveSegment(`group:${group.id}`)}
+                                    >
+                                        {group.name}
+                                    </Badge>
+                                ))}
+                            </div>
+
+                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                                <div className="flex flex-col w-full min-w-0">
+                                    {filteredContacts.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
+                                            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
+                                                <Users className="w-8 h-8 text-emerald-500/60" />
+                                                <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-3000" />
+                                            </div>
+                                            <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
+                                            <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                                                We couldn&apos;t find any contacts matching the selected filter.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        filteredContacts.map((contact) => {
+                                            const contactLast10 = getPhoneLast10(contact.phone);
+                                            const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
+                                            const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
+                                            const normalizedJid = existingConv ? existingConv.jid : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
+                                            const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                            return (
                                                 <div
-                                                    id='chatinfoblock'
-                                                    key={chat.jid}
-                                                    onClick={() => setSelectedJid(chat.jid)}
-                                                    className={`flex items-start gap-2.5 p-3 w-full border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${getPhoneLast10(selectedJid) === getPhoneLast10(chat.jid) ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
+                                                    key={contact.id}
+                                                    onClick={() => handleSelectContactChat(contact)}
+                                                    className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
                                                 >
-                                                    {/* Left: Avatar */}
-                                                    <Avatar className="w-10 h-10 border-2 border-background shadow-xs shrink-0 mt-0.5">
-                                                        <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                                                            {(chat.name || chat.jid.split('@')[0]).substring(0, 2).toUpperCase()}
+                                                    <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
+                                                        <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">
+                                                            {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
 
-                                                    {/* Middle: Name, Category, Phone, Message Snippet */}
-                                                    <div className="flex-1 min-w-0 w-0 overflow-hidden">
-                                                        <div className="flex items-center gap-1.5 min-w-0 mb-0.5">
-                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">
-                                                                {chat.name || chat.jid.split('@')[0]}
-                                                            </h3>
-                                                            {getContactForJid(chat.jid)?.category && (
-                                                                <Badge variant="outline" className="text-[8px] py-0 px-1 h-3.5 shrink-0 max-w-[65px] truncate border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-normal">
-                                                                    {getContactForJid(chat.jid).category}
-                                                                </Badge>
-                                                            )}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between mb-0.5">
+                                                            <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
+                                                            <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
+                                                                {contact.category || contact.type || "Contact"}
+                                                            </Badge>
                                                         </div>
-
-                                                        <p className="text-[9px] text-muted-foreground/60 truncate font-mono mb-1">
-                                                            {getContactForJid(chat.jid)?.phone || chat.jid.split('@')[0]}
+                                                        <p className="text-[11px] text-muted-foreground truncate opacity-70">
+                                                            {contact.phone}
                                                         </p>
-
-                                                        <div className="flex items-center gap-1 min-w-0 w-full overflow-hidden">
-                                                            {chat.fromMe && <span className="text-[9px] uppercase font-bold text-primary/70 shrink-0">You:</span>}
-                                                            <p className="text-[11px] text-muted-foreground truncate opacity-70 min-w-0 flex-1 block overflow-hidden text-ellipsis whitespace-nowrap leading-tight">
-                                                                {renderMessagePreview(chat.lastMessage)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Right: Timestamp & DropdownMenu Action */}
-                                                    <div id='dropdownoptions' className="flex flex-col items-end justify-between shrink-0 ml-auto pl-1 self-stretch gap-1">
-                                                        <span className="text-[9px] text-muted-foreground whitespace-nowrap shrink-0">
-                                                            {formatDistanceToNow(new Date(chat.timestamp * 1000))} ago
-                                                        </span>
-
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-6 w-6 p-0 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all shrink-0"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    title="More options"
-                                                                >
-                                                                    <MoreVertical className="w-3.5 h-3.5" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-48 z-50 shadow-xl border-border/60 bg-popover">
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 cursor-pointer text-emerald-600 focus:text-emerald-700 focus:bg-emerald-500/10 font-medium"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setManageContactJid(chat.jid);
-                                                                        setIsManageContactOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <UserPlus className="w-3.5 h-3.5" /> {getContactForJid(chat.jid) ? "Edit Contact & Tags" : "Add to Contacts"}
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 cursor-pointer"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        setViewContactJid(chat.jid);
-                                                                        setIsViewContactOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <Eye className="w-3.5 h-3.5" /> View Contact
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 cursor-pointer text-purple-600 focus:text-purple-700 focus:bg-purple-50"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleAssignConversation(chat.jid);
-                                                                    }}
-                                                                >
-                                                                    <Share2 className="w-3.5 h-3.5" /> Share / Delegate
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem
-                                                                    className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleDeleteConversation(e, chat.jid);
-                                                                    }}
-                                                                >
-                                                                    <Trash2 className="w-3.5 h-3.5" /> Delete Chat
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
                                                     </div>
                                                 </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </TabsContent>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </TabsContent>
 
-                            <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
-                                {/* Segment Filters Inside Tab */}
-                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
-                                    <Badge
-                                        variant={activeSegment === 'all' ? 'default' : 'outline'}
-                                        className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
+                        <TabsContent value="segments" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                            {/* Sub Segment Filter Badges */}
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
+                                <div className="flex items-center gap-1">
+                                    {[
+                                        { id: 'all', label: 'All' },
+                                        { id: 'categories', label: `Categories (${uniqueCategories.length})` },
+                                        { id: 'groups', label: `Groups (${groups.length})` },
+                                        { id: 'tags', label: `Tags (${uniqueTags.length})` },
+                                    ].map(tab => (
+                                        <Badge
+                                            key={tab.id}
+                                            variant={segmentViewFilter === tab.id ? 'default' : 'outline'}
+                                            className={`cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2 transition-all ${segmentViewFilter === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                                                }`}
+                                            onClick={() => setSegmentViewFilter(tab.id)}
+                                        >
+                                            {tab.label}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                {activeSegment !== 'all' && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground hover:text-destructive shrink-0 gap-0.5"
                                         onClick={() => setActiveSegment('all')}
+                                        title="Clear active filter"
                                     >
-                                        All Contacts
-                                    </Badge>
-                                    {activeSegment.startsWith('tag:') && (
-                                        <Badge
-                                            variant="default"
-                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2 bg-amber-500 text-white"
-                                            onClick={() => setActiveSegment('all')}
-                                        >
-                                            <Tag className="w-2.5 h-2.5" />
-                                            <span>#{activeSegment.split(':')[1]}</span>
-                                            <X className="w-2.5 h-2.5 ml-0.5 hover:opacity-80" />
-                                        </Badge>
-                                    )}
-                                    {Array.from(new Set(allContacts.map(c => c.category).filter(Boolean))).sort().map(catName => (
-                                        <Badge
-                                            key={catName}
-                                            variant={activeSegment === `category:${catName}` ? 'default' : 'outline'}
-                                            className="cursor-pointer text-[10px] shrink-0 gap-1 font-medium h-5 px-2"
-                                            onClick={() => setActiveSegment(`category:${catName}`)}
-                                        >
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 shrink-0" />
-                                            <span>{catName}</span>
-                                        </Badge>
-                                    ))}
-                                    {groups.map(group => (
-                                        <Badge
-                                            key={group.id}
-                                            variant={activeSegment === `group:${group.id}` ? 'default' : 'outline'}
-                                            className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
-                                            onClick={() => setActiveSegment(`group:${group.id}`)}
-                                        >
-                                            {group.name}
-                                        </Badge>
-                                    ))}
-                                </div>
+                                        <X className="w-2.5 h-2.5" /> Clear
+                                    </Button>
+                                )}
+                            </div>
 
-                                <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
-                                    <div className="flex flex-col w-full min-w-0">
-                                        {filteredContacts.length === 0 ? (
-                                            <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
-                                                <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mb-4 relative">
-                                                    <Users className="w-8 h-8 text-emerald-500/60" />
-                                                    <div className="absolute inset-0 rounded-full border-2 border-emerald-500/20 animate-ping duration-[3000ms]" />
-                                                </div>
-                                                <h3 className="text-sm font-bold text-zinc-800 mb-1">No Contacts Found</h3>
-                                                <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
-                                                    We couldn&apos;t find any contacts matching the selected filter.
-                                                </p>
+                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                                <div className="flex flex-col p-2.5 space-y-3 w-full">
+                                    {/* 1. CATEGORIES SECTION */}
+                                    {(segmentViewFilter === 'all' || segmentViewFilter === 'categories') && (
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                <span className="flex items-center gap-1.5 text-blue-400">
+                                                    <FolderPlus className="w-3.5 h-3.5" />
+                                                    <span>Categories</span>
+                                                </span>
+                                                <span className="text-[10px] opacity-70 font-mono">
+                                                    {uniqueCategories.length}
+                                                </span>
                                             </div>
-                                        ) : (
-                                            filteredContacts.map((contact) => {
-                                                const contactLast10 = getPhoneLast10(contact.phone);
-                                                const existingConv = conversations.find(c => getPhoneLast10(c.jid) === contactLast10);
-                                                const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
-                                                const normalizedJid = existingConv ? existingConv.jid : (cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`);
-                                                const isSelected = getPhoneLast10(selectedJid) === contactLast10;
-                                                return (
-                                                    <div
-                                                        key={contact.id}
-                                                        onClick={() => handleSelectContactChat(contact)}
-                                                        className={`flex items-center gap-3 p-4 border-b border-border/20 cursor-pointer transition-all hover:bg-primary/5 group ${isSelected ? 'bg-primary/10 border-r-2 border-r-primary' : ''}`}
-                                                    >
-                                                        <Avatar className="w-10 h-10 border-2 border-background shadow-sm">
-                                                            <AvatarFallback className="bg-emerald-500/10 text-emerald-500 font-bold text-xs">
-                                                                {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
-                                                            </AvatarFallback>
-                                                        </Avatar>
 
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center justify-between mb-0.5">
-                                                                <h3 className="text-xs font-bold truncate group-hover:text-primary transition-colors">{contact.name}</h3>
-                                                                <Badge variant="outline" className="text-[8px] py-0 h-3 opacity-50">
-                                                                    {contact.category || contact.type || "Contact"}
-                                                                </Badge>
+                                            {uniqueCategories.length === 0 ? (
+                                                <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                    No categories created yet.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {uniqueCategories.map(cat => {
+                                                        const catContacts = allContacts.filter(c => c.category === cat.name);
+                                                        const isExpanded = !!expandedSegments[`category:${cat.name}`];
+                                                        const isFilterActive = activeSegment === `category:${cat.name}`;
+                                                        const isSelectedSegment = selectedJid === `segment:category:${cat.name}`;
+
+                                                        return (
+                                                            <div key={cat.name} className={`rounded-lg border transition-all ${isSelectedSegment
+                                                                ? 'border-primary ring-1 ring-primary/40 bg-primary/10'
+                                                                : isFilterActive
+                                                                    ? 'border-primary/50 bg-primary/5'
+                                                                    : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                <div
+                                                                    className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                    onClick={() => setSelectedJid(`segment:category:${cat.name}`)}
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color || '#3b82f6' }} />
+                                                                        <span className="text-xs font-semibold truncate text-foreground">{cat.name}</span>
+                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                            {catContacts.length}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                                                                                }`}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActiveSegment(isFilterActive ? 'all' : `category:${cat.name}`);
+                                                                                setActiveTab('chats');
+                                                                            }}
+                                                                            title={isFilterActive ? "Remove filter" : "Filter chats by this category"}
+                                                                        >
+                                                                            <Filter className="w-2.5 h-2.5" />
+                                                                            <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                toggleSegmentExpand(`category:${cat.name}`);
+                                                                            }}
+                                                                        >
+                                                                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+
+                                                                {isExpanded && (
+                                                                    <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                        {catContacts.length === 0 ? (
+                                                                            <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this category</p>
+                                                                        ) : (
+                                                                            catContacts.map(contact => {
+                                                                                const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                return (
+                                                                                    <div
+                                                                                        key={contact.id}
+                                                                                        onClick={() => handleSelectContactChat(contact)}
+                                                                                        className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-primary/10 ${isSelected ? 'bg-primary/15 font-semibold text-primary' : 'text-foreground/90'
+                                                                                            }`}
+                                                                                    >
+                                                                                        <div className="flex items-center gap-2 truncate">
+                                                                                            <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-bold">
+                                                                                                    {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                </AvatarFallback>
+                                                                                            </Avatar>
+                                                                                            <span className="truncate text-xs">{contact.name}</span>
+                                                                                        </div>
+                                                                                        <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                        )}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <p className="text-[11px] text-muted-foreground truncate opacity-70">
-                                                                {contact.phone}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </TabsContent>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
-                            <TabsContent value="segments" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
-                                {/* Sub Segment Filter Badges */}
-                                <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
-                                    <div className="flex items-center gap-1">
-                                        {[
-                                            { id: 'all', label: 'All' },
-                                            { id: 'categories', label: `Categories (${uniqueCategories.length})` },
-                                            { id: 'groups', label: `Groups (${groups.length})` },
-                                            { id: 'tags', label: `Tags (${uniqueTags.length})` },
-                                        ].map(tab => (
-                                            <Badge
-                                                key={tab.id}
-                                                variant={segmentViewFilter === tab.id ? 'default' : 'outline'}
-                                                className={`cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2 transition-all ${segmentViewFilter === tab.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                                                    }`}
-                                                onClick={() => setSegmentViewFilter(tab.id)}
-                                            >
-                                                {tab.label}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                    {activeSegment !== 'all' && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 px-1.5 text-[9px] font-bold text-muted-foreground hover:text-destructive shrink-0 gap-0.5"
-                                            onClick={() => setActiveSegment('all')}
-                                            title="Clear active filter"
-                                        >
-                                            <X className="w-2.5 h-2.5" /> Clear
-                                        </Button>
+                                    {/* 2. BROADCAST GROUPS SECTION */}
+                                    {(segmentViewFilter === 'all' || segmentViewFilter === 'groups') && (
+                                        <div className="space-y-1.5 pt-1 border-t border-border/20">
+                                            <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                <span className="flex items-center gap-1.5 text-emerald-400">
+                                                    <Users className="w-3.5 h-3.5" />
+                                                    <span>Broadcast Groups</span>
+                                                </span>
+                                                <span className="text-[10px] opacity-70 font-mono">
+                                                    {groups.length}
+                                                </span>
+                                            </div>
+
+                                            {groups.length === 0 ? (
+                                                <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                    No broadcast groups created yet.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {groups.map(group => {
+                                                        const groupContacts = allContacts.filter(c => c.groups?.some(g => g.id === group.id));
+                                                        const isExpanded = !!expandedSegments[`group:${group.id}`];
+                                                        const isFilterActive = activeSegment === `group:${group.id}`;
+                                                        const isSelectedSegment = selectedJid === `segment:group:${group.id}`;
+
+                                                        return (
+                                                            <div key={group.id} className={`rounded-lg border transition-all ${isSelectedSegment
+                                                                ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-emerald-500/10'
+                                                                : isFilterActive
+                                                                    ? 'border-emerald-500/50 bg-emerald-500/5'
+                                                                    : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                <div
+                                                                    className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                    onClick={() => setSelectedJid(`segment:group:${group.id}`)}
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+                                                                        <span className="text-xs font-semibold truncate text-foreground">{group.name}</span>
+                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                            {groupContacts.length}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-emerald-500 text-white' : 'text-muted-foreground hover:text-foreground'
+                                                                                }`}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActiveSegment(isFilterActive ? 'all' : `group:${group.id}`);
+                                                                                setActiveTab('chats');
+                                                                            }}
+                                                                            title={isFilterActive ? "Remove filter" : "Filter chats by this group"}
+                                                                        >
+                                                                            <Filter className="w-2.5 h-2.5" />
+                                                                            <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                toggleSegmentExpand(`group:${group.id}`);
+                                                                            }}
+                                                                        >
+                                                                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+
+                                                                {isExpanded && (
+                                                                    <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                        {groupContacts.length === 0 ? (
+                                                                            <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this group</p>
+                                                                        ) : (
+                                                                            groupContacts.map(contact => {
+                                                                                const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                return (
+                                                                                    <div
+                                                                                        key={contact.id}
+                                                                                        onClick={() => handleSelectContactChat(contact)}
+                                                                                        className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-emerald-500/10 ${isSelected ? 'bg-emerald-500/15 font-semibold text-emerald-600' : 'text-foreground/90'
+                                                                                            }`}
+                                                                                    >
+                                                                                        <div className="flex items-center gap-2 truncate">
+                                                                                            <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-500 font-bold">
+                                                                                                    {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                </AvatarFallback>
+                                                                                            </Avatar>
+                                                                                            <span className="truncate text-xs">{contact.name}</span>
+                                                                                        </div>
+                                                                                        <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* 3. TAGS & BADGES SECTION */}
+                                    {(segmentViewFilter === 'all' || segmentViewFilter === 'tags') && (
+                                        <div className="space-y-1.5 pt-1 border-t border-border/20">
+                                            <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                <span className="flex items-center gap-1.5 text-amber-400">
+                                                    <Tag className="w-3.5 h-3.5" />
+                                                    <span>Tags & Badges</span>
+                                                </span>
+                                                <span className="text-[10px] opacity-70 font-mono">
+                                                    {uniqueTags.length}
+                                                </span>
+                                            </div>
+
+                                            {uniqueTags.length === 0 ? (
+                                                <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
+                                                    No tags assigned to contacts yet.
+                                                </div>
+                                            ) : (
+                                                <div className="space-y-1">
+                                                    {uniqueTags.map(tagName => {
+                                                        const taggedContacts = allContacts.filter(c => c.tags?.includes(tagName));
+                                                        const isExpanded = !!expandedSegments[`tag:${tagName}`];
+                                                        const isFilterActive = activeSegment === `tag:${tagName}`;
+                                                        const isSelectedSegment = selectedJid === `segment:tag:${tagName}`;
+
+                                                        return (
+                                                            <div key={tagName} className={`rounded-lg border transition-all ${isSelectedSegment
+                                                                ? 'border-amber-500 ring-1 ring-amber-500/40 bg-amber-500/10'
+                                                                : isFilterActive
+                                                                    ? 'border-amber-500/50 bg-amber-500/5'
+                                                                    : 'border-border/40 bg-card/30 hover:border-border/80'
+                                                                }`}>
+                                                                <div
+                                                                    className="flex items-center justify-between p-2 cursor-pointer select-none"
+                                                                    onClick={() => setSelectedJid(`segment:tag:${tagName}`)}
+                                                                >
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <Badge variant="outline" className="text-[10px] font-semibold border-amber-500/30 text-amber-500 bg-amber-500/10 px-1.5 py-0 h-4">
+                                                                            #{tagName}
+                                                                        </Badge>
+                                                                        <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
+                                                                            {taggedContacts.length}
+                                                                        </Badge>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1">
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-amber-500 text-white' : 'text-muted-foreground hover:text-foreground'
+                                                                                }`}
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setActiveSegment(isFilterActive ? 'all' : `tag:${tagName}`);
+                                                                                setActiveTab('chats');
+                                                                            }}
+                                                                            title={isFilterActive ? "Remove filter" : "Filter chats by this tag"}
+                                                                        >
+                                                                            <Filter className="w-2.5 h-2.5" />
+                                                                            <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                toggleSegmentExpand(`tag:${tagName}`);
+                                                                            }}
+                                                                        >
+                                                                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                                                                        </Button>
+                                                                    </div>
+                                                                </div>
+
+                                                                {isExpanded && (
+                                                                    <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
+                                                                        {taggedContacts.length === 0 ? (
+                                                                            <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts with this tag</p>
+                                                                        ) : (
+                                                                            taggedContacts.map(contact => {
+                                                                                const contactLast10 = getPhoneLast10(contact.phone);
+                                                                                const isSelected = getPhoneLast10(selectedJid) === contactLast10;
+                                                                                return (
+                                                                                    <div
+                                                                                        key={contact.id}
+                                                                                        onClick={() => handleSelectContactChat(contact)}
+                                                                                        className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-amber-500/10 ${isSelected ? 'bg-amber-500/15 font-semibold text-amber-600' : 'text-foreground/90'
+                                                                                            }`}
+                                                                                    >
+                                                                                        <div className="flex items-center gap-2 truncate">
+                                                                                            <Avatar className="w-5 h-5 shrink-0 border border-border/40">
+                                                                                                <AvatarFallback className="text-[8px] bg-amber-500/10 text-amber-500 font-bold">
+                                                                                                    {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
+                                                                                                </AvatarFallback>
+                                                                                            </Avatar>
+                                                                                            <span className="truncate text-xs">{contact.name}</span>
+                                                                                        </div>
+                                                                                        <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
-
-                                <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:!block [&>div>div]:w-full">
-                                    <div className="flex flex-col p-2.5 space-y-3 w-full">
-                                        {/* 1. CATEGORIES SECTION */}
-                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'categories') && (
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                                    <span className="flex items-center gap-1.5 text-blue-400">
-                                                        <FolderPlus className="w-3.5 h-3.5" />
-                                                        <span>Categories</span>
-                                                    </span>
-                                                    <span className="text-[10px] opacity-70 font-mono">
-                                                        {uniqueCategories.length}
-                                                    </span>
-                                                </div>
-
-                                                {uniqueCategories.length === 0 ? (
-                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
-                                                        No categories created yet.
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-1">
-                                                        {uniqueCategories.map(cat => {
-                                                            const catContacts = allContacts.filter(c => c.category === cat.name);
-                                                            const isExpanded = !!expandedSegments[`category:${cat.name}`];
-                                                            const isFilterActive = activeSegment === `category:${cat.name}`;
-                                                            const isSelectedSegment = selectedJid === `segment:category:${cat.name}`;
-
-                                                            return (
-                                                                <div key={cat.name} className={`rounded-lg border transition-all ${
-                                                                    isSelectedSegment 
-                                                                        ? 'border-primary ring-1 ring-primary/40 bg-primary/10' 
-                                                                        : isFilterActive 
-                                                                        ? 'border-primary/50 bg-primary/5' 
-                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
-                                                                }`}>
-                                                                    <div
-                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
-                                                                        onClick={() => setSelectedJid(`segment:category:${cat.name}`)}
-                                                                    >
-                                                                        <div className="flex items-center gap-2 min-w-0">
-                                                                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color || '#3b82f6' }} />
-                                                                            <span className="text-xs font-semibold truncate text-foreground">{cat.name}</span>
-                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
-                                                                                {catContacts.length}
-                                                                            </Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
-                                                                                    }`}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setActiveSegment(isFilterActive ? 'all' : `category:${cat.name}`);
-                                                                                    setActiveTab('chats');
-                                                                                }}
-                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this category"}
-                                                                            >
-                                                                                <Filter className="w-2.5 h-2.5" />
-                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    toggleSegmentExpand(`category:${cat.name}`);
-                                                                                }}
-                                                                            >
-                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {isExpanded && (
-                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
-                                                                            {catContacts.length === 0 ? (
-                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this category</p>
-                                                                            ) : (
-                                                                                catContacts.map(contact => {
-                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
-                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
-                                                                                    return (
-                                                                                        <div
-                                                                                            key={contact.id}
-                                                                                            onClick={() => handleSelectContactChat(contact)}
-                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-primary/10 ${isSelected ? 'bg-primary/15 font-semibold text-primary' : 'text-foreground/90'
-                                                                                                }`}
-                                                                                        >
-                                                                                            <div className="flex items-center gap-2 truncate">
-                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
-                                                                                                    <AvatarFallback className="text-[8px] bg-primary/10 text-primary font-bold">
-                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
-                                                                                                    </AvatarFallback>
-                                                                                                </Avatar>
-                                                                                                <span className="truncate text-xs">{contact.name}</span>
-                                                                                            </div>
-                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
-                                                                                        </div>
-                                                                                    );
-                                                                                })
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* 2. BROADCAST GROUPS SECTION */}
-                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'groups') && (
-                                            <div className="space-y-1.5 pt-1 border-t border-border/20">
-                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                                    <span className="flex items-center gap-1.5 text-emerald-400">
-                                                        <Users className="w-3.5 h-3.5" />
-                                                        <span>Broadcast Groups</span>
-                                                    </span>
-                                                    <span className="text-[10px] opacity-70 font-mono">
-                                                        {groups.length}
-                                                    </span>
-                                                </div>
-
-                                                {groups.length === 0 ? (
-                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
-                                                        No broadcast groups created yet.
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-1">
-                                                        {groups.map(group => {
-                                                            const groupContacts = allContacts.filter(c => c.groups?.some(g => g.id === group.id));
-                                                            const isExpanded = !!expandedSegments[`group:${group.id}`];
-                                                            const isFilterActive = activeSegment === `group:${group.id}`;
-                                                            const isSelectedSegment = selectedJid === `segment:group:${group.id}`;
-
-                                                            return (
-                                                                <div key={group.id} className={`rounded-lg border transition-all ${
-                                                                    isSelectedSegment 
-                                                                        ? 'border-emerald-500 ring-1 ring-emerald-500/40 bg-emerald-500/10' 
-                                                                        : isFilterActive 
-                                                                        ? 'border-emerald-500/50 bg-emerald-500/5' 
-                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
-                                                                }`}>
-                                                                    <div
-                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
-                                                                        onClick={() => setSelectedJid(`segment:group:${group.id}`)}
-                                                                    >
-                                                                        <div className="flex items-center gap-2 min-w-0">
-                                                                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
-                                                                            <span className="text-xs font-semibold truncate text-foreground">{group.name}</span>
-                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
-                                                                                {groupContacts.length}
-                                                                            </Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-emerald-500 text-white' : 'text-muted-foreground hover:text-foreground'
-                                                                                    }`}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setActiveSegment(isFilterActive ? 'all' : `group:${group.id}`);
-                                                                                    setActiveTab('chats');
-                                                                                }}
-                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this group"}
-                                                                            >
-                                                                                <Filter className="w-2.5 h-2.5" />
-                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    toggleSegmentExpand(`group:${group.id}`);
-                                                                                }}
-                                                                            >
-                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {isExpanded && (
-                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
-                                                                            {groupContacts.length === 0 ? (
-                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts in this group</p>
-                                                                            ) : (
-                                                                                groupContacts.map(contact => {
-                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
-                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
-                                                                                    return (
-                                                                                        <div
-                                                                                            key={contact.id}
-                                                                                            onClick={() => handleSelectContactChat(contact)}
-                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-emerald-500/10 ${isSelected ? 'bg-emerald-500/15 font-semibold text-emerald-600' : 'text-foreground/90'
-                                                                                                }`}
-                                                                                        >
-                                                                                            <div className="flex items-center gap-2 truncate">
-                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
-                                                                                                    <AvatarFallback className="text-[8px] bg-emerald-500/10 text-emerald-500 font-bold">
-                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
-                                                                                                    </AvatarFallback>
-                                                                                                </Avatar>
-                                                                                                <span className="truncate text-xs">{contact.name}</span>
-                                                                                            </div>
-                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
-                                                                                        </div>
-                                                                                    );
-                                                                                })
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* 3. TAGS & BADGES SECTION */}
-                                        {(segmentViewFilter === 'all' || segmentViewFilter === 'tags') && (
-                                            <div className="space-y-1.5 pt-1 border-t border-border/20">
-                                                <div className="flex items-center justify-between px-1 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                                    <span className="flex items-center gap-1.5 text-amber-400">
-                                                        <Tag className="w-3.5 h-3.5" />
-                                                        <span>Tags & Badges</span>
-                                                    </span>
-                                                    <span className="text-[10px] opacity-70 font-mono">
-                                                        {uniqueTags.length}
-                                                    </span>
-                                                </div>
-
-                                                {uniqueTags.length === 0 ? (
-                                                    <div className="text-[11px] text-muted-foreground/60 italic px-2 py-1.5 bg-muted/10 rounded-lg border border-dashed border-border/30">
-                                                        No tags assigned to contacts yet.
-                                                    </div>
-                                                ) : (
-                                                    <div className="space-y-1">
-                                                        {uniqueTags.map(tagName => {
-                                                            const taggedContacts = allContacts.filter(c => c.tags?.includes(tagName));
-                                                            const isExpanded = !!expandedSegments[`tag:${tagName}`];
-                                                            const isFilterActive = activeSegment === `tag:${tagName}`;
-                                                            const isSelectedSegment = selectedJid === `segment:tag:${tagName}`;
-
-                                                            return (
-                                                                <div key={tagName} className={`rounded-lg border transition-all ${
-                                                                    isSelectedSegment 
-                                                                        ? 'border-amber-500 ring-1 ring-amber-500/40 bg-amber-500/10' 
-                                                                        : isFilterActive 
-                                                                        ? 'border-amber-500/50 bg-amber-500/5' 
-                                                                        : 'border-border/40 bg-card/30 hover:border-border/80'
-                                                                }`}>
-                                                                    <div
-                                                                        className="flex items-center justify-between p-2 cursor-pointer select-none"
-                                                                        onClick={() => setSelectedJid(`segment:tag:${tagName}`)}
-                                                                    >
-                                                                        <div className="flex items-center gap-2 min-w-0">
-                                                                            <Badge variant="outline" className="text-[10px] font-semibold border-amber-500/30 text-amber-500 bg-amber-500/10 px-1.5 py-0 h-4">
-                                                                                #{tagName}
-                                                                            </Badge>
-                                                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono">
-                                                                                {taggedContacts.length}
-                                                                            </Badge>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-1">
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className={`h-5 px-1.5 text-[9px] rounded font-medium gap-1 ${isFilterActive ? 'bg-amber-500 text-white' : 'text-muted-foreground hover:text-foreground'
-                                                                                    }`}
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    setActiveSegment(isFilterActive ? 'all' : `tag:${tagName}`);
-                                                                                    setActiveTab('chats');
-                                                                                }}
-                                                                                title={isFilterActive ? "Remove filter" : "Filter chats by this tag"}
-                                                                            >
-                                                                                <Filter className="w-2.5 h-2.5" />
-                                                                                <span>{isFilterActive ? 'Filtered' : 'Filter'}</span>
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="sm"
-                                                                                className="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                                                                                onClick={(e) => {
-                                                                                    e.stopPropagation();
-                                                                                    toggleSegmentExpand(`tag:${tagName}`);
-                                                                                }}
-                                                                            >
-                                                                                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    {isExpanded && (
-                                                                        <div className="px-2 pb-2 pt-0.5 border-t border-border/20 space-y-1">
-                                                                            {taggedContacts.length === 0 ? (
-                                                                                <p className="text-[10px] text-muted-foreground/60 italic py-1 px-1">No contacts with this tag</p>
-                                                                            ) : (
-                                                                                taggedContacts.map(contact => {
-                                                                                    const contactLast10 = getPhoneLast10(contact.phone);
-                                                                                    const isSelected = getPhoneLast10(selectedJid) === contactLast10;
-                                                                                    return (
-                                                                                        <div
-                                                                                            key={contact.id}
-                                                                                            onClick={() => handleSelectContactChat(contact)}
-                                                                                            className={`flex items-center justify-between p-1.5 rounded-md cursor-pointer text-xs transition-colors hover:bg-amber-500/10 ${isSelected ? 'bg-amber-500/15 font-semibold text-amber-600' : 'text-foreground/90'
-                                                                                                }`}
-                                                                                        >
-                                                                                            <div className="flex items-center gap-2 truncate">
-                                                                                                <Avatar className="w-5 h-5 shrink-0 border border-border/40">
-                                                                                                    <AvatarFallback className="text-[8px] bg-amber-500/10 text-amber-500 font-bold">
-                                                                                                        {(contact.name || contact.phone).substring(0, 2).toUpperCase()}
-                                                                                                    </AvatarFallback>
-                                                                                                </Avatar>
-                                                                                                <span className="truncate text-xs">{contact.name}</span>
-                                                                                            </div>
-                                                                                            <span className="text-[10px] text-muted-foreground font-mono shrink-0">{contact.phone}</span>
-                                                                                        </div>
-                                                                                    );
-                                                                                })
-                                                                            )}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </ScrollArea>
-                            </TabsContent>
-
-                        </ScrollArea>
+                            </ScrollArea>
+                        </TabsContent>
                     </Tabs>
                 </div>
 
-                <div className="flex-1 min-w-0 bg-background/30 backdrop-blur-[2px]">
+                <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-[2px]">
                     {selectedJid ? (
                         <>
                             {/* Chat Header */}
                             {isSegmentChat ? (
-                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between shrink-0">
                                     <div className="flex items-center gap-3">
                                         <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSelectedJid(null)}>
                                             <ArrowLeft className="w-4 h-4" />
                                         </Button>
                                         <Avatar className="w-10 h-10 border border-border/50 shadow-xs">
-                                            <AvatarFallback className={`font-bold ${
-                                                activeSegmentData?.type === 'group' 
-                                                    ? 'bg-emerald-500/15 text-emerald-500' 
-                                                    : activeSegmentData?.type === 'category' 
-                                                    ? 'bg-blue-500/15 text-blue-500' 
+                                            <AvatarFallback className={`font-bold ${activeSegmentData?.type === 'group'
+                                                ? 'bg-emerald-500/15 text-emerald-500'
+                                                : activeSegmentData?.type === 'category'
+                                                    ? 'bg-blue-500/15 text-blue-500'
                                                     : 'bg-amber-500/15 text-amber-500'
-                                            }`}>
+                                                }`}>
                                                 {activeSegmentData?.type === 'group' ? <Users className="w-5 h-5" /> : activeSegmentData?.type === 'category' ? <FolderPlus className="w-5 h-5" /> : <Tag className="w-5 h-5" />}
                                             </AvatarFallback>
                                         </Avatar>
@@ -1709,7 +1708,7 @@ export default function WhatsAppChatsPage() {
                                     </div>
                                 </div>
                             ) : (
-                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between">
+                                <div className="px-4 h-14 border-b border-border/50 bg-card/20 backdrop-blur-md flex items-center justify-between shrink-0">
                                     <div className="flex items-center gap-3">
                                         <Button variant="ghost" size="icon" className="md:hidden">
                                             <ArrowLeft className="w-4 h-4" />
@@ -1836,7 +1835,7 @@ export default function WhatsAppChatsPage() {
 
                             {/* Chat Messages */}
                             {isSegmentChat ? (
-                                <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
+                                <ScrollArea className="flex-1 min-h-0 p-4 md:p-6 relative w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
                                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
 
                                     <div className="flex flex-col gap-4 relative z-10 pb-12 max-w-3xl mx-auto">
@@ -1912,7 +1911,7 @@ export default function WhatsAppChatsPage() {
                                     </div>
                                 </ScrollArea>
                             ) : (
-                                <ScrollArea className="flex-1 h-[calc(100vh-280px)] min-h-[350px] p-6 relative">
+                                <ScrollArea className="flex-1 min-h-0 p-4 md:p-6 relative w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
                                     {/* WhatsApp-style Background Pattern Overlay */}
                                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#005a4a 0.5px, transparent 0.5px)', backgroundSize: '20px 20px' }} />
 
@@ -2019,7 +2018,7 @@ export default function WhatsAppChatsPage() {
                             )}
 
                             {/* Chat Input */}
-                            <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3">
+                            <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3 shrink-0">
                                 <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
                                     <Smile className="w-5 h-5" />
                                 </Button>
@@ -2095,7 +2094,7 @@ export default function WhatsAppChatsPage() {
                         <div id='chat-empty' className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full bg-muted/5 animate-in fade-in zoom-in duration-700">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
                                 <MessageSquare className="w-8 h-8 text-primary/60" />
-                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-[3000ms]" />
+                                <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-ping duration-3000" />
                             </div>
 
                             <h3 className="text-sm font-bold text-zinc-800 mb-1">Select a conversation</h3>

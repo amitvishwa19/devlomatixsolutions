@@ -32,6 +32,22 @@ const handler = async (data) => {
             ].filter(Boolean))
         ];
 
+        // Also include userIds from all credentials associated with this workspace
+        const workspaceCreds = await db.credentials.findMany({
+            where: {
+                OR: [
+                    { workspaceId },
+                    { userId: { in: workspaceUserIds } }
+                ]
+            }
+        }).catch(() => []);
+
+        workspaceCreds.forEach(c => {
+            if (c.userId && !workspaceUserIds.includes(c.userId)) {
+                workspaceUserIds.push(c.userId);
+            }
+        });
+
         // 2. Resolve Active Default Credential (Prioritize user's switched default)
         let defaultCredential = await db.credentials.findFirst({
             where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
@@ -91,19 +107,6 @@ const handler = async (data) => {
         }).catch(() => []);
         const assignedJids = assignedShares.map(s => s.jid);
 
-        // 4. Fetch messages: workspace user messages + assigned messages
-        const ownMessages = db.whatsAppMessage.findMany({
-            where: { userId: { in: workspaceUserIds } },
-            orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
-        });
-
-        const assignedMessages = assignedJids.length > 0
-            ? db.whatsAppMessage.findMany({
-                where: { jid: { in: assignedJids } },
-                orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
-            })
-            : Promise.resolve([]);
-
         const allContacts = db.contact.findMany({
             where: {
                 OR: [
@@ -126,13 +129,37 @@ const handler = async (data) => {
             where: { userId: { in: workspaceUserIds } }
         }).catch(() => []);
 
-        const [rawMessages, rawAssignedMsgs, contacts, shares, products] = await Promise.all([
-            ownMessages, 
-            assignedMessages, 
+        const [contacts, shares, products] = await Promise.all([
             allContacts,
             allShares,
             allProducts
         ]);
+
+        // 4. Fetch messages: workspace user messages + assigned messages + contact-related messages
+        const contactJidPatterns = contacts.map(c => {
+            if (!c.phone) return null;
+            return c.phone.replace(/\D/g, '');
+        }).filter(Boolean);
+
+        const ownMessages = await db.whatsAppMessage.findMany({
+            where: {
+                OR: [
+                    { userId: { in: workspaceUserIds } },
+                    ...(contactJidPatterns.length > 0 ? [
+                        { jid: { in: contactJidPatterns.map(d => `${d}@s.whatsapp.net`) } },
+                        { jid: { in: contactJidPatterns.map(d => (d.length === 10 ? `91${d}@s.whatsapp.net` : `${d}@s.whatsapp.net`)) } }
+                    ] : [])
+                ]
+            },
+            orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
+        }).catch(() => []);
+
+        const assignedMessages = assignedJids.length > 0
+            ? await db.whatsAppMessage.findMany({
+                where: { jid: { in: assignedJids } },
+                orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
+            }).catch(() => [])
+            : [];
 
         const skuProductMap = new Map();
         const titleProductMap = new Map();
@@ -141,24 +168,9 @@ const handler = async (data) => {
             if (p.title) titleProductMap.set(String(p.title).toLowerCase().trim(), p);
         });
 
-        // 5. Filter messages strictly by activePhoneId if available
-        const filterByActivePhone = (msg) => {
-            if (!activePhoneId) return true;
-            const msgPhoneId = msg.metadata?.phone_number_id || 
-                               msg.metadata?.phoneNumberId || 
-                               msg.metadata?.phoneId ||
-                               msg.metadata?.raw?.metadata?.phone_number_id ||
-                               msg.metadata?.raw?.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
-            if (msgPhoneId) {
-                return String(msgPhoneId) === activePhoneId;
-            }
-            // For legacy messages without phone_number_id in metadata:
-            // if no phone ID was ever stamped, include it so old data isn't hidden
-            return true;
-        };
-
-        const messages = rawMessages.filter(filterByActivePhone);
-        const assignedMsgs = rawAssignedMsgs.filter(filterByActivePhone);
+        // Use all fetched messages for the workspace so all chats remain visible
+        const messages = ownMessages;
+        const assignedMsgs = assignedMessages;
 
         // Fetch contacts owned by assigning users for name resolution
         const assigningUserIds = [...new Set(assignedShares.map(s => s.sharedByUserId))];
@@ -204,7 +216,12 @@ const handler = async (data) => {
             const fullJid = cleanPhone.length === 10 ? `91${cleanPhone}@s.whatsapp.net` : `${cleanPhone}@s.whatsapp.net`;
             const msgTimestamp = Number(msg.timestamp) || Math.floor(new Date(msg.createdAt).getTime() / 1000);
 
-            let meta = JSON.parse(JSON.stringify(msg.metadata || {}));
+            let meta = {};
+            if (typeof msg.metadata === 'string') {
+                try { meta = JSON.parse(msg.metadata); } catch (e) { meta = {}; }
+            } else if (msg.metadata && typeof msg.metadata === 'object') {
+                meta = JSON.parse(JSON.stringify(msg.metadata));
+            }
 
             // Auto-enrich product image and info if not present
             if (!meta.productImageUrl && !meta.mediaUrl && !meta.imageUrl) {

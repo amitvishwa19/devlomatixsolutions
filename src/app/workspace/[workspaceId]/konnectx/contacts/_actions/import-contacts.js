@@ -46,26 +46,33 @@ const handler = async (data) => {
                 const tagsRaw = record.tags || '';
                 const tags = Array.isArray(tagsRaw) ? tagsRaw : (tagsRaw ? String(tagsRaw).split('|').map(t => t.trim()).filter(Boolean) : []);
 
-                await db.contact.upsert({
-                    where: {
-                        workspaceId_phone: { workspaceId, phone: cleanPhone }
-                    },
-                    update: {
-                        name,
-                        email,
-                        category,
-                        tags: { set: tags }
-                    },
-                    create: {
-                        name,
-                        phone: cleanPhone,
-                        email,
-                        userId,
-                        workspaceId,
-                        category,
-                        tags
-                    }
+                const existingContact = await db.contact.findFirst({
+                    where: { workspaceId, phone: cleanPhone }
                 });
+
+                if (existingContact) {
+                    await db.contact.update({
+                        where: { id: existingContact.id },
+                        data: {
+                            name,
+                            email,
+                            category,
+                            tags: tags
+                        }
+                    });
+                } else {
+                    await db.contact.create({
+                        data: {
+                            name,
+                            phone: cleanPhone,
+                            email,
+                            userId,
+                            workspaceId,
+                            category,
+                            tags
+                        }
+                    });
+                }
 
                 successCount++;
             } catch (rowError) {

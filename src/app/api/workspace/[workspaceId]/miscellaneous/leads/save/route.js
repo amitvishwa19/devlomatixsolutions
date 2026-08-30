@@ -67,26 +67,35 @@ export async function POST(req, { params }) {
                         };
 
                         // Upsert the contact based on phone number
-                        // Note: upsert in Prisma is atomic. If phone is @unique, this is safe.
-                        const contact = await tx.contact.upsert({
-                            where: { workspaceId_phone: { workspaceId, phone: cleanPhone } },
-                            update: {
-                                name: lead.name,
-                                email: lead.email || undefined,
-                                info: info,
-                                userId: userId,
-                                type: 'LEAD'
-                            },
-                            create: {
-                                name: lead.name,
-                                phone: cleanPhone,
-                                email: lead.email || undefined,
-                                info: info,
-                                userId: userId,
-                                workspaceId,
-                                type: 'LEAD'
-                            }
+                        const existingContact = await tx.contact.findFirst({
+                            where: { workspaceId, phone: cleanPhone }
                         });
+
+                        let contact;
+                        if (existingContact) {
+                            contact = await tx.contact.update({
+                                where: { id: existingContact.id },
+                                data: {
+                                    name: lead.name,
+                                    email: lead.email || undefined,
+                                    info: info,
+                                    userId: userId,
+                                    type: 'LEAD'
+                                }
+                            });
+                        } else {
+                            contact = await tx.contact.create({
+                                data: {
+                                    name: lead.name,
+                                    phone: cleanPhone,
+                                    email: lead.email || undefined,
+                                    info: info,
+                                    userId: userId,
+                                    workspaceId,
+                                    type: 'LEAD'
+                                }
+                            });
+                        }
 
                         // If a group is selected, link the contact to it
                         if (groupId) {

@@ -134,46 +134,57 @@ export async function saveCandidateAsContactAction(workspaceId, data) {
             savedAt: new Date().toISOString()
         };
 
-        const contact = await db.contact.upsert({
+        const existingContact = await db.contact.findFirst({
             where: {
-                workspaceId_phone: {
-                    workspaceId,
-                    phone: cleanPhone
-                }
-            },
-            update: {
-                name: name.trim(),
-                email: email?.trim() || null,
-                title: title?.trim() || null,
-                category: category?.trim() || null,
-                tags: Array.isArray(tags) ? tags : [],
-                type: type || 'CANDIDATE',
-                address: address?.trim() || null,
-                info,
-                groups: {
-                    set: (groupIds || []).map(id => ({ id }))
-                }
-            },
-            create: {
                 workspaceId,
-                userId,
-                name: name.trim(),
-                phone: cleanPhone,
-                email: email?.trim() || null,
-                title: title?.trim() || null,
-                category: category?.trim() || null,
-                tags: Array.isArray(tags) ? tags : [],
-                type: type || 'CANDIDATE',
-                address: address?.trim() || null,
-                info,
-                groups: {
-                    connect: (groupIds || []).map(id => ({ id }))
-                }
-            },
-            include: {
-                groups: true
+                phone: cleanPhone
             }
         });
+
+        let contact;
+        if (existingContact) {
+            contact = await db.contact.update({
+                where: { id: existingContact.id },
+                data: {
+                    name: name.trim(),
+                    email: email?.trim() || null,
+                    title: title?.trim() || null,
+                    category: category?.trim() || null,
+                    tags: Array.isArray(tags) ? tags : [],
+                    type: type || 'CANDIDATE',
+                    address: address?.trim() || null,
+                    info,
+                    groups: {
+                        set: (groupIds || []).map(id => ({ id }))
+                    }
+                },
+                include: {
+                    groups: true
+                }
+            });
+        } else {
+            contact = await db.contact.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    name: name.trim(),
+                    phone: cleanPhone,
+                    email: email?.trim() || null,
+                    title: title?.trim() || null,
+                    category: category?.trim() || null,
+                    tags: Array.isArray(tags) ? tags : [],
+                    type: type || 'CANDIDATE',
+                    address: address?.trim() || null,
+                    info,
+                    groups: {
+                        connect: (groupIds || []).map(id => ({ id }))
+                    }
+                },
+                include: {
+                    groups: true
+                }
+            });
+        }
 
         // Ensure sharing record exists
         await db.contactShare.upsert({

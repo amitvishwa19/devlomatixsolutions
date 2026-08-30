@@ -45,40 +45,48 @@ export async function saveLeadAction(workspaceId, data) {
             raw: data.raw || {} // Store full exact response here
         };
 
-        const contact = await db.contact.upsert({
+        const existingContact = await db.contact.findFirst({
             where: {
-                workspaceId_phone: {
-                    workspaceId,
-                    phone: cleanPhone
-                }
-            },
-            update: {
-                name,
-                email: email || undefined,
-                title: title || undefined,
-                category: category || undefined,
-                address: address || undefined,
-                location: location || undefined,
-                tags: tags || [],
-                info: info,
-                userId,
-                type: 'GOOGLE_PLACE'
-            },
-            create: {
                 workspaceId,
-                userId,
-                name,
-                phone: cleanPhone,
-                email: email || undefined,
-                title: title || undefined,
-                category: category || undefined,
-                address: address || undefined,
-                location: location || undefined,
-                tags: tags || [],
-                info: info,
-                type: 'GOOGLE_PLACE'
+                phone: cleanPhone
             }
         });
+
+        let contact;
+        if (existingContact) {
+            contact = await db.contact.update({
+                where: { id: existingContact.id },
+                data: {
+                    name,
+                    email: email || undefined,
+                    title: title || undefined,
+                    category: category || undefined,
+                    address: address || undefined,
+                    location: location || undefined,
+                    tags: tags || [],
+                    info: info,
+                    userId,
+                    type: 'GOOGLE_PLACE'
+                }
+            });
+        } else {
+            contact = await db.contact.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    name,
+                    phone: cleanPhone,
+                    email: email || undefined,
+                    title: title || undefined,
+                    category: category || undefined,
+                    address: address || undefined,
+                    location: location || undefined,
+                    tags: tags || [],
+                    info: info,
+                    type: 'GOOGLE_PLACE'
+                }
+            });
+        }
 
         revalidatePath(`/workspace/${workspaceId}/miscellaneous/leads`);
         
