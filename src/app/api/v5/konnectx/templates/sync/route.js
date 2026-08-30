@@ -37,26 +37,46 @@ export async function POST(request) {
 
     const metaTemplates = result.data || [];
     let synced = 0;
+    const syncPhoneNumberId = cloudCreds?.phoneNumberId || null;
 
     for (const mt of metaTemplates) {
       const existing = await db.messageTemplate.findFirst({
-        where: { ...(userId && { userId }), templateName: mt.name }
+        where: {
+          ...(userId && { userId }),
+          templateName: mt.name,
+          ...(syncPhoneNumberId ? { phoneNumberId: syncPhoneNumberId } : {})
+        }
       });
 
       if (!existing) {
-        await db.messageTemplate.create({
-          data: {
+        // Adopt an untagged (legacy) copy of this template into the syncing account when present
+        const untagged = syncPhoneNumberId
+          ? await db.messageTemplate.findFirst({
+              where: { ...(userId && { userId }), templateName: mt.name, phoneNumberId: null }
+            })
+          : null;
+
+        if (untagged) {
+          await db.messageTemplate.update({
+            where: { id: untagged.id },
+            data: { phoneNumberId: syncPhoneNumberId },
+          });
+        } else {
+          await db.messageTemplate.create({
+            data: {
 ...(userId && { userId }),
-            name: mt.name,
-            templateName: mt.name,
-            category: mt.category || 'UTILITY',
-            language: mt.language || 'en_US',
-            type: (mt.components?.find(c => c.type === 'HEADER')?.format || 'text').toLowerCase(),
-            body: mt.components?.find(c => c.type === 'BODY')?.text || '',
-            status: mt.status || 'APPROVED',
-            platform: 'WHATSAPP_CLOUD',
-          },
-        });
+              name: mt.name,
+              templateName: mt.name,
+              category: mt.category || 'UTILITY',
+              language: mt.language || 'en_US',
+              type: (mt.components?.find(c => c.type === 'HEADER')?.format || 'text').toLowerCase(),
+              body: mt.components?.find(c => c.type === 'BODY')?.text || '',
+              status: mt.status || 'APPROVED',
+              platform: 'WHATSAPP_CLOUD',
+              phoneNumberId: syncPhoneNumberId,
+            },
+          });
+        }
         synced++;
       }
     }

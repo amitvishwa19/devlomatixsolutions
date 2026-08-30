@@ -5,16 +5,17 @@ import { decrypt } from "@/lib/auth";
 async function getUserIdFromRequest(request) {
   try {
     const authHeader = request.headers.get("authorization");
-    if (!authHeader) {
-      console.warn('[getUserIdFromRequest] No authorization header found');
-      return null;
+    if (authHeader) {
+      const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
+      const payload = await decrypt(token);
+      if (payload?.userId) return payload.userId;
     }
-    const token = authHeader.startsWith("Bearer ") ? authHeader.substring(7) : authHeader;
-    const payload = await decrypt(token);
-    return payload?.userId || null;
+    const { searchParams } = new URL(request.url);
+    return searchParams.get("userId") || null;
   } catch (error) {
     console.error('[getUserIdFromRequest] Error decrypting token:', error);
-    return null;
+    const { searchParams } = new URL(request.url);
+    return searchParams.get("userId") || null;
   }
 }
 
@@ -26,11 +27,25 @@ export async function GET(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const phoneNumberId =
+      searchParams.get("phoneNumberId") ||
+      searchParams.get("phone_number_id") ||
+      searchParams.get("phonenumberid") ||
+      searchParams.get("phoneNumber");
+
     const templates = await db.messageTemplate.findMany({
       where: {
-        OR: [
-          { userId },
-          { sharedWith: { some: { sharedWithUserId: userId } } }
+        AND: [
+          {
+            OR: [
+              { userId },
+              { sharedWith: { some: { sharedWithUserId: userId } } }
+            ]
+          },
+          ...(phoneNumberId
+            ? [{ OR: [{ phoneNumberId }, { phoneNumberId: null }] }]
+            : [])
         ]
       },
       include: {
@@ -71,11 +86,18 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { name, category, language, type, body: templateBody, footer, buttons, metadata, platform, status } = body;
+    const { name, category, language, type, body: templateBody, footer, buttons, metadata, platform, status, phoneNumberId } = body;
 
     if (!name || !templateBody) {
       return NextResponse.json({ error: "Name and body are required" }, { status: 400 });
     }
+
+    const { searchParams } = new URL(request.url);
+    const accountPhone =
+      phoneNumberId ||
+      searchParams.get("phoneNumberId") ||
+      searchParams.get("phone_number_id") ||
+      null;
 
     const template = await db.messageTemplate.create({
       data: {
@@ -91,6 +113,7 @@ export async function POST(request) {
         metadata: metadata || {},
         platform: platform || 'WHATSAPP_CLOUD',
         status: status || 'DRAFT',
+        phoneNumberId: accountPhone,
       },
     });
 
