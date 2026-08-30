@@ -94,6 +94,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import MediaBubble from "./_components/MediaBubble";
 import TemplateMessage from "./_components/TemplateMessage";
+import ChatTemplatePreview from "./_components/ChatTemplatePreview";
 import AccountSwitcher from "../_components/AccountSwitcher";
 
 // Helper: Parse lastMessage JSON and return a preview string
@@ -1885,27 +1886,49 @@ export default function WhatsAppChatsPage() {
                                                 </p>
                                             </div>
                                         ) : (
-                                            broadcastHistory[selectedJid].map((msg) => (
-                                                <div key={msg.id} className="flex justify-end w-full">
-                                                    <div className="max-w-[85%] relative bg-primary text-primary-foreground p-3.5 rounded-2xl rounded-tr-none shadow-sm space-y-1.5">
-                                                        <div className="flex items-center justify-between gap-4 text-[10px] opacity-80 border-b border-primary-foreground/20 pb-1">
-                                                            <span className="font-semibold flex items-center gap-1">
-                                                                <Radio className="w-2.5 h-2.5" /> Broadcast Message
-                                                            </span>
-                                                            <span>Sent to {msg.recipientCount || activeSegmentData?.recipients?.length} members</span>
+                                            broadcastHistory[selectedJid].map((msg) => {
+                                                const isBcTemplate = msg.metadata?.type === 'template' ||
+                                                    msg.metadata?.type === 'TEMPLATE' ||
+                                                    Boolean(msg.metadata?.templateName) ||
+                                                    (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
+                                                const bcTemplateName = msg.metadata?.templateName ||
+                                                    (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
+                                                        ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
+                                                        : null);
+                                                const bcTemplateDef = isBcTemplate && bcTemplateName
+                                                    ? templates.find(t => t.templateName === bcTemplateName || t.name === bcTemplateName)
+                                                    : null;
+
+                                                if (isBcTemplate) {
+                                                    return (
+                                                        <div key={msg.id} className="flex justify-end w-full">
+                                                            <TemplateMessage msg={msg} templateDefinition={bcTemplateDef} />
                                                         </div>
-                                                        <p className="text-xs whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                                                        <div className="flex items-center justify-end gap-1.5 text-[9px] opacity-75 pt-0.5">
-                                                            <span>{formatDistanceToNow(new Date(msg.timestamp * 1000))} ago</span>
-                                                            {msg.status === 'PENDING' ? (
-                                                                <Loader2 className="w-3 h-3 animate-spin" />
-                                                            ) : (
-                                                                <CheckCheck className="w-3 h-3 text-emerald-300" />
-                                                            )}
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div key={msg.id} className="flex justify-end w-full">
+                                                        <div className="max-w-[85%] relative bg-primary text-primary-foreground p-3.5 rounded-2xl rounded-tr-none shadow-sm space-y-1.5">
+                                                            <div className="flex items-center justify-between gap-4 text-[10px] opacity-80 border-b border-primary-foreground/20 pb-1">
+                                                                <span className="font-semibold flex items-center gap-1">
+                                                                    <Radio className="w-2.5 h-2.5" /> Broadcast Message
+                                                                </span>
+                                                                <span>Sent to {msg.recipientCount || activeSegmentData?.recipients?.length} members</span>
+                                                            </div>
+                                                            <p className="text-xs whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+                                                            <div className="flex items-center justify-end gap-1.5 text-[9px] opacity-75 pt-0.5">
+                                                                <span>{formatDistanceToNow(new Date(msg.timestamp * 1000))} ago</span>
+                                                                {msg.status === 'PENDING' ? (
+                                                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                                                ) : (
+                                                                    <CheckCheck className="w-3 h-3 text-emerald-300" />
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            ))
+                                                );
+                                            })
                                         )}
                                         <div ref={scrollRef} className="h-4 w-full shrink-0" />
                                     </div>
@@ -2002,11 +2025,13 @@ export default function WhatsAppChatsPage() {
                                                                 </Button>
                                                             </div>
 
-                                                            {/* Common Meta Info (Time & Status) */}
-                                                            <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
-                                                                {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
-                                                                {msg.fromMe && <MessageStatus status={msg.status} />}
-                                                            </div>
+                                                            {/* Common Meta Info (Time & Status) — template bubbles embed their own time/ticks */}
+                                                            {!isTemplate && (
+                                                                <div className={`flex items-center justify-end gap-1 mt-1 text-[9px] px-1 ${msg.fromMe ? 'text-primary/60' : 'text-muted-foreground/60'}`}>
+                                                                    {formatDistanceToNow(new Date(msg.timestamp * 1000))} ago
+                                                                    {msg.fromMe && <MessageStatus status={msg.status} />}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 );
@@ -2548,6 +2573,16 @@ export default function WhatsAppChatsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Template Preview Dialog */}
+            <ChatTemplatePreview
+                template={previewTemplate}
+                isOpen={isPreviewOpen}
+                onClose={() => {
+                    setIsPreviewOpen(false);
+                    setPreviewTemplate(null);
+                }}
+            />
         </div>
     );
 }

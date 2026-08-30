@@ -35,6 +35,9 @@ export async function POST(request) {
     let result;
     const cleanTo = to.replace(/\D/g, '');
 
+    let storedText = messageBody || '';
+    let storedMetadata = { type: type || 'text', phone_number_id: cloudCreds?.phoneNumberId || '' };
+
     if (type === 'template' && template) {
       result = await cloudApi.sendTemplateMessage(
         cloudCreds,
@@ -43,6 +46,48 @@ export async function POST(request) {
         template.language?.code || 'en_US',
         template.components || []
       );
+
+      // Enrich stored message: interpolated preview text + templateName/media/header
+      try {
+        const dbTemplate = await db.messageTemplate.findFirst({
+          where: {
+            ...(userId && { userId }),
+            OR: [{ name: template.name }, { templateName: template.name }]
+          }
+        });
+
+        let previewText = `[Template: ${template.name}]`;
+        let mediaUrl = '';
+
+        if (dbTemplate?.body) {
+          let fullText = dbTemplate.body || '';
+          const bodyComp = template.components?.find((c) => c.type?.toLowerCase() === 'body');
+          if (bodyComp?.parameters) {
+            bodyComp.parameters.forEach((param, idx) => {
+              fullText = fullText.replace(`{{${idx + 1}}}`, param.text || '');
+            });
+          }
+          fullText = fullText.replace(/\{\{\d+\}\}/g, '').trim();
+          if (fullText) previewText = fullText;
+
+          const headerComp = template.components?.find((c) => c.type?.toLowerCase() === 'header');
+          const mediaParam = headerComp?.parameters?.[0];
+          if (mediaParam && ['image', 'video', 'document'].includes(mediaParam.type)) {
+            mediaUrl = mediaParam[mediaParam.type]?.link || '';
+          }
+        }
+
+        storedText = previewText;
+        storedMetadata = {
+          type: 'template',
+          templateName: template.name,
+          ...(mediaUrl && { mediaUrl }),
+          originalPayload: { type: 'template', template },
+          phone_number_id: cloudCreds?.phoneNumberId || ''
+        };
+      } catch (enrichErr) {
+        console.error('[Chats Send] Template enrich failed:', enrichErr);
+      }
     } else {
       result = await cloudApi.sendTextMessage(cloudCreds, cleanTo, messageBody || '');
     }
@@ -56,11 +101,11 @@ export async function POST(request) {
 ...(userId && { userId }),
         waId: result.data?.messages?.[0]?.id || `msg_${Date.now()}`,
         jid: cleanTo + '@s.whatsapp.net',
-        text: messageBody || '',
+        text: storedText,
         fromMe: true,
         timestamp: BigInt(Math.floor(Date.now() / 1000)),
         status: 'SENT',
-        metadata: { type: type || 'text', phone_number_id: cloudCreds?.phoneNumberId || '' },
+        metadata: storedMetadata,
       },
     });
 
