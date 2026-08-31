@@ -37,6 +37,35 @@ export async function POST(request) {
   }
 }
 
+export async function PATCH(request) {
+  try {
+    const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Rule id is required" }, { status: 400 });
+    }
+
+    const existing = await db.autoResponderRule.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: "Rule not found" }, { status: 404 });
+    }
+
+    const updateData = {};
+    if (body.trigger !== undefined) updateData.trigger = body.trigger;
+    if (body.response !== undefined) updateData.response = body.response;
+    if (body.matchType !== undefined) updateData.matchType = body.matchType;
+    if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
+
+    const rule = await db.autoResponderRule.update({ where: { id }, data: updateData });
+
+    return NextResponse.json({ success: true, data: { rule } });
+  } catch (error) {
+    return NextResponse.json({ error: error.message || "Failed to update auto-responder rule" }, { status: 500 });
+  }
+}
+
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
