@@ -1,8 +1,10 @@
 'use client'
 import React from 'react';
 import Link from 'next/link';
-import { Rocket } from 'lucide-react';
+import "@/css/public.css";
+import { Rocket, Sparkles } from 'lucide-react';
 import { AppLogo } from '@/components/global/AppLogo';
+import { motion } from "framer-motion";
 
 const AuthLayout = ({ children }) => {
     return (
@@ -27,15 +29,29 @@ const AuthLayout = ({ children }) => {
 
                 {/* Main Hero Text */}
                 <div className="max-w-2xl mt-12">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#00F0FF]/10 text-[#00F0FF] text-sm font-medium mb-8 border border-[#00F0FF]/20">
-                        <Rocket className="w-4 h-4 fill-current" />
-                        <span>Unified SaaS Mission Control</span>
+
+
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-6">
+                        <Rocket className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+                            Unified SaaS Mission Control
+                        </span>
                     </div>
 
-                    <h1 className="text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight">
-                        Deploy <span className="text-transparent bg-clip-text bg-linear-to-r from-[#00F0FF] to-[#7B2CBF]">Missions</span><br />
-                        From One Hub
-                    </h1>
+                    {/* Main Heading */}
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.14] mb-6 text-foreground tracking-tight"
+                    >
+                        Deploy
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                            Missions From One Hub
+                        </span>
+                    </motion.h1>
+
+
 
                     <p className="text-slate-400 text-lg mb-16 leading-relaxed max-w-xl">
                         A production-ready foundation for high-performance agent deployment, real-time telemetry, and multi-tenant workspace management.

@@ -157,7 +157,7 @@ const Hero = () => {
                                 <div className="relative rounded-2xl border border-border/80 dark:border-white/15 shadow-2xl overflow-hidden bg-card dark:bg-[#11171d]">
                                     {/* Top decorative gradient bar */}
                                     <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-orange-500 to-amber-400" />
-                                    
+
                                     <img
                                         src={heroDashboard.src}
                                         alt="Modern tech dashboard with data visualizations"
