@@ -16,7 +16,7 @@ const Hero = () => {
         <div className="w-full">
             <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24 pb-16 w-full">
                 {/* Vibrant ambient mesh background */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 via-indigo-500/6 to-rose-500/5 dark:bg-[radial-gradient(circle_at_top_right,rgba(253,131,11,0.13),transparent_35%),radial-gradient(circle_at_left_top,rgba(229,26,26,0.15),transparent_30%),linear-gradient(180deg,#0d1318_0%,#060a0d_100%)] pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/8 via-indigo-500/6 to-rose-500/5 dark:bg-[radial-gradient(circle_at_top_right,rgba(14,165,233,0.13),transparent_35%),radial-gradient(circle_at_left_top,rgba(59,130,246,0.15),transparent_30%),linear-gradient(180deg,#0d1318_0%,#060a0d_100%)] pointer-events-none" />
 
                 {/* High-Tech Grid Pattern */}
                 <div className="absolute inset-0 grid-pattern opacity-30 pointer-events-none" />
@@ -29,30 +29,30 @@ const Hero = () => {
 
                 {/* Floating Micro-Badges */}
                 <motion.div
-                    className="absolute top-28 right-16 px-4 py-2 rounded-2xl glass-card hidden xl:flex items-center gap-2.5 shadow-lg border border-amber-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md"
+                    className="absolute top-28 right-16 px-4 py-2 rounded-2xl glass-card hidden xl:flex items-center gap-2.5 shadow-lg border border-sky-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md"
                     animate={{ y: [0, -15, 0] }}
                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                 >
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs shadow-xs font-bold">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-xs shadow-xs font-bold">
                         ⚡
                     </div>
                     <div>
                         <div className="text-xs font-bold text-foreground">High Speed</div>
-                        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">Sub-second Latency</div>
+                        <div className="text-[10px] text-sky-600 dark:text-sky-400 font-semibold">Sub-second Latency</div>
                     </div>
                 </motion.div>
 
                 <motion.div
-                    className="absolute bottom-32 left-12 px-4 py-2 rounded-2xl glass-card hidden xl:flex items-center gap-2.5 shadow-lg border border-red-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md"
+                    className="absolute bottom-32 left-12 px-4 py-2 rounded-2xl glass-card hidden xl:flex items-center gap-2.5 shadow-lg border border-blue-500/30 bg-card/90 dark:bg-[#11171d]/90 backdrop-blur-md"
                     animate={{ y: [0, -18, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 >
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-white text-xs shadow-xs font-bold">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-blue-500 to-sky-600 flex items-center justify-center text-white text-xs shadow-xs font-bold">
                         ✦
                     </div>
                     <div>
                         <div className="text-xs font-bold text-foreground">AI Automation</div>
-                        <div className="text-[10px] text-orange-500 dark:text-orange-400 font-semibold">Smart Workflows</div>
+                        <div className="text-[10px] text-cyan-600 dark:text-cyan-400 font-semibold">Smart Workflows</div>
                     </div>
                 </motion.div>
 
@@ -61,9 +61,9 @@ const Hero = () => {
                         {/* Left Content */}
                         <div className="text-center lg:text-left">
                             {/* Badge */}
-                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-6">
-                                <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-                                <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+                            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-6">
+                                <Sparkles className="w-4 h-4 text-primary" />
+                                <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                                     Digital Sovereignty & Enterprise Workplaces
                                 </span>
                             </div>
@@ -77,7 +77,7 @@ const Hero = () => {
                             >
                                 We Build Digital Systems <br />
                                 That{" "}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
                                     Scale Without Limits.
                                 </span>
                             </motion.h1>
@@ -103,7 +103,7 @@ const Hero = () => {
                                     variant="hero"
                                     size="xl"
                                     onClick={() => setIsProjectInquiryOpen(true)}
-                                    className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-red-500/25 hover:shadow-red-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
+                                    className="bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:brightness-110 text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
                                 >
                                     Start Your Project
                                     <ArrowRight className="w-5 h-5 ml-1" />
@@ -152,11 +152,11 @@ const Hero = () => {
                         >
                             <div className="relative">
                                 {/* Flame/Orange ambient glow effect behind image */}
-                                <div className="absolute -inset-4 bg-gradient-to-r from-red-500/25 via-orange-500/25 to-amber-500/15 rounded-3xl blur-2xl opacity-60 dark:opacity-50" />
+                                <div className="absolute -inset-4 bg-gradient-to-r from-sky-500/25 via-blue-500/25 to-indigo-500/15 rounded-3xl blur-2xl opacity-60 dark:opacity-50" />
 
                                 <div className="relative rounded-2xl border border-border/80 dark:border-white/15 shadow-2xl overflow-hidden bg-card dark:bg-[#11171d]">
                                     {/* Top decorative gradient bar */}
-                                    <div className="h-1.5 w-full bg-gradient-to-r from-red-600 via-orange-500 to-amber-400" />
+                                    <div className="h-1.5 w-full bg-gradient-to-r from-primary via-blue-500 to-indigo-500" />
 
                                     <img
                                         src={heroDashboard.src}

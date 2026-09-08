@@ -189,7 +189,7 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
 
     return (
         <Dialog open={isOpen} onOpenChange={handleClose} modal={false}>
-            <DialogContent className="min-h-[90vh] max-h-[90vh] min-w-[90vw] bg-background rounded-xl p-0 overflow-hidden flex flex-col border">
+            <DialogContent className="min-h-[90vh] max-h-[90vh] min-w-[90vw] bg-background rounded-4xl p-0 overflow-hidden flex flex-col border  hover:border-primary/60">
                 <DialogHeader className="sr-only">
                     <DialogTitle>{job.title || "Job Application"}</DialogTitle>
                     <DialogDescription>Submit your application for {job.title || "this position"}</DialogDescription>

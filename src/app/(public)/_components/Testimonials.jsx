@@ -51,16 +51,16 @@ const Testimonials = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
               Partner Testimonials
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
             Validated by Teams Who{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
               Demand Excellence.
             </span>
           </h2>
@@ -78,7 +78,7 @@ const Testimonials = () => {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ y: -6 }}
-              className="glass-card dark:zx-card p-8 rounded-2xl relative overflow-hidden hover:shadow-xl hover:border-orange-500/50 transition-all duration-300 flex flex-col justify-between group"
+              className="glass-card dark:zx-card p-8 rounded-2xl relative overflow-hidden hover:shadow-xl hover:border-primary/50 transition-all duration-300 flex flex-col justify-between group"
             >
               {/* Top gradient accent */}
               <div className={`h-1.5 w-full bg-gradient-to-r ${testimonial.topBar} absolute top-0 left-0 opacity-80 group-hover:opacity-100 transition-opacity`} />

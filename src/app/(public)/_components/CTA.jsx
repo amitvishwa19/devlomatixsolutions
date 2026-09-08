@@ -63,9 +63,9 @@ const CTA = () => {
                         viewport={{ once: true }}
                         className="max-w-4xl mx-auto text-center"
                     >
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-                            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400 animate-pulse" />
-                            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+                            <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                                 Take The Next Step
                             </span>
                         </div>
@@ -78,7 +78,7 @@ const CTA = () => {
                             viewport={{ once: true }}
                         >
                             Build Your Systems On A{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
                                 Platform Built to Last.
                             </span>
                         </motion.h2>
@@ -122,7 +122,7 @@ const CTA = () => {
                                 variant="hero"
                                 size="xl"
                                 onClick={() => setIsProjectInquiryOpen(true)}
-                                className="bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 hover:brightness-110 text-white font-semibold shadow-lg shadow-red-500/25 hover:shadow-red-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
+                                className="bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:brightness-110 text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer border-0 rounded-full px-8"
                             >
                                 Start Your Project
                                 <ArrowRight className="w-5 h-5 ml-1" />
@@ -131,9 +131,9 @@ const CTA = () => {
                                 variant="heroOutline"
                                 size="xl"
                                 onClick={() => setIsContactOpen(true)}
-                                className="rounded-full px-8 font-semibold border-border/80 dark:border-white/15 hover:border-orange-500/50 cursor-pointer"
+                                className="rounded-full px-8 font-semibold border-border/80 dark:border-white/15 hover:border-primary/50 cursor-pointer"
                             >
-                                <Mail className="w-4 h-4 mr-2 text-orange-500" />
+                                <Mail className="w-4 h-4 mr-2 text-primary" />
                                 Start a Conversation
                             </Button>
                         </motion.div>

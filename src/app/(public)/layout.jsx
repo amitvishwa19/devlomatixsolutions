@@ -5,7 +5,7 @@ import StickyBottomBar from "./_components/StickyBottomBar";
 
 export default function PublicLayout({ children }) {
     return (
-        <div className="public-theme flex flex-col min-h-screen pb-24 font-sans selection:bg-orange-500/20 selection:text-orange-300" >
+        <div className="public-theme flex flex-col min-h-screen pb-24 font-sans selection:bg-primary/20 selection:text-primary" >
             <div>
                 <Navbar />
             </div>

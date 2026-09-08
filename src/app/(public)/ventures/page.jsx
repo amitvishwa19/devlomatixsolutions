@@ -117,10 +117,10 @@ const colorVariants = {
         tag: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25",
     },
     amber: {
-        card: "from-amber-500/10 via-orange-500/5 to-transparent border-amber-500/30 hover:border-amber-500/60 shadow-xs hover:shadow-xl hover:shadow-amber-500/15 bg-card",
-        icon: "from-amber-500 to-orange-600 shadow-amber-500/25",
-        bar: "from-amber-500 via-orange-500 to-yellow-400",
-        tag: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
+        card: "from-teal-500/10 via-cyan-500/5 to-transparent border-teal-500/30 hover:border-teal-500/60 shadow-xs hover:shadow-xl hover:shadow-teal-500/15 bg-card",
+        icon: "from-teal-500 to-cyan-600 shadow-teal-500/25",
+        bar: "from-teal-500 via-cyan-500 to-emerald-400",
+        tag: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25",
     },
     purple: {
         card: "from-purple-500/10 via-pink-500/5 to-transparent border-purple-500/30 hover:border-purple-500/60 shadow-xs hover:shadow-xl hover:shadow-purple-500/15 bg-card",
@@ -156,15 +156,15 @@ export default function VenturesPage() {
                             transition={{ duration: 0.6 }}
                         >
                             <div className="flex items-center gap-3 mb-6">
-                                <Badge variant="outline" className="bg-orange-500/10 text-orange-400 dark:text-orange-300 border-orange-500/30 font-semibold px-3 py-1 text-[11px] uppercase tracking-wider">
+                                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 font-semibold px-3 py-1 text-[11px] uppercase tracking-wider">
                                     Active Ecosystem
                                 </Badge>
-                                <div className="h-px flex-1 bg-gradient-to-r from-orange-500/25 to-transparent" />
+                                <div className="h-px flex-1 bg-gradient-to-r from-primary/25 to-transparent" />
                             </div>
                             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-foreground mb-6 leading-[1.15]">
                                 Engineering Digital Workplaces <br />
                                 Across{" "}
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
                                     Every Industry Sector.
                                 </span>
                             </h1>
@@ -259,7 +259,7 @@ export default function VenturesPage() {
                                                     </button>
                                                     <a 
                                                         href={`mailto:${venture.email}`}
-                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-orange-500 hover:border-orange-500/30 transition-all hover:scale-105 cursor-pointer"
+                                                        className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-105 cursor-pointer"
                                                     >
                                                         <Mail className="w-3.5 h-3.5" />
                                                     </a>

@@ -36,19 +36,19 @@ const services = [
         shadow: "shadow-pink-500/20",
         hoverBorder: "hover:border-pink-500/50",
         hoverGlow: "hover:shadow-pink-500/10",
-        topBar: "from-pink-500 via-rose-500 to-amber-400",
+        topBar: "from-pink-500 via-rose-500 to-rose-400",
         description: "Pixel-perfect, ultra-responsive cross-platform mobile and web applications with delightful user experience.",
     },
     {
         icon: Layers,
         title: "System Integration",
         tag: "Architecture",
-        tagColor: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
-        gradient: "from-amber-500 to-orange-600",
-        shadow: "shadow-amber-500/20",
-        hoverBorder: "hover:border-amber-500/50",
-        hoverGlow: "hover:shadow-amber-500/10",
-        topBar: "from-amber-500 via-orange-500 to-yellow-400",
+        tagColor: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25",
+        gradient: "from-teal-500 to-cyan-600",
+        shadow: "shadow-teal-500/20",
+        hoverBorder: "hover:border-teal-500/50",
+        hoverGlow: "hover:shadow-teal-500/10",
+        topBar: "from-teal-500 via-cyan-500 to-sky-400",
         description: "Unify fragmented ERPs, CRMs, and legacy data pipelines into a single high-throughput event fabric.",
     },
     {
@@ -99,16 +99,16 @@ const Services = () => {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-                        <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-                        <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+                        <Sparkles className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                             Our Core Capabilities
                         </span>
                     </div>
 
                     <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
                         Built for Performance. Engineered for the{" "}
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
                             Next Decade.
                         </span>
                     </h2>

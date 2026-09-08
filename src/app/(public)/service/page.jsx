@@ -62,7 +62,7 @@ export default function ServicePage() {
                         >
                             <span className="text-primary text-xs font-semibold tracking-wider uppercase bg-primary/10 px-3 py-1 rounded-full border border-primary/20">Our Services</span>
                             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mt-5 mb-5 text-foreground">
-                                End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-orange-500 to-amber-500">Tech Solutions</span>
+                                End-to-End <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-500">Tech Solutions</span>
                             </h1>
                             <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl mx-auto font-normal">
                                 From ideation to deployment, we provide comprehensive software services

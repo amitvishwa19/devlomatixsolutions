@@ -21,9 +21,9 @@ const steps = [
   {
     icon: Code,
     title: "3. Development",
-    gradient: "from-amber-500 to-orange-600",
-    shadow: "shadow-amber-500/25",
-    border: "border-amber-500/40",
+    gradient: "from-cyan-500 to-sky-600",
+    shadow: "shadow-cyan-500/25",
+    border: "border-cyan-500/40",
     description: "Agile 2-week development sprints delivering clean, tested code backed by automated CI/CD pipelines.",
   },
   {
@@ -55,16 +55,16 @@ const Process = () => {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
               Execution Methodology
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
             Four Structured Phases to{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
               Ship Without Disruption.
             </span>
           </h2>
@@ -77,9 +77,9 @@ const Process = () => {
         <div className="relative">
           {/* Full-width connecting line through circles with flowing animation */}
           <div className="hidden lg:block absolute top-[44px] left-[12.5%] right-[12.5%] h-[3px] z-0 overflow-hidden rounded-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/25 via-orange-500/25 via-amber-500/25 to-emerald-500/25" />
+            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/25 via-blue-500/25 via-indigo-500/25 to-emerald-500/25" />
             <div
-              className="absolute inset-0 bg-gradient-to-r from-red-500 via-orange-500 via-amber-500 to-emerald-500 animate-flow-line"
+              className="absolute inset-0 bg-gradient-to-r from-sky-500 via-blue-500 via-indigo-500 to-emerald-500 animate-flow-line"
               style={{ backgroundSize: '200% 100%' }}
             />
           </div>
@@ -96,7 +96,7 @@ const Process = () => {
               >
                 <div className="text-center px-4">
                   {/* Phase Label */}
-                  <div className="text-[11px] font-mono font-semibold tracking-widest uppercase text-orange-500 dark:text-orange-400 mb-2">
+                  <div className="text-[11px] font-mono font-semibold tracking-widest uppercase text-primary mb-2">
                     PHASE 0{index + 1}
                   </div>
 

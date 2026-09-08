@@ -29,9 +29,9 @@ const features = [
     {
         icon: TrendingUp,
         title: "Scalable Solutions",
-        gradient: "from-amber-500 to-orange-600",
-        shadow: "shadow-amber-500/25",
-        hoverBorder: "hover:border-amber-500/50",
+        gradient: "from-teal-500 to-cyan-600",
+        shadow: "shadow-teal-500/25",
+        hoverBorder: "hover:border-teal-500/50",
         description: "Future-proof microservices architecture that seamlessly handles 100x traffic spikes without costly rewrites.",
     },
     {
@@ -56,7 +56,7 @@ const WhyChooseUs = () => {
     return (
         <section id="why-choose-us" className="py-32 relative overflow-hidden">
             {/* Rich gradient background for dark/light */}
-            <div className="absolute inset-0 bg-gradient-to-tl from-indigo-500/6 via-background to-cyan-500/6 dark:bg-[radial-gradient(circle_at_bottom_left,rgba(229,26,26,0.10),transparent_40%),radial-gradient(circle_at_top_right,rgba(253,131,11,0.10),transparent_35%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tl from-indigo-500/6 via-background to-cyan-500/6 dark:bg-[radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.10),transparent_40%),radial-gradient(circle_at_top_right,rgba(14,165,233,0.10),transparent_35%)] pointer-events-none" />
 
             {/* Decorative orbs */}
             <div className="absolute top-1/3 right-0 w-[500px] h-[500px] orb-secondary rounded-full blur-[100px] opacity-70 pointer-events-none" />
@@ -71,16 +71,16 @@ const WhyChooseUs = () => {
                         transition={{ duration: 0.6 }}
                         viewport={{ once: true }}
                     >
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-                            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-                            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+                            <Sparkles className="w-4 h-4 text-primary" />
+                            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
                                 Unrivaled Strategic Advantage
                             </span>
                         </div>
 
                         <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
                             Six Core Reasons Enterprise Teams{" "}
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
                                 Scale With Us.
                             </span>
                         </h2>

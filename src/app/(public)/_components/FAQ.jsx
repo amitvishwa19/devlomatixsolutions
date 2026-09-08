@@ -45,16 +45,16 @@ const FAQ = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/25 shadow-xs mb-4">
-            <Sparkles className="w-4 h-4 text-orange-500 dark:text-orange-400" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-orange-500 dark:text-orange-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 shadow-xs mb-4">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-primary">
               Clear & Transparent
             </span>
           </div>
 
           <h2 className="text-3xl md:text-5xl font-bold mt-2 mb-6 text-foreground tracking-tight leading-tight">
             Common Questions From{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-500 to-amber-400 dark:from-red-400 dark:via-orange-400 dark:to-amber-300">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
               Partners Like You.
             </span>
           </h2>
@@ -75,14 +75,14 @@ const FAQ = () => {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-orange-500/5 transition-colors duration-300 cursor-pointer"
+                className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-primary/5 transition-colors duration-300 cursor-pointer"
               >
                 <span className="font-bold text-foreground pr-4 text-base tracking-tight">
                   {faq.question}
                 </span>
-                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-orange-500/10 text-orange-400 border border-orange-500/25' : 'bg-secondary/70 text-muted-foreground'}`}>
+                <div className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${openIndex === index ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-secondary/70 text-muted-foreground'}`}>
                   {openIndex === index ? (
-                    <Minus className="w-4 h-4 text-orange-500" />
+                    <Minus className="w-4 h-4 text-primary" />
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}

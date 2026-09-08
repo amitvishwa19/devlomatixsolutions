@@ -23,8 +23,8 @@ import axios from 'axios';
 const fetcher = url => axios.get(url).then(res => res.data);
 
 const STATS = [
-    { label: 'Offices Worldwide', value: '12+', icon: Globe },
-    { label: 'Team Members', value: '250+', icon: Users },
+    { label: 'Offices Worldwide', value: '4+', icon: Globe },
+    { label: 'Team Members', value: '50+', icon: Users },
     { label: 'Success Rate', value: '98%', icon: Trophy },
 ];
 
