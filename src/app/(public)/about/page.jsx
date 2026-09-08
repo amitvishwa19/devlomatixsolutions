@@ -1,8 +1,13 @@
 'use client'
 import React from 'react'
 import { motion } from "framer-motion";
-import { Target, Heart, Zap, Users, Award, Globe, MapPin, Calendar, Briefcase, GraduationCap } from "lucide-react";
+import { Target, Heart, Zap, Users, Award, Globe, MapPin, Calendar, Briefcase, GraduationCap, ArrowRight } from "lucide-react";
 import PageTransition from '../_components/PageTransition';
+import Link from 'next/link';
+import useSWR from 'swr';
+import axios from 'axios';
+
+const fetcher = url => axios.get(url).then(res => res.data);
 
 const team = [
     {
@@ -61,20 +66,20 @@ const values = [
 ];
 
 const stats = [
-    { value: "2022", label: "Founded" },
+    { value: "2019", label: "Founded" },
     { value: "40+", label: "Projects Completed" },
-    { value: "25+", label: "Team Members" },
+    { value: "50+", label: "Team Members" },
     { value: "4", label: "Countries Served" },
 ];
 
 const timeline = [
     {
-        year: "2016",
+        year: "2019",
         title: "The Beginning",
         description: "Started as a 4-person team with a vision to democratize enterprise-grade software.",
     },
     {
-        year: "2018",
+        year: "2019",
         title: "First Major Client",
         description: "Partnered with a Fortune 500 company, establishing our reputation for enterprise solutions.",
     },
@@ -97,46 +102,25 @@ const timeline = [
 
 const offices = [
     {
-        city: "Gurugram",
+        city: "Singapore",
         address: "Cyber Hub, DLF Phase 2",
         type: "Headquarters",
     },
     {
-        city: "Bangalore",
+        city: "Vadodara",
         address: "Koramangala, 5th Block",
         type: "Tech Hub",
     },
     {
-        city: "Hyderabad",
+        city: "Dubai",
         address: "HITEC City, Madhapur",
         type: "Development Center",
     },
 ];
 
-const careers = [
-    {
-        title: "Senior Full-Stack Developer",
-        location: "Remote / Gurugram",
-        type: "Full-time",
-    },
-    {
-        title: "UI/UX Designer",
-        location: "Remote / Bangalore",
-        type: "Full-time",
-    },
-    {
-        title: "DevOps Engineer",
-        location: "Remote",
-        type: "Full-time",
-    },
-    {
-        title: "Project Manager",
-        location: "Hyderabad",
-        type: "Full-time",
-    },
-];
-
 export default function AboutPage() {
+    const { data: jobs, isLoading } = useSWR('/api/public/jobs', fetcher);
+
     return (
         <PageTransition>
             <div className="min-h-screen bg-background">
@@ -316,7 +300,7 @@ export default function AboutPage() {
                 </section>
 
                 {/* Team Section */}
-                <section id="about" className="py-20 bg-secondary/30 dark:bg-card/30">
+                {/* <section id="about" className="py-20 bg-secondary/30 dark:bg-card/30">
                     <div className="container mx-auto px-6">
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
@@ -361,7 +345,7 @@ export default function AboutPage() {
                             ))}
                         </div>
                     </div>
-                </section>
+                </section> */}
 
                 {/* Offices Section */}
                 <section className="py-20">
@@ -401,7 +385,7 @@ export default function AboutPage() {
                                     <h3 className="font-display text-xl font-semibold text-foreground mt-2">
                                         {office.city}
                                     </h3>
-                                    <p className="text-muted-foreground text-sm mt-2">{office.address}</p>
+                                    {/* <p className="text-muted-foreground text-sm mt-2">{office.address}</p> */}
                                 </motion.div>
                             ))}
                         </div>
@@ -428,12 +412,32 @@ export default function AboutPage() {
                         </motion.div>
 
                         <div className="max-w-3xl mx-auto space-y-4">
-                            {careers.map((job, index) => (
-                                <motion.div
+                            {isLoading && [...Array(3)].map((_, index) => (
+                                <div
                                     key={index}
+                                    className="glass-card p-6 h-20 animate-pulse"
+                                />
+                            ))}
+
+                            {!isLoading && jobs?.length === 0 && (
+                                <motion.div
                                     initial={{ opacity: 0, y: 20 }}
                                     whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                                    viewport={{ once: true }}
+                                    className="glass-card p-10 text-center"
+                                >
+                                    <p className="text-muted-foreground">
+                                        No open positions right now, but we&apos;re always looking for great talent.
+                                    </p>
+                                </motion.div>
+                            )}
+
+                            {!isLoading && jobs?.map((job, index) => (
+                                <motion.div
+                                    key={job.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4, delay: Math.min(index * 0.1, 0.4) }}
                                     viewport={{ once: true }}
                                     className="glass-card p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer"
                                 >
@@ -449,10 +453,22 @@ export default function AboutPage() {
                                         </div>
                                     </div>
                                     <span className="px-4 py-2 rounded-lg bg-secondary/50 text-sm font-medium text-muted-foreground">
-                                        {job.type}
+                                        {job.type || 'Full-time'}
                                     </span>
                                 </motion.div>
                             ))}
+
+                            {!isLoading && jobs?.length > 0 && (
+                                <div className="text-center pt-4">
+                                    <Link
+                                        href="/career"
+                                        className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                                    >
+                                        View All Openings
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Link>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
