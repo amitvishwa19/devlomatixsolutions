@@ -14,12 +14,14 @@ import {
     ShieldCheck, 
     MessageSquare, 
     Bot,
-    BarChart3
+    BarChart3,
+    BrainCircuit
 } from 'lucide-react';
 
 import { OverviewTab } from './tabs/OverviewTab';
 import { CombosTab } from './tabs/CombosTab';
 import { ProvidersTab } from './tabs/ProvidersTab';
+import { ModelsTab } from './tabs/ModelsTab';
 import { AgentsTab } from './tabs/AgentsTab';
 import { CompressionTab } from './tabs/CompressionTab';
 import { LogsTab } from './tabs/LogsTab';
@@ -61,6 +63,9 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         </TabsTrigger>
                         <TabsTrigger value="providers" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Cpu className="h-3.5 w-3.5" /> Providers
+                        </TabsTrigger>
+                        <TabsTrigger value="models" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                            <BrainCircuit className="h-3.5 w-3.5" /> Models
                         </TabsTrigger>
                         <TabsTrigger value="agents" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Bot className="h-3.5 w-3.5" /> Agents
@@ -105,6 +110,14 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         <ScrollArea className="h-full">
                             <div className="p-2">
                                 <ProvidersTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="models" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <ModelsTab workspaceId={workspaceId} />
                             </div>
                         </ScrollArea>
                     </TabsContent>

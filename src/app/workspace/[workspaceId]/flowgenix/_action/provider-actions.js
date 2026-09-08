@@ -104,6 +104,75 @@ export async function toggleProviderStatusAction({ id, isActive, workspaceId }) 
     }
 }
 
+/**
+ * Toggle an individual model active/inactive within a provider
+ * States are stored per-model in metadata.modelStates so that one model's switch
+ * never flips the other models of the same provider.
+ */
+export async function setModelActiveAction({ id, model, isActive, workspaceId }) {
+    try {
+        await ensureAdmin();
+
+        if (!id || !model) return { success: false, error: "Provider ID and model name are required." };
+
+        const provider = await db.agentModel.findUnique({ where: { id } });
+        if (!provider) return { success: false, error: "Provider not found" };
+
+        const metadata = provider.metadata && typeof provider.metadata === "object" ? { ...provider.metadata } : {};
+        const modelStates = metadata.modelStates && typeof metadata.modelStates === "object" ? { ...metadata.modelStates } : {};
+        modelStates[model] = Boolean(isActive);
+
+        const updated = await db.agentModel.update({
+            where: { id },
+            data: { metadata: { ...metadata, modelStates } }
+        });
+
+        revalidatePath(`/workspace/${workspaceId}/flowgenix`);
+        return { success: true, data: updated };
+    } catch (error) {
+        console.error("setModelActiveAction Error:", error);
+        return { success: false, error: error.message || "Failed to update model status" };
+    }
+}
+
+/**
+ * Activate or deactivate all providers AND every imported model at once
+ */
+export async function setAllProvidersActiveAction({ workspaceId, isActive }) {
+    try {
+        await ensureAdmin();
+
+        if (!workspaceId) return { success: false, error: "Workspace ID is required" };
+
+        const providers = await db.agentModel.findMany({ where: { workspaceId } });
+        let modelCount = 0;
+
+        for (const provider of providers) {
+            const metadata = provider.metadata && typeof provider.metadata === "object" ? { ...provider.metadata } : {};
+            const models = Array.isArray(metadata.importedModels) ? metadata.importedModels : [];
+            const modelStates = {};
+            for (const model of models) {
+                modelStates[model] = Boolean(isActive);
+                modelCount++;
+            }
+
+            await db.agentModel.update({
+                where: { id: provider.id },
+                data: {
+                    isActive: Boolean(isActive),
+                    metadata: { ...metadata, ...(models.length > 0 ? { modelStates } : {}) }
+                }
+            });
+        }
+
+        revalidatePath(`/workspace/${workspaceId}/flowgenix`);
+        return { success: true, data: { count: modelCount, providerCount: providers.length, isActive } };
+    } catch (error) {
+        console.error("setAllProvidersActiveAction Error:", error);
+        return { success: false, error: error.message || "Failed to update all providers" };
+    }
+}
+
 function resolveProviderUrl(provider, customBaseUrl) {
     if (customBaseUrl && customBaseUrl.trim()) return customBaseUrl.trim().replace(/\/+$/, "");
     switch (provider?.toLowerCase()) {

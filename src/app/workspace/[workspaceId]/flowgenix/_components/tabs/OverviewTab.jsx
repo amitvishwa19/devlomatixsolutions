@@ -143,10 +143,17 @@ client = OpenAI(
     api_key="workspace-bearer-token"
 )
 
+# Direct model routing:
 response = client.chat.completions.create(
     model="auto/coding",
     messages=[{"role": "user", "content": "Explain quantum teleportation in 2 sentences"}]
 )
+
+# Or target the Master Orchestrator agent (auto-delegates to sub-agents):
+# response = client.chat.completions.create(
+#     model="agent/OmniRoute Orchestrator",
+#     messages=[{"role": "user", "content": "Write and audit a production API endpoint."}]
+# )
 
 print(response.choices[0].message.content)`;
 
@@ -156,7 +163,50 @@ print(response.choices[0].message.content)`;
   -d '{
     "model": "auto/coding",
     "messages": [{"role": "user", "content": "Hello FlowGenix Gateway"}]
-  }'`;
+  }'
+
+# Target the Agent Orchestrator instead:
+#   "model": "agent/OmniRoute Orchestrator"`;
+
+    const postmanSnippet = `{
+  "method": "POST",
+  "url": "${gatewayEndpoint}/chat/completions",
+  "headers": {
+    "Authorization": "Bearer workspace-bearer-token",
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "model": "auto/coding",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Explain quantum teleportation in 2 sentences"
+      }
+    ],
+    "temperature": 0.7,
+    "stream": false
+  }
+}`;
+
+    const postmanAgentSnippet = `{
+  "method": "POST",
+  "url": "${gatewayEndpoint}/chat/completions",
+  "headers": {
+    "Authorization": "Bearer workspace-bearer-token",
+    "Content-Type": "application/json"
+  },
+  "body": {
+    "model": "agent/OmniRoute Orchestrator",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Write a production-ready authentication endpoint and audit it for vulnerabilities."
+      }
+    ],
+    "temperature": 0.3,
+    "stream": false
+  }
+}`;
 
     const metricsCards = [
         {
@@ -334,6 +384,7 @@ print(response.choices[0].message.content)`;
                         <TabsList className="bg-muted/40 h-8 p-1">
                             <TabsTrigger value="python" className="text-xs px-3">Python</TabsTrigger>
                             <TabsTrigger value="curl" className="text-xs px-3">cURL</TabsTrigger>
+                            <TabsTrigger value="postman" className="text-xs px-3">Postman (JSON)</TabsTrigger>
                             <TabsTrigger value="cursor" className="text-xs px-3">Cursor / IDE</TabsTrigger>
                         </TabsList>
 
@@ -365,6 +416,35 @@ print(response.choices[0].message.content)`;
                             </pre>
                         </TabsContent>
 
+                        <TabsContent value="postman" className="mt-3 relative">
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleCopy(postmanSnippet, 'Postman')}
+                                className="absolute right-3 top-3 h-7 px-2 text-xs bg-secondary/80 hover:bg-secondary text-foreground z-10"
+                            >
+                                {copiedSnippet === 'Postman' ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            </Button>
+                            <div className="p-3 rounded-lg bg-black/60 border border-border/40 space-y-2">
+                                <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground flex-wrap">
+                                    <span className="text-emerald-400 font-bold">POST</span>
+                                    <span className="text-primary">{gatewayEndpoint}/chat/completions</span>
+                                </div>
+                                <div className="p-2 rounded bg-secondary/30 border border-border/40">
+                                    <span className="text-muted-foreground block text-[10px]">Headers</span>
+                                    <span className="text-foreground font-mono text-[11px]">Authorization: Bearer workspace-bearer-token</span>
+                                </div>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block pt-1">Variant 1 - Direct Model Routing</span>
+                                <pre className="p-4 rounded-lg bg-black/60 border border-border/40 font-mono text-xs text-emerald-400 overflow-x-auto max-h-72">
+                                    {postmanSnippet}
+                                </pre>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block pt-2">Variant 2 - Agent Orchestrator (auto-delegates to sub-agents)</span>
+                                <pre className="p-4 rounded-lg bg-black/60 border border-border/40 font-mono text-xs text-emerald-400 overflow-x-auto max-h-72">
+                                    {postmanAgentSnippet}
+                                </pre>
+                            </div>
+                        </TabsContent>
+
                         <TabsContent value="cursor" className="mt-3">
                             <div className="p-4 rounded-lg bg-black/60 border border-border/40 space-y-2 text-xs font-mono">
                                 <p className="text-muted-foreground">In Cursor Settings &gt; Models &gt; OpenAI API Key:</p>
@@ -374,7 +454,7 @@ print(response.choices[0].message.content)`;
                                 </div>
                                 <div className="p-2.5 rounded bg-secondary/30 border border-border/40">
                                     <span className="text-muted-foreground block text-[10px]">Model Names:</span>
-                                    <span className="text-emerald-400 font-bold">auto/coding, auto/fast, custom/coding-chain</span>
+                                    <span className="text-emerald-400 font-bold">auto/coding, auto/fast, custom/coding-chain, agent/OmniRoute Orchestrator</span>
                                 </div>
                             </div>
                         </TabsContent>

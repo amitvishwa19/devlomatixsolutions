@@ -2,6 +2,7 @@ import dns from "node:dns";
 import { db } from "@/lib/db";
 import { compressPayload, estimateTokens } from "./compression-engine";
 import { recordTelemetry } from "./telemetry-store";
+import { runAgentOrchestrator } from "./agent-orchestrator";
 
 // Ensure Node.js prefers IPv4 on dual-stack hosts and tolerates system clock skew in dev/custom environments
 try {
@@ -184,6 +185,12 @@ export async function executeGatewayRequest({
     ...extraParams
 }) {
     const startTime = Date.now();
+
+    // Agent orchestration path: "agent/<name>" targets the master orchestrator agent
+    if (requestedModel && typeof requestedModel === "string" && requestedModel.trim().toLowerCase().startsWith("agent/")) {
+        return await runAgentOrchestrator({ workspaceId, model: requestedModel.trim(), messages, stream });
+    }
+
     const resolution = await resolveCandidateTargets(workspaceId, requestedModel);
     const candidates = resolution.targets;
 
