@@ -58,7 +58,7 @@ export default function ArticlePage() {
         <div className="space-y-4 animate-fade-in p-2">
             {/* Local Modals */}
             <AddPostModal />
-            <MediaLibraryModal />
+            <MediaLibraryModal workspaceId={workspaceId} />
 
             {/* Header Section */}
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 bg-card border border-border p-4 rounded-md shadow-soft">

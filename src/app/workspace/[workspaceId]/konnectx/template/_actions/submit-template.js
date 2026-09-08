@@ -4,17 +4,17 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { symmetricDecrypt } from "@/lib/encryption";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 
 const SubmitTemplateSchema = z.object({
     workspaceId: z.string(),
     templateId: z.string(),
 });
 
-const getMetaHeaderHandle = async (mediaUrl, accessToken, format) => {
-    const appId = process.env.FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+const getMetaHeaderHandle = async (mediaUrl, accessToken, format, credentialAppId = null) => {
+    const appId = credentialAppId || process.env.FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || process.env.WHATSAPP_APP_ID || process.env.META_APP_ID;
     if (!appId) {
-        console.warn("[getMetaHeaderHandle] FACEBOOK_APP_ID is not configured in environment variables.");
+        console.warn("[getMetaHeaderHandle] FACEBOOK_APP_ID is not configured in environment variables or credentials.");
         return null;
     }
 
@@ -28,30 +28,41 @@ const getMetaHeaderHandle = async (mediaUrl, accessToken, format) => {
         }
         const buffer = Buffer.from(await mediaResponse.arrayBuffer());
         const fileLength = buffer.length;
-        const fileType = mediaResponse.headers.get('content-type') || 'image/jpeg';
-        const fileName = mediaUrl.split('/').pop()?.split('?')[0] || 'sample_file';
+        const rawFileType = mediaResponse.headers.get('content-type') || '';
+        let fileType = rawFileType.split(';')[0].trim().toLowerCase();
+        let fileName = mediaUrl.split('/').pop()?.split('?')[0] || 'sample_file';
+
+        // Normalize octet-stream / empty content types based on filename extension
+        if (fileType === 'application/octet-stream' || !fileType) {
+            if (fileName.toLowerCase().endsWith('.png')) fileType = 'image/png';
+            else if (fileName.toLowerCase().endsWith('.jpg') || fileName.toLowerCase().endsWith('.jpeg')) fileType = 'image/jpeg';
+            else if (fileName.toLowerCase().endsWith('.pdf')) fileType = 'application/pdf';
+            else if (fileName.toLowerCase().endsWith('.mp4')) fileType = 'video/mp4';
+            else if (fileName.toLowerCase().endsWith('.mp3')) fileType = 'audio/mpeg';
+            else if (format === 'IMAGE') fileType = 'image/jpeg';
+        }
 
         console.log("[getMetaHeaderHandle] File fetched. MIME Type:", fileType);
 
         // MIME Type validation against the required Meta format
         if (format === 'IMAGE') {
             const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-            if (!allowedTypes.includes(fileType.toLowerCase())) {
+            if (!allowedTypes.includes(fileType)) {
                 throw new Error(`Unsupported image MIME type: ${fileType}. Meta only supports JPEG and PNG for template headers.`);
             }
         } else if (format === 'VIDEO') {
             const allowedTypes = ['video/mp4', 'video/3gpp'];
-            if (!allowedTypes.includes(fileType.toLowerCase())) {
+            if (!allowedTypes.includes(fileType)) {
                 throw new Error(`Unsupported video MIME type: ${fileType}. Meta only supports MP4 and 3GP.`);
             }
         } else if (format === 'AUDIO') {
             const allowedTypes = ['audio/aac', 'audio/mp4', 'audio/mpeg', 'audio/amr', 'audio/ogg'];
-            if (!allowedTypes.includes(fileType.toLowerCase())) {
+            if (!allowedTypes.includes(fileType)) {
                 throw new Error(`Unsupported audio MIME type: ${fileType}.`);
             }
         } else if (format === 'DOCUMENT') {
             const allowedTypes = ['application/pdf'];
-            if (!allowedTypes.includes(fileType.toLowerCase())) {
+            if (!allowedTypes.includes(fileType)) {
                 throw new Error(`Unsupported document MIME type: ${fileType}. Meta template headers only support PDF.`);
             }
         }
@@ -110,34 +121,11 @@ const handler = async (data) => {
             return { error: "Template not found" };
         }
 
-        // 2. Fetch Cloud API Credentials (with fallback)
-        let credential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-        });
+        // 2. Fetch Cloud API Credentials (using unified credential resolver)
+        const { credential, credentials: cloudCreds } = await resolveWhatsAppCredentials({ workspaceId, userId });
 
-        if (!credential) {
-            credential = await db.credentials.findFirst({
-                where: { userId, platform: 'WHATSAPP_CLOUD' },
-                orderBy: { updatedAt: 'desc' }
-            });
-        }
-
-        if (!credential) {
-            return { error: "WhatsApp Cloud credentials not found" };
-        }
-
-        let cloudCreds = null;
-        const stored = credential.credentials;
-        if (stored) {
-            if (typeof stored === 'string' && stored.includes(':')) {
-                try { cloudCreds = JSON.parse(symmetricDecrypt(stored)); } catch (e) { }
-            } else if (typeof stored === 'object' && stored.enc && typeof stored.enc === 'string' && stored.enc.includes(':')) {
-                try { cloudCreds = JSON.parse(symmetricDecrypt(stored.enc)); } catch (e) { }
-            } else if (typeof stored === 'object') {
-                cloudCreds = stored;
-            } else {
-                try { cloudCreds = JSON.parse(stored); } catch (e) { }
-            }
+        if (!cloudCreds?.accessToken || !cloudCreds?.wabaId) {
+            return { error: "WhatsApp Cloud credentials (Access Token or WABA ID) not found or not configured." };
         }
 
         // 3. Prepare Meta Template Data
@@ -179,11 +167,11 @@ const handler = async (data) => {
             const mediaUrl = metadata?.mediaUrl;
             let headerHandle = null;
 
-             if (mediaUrl) {
+            if (mediaUrl) {
                 const isUrl = /^https?:\/\//i.test(mediaUrl);
                 if (isUrl) {
                     // Upload the file to Meta on-the-fly to get a header_handle
-                    headerHandle = await getMetaHeaderHandle(mediaUrl, cloudCreds.accessToken, format);
+                    headerHandle = await getMetaHeaderHandle(mediaUrl, cloudCreds.accessToken, format, cloudCreds.appId || cloudCreds.app_id);
                 } else {
                     headerHandle = mediaUrl; // already a handle
                 }
@@ -197,13 +185,14 @@ const handler = async (data) => {
                     AUDIO: "https://www.w3schools.com/html/horse.mp3",
                     DOCUMENT: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
                 }[format];
-                headerHandle = await getMetaHeaderHandle(fallbackUrl, cloudCreds.accessToken, format);
+                headerHandle = await getMetaHeaderHandle(fallbackUrl, cloudCreds.accessToken, format, cloudCreds.appId || cloudCreds.app_id);
             }
 
-            if (headerHandle) {
-                mediaComp.example = { header_handle: [headerHandle] };
+            if (!headerHandle) {
+                return { error: `Failed to upload header ${format.toLowerCase()} to Meta. Ensure the file is a valid public JPEG/PNG image and FACEBOOK_APP_ID is configured.` };
             }
-            
+
+            mediaComp.example = { header_handle: [headerHandle] };
             components.push(mediaComp);
         } else if (template.metadata?.headerText && templateType !== 'carousel') {
             const headerText = template.metadata.headerText.trim();
@@ -256,7 +245,7 @@ const handler = async (data) => {
                 
                 // Get the image handle for this specific card
                 const cImageUrl = cardData.mediaUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=800";
-                const cHeaderHandle = await getMetaHeaderHandle(cImageUrl, cloudCreds.accessToken, 'IMAGE');
+                const cHeaderHandle = await getMetaHeaderHandle(cImageUrl, cloudCreds.accessToken, 'IMAGE', cloudCreds.appId || cloudCreds.app_id);
                 
                 if (!cHeaderHandle) {
                     return { error: `Failed to process image for Carousel Card ${cards.length + 1}. Ensure it is a valid public JPEG or PNG.` };

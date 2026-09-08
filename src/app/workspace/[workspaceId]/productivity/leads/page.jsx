@@ -42,6 +42,8 @@ import { Country, State, City } from 'country-state-city';
 import SaveContact from './_components/SaveContact';
 import BulkActionBar from './_components/BulkActionBar';
 import LeadApiKeyModal from './_components/LeadApiKeyModal';
+import { useAction } from '@/hooks/use-action';
+import { getCategories } from '../../konnectx/contacts/_actions/get-categories';
 import { bulkSaveLeadsAction } from './_actions/bulk-save';
 import { Loader2, Save, ExternalLink, Key, ShieldCheck } from 'lucide-react';
 
@@ -55,6 +57,7 @@ export default function LeadsPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [nextPageToken, setNextPageToken] = useState(null);
     const [contactGroups, setContactGroups] = useState([]);
+    const [contactCategories, setContactCategories] = useState([]);
     const [selectedGroupId, setSelectedGroupId] = useState('');
     const [saving, setSaving] = useState(false);
     const [selectedLeadIds, setSelectedLeadIds] = useState([]);
@@ -205,6 +208,14 @@ export default function LeadsPage() {
     useEffect(() => {
         fetchContactGroups();
     }, []);
+
+    const { execute: executeGetCategories } = useAction(getCategories, {
+        onSuccess: (data) => setContactCategories(data || [])
+    });
+
+    useEffect(() => {
+        if (workspaceId) executeGetCategories({ workspaceId, type: 'CONTACT' });
+    }, [workspaceId, executeGetCategories]);
 
     const fetchContactGroups = async () => {
         try {
@@ -1064,6 +1075,7 @@ export default function LeadsPage() {
                 }}
                 leads={saveLeadsModal.leads}
                 selectedLeadIds={saveLeadsModal.selectedLeadIds}
+                categories={contactCategories}
                 onSuccess={() => {
                     setSelectedLeadIds([]);
                     handleFindLeads(false); // Refresh badges without clearing results

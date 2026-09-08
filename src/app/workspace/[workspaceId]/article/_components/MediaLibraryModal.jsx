@@ -45,165 +45,182 @@ import { useSession } from 'next-auth/react';
 import { supabase } from "@/lib/supabase";
 
 export const MediaLibraryModal = ({ workspaceId, onSelect, initialTab = "library" }) => {
- const { isOpen, type, onClose, data } = useModal();
- const isModalOpen = isOpen && type === "mediaLibrary";
- const { data: session } = useSession();
+  const { isOpen, type, onClose, data, activeModals } = useModal();
+  const modalData = activeModals?.["mediaLibrary"] || (type === "mediaLibrary" ? data : {}) || {};
+  const effectiveWorkspaceId = workspaceId || modalData?.workspaceId;
+  const effectiveOnSelect = onSelect || modalData?.onSelect;
+  const isModalOpen = (isOpen && type === "mediaLibrary") || Boolean(activeModals?.["mediaLibrary"]);
+  const { data: session } = useSession();
 
- const fileInputRef = useRef(null);
- const [isLoading, setIsLoading] = useState(false);
- const [isUploading, setIsUploading] = useState(false);
- const [uploadProgress, setUploadProgress] = useState(0);
- const [documents, setDocuments] = useState([]);
- const [search, setSearch] = useState('');
- const [selectedUrl, setSelectedUrl] = useState(null);
- const [isEditing, setIsEditing] = useState(false);
- const [activeFilter, setActiveFilter] = useState('all'); // all, starred, recent
+  const fileInputRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [documents, setDocuments] = useState([]);
+  const [search, setSearch] = useState('');
+  const [selectedUrl, setSelectedUrl] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('all'); // all, starred, recent
 
- useEffect(() => {
- if (isModalOpen && workspaceId) {
- fetchDocuments();
- }
- }, [isModalOpen, workspaceId]);
+  useEffect(() => {
+    if (isModalOpen && effectiveWorkspaceId) {
+      fetchDocuments();
+    }
+  }, [isModalOpen, effectiveWorkspaceId]);
 
- const fetchDocuments = async () => {
- setIsLoading(true);
- try {
- const res = await getDocuments(workspaceId, { isFolder: false });
- if (res.success && res.data) {
-   const images = res.data.filter(doc =>
-     doc.fileType?.startsWith('image/') ||
-     ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(doc.extension?.toLowerCase())
-   );
-   setDocuments(images);
- }
- } catch (error) {
- console.error("[MEDIA_LIBRARY_FETCH]", error);
- } finally {
- setIsLoading(false);
- }
- };
+  const fetchDocuments = async () => {
+    if (!effectiveWorkspaceId) return;
+    setIsLoading(true);
+    try {
+      const res = await getDocuments(effectiveWorkspaceId, { isFolder: false });
+      if (res.success && res.data) {
+        const images = res.data.filter(doc =>
+          doc.fileType?.startsWith('image/') ||
+          ['.jpg', '.jpeg', '.png', '.gif', '.webp'].includes(doc.extension?.toLowerCase())
+        );
+        setDocuments(images);
+      }
+    } catch (error) {
+      console.error("[MEDIA_LIBRARY_FETCH]", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
- const handleUploadClick = () => {
- fileInputRef.current?.click();
- };
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
- const handleFileUpload = async (e) => {
- const file = e.target.files?.[0];
- if (!file) return;
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
- if (file.size > 4 * 1024 * 1024) {
- toast.error("File size exceeds 4MB limit");
- return;
- }
+    if (!effectiveWorkspaceId) {
+      toast.error("Workspace ID missing. Please refresh and try again.");
+      return;
+    }
 
- setIsUploading(true);
- setUploadProgress(10);
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error("File size exceeds 4MB limit");
+      return;
+    }
 
- try {
- const fileExt = file.name.split('.').pop();
- const fileName = `${Date.now()}_${file.name.replace(/\.[^/.]+$/,"")}.${fileExt}`;
- const filePath = `workspace_${workspaceId}/media/${fileName}`;
+    setIsUploading(true);
+    setUploadProgress(10);
 
- setUploadProgress(30);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${file.name.replace(/\.[^/.]+$/, "")}.${fileExt}`;
+      const filePath = `workspace_${effectiveWorkspaceId}/media/${fileName}`;
 
- // Upload to Supabase Storage
- const { data: uploadData, error: uploadError } = await supabase.storage
- .from('devlomatix')
- .upload(filePath, file, {
- cacheControl:'3600',
- upsert: false
- });
+      setUploadProgress(30);
 
- if (uploadError) throw uploadError;
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('devlomatix')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
- setUploadProgress(70);
+      if (uploadError) throw uploadError;
 
- // Get Public URL
- const { data: { publicUrl } } = supabase.storage
- .from('devlomatix')
- .getPublicUrl(filePath);
+      setUploadProgress(70);
 
- // Sync with Database via Server Action
- const res = await createDocument(workspaceId, {
- name: file.name,
- fileUrl: publicUrl,
- fileKey: uploadData.path,
- fileSize: file.size,
- fileType: file.type,
- isFolder: false,
- category:"IMAGE"
- });
+      // Get Public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('devlomatix')
+        .getPublicUrl(filePath);
 
- if (!res.success) throw new Error(res.error);
+      // Sync with Database via Server Action
+      const res = await createDocument(effectiveWorkspaceId, {
+        name: file.name,
+        fileUrl: publicUrl,
+        fileKey: uploadData.path,
+        fileSize: file.size,
+        fileType: file.type,
+        isFolder: false,
+        category: "IMAGE"
+      });
 
- setUploadProgress(100);
- toast.success("Media uploaded successfully!");
- fetchDocuments();
- setSelectedUrl(publicUrl);
- } catch (error) {
- console.error("[SUPABASE_UPLOAD_ERROR]", error);
- toast.error(error.message ||"Failed to upload media");
- } finally {
- setTimeout(() => {
- setIsUploading(false);
- setUploadProgress(0);
- }, 500);
- if (e.target) e.target.value ="";
- }
- };
+      if (!res.success) throw new Error(res.error);
 
- const handleSaveEditedImage = async (blob) => {
- setIsLoading(true);
- try {
- const fileName = `refined_${Date.now()}.webp`;
- const filePath = `workspace_${workspaceId}/media/${fileName}`;
+      setUploadProgress(100);
+      toast.success("Media uploaded successfully!");
+      fetchDocuments();
+      setSelectedUrl(publicUrl);
+    } catch (error) {
+      console.error("[SUPABASE_UPLOAD_ERROR]", error);
+      toast.error(error.message || "Failed to upload media");
+    } finally {
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 500);
+      if (e.target) e.target.value = "";
+    }
+  };
 
- const { data: uploadData, error: uploadError } = await supabase.storage
- .from('devlomatix')
- .upload(filePath, blob);
+  const handleSaveEditedImage = async (blob) => {
+    if (!effectiveWorkspaceId) {
+      toast.error("Workspace ID missing");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const fileName = `refined_${Date.now()}.jpg`;
+      const filePath = `workspace_${effectiveWorkspaceId}/media/${fileName}`;
 
- if (uploadError) throw uploadError;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('devlomatix')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg'
+        });
 
- const { data: { publicUrl } } = supabase.storage
- .from('devlomatix')
- .getPublicUrl(filePath);
+      if (uploadError) throw uploadError;
 
- const res = await createDocument(workspaceId, {
- name: fileName,
- fileUrl: publicUrl,
- fileKey: uploadData.path,
- fileSize: blob.size,
- fileType:'image/webp',
- isFolder: false,
- category:"IMAGE"
- });
+      const { data: { publicUrl } } = supabase.storage
+        .from('devlomatix')
+        .getPublicUrl(filePath);
 
- if (!res.success) throw new Error(res.error);
+      const res = await createDocument(effectiveWorkspaceId, {
+        name: fileName,
+        fileUrl: publicUrl,
+        fileKey: uploadData.path,
+        fileSize: blob.size,
+        fileType: 'image/jpeg',
+        isFolder: false,
+        category: "IMAGE"
+      });
 
- toast.success("Image refined and saved!");
- setIsEditing(false);
- fetchDocuments();
- setSelectedUrl(publicUrl);
- } catch (error) {
- console.error(error);
- toast.error("Failed to save refined image");
- } finally {
- setIsLoading(false);
- }
- };
+      if (!res.success) throw new Error(res.error);
 
- const handleSelect = async () => {
- if (selectedUrl) {
- onSelect?.(selectedUrl);
- handleClose();
- }
- };
+      toast.success("Image refined and saved!");
+      setIsEditing(false);
+      fetchDocuments();
+      setSelectedUrl(publicUrl);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to save refined image");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
- const handleClose = () => {
- setSelectedUrl(null);
- setSearch('');
- onClose("mediaLibrary");
- };
+  const handleSelect = async () => {
+    if (selectedUrl) {
+      if (effectiveOnSelect) {
+        effectiveOnSelect(selectedUrl);
+      }
+      handleClose();
+    }
+  };
+
+  const handleClose = () => {
+    setSelectedUrl(null);
+    setSearch('');
+    onClose("mediaLibrary");
+  };
 
  const filteredDocuments = useMemo(() => {
  return documents.filter(doc => {

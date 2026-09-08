@@ -79,10 +79,10 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }) => {
  finalCanvas = cropCanvas;
  }
 
- finalCanvas.toBlob((blob) => {
- onSave(blob);
- },'image/webp', 0.9);
- };
+    finalCanvas.toBlob((blob) => {
+        onSave(blob);
+    }, 'image/jpeg', 0.92);
+  };
 
  return (
  <div className="flex flex-col h-full bg-background border rounded-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">

@@ -8,8 +8,10 @@ import {
     Users, 
     Check, 
     Phone, 
-    Loader2 
+    Loader2,
+    Image as ImageIcon
 } from 'lucide-react';
+import { useModal } from '@/hooks/useModal';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -50,8 +52,10 @@ export default function TestTemplateDialog({
     setVariableMappings,
     testNumbers = [],
     mediaUrl,
-    setMediaUrl
+    setMediaUrl,
+    workspaceId
 }) {
+    const { onOpen } = useModal();
     if (!template) return null;
 
     const filteredContacts = contacts.filter((c) =>
@@ -122,22 +126,54 @@ export default function TestTemplateDialog({
                     {/* Media URL Section */}
                     {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(template.type?.toUpperCase()) && (
                         <div className="space-y-3 bg-primary/5 p-4 rounded-xl border border-primary/20">
-                            <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                {template.type} Header Required
-                            </h4>
+                            <div className="flex items-center justify-between">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                    <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                    {template.type} Header Required
+                                </h4>
+                                {workspaceId && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                        onClick={() => onOpen('mediaLibrary', {
+                                            workspaceId,
+                                            onSelect: (url) => setMediaUrl(url)
+                                        })}
+                                    >
+                                        Choose from Hub
+                                    </Button>
+                                )}
+                            </div>
                             <div className="space-y-1.5">
                                 <label className="text-[11px] font-bold text-foreground opacity-70">
                                     Provide {template.type} URL or ID
                                 </label>
-                                <Input
-                                    placeholder={`https://... or Meta Media ID`}
-                                    value={mediaUrl || ''}
-                                    onChange={(e) => setMediaUrl(e.target.value)}
-                                    className="h-9 bg-background text-sm border-primary/20 focus-visible:ring-primary/30"
-                                />
+                                <div className="relative group/input">
+                                    <Input
+                                        placeholder={`https://... or Meta Media ID`}
+                                        value={mediaUrl || ''}
+                                        onChange={(e) => setMediaUrl(e.target.value)}
+                                        className={`h-9 bg-background text-sm border-primary/20 focus-visible:ring-primary/30 ${workspaceId ? 'pr-9' : ''}`}
+                                    />
+                                    {workspaceId && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                            onClick={() => onOpen('mediaLibrary', {
+                                                workspaceId,
+                                                onSelect: (url) => setMediaUrl(url)
+                                            })}
+                                        >
+                                            <ImageIcon className="w-3.5 h-3.5" />
+                                        </Button>
+                                    )}
+                                </div>
                                 <p className="text-[9px] text-muted-foreground">
-                                    This template requires an {template.type.toLowerCase()} header. Enter a public link or an internal ID.
+                                    This template requires an {template.type.toLowerCase()} header. Enter a public link or select from Media Hub.
                                 </p>
                             </div>
                         </div>

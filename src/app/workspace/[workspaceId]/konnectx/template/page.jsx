@@ -605,7 +605,7 @@ export default function TemplatePage() {
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
-                <MediaLibraryModal />
+                <MediaLibraryModal workspaceId={workspaceId} />
                 {/* Header */}
                 <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
                     <div className="flex flex-row gap-2 items-center">
@@ -719,6 +719,7 @@ export default function TemplatePage() {
                     testNumbers={metadata.testNumbers || []}
                     mediaUrl={mediaUrl}
                     setMediaUrl={setMediaUrl}
+                    workspaceId={workspaceId}
                 />
 
                 <TemplatePreview

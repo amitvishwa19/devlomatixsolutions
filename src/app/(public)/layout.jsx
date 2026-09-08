@@ -1,4 +1,4 @@
-import "@/css/public.css";
+//import "@/css/public.css";
 import Navbar from "./_components/Navbar";
 import Footer from "./_components/Footer";
 import StickyBottomBar from "./_components/StickyBottomBar";
