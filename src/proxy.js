@@ -45,25 +45,9 @@ export async function proxy(request) {
     }
 
     // Workspace Access Control (Role Guard)
-    // Only users with a role slug in [super-admin, admin, demo] can access /workspace/[workspaceId]
+    // Any authenticated user can access /workspace; role-based checks are handled at the page/action layer.
     if (pathname.startsWith('/workspace/') && token) {
-        const allowedSlugs = ['super-admin', 'admin', 'demo', 'workspace'];
-
-        // If roles are missing from the token entirely, the session is stale:
-        // let the page layer handle it to avoid lockouts during enrichment.
-        const isStaleSession = token.roles === undefined;
-
-        const hasAllowedRole = token.roles?.some((r) => {
-            const roleSlug = r.slug || String(r.title || '').toLowerCase().trim();
-            return allowedSlugs.includes(roleSlug);
-        });
-
-        if (!isStaleSession && !hasAllowedRole) {
-            console.error(
-                `[Role Guard] Blocked access: ${token.email} (roles: ${JSON.stringify(token.roles?.map(r => r.slug))}) tried to enter ${pathname}`
-            );
-            return NextResponse.redirect(new URL('/unauthorized', request.url));
-        }
+        return NextResponse.next()
     }
 
     // Logged in -> Allow viewing the home page/landing page

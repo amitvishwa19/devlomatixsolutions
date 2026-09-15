@@ -1,10 +1,7 @@
-import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import jwt from 'jsonwebtoken'
 import bcryptjs from "bcryptjs";
-import { SignJWT, jwtVerify } from "jose";
-import { v4 as uuidv4 } from 'uuid'
-import { MemberRole } from "@prisma/client";
+import { SignJWT } from "jose";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
 
