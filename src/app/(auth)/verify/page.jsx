@@ -40,38 +40,38 @@ export default function Verify() {
     }, [execute])
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0B0F19] text-white font-sans">
+        <div className="public-theme relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0b1014] text-white font-sans">
             <NetworkBackground />
 
             {/* Ambient Background Glows */}
-            <div className="fixed inset-0 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-[#00F0FF]/5 blur-[120px]" />
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[55%] h-[55%] rounded-full bg-cyan-500/10 blur-[130px] animate-pulse-glow" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] rounded-full bg-blue-600/10 blur-[140px] animate-pulse-glow" style={{ animationDelay: '1.5s' }} />
                 <div
-                    className="absolute inset-0 opacity-[0.03]"
+                    className="absolute inset-0 opacity-[0.04]"
                     style={{
-                        backgroundImage: `linear-gradient(to right, #00F0FF 1px, transparent 1px), linear-gradient(to bottom, #00F0FF 1px, transparent 1px)`,
+                        backgroundImage: `linear-gradient(to right, rgba(56, 189, 248, 0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(56, 189, 248, 0.4) 1px, transparent 1px)`,
                         backgroundSize: '40px 40px'
                     }}
                 />
             </div>
 
             {/* Header/Logo */}
-            <div className="absolute top-8 left-8 relative z-20">
+            <div className="absolute top-8 left-8 z-20">
                 <AppLogo link={'/'} size={40} height={40} width={120} />
             </div>
 
             {/* Main Content */}
             <div className="relative z-10 w-full max-w-md mx-4">
-                <div className="backdrop-blur-xl bg-[#0f172a]/80 rounded-[2.5rem] p-10 shadow-3xl border border-white/10 relative overflow-hidden transition-all duration-500">
+                <div className="backdrop-blur-2xl bg-card/85 dark:bg-[#0f161a]/90 rounded-[2.5rem] p-10 shadow-2xl shadow-cyan-950/20 border border-border/80 dark:border-white/10 relative overflow-hidden transition-all duration-500">
                     {/* Glowing Accent */}
-                    <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-br from-[#00F0FF]/10 to-[#7B2CBF]/10 blur-xl opacity-50 pointer-events-none" />
+                    <div className="absolute -inset-1 rounded-[2.5rem] bg-gradient-to-br from-cyan-500/20 via-sky-500/15 to-blue-600/20 blur-2xl opacity-60 pointer-events-none" />
 
                     <div className="relative z-10 text-center space-y-8">
                         
                         {/* Status Icon */}
-                        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-[#00F0FF]/10 border border-[#00F0FF]/20 shadow-[0_0_30px_rgba(0,240,240,0.15)] transition-all duration-500">
-                            {status === 'verifying' && <Loader2 className="h-12 w-12 text-[#00F0FF] animate-spin" />}
+                        <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-3xl bg-sky-500/10 border border-sky-500/25 shadow-[0_0_30px_rgba(14,165,233,0.2)] transition-all duration-500">
+                            {status === 'verifying' && <Loader2 className="h-12 w-12 text-sky-400 animate-spin" />}
                             {status === 'success' && <CheckCircle2 className="h-12 w-12 text-emerald-400 animate-in zoom-in duration-500" />}
                             {status === 'error' && <AlertCircle className="h-12 w-12 text-rose-500 animate-in shake duration-500" />}
                         </div>
@@ -120,7 +120,7 @@ export default function Verify() {
                                 <Button
                                     asChild
                                     size="lg"
-                                    className="w-full gap-2 bg-gradient-to-r from-[#00F0FF] to-[#00D0FF] text-[#0f172a] hover:from-[#00D0FF] hover:to-[#00B0FF] font-black shadow-[0_0_25px_rgba(0,240,255,0.4)] transition-all h-14 rounded-2xl"
+                                    className="w-full gap-2 bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold shadow-lg shadow-primary/25 transition-all h-14 rounded-2xl border-0 cursor-pointer"
                                 >
                                     <Link href="/">
                                         Enter Command Center
@@ -144,8 +144,8 @@ export default function Verify() {
 
                         {/* Footer Status */}
                         <div className="pt-6 border-t border-white/5">
-                            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-500 uppercase tracking-widest font-black">
-                                <span className={status === 'success' ? 'text-[#00F0FF]' : 'text-slate-700'}>●</span>
+                            <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 uppercase tracking-widest font-black">
+                                <span className={status === 'success' ? 'text-sky-400' : 'text-slate-600'}>●</span>
                                 AUTH_SUBSYSTEM_{status.toUpperCase()}
                             </div>
                         </div>
@@ -154,7 +154,7 @@ export default function Verify() {
             </div>
 
             {/* Global Footer */}
-            <div className="absolute bottom-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-[0.3em] z-20">
+            <div className="absolute bottom-8 text-center text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em] z-20">
                 Devlomatix Mission Control • Security Grade AAA
             </div>
         </div>

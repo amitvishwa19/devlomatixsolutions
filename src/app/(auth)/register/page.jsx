@@ -47,65 +47,69 @@ export default function Register() {
     }
 
     return (
-
-        <div className="lg:p-8">
+        <div className="w-full">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                <div className="flex flex-col space-y-2 text-center mb-5" >
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                        Create new account
+                <div className="flex flex-col space-y-2 text-center mb-4">
+                    <h1 className="text-3xl font-bold text-white tracking-tight">
+                        Create Account
                     </h1>
-
+                    <p className="text-sm text-slate-400">
+                        Join Devlomatix and start deploying missions
+                    </p>
                 </div>
 
-
-                <div className={cn("grid gap-6")}>
-
+                <div className={cn("grid gap-5")}>
                     <div className="grid gap-4">
-
                         <div className="grid gap-2">
-                            <Label className="" htmlFor="email">
+                            <Label className="text-slate-300 text-sm font-medium" htmlFor="email">
                                 Email
                             </Label>
                             <Input
                                 id="email"
-                                placeholder=""
+                                placeholder="name@example.com"
                                 type="email"
                                 disabled={loading}
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
-                                className="bg-card border  placeholder:text-muted-foreground "
+                                className="h-11 rounded-xl bg-secondary/40 dark:bg-white/[0.04] border-border/80 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60 text-foreground placeholder:text-muted-foreground transition-all"
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label className="" htmlFor="email">
+                            <Label className="text-slate-300 text-sm font-medium" htmlFor="password">
                                 Password
                             </Label>
                             <Input
                                 id="password"
                                 type="password"
+                                placeholder="••••••••"
                                 disabled={loading}
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
-                                className="bg-card border  placeholder:text-muted-foreground "
+                                className="h-11 rounded-xl bg-secondary/40 dark:bg-white/[0.04] border-border/80 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60 text-foreground placeholder:text-muted-foreground transition-all"
                             />
                         </div>
 
                         <div className="grid gap-2">
-                            <Label className="" htmlFor="email">
+                            <Label className="text-slate-300 text-sm font-medium" htmlFor="confirmPassword">
                                 Confirm Password
                             </Label>
                             <Input
                                 id="confirmPassword"
                                 type="password"
+                                placeholder="••••••••"
                                 disabled={loading}
                                 value={data.confirmPassword}
                                 onChange={(e) => setData({ ...data, confirmPassword: e.target.value })}
-                                className="bg-card border  placeholder:text-muted-foreground "
+                                className="h-11 rounded-xl bg-secondary/40 dark:bg-white/[0.04] border-border/80 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60 text-foreground placeholder:text-muted-foreground transition-all"
                             />
                         </div>
 
-                        <Button className='h-10' disabled={loading} onClick={() => { handelUserRegistration() }}>
+                        <Button
+                            className="h-11 w-full mt-2 cursor-pointer bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/35 active:scale-[0.98] transition-all border-0"
+                            disabled={loading}
+                            onClick={() => { handelUserRegistration() }}
+                        >
                             {loading && (
                                 <Loader className="mr-2 h-4 w-4 animate-spin" />
                             )}
@@ -113,36 +117,32 @@ export default function Register() {
                         </Button>
                     </div>
 
-                    <div className='flex justify-center text-sm text-muted-foreground'>
-                        Already have account ?
-                        <Link replace={true} href={'/'}>
-                            <span className='ml-2  font-bold text-primary'>Sign In</span>
+                    <div className="flex justify-center text-sm text-slate-400">
+                        Already have an account?
+                        <Link replace={true} href={'/login'}>
+                            <span className="ml-2 font-bold text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-4">Sign In</span>
                         </Link>
                     </div>
-
-
                 </div>
-                <div className='flex flex-col items-center justify-center text-xs gap-2'>
-                    <span className='text-xs'>By creating an account, you agree to our{" "}</span>
-                    <p className=''>
+
+                <div className="flex flex-col items-center justify-center text-[11px] gap-1.5 mt-6 text-slate-500 text-center px-4">
+                    <span>By creating an account, you agree to our</span>
+                    <p>
                         <Link
                             href="/terms"
-                            className="underline underline-offset-4 text-primary"
+                            className="text-slate-300 hover:text-primary transition-colors"
                         >
                             Terms of Service
                         </Link>{" "}
                         and{" "}
                         <Link
                             href="/privacy"
-                            className="underline underline-offset-4 text-primary"
+                            className="text-slate-300 hover:text-primary transition-colors"
                         >
                             Privacy Policy
                         </Link>
                         .
                     </p>
-
-
-
                 </div>
             </div>
         </div>

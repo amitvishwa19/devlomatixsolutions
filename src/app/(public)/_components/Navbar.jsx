@@ -87,13 +87,13 @@ const Navbar = () => {
                                     <button
                                         onClick={() => setServicesOpen(!servicesOpen)}
                                         className={cn(
-"relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-1",
+                                            "relative px-4 py-1.5 text-sm font-medium rounded-full transition-all duration-200 flex items-center gap-1",
                                             isActive(link.href)
                                                 ? "text-primary font-semibold"
                                                 : "text-muted-foreground hover:text-foreground hover:bg-card/60 dark:hover:bg-white/[0.04]"
-                                    )}
-                                >
-                                    {isActive(link.href) && (
+                                        )}
+                                    >
+                                        {isActive(link.href) && (
                                             <motion.div
                                                 layoutId="activeTab"
                                                 className="absolute inset-0 rounded-full border border-primary/30 bg-primary/10 shadow-xs"
@@ -162,12 +162,12 @@ const Navbar = () => {
                             <AuthSelector />
                         ) : (
                             <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="sm" asChild className="rounded-full font-semibold hover:text-primary">
+                                {/* <Button variant="ghost" size="sm" asChild className="rounded-full font-semibold hover:text-primary">
                                     <Link href="/login">Sign In</Link>
                                 </Button>
                                 <Button variant="hero" size="sm" asChild className="rounded-full shadow-md shadow-primary/20 px-4 font-bold bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white border-0 hover:brightness-110">
                                     <Link href="/contact">Get in Touch</Link>
-                                </Button>
+                                </Button> */}
                             </div>
                         )}
                     </div>

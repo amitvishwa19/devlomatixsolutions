@@ -73,8 +73,8 @@ export default function Login() {
     return (
         <div className="w-full">
             <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                <div className="flex flex-col space-y-2 text-center mb-5">
-                    <h1 className="text-3xl font-bold  text-white mb-2">
+                <div className="flex flex-col space-y-2 text-center mb-4">
+                    <h1 className="text-3xl font-bold text-white tracking-tight">
                         Sign In
                     </h1>
                     <p className="text-sm text-slate-400">
@@ -82,10 +82,10 @@ export default function Login() {
                     </p>
                 </div>
 
-                <div className={cn("grid gap-6")}>
+                <div className={cn("grid gap-5")}>
                     <div className="grid gap-4">
                         <div className="grid gap-2">
-                            <Label className="text-slate-300" htmlFor="email">
+                            <Label className="text-slate-300 text-sm font-medium" htmlFor="email">
                                 Email
                             </Label>
                             <Input
@@ -95,31 +95,32 @@ export default function Login() {
                                 disabled={loading}
                                 value={data.email}
                                 onChange={(e) => setData({ ...data, email: e.target.value })}
-                                className="bg-card border  placeholder:text-muted-foreground "
+                                className="h-11 rounded-xl bg-secondary/40 dark:bg-white/[0.04] border-border/80 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60 text-foreground placeholder:text-muted-foreground transition-all"
                             />
                         </div>
 
                         <div className="grid gap-2">
                             <div className="flex justify-between items-center">
-                                <Label className="text-slate-300" htmlFor="password">
+                                <Label className="text-slate-300 text-sm font-medium" htmlFor="password">
                                     Password
                                 </Label>
-                                <Link href={'/forgot'} className="text-xs font-semibold text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors">
+                                <Link href={'/forgot'} className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
                                     Forgot Password?
                                 </Link>
                             </div>
                             <Input
                                 id="password"
                                 type="password"
+                                placeholder="••••••••"
                                 disabled={loading}
                                 value={data.password}
                                 onChange={(e) => setData({ ...data, password: e.target.value })}
-                                className="bg-card border  placeholder:text-muted-foreground "
+                                className="h-11 rounded-xl bg-secondary/40 dark:bg-white/[0.04] border-border/80 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/60 text-foreground placeholder:text-muted-foreground transition-all"
                             />
                         </div>
 
                         <Button
-                            className='h-10 w-full mt-2 cursor-pointer bg-linear-to-r from-[#00F0FF] to-[#00D0FF] font-bold text-shadow-sm transition-all ease-out'
+                            className="h-11 w-full mt-2 cursor-pointer bg-gradient-to-r from-primary via-blue-600 to-indigo-600 hover:brightness-110 text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/35 active:scale-[0.98] transition-all border-0"
                             disabled={loading}
                             onClick={login}
                         >
@@ -130,30 +131,30 @@ export default function Login() {
                         </Button>
                     </div>
 
-                    <div className='flex justify-center text-sm text-slate-400 mt-2'>
+                    <div className="flex justify-center text-sm text-slate-400">
                         Don&apos;t have an account?
                         <Link replace={true} href={'/register'}>
-                            <span className='ml-2 font-bold text-[#00F0FF] hover:text-[#00F0FF]/80 transition-colors hover:underline underline-offset-4'>Sign Up</span>
+                            <span className="ml-2 font-bold text-primary hover:text-primary/80 transition-colors hover:underline underline-offset-4">Sign Up</span>
                         </Link>
                     </div>
 
-                    <div className="relative mt-2">
+                    <div className="relative my-1">
                         <div className="absolute inset-0 flex items-center">
                             <span className="w-full border-t border-white/10" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-[#0f172a] px-3 font-medium text-slate-500">
+                            <span className="bg-[#0f161a] px-3 font-medium text-slate-400">
                                 Or continue with
                             </span>
                         </div>
                     </div>
 
-                    <div className='flex justify-evenly w-full mt-2'>
+                    <div className="flex justify-evenly w-full">
                         <Button
-
+                            type="button"
                             disabled={false}
                             onClick={handleGoogleLogin}
-                            className='w-full dark:text-white flex items-center justify-center gap-2 py-2 cursor-pointer px-4 bg-transparent border  transition-all h-11 rounded-lg'
+                            className="w-full flex items-center justify-center gap-2.5 py-2 cursor-pointer px-4 bg-secondary/40 dark:bg-white/[0.04] hover:bg-secondary/70 dark:hover:bg-white/[0.08] border border-border/70 dark:border-white/10 text-foreground font-medium transition-all h-11 rounded-xl"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -164,17 +165,16 @@ export default function Login() {
                             Google
                         </Button>
                     </div>
-
                 </div>
 
-                <div className='flex flex-col items-center justify-center text-[11px] gap-2 mt-8 text-slate-500 text-center px-4'>
+                <div className="flex flex-col items-center justify-center text-[11px] gap-1.5 mt-6 text-slate-500 text-center px-4">
                     <span>By creating an account, you agree to our</span>
                     <p>
-                        <Link href="/terms" className="text-slate-300 hover:text-[#00F0FF] transition-colors">
+                        <Link href="/terms" className="text-slate-300 hover:text-primary transition-colors">
                             Terms of Service
                         </Link>
                         {" "}and{" "}
-                        <Link href="/privacy" className="text-slate-300 hover:text-[#00F0FF] transition-colors">
+                        <Link href="/privacy" className="text-slate-300 hover:text-primary transition-colors">
                             Privacy Policy
                         </Link>
                     </p>
