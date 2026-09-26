@@ -9,10 +9,12 @@ import { getWhatsappDefault } from "@/lib/whatsapp-default";
 
 const GetConversationsSchema = z.object({
     workspaceId: z.string(),
+    credentialId: z.string().optional(),
+    phoneNumberId: z.string().optional(),
 });
 
 const handler = async (data) => {
-    const { workspaceId } = data;
+    const { workspaceId, credentialId: explicitCredId, phoneNumberId: explicitPhoneId } = data;
 
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
@@ -49,9 +51,18 @@ const handler = async (data) => {
         });
 
         // 2. Resolve Active Default Credential (Prioritize user's switched default)
-        let defaultCredential = await db.credentials.findFirst({
-            where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-        }).catch(() => null);
+        let defaultCredential = null;
+        if (explicitCredId) {
+            defaultCredential = await db.credentials.findUnique({
+                where: { id: explicitCredId }
+            }).catch(() => null);
+        }
+
+        if (!defaultCredential) {
+            defaultCredential = await db.credentials.findFirst({
+                where: { userId, platform: 'WHATSAPP_CLOUD', isDefault: true }
+            }).catch(() => null);
+        }
 
         if (!defaultCredential) {
             defaultCredential = await db.credentials.findFirst({
@@ -85,8 +96,8 @@ const handler = async (data) => {
         }
 
         // Extract active Phone ID if available
-        let activePhoneId = "";
-        if (defaultCredential) {
+        let activePhoneId = explicitPhoneId || "";
+        if (!activePhoneId && defaultCredential) {
             let cloudCreds = null;
             const stored = defaultCredential.credentials;
             if (typeof stored === 'string' && stored.includes(':')) {
@@ -156,28 +167,55 @@ const handler = async (data) => {
             if (t.templateName) templateMap.set(t.templateName.toLowerCase().trim(), t);
         });
 
-        // 4. Fetch messages: workspace user messages + assigned messages + contact-related messages
+        // 4. Fetch messages: strictly filtered by active account phone_number_id if available
         const contactJidPatterns = contacts.map(c => {
             if (!c.phone) return null;
             return c.phone.replace(/\D/g, '');
         }).filter(Boolean);
 
+        const messageWhere = {
+            OR: [
+                { userId: { in: workspaceUserIds } },
+                ...(contactJidPatterns.length > 0 ? [
+                    { jid: { in: contactJidPatterns.map(d => `${d}@s.whatsapp.net`) } },
+                    { jid: { in: contactJidPatterns.map(d => (d.length === 10 ? `91${d}@s.whatsapp.net` : `${d}@s.whatsapp.net`)) } }
+                ] : [])
+            ]
+        };
+
+        if (activePhoneId) {
+            messageWhere.AND = [
+                {
+                    OR: [
+                        { metadata: { path: ['phone_number_id'], equals: activePhoneId } },
+                        { metadata: { path: ['phoneNumberId'], equals: activePhoneId } },
+                        { metadata: { path: ['raw', 'metadata', 'phone_number_id'], equals: activePhoneId } }
+                    ]
+                }
+            ];
+        }
+
         const ownMessages = await db.whatsAppMessage.findMany({
-            where: {
-                OR: [
-                    { userId: { in: workspaceUserIds } },
-                    ...(contactJidPatterns.length > 0 ? [
-                        { jid: { in: contactJidPatterns.map(d => `${d}@s.whatsapp.net`) } },
-                        { jid: { in: contactJidPatterns.map(d => (d.length === 10 ? `91${d}@s.whatsapp.net` : `${d}@s.whatsapp.net`)) } }
-                    ] : [])
-                ]
-            },
+            where: messageWhere,
             orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
         }).catch(() => []);
 
+        const assignedWhere = { jid: { in: assignedJids } };
+        if (activePhoneId) {
+            assignedWhere.AND = [
+                {
+                    OR: [
+                        { metadata: { path: ['phone_number_id'], equals: activePhoneId } },
+                        { metadata: { path: ['phoneNumberId'], equals: activePhoneId } },
+                        { metadata: { path: ['raw', 'metadata', 'phone_number_id'], equals: activePhoneId } }
+                    ]
+                }
+            ];
+        }
+
         const assignedMessages = assignedJids.length > 0
             ? await db.whatsAppMessage.findMany({
-                where: { jid: { in: assignedJids } },
+                where: assignedWhere,
                 orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
             }).catch(() => [])
             : [];
@@ -242,6 +280,17 @@ const handler = async (data) => {
                 try { meta = JSON.parse(msg.metadata); } catch (e) { meta = {}; }
             } else if (msg.metadata && typeof msg.metadata === 'object') {
                 meta = JSON.parse(JSON.stringify(msg.metadata));
+            }
+
+            // Strictly filter out messages belonging to other WhatsApp phone numbers/accounts
+            const msgPhoneId = meta.phone_number_id ||
+                               meta.phoneNumberId ||
+                               meta.raw?.phone_number_id ||
+                               meta.raw?.metadata?.phone_number_id ||
+                               meta.originalPayload?.phone_number_id;
+
+            if (activePhoneId && msgPhoneId && String(msgPhoneId).trim() !== String(activePhoneId).trim()) {
+                return;
             }
 
             // Auto-enrich product image and info if not present
@@ -423,6 +472,8 @@ const handler = async (data) => {
             data: {
                 success: true, 
                 activePhoneId,
+                activeCredentialId: defaultCredential?.id || null,
+                activeProfile: defaultCredential?.profile || null,
                 conversations: JSON.parse(JSON.stringify(conversations))
             } 
         };
