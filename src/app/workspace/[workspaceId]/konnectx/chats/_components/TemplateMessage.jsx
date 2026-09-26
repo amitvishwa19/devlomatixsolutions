@@ -34,11 +34,24 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
     }
     meta = meta || {};
 
+    // Resolve the template definition from the prop, or from the server-enriched metadata
+    const effectiveDef = templateDefinition || meta.templateDefinition || null;
+
+    const parseMaybeJson = (value) => {
+        if (typeof value === 'string') {
+            try { return JSON.parse(value); } catch (e) { return null; }
+        }
+        return value && typeof value === 'object' ? value : null;
+    };
+
+    const defMeta = parseMaybeJson(effectiveDef?.metadata) || {};
+
     // Header Logic
-    let headerComponent = templateDefinition?.metadata?.components?.find(c => c.type === 'HEADER');
-    let headerType = (headerComponent?.format || templateDefinition?.type || 'TEXT').toUpperCase();
-    let headerText = headerComponent?.text || templateDefinition?.header || meta.headerText || null;
-    let headerMediaUrl = meta.mediaUrl || meta.originalPayload?.mediaUrl || templateDefinition?.metadata?.mediaUrl || null;
+    const defComponents = Array.isArray(defMeta.components) ? defMeta.components : [];
+    let headerComponent = defComponents.find(c => (c.type || '').toUpperCase() === 'HEADER') || defMeta.headerComponent || null;
+    let headerType = (headerComponent?.format || effectiveDef?.type || 'TEXT').toUpperCase();
+    let headerText = headerComponent?.text || defMeta.headerText || effectiveDef?.header || meta.headerText || null;
+    let headerMediaUrl = meta.mediaUrl || meta.originalPayload?.mediaUrl || defMeta.mediaUrl || headerComponent?.mediaUrl || null;
 
     // Fallback: pull media link from the original sent/webhook payload header parameters
     if (!headerMediaUrl) {
@@ -52,35 +65,27 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
 
     // Buttons Logic
     let buttons = [];
-    if (Array.isArray(templateDefinition?.buttons)) {
-        buttons = templateDefinition.buttons;
-    } else if (typeof templateDefinition?.buttons === 'string') {
-        try { buttons = JSON.parse(templateDefinition.buttons); } catch (e) { }
+    const defButtons = parseMaybeJson(effectiveDef?.buttons);
+    if (Array.isArray(defButtons)) {
+        buttons = defButtons;
+    } else if (Array.isArray(defMeta.buttons)) {
+        buttons = defMeta.buttons;
     } else if (Array.isArray(meta.buttons)) {
         buttons = meta.buttons;
     }
 
     // Carousel Logic
-    const isCarousel = templateDefinition?.type?.toUpperCase() === 'CAROUSEL';
-    const cards = isCarousel ? (templateDefinition?.metadata?.cards || []) : [];
+    const isCarousel = (effectiveDef?.type || '').toUpperCase() === 'CAROUSEL';
+    const cards = isCarousel ? (defMeta.cards || []) : [];
 
-    const isInteractiveGroup = templateDefinition?.type === 'interactive-group' ||
+    const isInteractiveGroup = effectiveDef?.type === 'interactive-group' ||
+        defMeta.type === 'interactive-group' ||
         meta.type === 'interactive-group';
-
-    const effectiveDef = templateDefinition || meta.templateDefinition || null;
 
     // Interpolate & Format Template Body
     const getRenderedBody = () => {
-        // 1. If msg.text has clean rendered body (not starting with raw [Template: ...])
-        if (typeof msg.text === 'string' && msg.text.trim()) {
-            const clean = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
-            if (clean && !clean.startsWith('[Template:') && !clean.includes('{{1}}')) {
-                return clean;
-            }
-        }
-
-        // 2. If effective template definition body is available
-        const bodyTemplate = effectiveDef?.body || meta.templateBody;
+        // 1. If effective template definition body or stored templateBody is available, interpolate and render it!
+        const bodyTemplate = effectiveDef?.body || meta.templateBody || meta.templateDefinition?.body;
         if (bodyTemplate) {
             let text = bodyTemplate;
 
@@ -128,14 +133,15 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
             if (text) return text;
         }
 
-        // 3. Fallback: Extract descriptive content after [Template: ...]
-        if (typeof msg.text === 'string' && msg.text.startsWith('[Template:')) {
-            const afterTag = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
-            if (afterTag) return afterTag;
+        // 2. If renderedBody was saved in metadata
+        if (meta.renderedBody && typeof meta.renderedBody === 'string' && meta.renderedBody.trim()) {
+            return meta.renderedBody.trim();
         }
 
+        // 3. If msg.text has clean rendered body (not starting with raw [Template: ...])
         if (typeof msg.text === 'string' && msg.text.trim()) {
-            return msg.text;
+            const clean = msg.text.replace(/^\[Template:[^\]]+\]\s*/, '').trim();
+            if (clean) return clean;
         }
 
         return `WhatsApp Template: ${templateName}`;
@@ -184,9 +190,9 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
                             <div className="px-3 py-2 text-[14px] leading-relaxed whitespace-pre-wrap break-words">
                                 {typeof renderedBody === 'string' ? renderedBody : renderedBody}
                             </div>
-                            {templateDefinition?.footer && (
+                            {(effectiveDef?.footer || defMeta.footer || meta.footer) && (
                                 <div className="px-3 pb-2 -mt-1 text-[11.5px] text-[#667781] dark:text-[#8696a0] italic">
-                                    {templateDefinition.footer}
+                                    {effectiveDef?.footer || defMeta.footer || meta.footer}
                                 </div>
                             )}
                         </div>
@@ -327,27 +333,10 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
                         {typeof renderedBody === 'string' ? renderedBody : renderedBody}
                     </div>
 
-                    {/* Structured Details Micro-Chips (if available) */}
-                    {(meta.candidateName || meta.jobTitle) && (
-                        <div className="mt-2 pt-2 flex flex-wrap gap-1.5 border-t border-black/5 dark:border-white/10">
-                            {meta.candidateName && (
-                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-black/5 dark:bg-black/20 text-[#111b21] dark:text-[#e9edef]">
-                                    <span className="text-[#00a884] dark:text-[#53bdeb] font-semibold">Candidate:</span>
-                                    {meta.candidateName}
-                                </div>
-                            )}
-                            {meta.jobTitle && (
-                                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-black/5 dark:bg-black/20 text-[#111b21] dark:text-[#e9edef]">
-                                    <span className="text-[#00a884] dark:text-[#53bdeb] font-semibold">Position:</span>
-                                    {meta.jobTitle}
-                                </div>
-                            )}
-                        </div>
-                    )}
 
-                    {(effectiveDef?.footer || meta.footer) && (
+                    {(effectiveDef?.footer || defMeta.footer || meta.footer) && (
                         <div className="text-[12px] mt-1.5 text-[#667781] dark:text-[#8696a0] italic">
-                            {effectiveDef?.footer || meta.footer}
+                            {effectiveDef?.footer || defMeta.footer || meta.footer}
                         </div>
                     )}
 

@@ -710,6 +710,7 @@ export default function WhatsAppChatsPage() {
 
         // Handle Media Header if required by the template
         const templateType = (selectedTemplateForSend.type || 'text').toUpperCase();
+        let sentMediaUrl = null;
         if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(templateType)) {
             let finalMediaUrl = templateMediaUrl || '';
 
@@ -737,6 +738,8 @@ export default function WhatsAppChatsPage() {
                         }
                     ]
                 });
+
+                sentMediaUrl = finalMediaUrl;
             }
         }
 
@@ -805,25 +808,35 @@ export default function WhatsAppChatsPage() {
             fromMe: true,
             timestamp: Math.floor(Date.now() / 1000),
             status: 'PENDING',
-            metadata: { type: 'template', templateName }
+            waId: tempId,
+            metadata: {
+                type: 'template',
+                templateName,
+                mediaUrl: sentMediaUrl,
+                templateDefinition: selectedTemplateForSend
+            }
         };
         setConversations(prev => prev.map(conv => {
-            return {
-                ...conv,
-                lastMessage: JSON.stringify({
-                    text: previewText,
-                    type: 'template',
-                    templateName: templateName,
-                    timestamp: optimisticMsg.timestamp
-                }),
-                messages: [optimisticMsg, ...conv.messages]
-            };
+            if (getPhoneLast10(conv.jid) === getPhoneLast10(selectedJid)) {
+                return {
+                    ...conv,
+                    lastMessage: JSON.stringify({
+                        text: previewText,
+                        type: 'template',
+                        templateName: templateName,
+                        timestamp: optimisticMsg.timestamp
+                    }),
+                    timestamp: optimisticMsg.timestamp,
+                    messages: [...conv.messages, optimisticMsg]
+                };
+            }
             return conv;
         }));
         setIsTemplateDrawerOpen(false);
         setSelectedTemplateForSend(null);
         setTemplateVars({});
         setIsSending(true);
+        scrollToBottom('smooth');
 
         executeSendMessage({
             workspaceId,
@@ -849,8 +862,9 @@ export default function WhatsAppChatsPage() {
         console.log(`[Preview] Looking for template: ${templateName}`);
 
         let foundTemplate = templates.find(t =>
-            t.templateName === templateName || t.name === templateName
-        );
+            t.templateName?.toLowerCase() === templateName.toLowerCase() ||
+            t.name?.toLowerCase() === templateName.toLowerCase()
+        ) || msg.metadata?.templateDefinition;
 
         if (!foundTemplate) {
             foundTemplate = {
@@ -1022,7 +1036,7 @@ export default function WhatsAppChatsPage() {
 
                         <TabsContent value="chats" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col overflow-hidden">
                             {/* Segment Filters Inside Tab */}
-                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth shrink-0">
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex flex-wrap items-center gap-1.5 shrink-0">
                                 <Badge
                                     variant={activeSegment === 'all' ? 'default' : 'outline'}
                                     className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
@@ -1187,7 +1201,7 @@ export default function WhatsAppChatsPage() {
 
                         <TabsContent value="contacts" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
                             {/* Segment Filters Inside Tab */}
-                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth">
+                            <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex flex-wrap items-center gap-1.5 shrink-0">
                                 <Badge
                                     variant={activeSegment === 'all' ? 'default' : 'outline'}
                                     className="cursor-pointer text-[10px] shrink-0 font-medium h-5 px-2"
@@ -1896,7 +1910,9 @@ export default function WhatsAppChatsPage() {
                                                         ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
                                                         : null);
                                                 const bcTemplateDef = isBcTemplate && bcTemplateName
-                                                    ? templates.find(t => t.templateName === bcTemplateName || t.name === bcTemplateName)
+                                                    ? (templates.find(t => t.templateName?.toLowerCase() === bcTemplateName.toLowerCase() || t.name?.toLowerCase() === bcTemplateName.toLowerCase())
+                                                        || msg.metadata?.templateDefinition
+                                                        || null)
                                                     : null;
 
                                                 if (isBcTemplate) {
@@ -1961,7 +1977,9 @@ export default function WhatsAppChatsPage() {
                                                         ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
                                                         : null);
                                                 const templateDef = (isTemplate && templateName)
-                                                    ? templates.find(t => t.templateName === templateName || t.name === templateName)
+                                                    ? (templates.find(t => t.templateName?.toLowerCase() === templateName.toLowerCase() || t.name?.toLowerCase() === templateName.toLowerCase())
+                                                        || msg.metadata?.templateDefinition
+                                                        || null)
                                                     : null;
 
                                                 return (

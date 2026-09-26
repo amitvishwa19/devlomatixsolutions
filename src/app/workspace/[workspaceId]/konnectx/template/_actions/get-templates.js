@@ -73,7 +73,8 @@ const handler = async (data) => {
         const whereClause = {
             OR: [
                 { userId: { in: workspaceUserIds } },
-                { sharedWith: { some: { sharedWithUserId: currentUserId } } }
+                { sharedWith: { some: { sharedWithUserId: currentUserId } } },
+                { isDefault: true }
             ]
         };
 

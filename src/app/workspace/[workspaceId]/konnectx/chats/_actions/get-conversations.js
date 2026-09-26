@@ -130,12 +130,6 @@ const handler = async (data) => {
         }).catch(() => []);
 
         const allTemplates = db.messageTemplate.findMany({
-            where: {
-                OR: [
-                    { workspaceId },
-                    { userId: { in: workspaceUserIds } }
-                ]
-            },
             select: {
                 id: true,
                 name: true,
@@ -293,41 +287,61 @@ const handler = async (data) => {
                         ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
                         : null);
 
-                if (templateName) {
-                    const tpl = templateMap.get(templateName.toLowerCase().trim());
-                    if (tpl) {
-                        meta.templateName = tpl.templateName || tpl.name;
-                        meta.templateDefinition = tpl;
+                let tpl = templateName ? templateMap.get(templateName.toLowerCase().trim()) : null;
+                if (!tpl && meta.templateDefinition) {
+                    tpl = meta.templateDefinition;
+                }
 
-                        let bodyText = tpl.body || '';
-                        const payloadComponents =
-                            meta.originalPayload?.template?.components ||
-                            meta.originalPayload?.components ||
-                            meta.components ||
-                            [];
-                        const bodyComp = payloadComponents.find(
-                            (c) => (c.type || '').toLowerCase() === 'body'
-                        );
-                        const params = bodyComp?.parameters || meta.parameters || meta.vars || [];
+                if (tpl) {
+                    meta.templateName = tpl.templateName || tpl.name;
+                    meta.templateDefinition = tpl;
 
-                        if (Array.isArray(params)) {
-                            params.forEach((p, idx) => {
-                                const val = typeof p === 'object' ? p.text || p.value || '' : String(p || '');
-                                if (val) {
-                                    bodyText = bodyText.replace(new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'), val);
-                                }
-                            });
-                        }
+                    let bodyText = tpl.body || '';
+                    const payloadComponents =
+                        meta.originalPayload?.template?.components ||
+                        meta.originalPayload?.components ||
+                        meta.components ||
+                        [];
+                    const bodyComp = payloadComponents.find(
+                        (c) => (c.type || '').toLowerCase() === 'body'
+                    );
+                    const params = bodyComp?.parameters || meta.parameters || meta.vars || [];
 
-                        if (meta.candidateName) bodyText = bodyText.replace(/\{\{1\}\}/g, meta.candidateName).replace(/\{\{name\}\}/gi, meta.candidateName);
-                        if (meta.jobTitle) bodyText = bodyText.replace(/\{\{2\}\}/g, meta.jobTitle).replace(/\{\{jobTitle\}\}/gi, meta.jobTitle);
-                        if (meta.companyName) bodyText = bodyText.replace(/\{\{3\}\}/g, meta.companyName).replace(/\{\{companyName\}\}/gi, meta.companyName);
+                    if (Array.isArray(params)) {
+                        params.forEach((p, idx) => {
+                            const val = typeof p === 'object' ? p.text || p.value || '' : String(p || '');
+                            if (val) {
+                                bodyText = bodyText.replace(new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'), val);
+                            }
+                        });
+                    }
 
-                        bodyText = bodyText.replace(/\{\{\d+\}\}/g, '').trim();
+                    const candName = meta.candidateName || meta.name || meta.originalPayload?.candidateName;
+                    const jobTitle = meta.jobTitle || meta.originalPayload?.jobTitle;
+                    const compName = meta.companyName || meta.originalPayload?.companyName;
 
-                        if (bodyText) {
-                            msg.text = bodyText;
-                        }
+                    if (candName) bodyText = bodyText.replace(/\{\{1\}\}/g, candName).replace(/\{\{name\}\}/gi, candName).replace(/\{\{candidateName\}\}/gi, candName);
+                    if (jobTitle) bodyText = bodyText.replace(/\{\{2\}\}/g, jobTitle).replace(/\{\{jobTitle\}\}/gi, jobTitle);
+                    if (compName) bodyText = bodyText.replace(/\{\{3\}\}/g, compName).replace(/\{\{companyName\}\}/gi, compName);
+
+                    bodyText = bodyText.replace(/\{\{\d+\}\}/g, '').trim();
+
+                    if (bodyText) {
+                        msg.text = bodyText;
+                    }
+                } else if (meta.renderedBody) {
+                    msg.text = meta.renderedBody;
+                } else if (meta.templateBody) {
+                    let bodyText = meta.templateBody;
+                    const candName = meta.candidateName || meta.name;
+                    const jobTitle = meta.jobTitle;
+                    const compName = meta.companyName;
+                    if (candName) bodyText = bodyText.replace(/\{\{1\}\}/g, candName).replace(/\{\{name\}\}/gi, candName);
+                    if (jobTitle) bodyText = bodyText.replace(/\{\{2\}\}/g, jobTitle).replace(/\{\{jobTitle\}\}/gi, jobTitle);
+                    if (compName) bodyText = bodyText.replace(/\{\{3\}\}/g, compName).replace(/\{\{companyName\}\}/gi, compName);
+                    bodyText = bodyText.replace(/\{\{\d+\}\}/g, '').trim();
+                    if (bodyText) {
+                        msg.text = bodyText;
                     }
                 }
 

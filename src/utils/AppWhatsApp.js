@@ -260,22 +260,70 @@ export async function sendJobApplicationWhatsApp({
                 const waMessageId = result?.data?.messages?.[0]?.id || `wa_apply_${Date.now()}`;
                 const formattedJid = `${cleanPhone}@s.whatsapp.net`;
 
+                let fullRenderedText = "";
+                if (templateRecord?.body) {
+                    let rendered = templateRecord.body;
+                    if (components && Array.isArray(components)) {
+                        const bodyComp = components.find(c => (c.type || '').toLowerCase() === 'body');
+                        const params = bodyComp?.parameters || [];
+                        params.forEach((p, idx) => {
+                            const val = typeof p === 'object' ? (p.text || p.value || '') : String(p || '');
+                            if (val) {
+                                rendered = rendered.replace(new RegExp(`\\{\\{${idx + 1}\\}\\}`, 'g'), val);
+                            }
+                        });
+                    }
+                    if (candidateName) {
+                        rendered = rendered.replace(/\{\{1\}\}/g, candidateName)
+                            .replace(/\{\{name\}\}/gi, candidateName)
+                            .replace(/\{\{candidateName\}\}/gi, candidateName);
+                    }
+                    if (jobTitle) {
+                        rendered = rendered.replace(/\{\{2\}\}/g, jobTitle)
+                            .replace(/\{\{jobTitle\}\}/gi, jobTitle);
+                    }
+                    if (appName) {
+                        rendered = rendered.replace(/\{\{3\}\}/g, appName)
+                            .replace(/\{\{companyName\}\}/gi, appName);
+                    }
+                    rendered = rendered.replace(/\{\{\d+\}\}/g, '').trim();
+                    if (rendered) {
+                        fullRenderedText = rendered;
+                    }
+                }
+
+                const logMessageText = fullRenderedText || `[Template: ${templateName}] Job application received for ${jobTitle}`;
+
                 await db.whatsAppMessage.create({
                     data: {
                         userId: targetUserId,
                         waId: waMessageId,
                         jid: formattedJid,
-                        text: `[Template: ${templateName}] Job application received for ${jobTitle}`,
+                        text: logMessageText,
                         fromMe: true,
                         timestamp: BigInt(Math.floor(Date.now() / 1000)),
                         status: result?.success ? 'SENT' : 'FAILED',
                         metadata: {
                             type: 'template',
                             templateName: templateName,
+                            templateBody: templateRecord?.body || null,
+                            renderedBody: fullRenderedText || null,
                             candidateName: candidateName || name,
                             jobTitle: jobTitle,
                             companyName: appName,
+                            summary: `Job application received for ${jobTitle}`,
                             components: components,
+                            templateDefinition: templateRecord ? {
+                                id: templateRecord.id,
+                                name: templateRecord.name,
+                                templateName: templateRecord.templateName || templateRecord.name,
+                                type: templateRecord.type || 'TEXT',
+                                header: templateRecord.header,
+                                body: templateRecord.body,
+                                footer: templateRecord.footer,
+                                buttons: templateRecord.buttons,
+                                metadata: templateRecord.metadata
+                            } : undefined,
                             originalPayload: {
                                 template: {
                                     name: templateName,

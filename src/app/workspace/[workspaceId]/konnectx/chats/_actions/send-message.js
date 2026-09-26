@@ -7,7 +7,6 @@ import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
 import { getWhatsappDefault } from "@/lib/whatsapp-default";
-import fs from 'fs';
 
 const SendMessageSchema = z.object({
     workspaceId: z.string(),
@@ -94,6 +93,7 @@ const handler = async (data) => {
         // 2. Dispatch
         let result;
         const msgType = type.toLowerCase();
+        let templateHeaderMediaUrl = null;
 
         switch (msgType) {
             case 'text':
@@ -142,6 +142,11 @@ const handler = async (data) => {
 
                     for (const comp of data.template.components) {
                         if (comp.type === 'header' && comp.parameters) {
+                            for (const param of comp.parameters) {
+                                if (['image', 'video', 'document'].includes(param.type) && param[param.type]?.link) {
+                                    templateHeaderMediaUrl = param[param.type].link;
+                                }
+                            }
                             await processParameters(comp.parameters);
                         } else if (comp.type === 'carousel' && comp.cards) {
                             for (const card of comp.cards) {
@@ -158,11 +163,6 @@ const handler = async (data) => {
                 }
                 
                 console.log("[SendMessage] Final Template Components Payload:", JSON.stringify(data.template.components, null, 2));
-                fs.writeFileSync('d:\\Dev\\React\\devlomatix\\devlomatix-workspace\\devlomatix\\debug-payload.json', JSON.stringify({
-                    templateName: data.template.name,
-                    components: data.template.components,
-                    fullRequestData: data
-                }, null, 2));
 
                 result = await cloudApi.sendTemplateMessage(
                     cloudCredentials, cleanTo,
@@ -215,8 +215,10 @@ const handler = async (data) => {
                     fromMe: true,
                     timestamp: BigInt(Math.floor(Date.now() / 1000)),
                     status: "SENT",
-                    metadata: { 
-                        type: msgType, 
+                    metadata: {
+                        type: msgType,
+                        templateName: msgType === 'template' ? data.template.name : undefined,
+                        mediaUrl: templateHeaderMediaUrl,
                         originalPayload: data,
                         phone_number_id: String(cloudCredentials?.phoneNumberId || cloudCredentials?.phone_number_id || "")
                     }
