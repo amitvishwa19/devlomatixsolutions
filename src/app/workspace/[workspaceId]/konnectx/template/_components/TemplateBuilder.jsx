@@ -50,7 +50,9 @@ export default function TemplateBuilder({
     editingId,
     isSaving,
     isSubmittingId,
-    workspaceId
+    workspaceId,
+    groups = [],
+    onOpenManageGroups
 }) {
     const { onOpen } = useModal();
     const [aiPrompt, setAiPrompt] = useState('');
@@ -249,6 +251,63 @@ export default function TemplateBuilder({
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-semibold text-foreground mb-1.5 flex items-center justify-between">
+                                        <span>Template Group (Folder)</span>
+                                        {onOpenManageGroups && (
+                                            <button
+                                                type="button"
+                                                onClick={onOpenManageGroups}
+                                                className="text-[11px] text-primary hover:underline font-semibold"
+                                            >
+                                                + Manage Groups
+                                            </button>
+                                        )}
+                                    </label>
+                                    <Select
+                                        value={formData.metadata?.groupId || 'NONE'}
+                                        onValueChange={(val) => {
+                                            const currentMeta = { ...(formData.metadata || {}) };
+                                            if (val === 'NONE') {
+                                                delete currentMeta.groupId;
+                                                delete currentMeta.groupName;
+                                                delete currentMeta.groupColor;
+                                            } else {
+                                                const foundGrp = groups.find(g => g.id === val);
+                                                if (foundGrp) {
+                                                    currentMeta.groupId = foundGrp.id;
+                                                    currentMeta.groupName = foundGrp.name;
+                                                    currentMeta.groupColor = foundGrp.color || '#3b82f6';
+                                                }
+                                            }
+                                            setFormData({ ...formData, metadata: currentMeta });
+                                        }}
+                                    >
+                                        <SelectTrigger className="bg-background border-border">
+                                            <SelectValue placeholder="Select group (optional)" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-card border-border">
+                                            <SelectItem value="NONE">
+                                                <span className="flex items-center gap-2 text-muted-foreground">
+                                                    <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                                                    No Group (Ungrouped)
+                                                </span>
+                                            </SelectItem>
+                                            {groups.map((grp) => (
+                                                <SelectItem key={grp.id} value={grp.id}>
+                                                    <span className="flex items-center gap-2">
+                                                        <span
+                                                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                                                            style={{ backgroundColor: grp.color || '#3b82f6' }}
+                                                        />
+                                                        {grp.name}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
 
                                 {!editingId && (

@@ -9,9 +9,14 @@ import {
     Loader2,
     LayoutGrid,
     List,
-    RefreshCw
+    RefreshCw,
+    FolderPlus,
+    Layers,
+    Tag,
+    Filter
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
@@ -27,6 +32,8 @@ import TemplateBuilder from './_components/TemplateBuilder';
 import { TemplatePreviewCard, TemplateListRow } from './_components/TemplateItems';
 import TestTemplateDialog from './_components/TestTemplateDialog';
 import TemplatePreview from './_components/TemplatePreview';
+import ManageTemplateGroupsDialog from './_components/ManageTemplateGroupsDialog';
+import AssignTemplateGroupDialog from './_components/AssignTemplateGroupDialog';
 import { useAction } from "@/hooks/use-action";
 import { getTemplates } from "./_actions/get-templates";
 import { saveTemplate } from "./_actions/save-template";
@@ -34,6 +41,7 @@ import { syncTemplates } from "./_actions/sync-templates-v2";
 import { deleteTemplate } from "./_actions/delete-template";
 import { submitTemplate } from "./_actions/submit-template";
 import { checkTemplateStatus } from "./_actions/check-template-status";
+import { getTemplateGroups } from "./_actions/get-template-groups";
 import { MediaLibraryModal } from "../../article/_components/MediaLibraryModal";
 import { getContacts as getContactsAction } from "../contacts/_actions/get-contacts";
 import { sendMessage as sendMessageAction } from "../chats/_actions/send-message";
@@ -46,6 +54,8 @@ export default function TemplatePage() {
     const workspaceId = params.workspaceId;
     const { onOpen } = useModal();
     const [templates, setTemplates] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [selectedGroupFilter, setSelectedGroupFilter] = useState('ALL'); // 'ALL', 'UNGROUPED', or groupId
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('list');
@@ -60,6 +70,12 @@ export default function TemplatePage() {
     const [isDeletingId, setIsDeletingId] = useState(null);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState(null);
+    
+    // Group Management Dialogs
+    const [isManageGroupsOpen, setIsManageGroupsOpen] = useState(false);
+    const [isAssignGroupOpen, setIsAssignGroupOpen] = useState(false);
+    const [assignTargetTemplate, setAssignTargetTemplate] = useState(null);
+
     const [formData, setFormData] = useState({
         name: '',
         category: 'UTILITY',
@@ -121,10 +137,25 @@ export default function TemplatePage() {
         }
     });
 
+    const { execute: executeGetGroups } = useAction(getTemplateGroups, {
+        onSuccess: (data) => {
+            setGroups(data.groups || []);
+        },
+        onError: (err) => {
+            console.error("Error fetching template groups:", err);
+        }
+    });
+
     const fetchTemplates = () => {
         setIsLoading(true);
         if (workspaceId) {
             executeGetTemplates({ workspaceId });
+        }
+    };
+
+    const fetchGroups = () => {
+        if (workspaceId) {
+            executeGetGroups({ workspaceId });
         }
     };
 
@@ -143,12 +174,14 @@ export default function TemplatePage() {
     useEffect(() => {
         if (workspaceId) {
             fetchTemplates();
+            fetchGroups();
             fetchContacts();
             fetchMetadata();
         }
 
         const handleAccountSwitch = () => {
             fetchTemplates();
+            fetchGroups();
             fetchContacts();
             fetchMetadata();
         };
@@ -161,6 +194,7 @@ export default function TemplatePage() {
         onSuccess: (data) => {
             toast.success(data.message || "Template sync completed!", { id: "sync-toast" });
             fetchTemplates();
+            fetchGroups();
             setIsSyncing(false);
         },
         onError: (error) => {
@@ -180,6 +214,7 @@ export default function TemplatePage() {
             toast.success(editingId ? "Template updated!" : "Template created!");
             setIsBuilderOpen(false);
             executeGetTemplates({ workspaceId });
+            fetchGroups();
             setIsSaving(false);
 
             if (context?.shouldSubmit && data.template?.id) {
@@ -200,6 +235,7 @@ export default function TemplatePage() {
             toast.success(msg, { id: "delete-toast" });
             setIsDeletingId(null);
             fetchTemplates();
+            fetchGroups();
         },
         onError: (error) => {
             toast.error(error, { id: "delete-toast" });
@@ -241,7 +277,7 @@ export default function TemplatePage() {
 
     const { execute: executeSendTest, isLoading: isSendingTest } = useAction(sendMessageAction, {
         onSuccess: () => {
-            // We need to track successes for multiple recipients
+            // We track successes for multiple recipients
         },
         onError: (err) => toast.error(err || "Failed to send test message")
     });
@@ -274,7 +310,12 @@ export default function TemplatePage() {
                     locationName: '',
                     locationAddress: '',
                     listButton: 'Select Option',
-                    listSections: [{ title: 'Options', rows: [{ title: '', description: '' }] }]
+                    listSections: [{ title: 'Options', rows: [{ title: '', description: '' }] }],
+                    ...(selectedGroupFilter && selectedGroupFilter !== 'ALL' && selectedGroupFilter !== 'UNGROUPED' ? {
+                        groupId: selectedGroupFilter,
+                        groupName: groups.find(g => g.id === selectedGroupFilter)?.name,
+                        groupColor: groups.find(g => g.id === selectedGroupFilter)?.color || '#3b82f6'
+                    } : {})
                 }
             });
             setEditingId(null);
@@ -366,7 +407,6 @@ export default function TemplatePage() {
         setIsPreviewModalOpen(true);
     };
 
-
     const handleShare = (template) => {
         setSelectedShareTemplate(template);
         setIsShareDialogOpen(true);
@@ -374,6 +414,12 @@ export default function TemplatePage() {
 
     const handleShareUpdate = () => {
         fetchTemplates();
+        fetchGroups();
+    };
+
+    const handleAssignGroup = (template) => {
+        setAssignTargetTemplate(template);
+        setIsAssignGroupOpen(true);
     };
 
     const handleSendTest = async () => {
@@ -382,14 +428,12 @@ export default function TemplatePage() {
 
         const recipientList = [];
 
-        // Prioritize CRM contacts so they have their context attached
         contactRecipients.forEach(contact => {
             if (!recipientList.find(r => r.phone === contact.phone)) {
                 recipientList.push({ phone: contact.phone, contact });
             }
         });
 
-        // Add manual numbers, looking up CRM contact if possible
         manualNumbers.forEach(phone => {
             if (!recipientList.find(r => r.phone === phone)) {
                 const existingContact = allContacts.find(c => c.phone === phone);
@@ -415,7 +459,6 @@ export default function TemplatePage() {
             }
         }
 
-        // Add validation for media templates
         if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(testingTemplate.type?.toUpperCase())) {
             const finalMediaUrl = mediaUrl || testingTemplate.metadata?.mediaUrl;
             if (!finalMediaUrl || finalMediaUrl.trim() === '') {
@@ -447,7 +490,6 @@ export default function TemplatePage() {
 
                 cardsData.forEach((card, index) => {
                     const cardComps = [];
-
                     const cMediaUrl = card.mediaUrl || fallbackImageUrl;
                     const isHandle = /^\d+$/.test(cMediaUrl.toString()) || cMediaUrl.toString().startsWith('4');
                     cardComps.push({
@@ -466,7 +508,6 @@ export default function TemplatePage() {
                     });
                 });
 
-                // Duplicate the first card if only 1 exists, as Meta expects at least 2 cards for carousels
                 if (carouselCards.length === 1) {
                     carouselCards.push({
                         card_index: 1,
@@ -479,7 +520,6 @@ export default function TemplatePage() {
                     cards: carouselCards
                 });
 
-                // Handle top-level body variables for carousel
                 if (bodyVars.length > 0) {
                     components.push({
                         type: 'body',
@@ -490,8 +530,6 @@ export default function TemplatePage() {
                 return components;
             }
 
-            // Handle Standard Templates
-            // Handle Header (Text or Media)
             if (headerVars.length > 0) {
                 components.push({
                     type: 'header',
@@ -515,11 +553,8 @@ export default function TemplatePage() {
                         ]
                     });
                 }
-            } else if (testingTemplate.metadata?.headerText && !headerVars.length) {
-                // Static text header - usually doesn't need component parameter if no variables
             }
 
-            // Handle Body
             if (bodyVars.length > 0) {
                 components.push({
                     type: 'body',
@@ -527,7 +562,6 @@ export default function TemplatePage() {
                 });
             }
 
-            // Handle Buttons (Specifically Flow buttons if they exist)
             if (testingTemplate.buttons && Array.isArray(testingTemplate.buttons)) {
                 testingTemplate.buttons.forEach((btn, idx) => {
                     if (btn.type === 'FLOW') {
@@ -550,13 +584,6 @@ export default function TemplatePage() {
 
             return components;
         };
-
-        // Let's build a sample for logging using the first recipient
-        console.log("[TEMPLATE_TEST_PAYLOAD_SAMPLE]", {
-            template: testingTemplate.templateName || testingTemplate.name,
-            language: testingTemplate.language || 'en_US',
-            components: buildComponents(recipientList[0])
-        });
 
         const sendPromises = recipientList.map(async (recipient) => {
             const components = buildComponents(recipient);
@@ -597,33 +624,125 @@ export default function TemplatePage() {
         executeCheckStatus({ workspaceId, templateId });
     };
 
+    // Filtered templates calculation (Search + Group Segment)
     const filteredTemplates = templates.filter((t) => {
-        return t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            t.body.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (t.body || '').toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (!matchesSearch) return false;
+
+        if (selectedGroupFilter === 'ALL') return true;
+        if (selectedGroupFilter === 'UNGROUPED') {
+            return !t.metadata?.groupId;
+        }
+        return t.metadata?.groupId === selectedGroupFilter;
     });
+
+    const totalAllCount = templates.length;
+    const totalUngroupedCount = templates.filter(t => !t.metadata?.groupId).length;
 
     return (
         <TooltipProvider>
             <div className="flex flex-col h-full gap-2 p-2 animate-in fade-in duration-500">
                 <MediaLibraryModal workspaceId={workspaceId} />
+
                 {/* Header */}
                 <div className="flex border border-border items-center justify-between bg-card p-2 rounded-md shadow-sm">
                     <div className="flex flex-row gap-2 items-center">
                         <DynamicIcon name='layout-template' className="w-8 h-8 text-primary" />
                         <div className='flex flex-col'>
                             <h2 className="text-xl font-bold text-foreground">Message Templates</h2>
-                            <p className="text-xs text-muted-foreground">Comprehensive WhatsApp template management.</p>
+                            <p className="text-xs text-muted-foreground">Comprehensive WhatsApp template & group management.</p>
                         </div>
                     </div>
                     <div className='flex flex-row gap-2'>
                         <AccountSwitcher />
-                        <Button onClick={handleSyncCloud} variant="outline" className="border-primary/20 text-primary  shadow-sm gap-2" disabled={isSyncing}>
+                        <Button onClick={() => setIsManageGroupsOpen(true)} variant="outline" className="border-primary/20 text-primary shadow-sm gap-2">
+                            <FolderPlus className="w-4 h-4" /> Template Groups
+                        </Button>
+                        <Button onClick={handleSyncCloud} variant="outline" className="border-primary/20 text-primary shadow-sm gap-2" disabled={isSyncing}>
                             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} /> Sync Meta
                         </Button>
                         <Button onClick={() => handleOpenBuilder()} className="bg-primary hover:bg-primary/90 shadow-sm gap-2">
                             <Plus className="w-4 h-4 " /> Create Template
                         </Button>
+                    </div>
+                </div>
 
+                {/* Group Filter Segment Bar */}
+                <div className="bg-card p-2 rounded-xl border border-border/50 shadow-sm flex items-center justify-between gap-3 overflow-x-auto">
+                    <div className="flex items-center gap-1.5 min-w-max">
+                        <Button
+                            variant={selectedGroupFilter === 'ALL' ? 'default' : 'ghost'}
+                            size="sm"
+                            className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                            onClick={() => setSelectedGroupFilter('ALL')}
+                        >
+                            <Layers className="w-3.5 h-3.5" />
+                            All Templates
+                            <Badge
+                                variant={selectedGroupFilter === 'ALL' ? 'secondary' : 'outline'}
+                                className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
+                            >
+                                {totalAllCount}
+                            </Badge>
+                        </Button>
+
+                        <Button
+                            variant={selectedGroupFilter === 'UNGROUPED' ? 'default' : 'ghost'}
+                            size="sm"
+                            className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                            onClick={() => setSelectedGroupFilter('UNGROUPED')}
+                        >
+                            <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                            Ungrouped
+                            <Badge
+                                variant={selectedGroupFilter === 'UNGROUPED' ? 'secondary' : 'outline'}
+                                className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
+                            >
+                                {totalUngroupedCount}
+                            </Badge>
+                        </Button>
+
+                        <div className="h-4 w-px bg-border/60 mx-1" />
+
+                        {groups.map((group) => {
+                            const isSelected = selectedGroupFilter === group.id;
+                            const groupColor = group.color || '#3b82f6';
+                            const count = templates.filter(t => t.metadata?.groupId === group.id).length;
+
+                            return (
+                                <Button
+                                    key={group.id}
+                                    variant={isSelected ? 'default' : 'ghost'}
+                                    size="sm"
+                                    className={`h-8 text-xs font-semibold gap-2 rounded-lg transition-all ${isSelected ? '' : 'hover:bg-muted/40'}`}
+                                    onClick={() => setSelectedGroupFilter(group.id)}
+                                >
+                                    <span
+                                        className="w-2.5 h-2.5 rounded-full shrink-0"
+                                        style={{ backgroundColor: groupColor }}
+                                    />
+                                    {group.name}
+                                    <Badge
+                                        variant={isSelected ? 'secondary' : 'outline'}
+                                        className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
+                                    >
+                                        {count}
+                                    </Badge>
+                                </Button>
+                            );
+                        })}
+
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 text-xs text-primary font-semibold gap-1.5 rounded-lg hover:bg-primary/10"
+                            onClick={() => setIsManageGroupsOpen(true)}
+                            title="Add or Manage Groups"
+                        >
+                            <Plus className="w-3.5 h-3.5" /> New Group
+                        </Button>
                     </div>
                 </div>
 
@@ -631,7 +750,12 @@ export default function TemplatePage() {
                 <div className="bg-card p-2 rounded-xl shadow-sm flex flex-row gap-4 justify-between items-center border border-border/50">
                     <div className="relative flex-1 max-w-xs md:max-w-md">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search templates..." className="pl-9 bg-background/50 border-border h-10 ring-offset-background" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <Input
+                            placeholder="Search templates in this group..."
+                            className="pl-9 bg-background/50 border-border h-10 ring-offset-background"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                     <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10">
                         <Button variant={viewMode === 'grid' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
@@ -645,7 +769,22 @@ export default function TemplatePage() {
                         {isLoading ? (
                             <div className="flex-1 flex flex-col items-center justify-center h-64 opacity-50"><Loader2 className="w-10 h-10 animate-spin text-primary mb-4" /><p className="text-sm font-medium">Loading templates...</p></div>
                         ) : filteredTemplates.length === 0 ? (
-                            <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10"><MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6" /><h3 className="text-xl font-bold text-foreground">No templates found</h3><Button onClick={() => handleOpenBuilder()} className="mt-8 gap-2"><Plus className="w-4 h-4" /> Create Custom Template</Button></div>
+                            <div className="flex-1 flex flex-col items-center justify-center p-20 border-2 border-dashed border-border rounded-xl bg-card/10">
+                                <MessageSquare className="w-16 h-16 text-muted-foreground/20 mb-6" />
+                                <h3 className="text-xl font-bold text-foreground">
+                                    {selectedGroupFilter !== 'ALL'
+                                        ? "No templates found in this group"
+                                        : "No templates found"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground mt-1 mb-4">
+                                    {selectedGroupFilter !== 'ALL'
+                                        ? "Try selecting another group or create a new template for this folder."
+                                        : "Create your first custom WhatsApp template to get started."}
+                                </p>
+                                <Button onClick={() => handleOpenBuilder()} className="gap-2">
+                                    <Plus className="w-4 h-4" /> Create Custom Template
+                                </Button>
+                            </div>
                         ) : (
                             <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-12" : "flex flex-col gap-3 pb-12"}>
                                 {filteredTemplates.map((template) => (
@@ -661,6 +800,7 @@ export default function TemplatePage() {
                                             onSubmit={handleSubmitToMeta}
                                             onCheckStatus={handleCheckStatus}
                                             onShare={handleShare}
+                                            onAssignGroup={handleAssignGroup}
                                             isSubmittingId={isSubmittingId}
                                             isDeletingId={isDeletingId}
                                         />
@@ -676,6 +816,7 @@ export default function TemplatePage() {
                                             onSubmit={handleSubmitToMeta}
                                             onCheckStatus={handleCheckStatus}
                                             onShare={handleShare}
+                                            onAssignGroup={handleAssignGroup}
                                             isSubmittingId={isSubmittingId}
                                             isDeletingId={isDeletingId}
                                         />
@@ -697,6 +838,32 @@ export default function TemplatePage() {
                     isSaving={isSaving}
                     isSubmittingId={isSubmittingId}
                     workspaceId={workspaceId}
+                    groups={groups}
+                    onOpenManageGroups={() => setIsManageGroupsOpen(true)}
+                />
+
+                <ManageTemplateGroupsDialog
+                    isOpen={isManageGroupsOpen}
+                    onOpenChange={setIsManageGroupsOpen}
+                    workspaceId={workspaceId}
+                    groups={groups}
+                    onUpdate={() => {
+                        fetchGroups();
+                        fetchTemplates();
+                    }}
+                />
+
+                <AssignTemplateGroupDialog
+                    isOpen={isAssignGroupOpen}
+                    onOpenChange={setIsAssignGroupOpen}
+                    template={assignTargetTemplate}
+                    workspaceId={workspaceId}
+                    groups={groups}
+                    onSuccess={() => {
+                        fetchTemplates();
+                        fetchGroups();
+                    }}
+                    onOpenManageGroups={() => setIsManageGroupsOpen(true)}
                 />
 
                 <TestTemplateDialog

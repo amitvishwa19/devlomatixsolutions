@@ -1,31 +1,31 @@
 'use client';
 
 import React from 'react';
-import { 
-    Send, 
-    X, 
-    Search, 
-    Users, 
-    Check, 
-    Phone, 
+import {
+    Send,
+    X,
+    Search,
+    Users,
+    Check,
+    Phone,
     Loader2,
     Image as ImageIcon
 } from 'lucide-react';
 import { useModal } from '@/hooks/useModal';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-    Dialog, 
-    DialogContent, 
-    DialogHeader, 
-    DialogTitle, 
-    DialogFooter, 
-    DialogDescription 
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogDescription
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
     Select,
     SelectContent,
     SelectItem,
@@ -86,265 +86,273 @@ export default function TestTemplateDialog({
         { key: 'whatsappName', label: 'WA Name' },
     ];
 
-    const activeContacts = selectedContactIds.length > 0 
+    const activeContacts = selectedContactIds.length > 0
         ? contacts.filter(c => selectedContactIds.includes(c.id))
         : contacts;
 
-    const availableFields = fieldsToCheck.filter(field => 
+    const availableFields = fieldsToCheck.filter(field =>
         activeContacts.some(c => c[field.key] !== null && c[field.key] !== undefined && c[field.key].toString().trim() !== '')
     );
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[600px] gap-0 p-0 overflow-hidden bg-card border-border">
-                <DialogHeader className="p-6 pb-2">
-                    <DialogTitle className="flex items-center gap-2">
+            <DialogContent className="max-w-3xl sm:max-w-4xl w-[95vw] max-h-[92vh] flex flex-col p-0 gap-0 overflow-hidden bg-card border-border rounded-xl shadow-2xl">
+                {/* Fixed Header */}
+                <DialogHeader className="p-5 pb-3 border-b border-border/50 shrink-0">
+                    <DialogTitle className="flex items-center gap-2 text-lg font-bold">
                         <Send className="w-5 h-5 text-primary" />
                         Send Test Message
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-xs text-muted-foreground">
                         Test your template by sending it to selected contacts or manual numbers.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="px-6 py-2">
-                    <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 flex flex-col gap-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Template: {template.name}</span>
-                            <div className="flex gap-2">
-                                <Badge variant="outline" className="text-[9px] h-4 px-1">{template.category}</Badge>
-                                <Badge variant="outline" className="text-[9px] h-4 px-1">{template.language}</Badge>
+                {/* Scrollable Content */}
+                <ScrollArea className="flex-1 overflow-y-auto max-h-[calc(92vh-130px)]">
+                    <div className="p-6 space-y-6">
+                        {/* Template Info Card */}
+                        <div className="bg-primary/5 border border-primary/10 rounded-xl p-3.5 flex flex-col gap-2">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                                    Template: {template.name}
+                                </span>
+                                <div className="flex gap-2">
+                                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-semibold">
+                                        {template.category}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-semibold">
+                                        {template.language}
+                                    </Badge>
+                                </div>
                             </div>
+                            <p className="text-xs text-muted-foreground line-clamp-3 italic font-medium">
+                                "{template.body}"
+                            </p>
                         </div>
-                        <p className="text-[11px] text-muted-foreground line-clamp-2 italic font-medium">
-                            "{template.body}"
-                        </p>
-                    </div>
-                </div>
 
-                <div className="p-6 py-4 space-y-6">
-                    {/* Media URL Section */}
-                    {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(template.type?.toUpperCase()) && (
-                        <div className="space-y-3 bg-primary/5 p-4 rounded-xl border border-primary/20">
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
-                                    <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                    {template.type} Header Required
-                                </h4>
-                                {workspaceId && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
-                                        onClick={() => onOpen('mediaLibrary', {
-                                            workspaceId,
-                                            onSelect: (url) => setMediaUrl(url)
-                                        })}
-                                    >
-                                        Choose from Hub
-                                    </Button>
-                                )}
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-foreground opacity-70">
-                                    Provide {template.type} URL or ID
-                                </label>
-                                <div className="relative group/input">
-                                    <Input
-                                        placeholder={`https://... or Meta Media ID`}
-                                        value={mediaUrl || ''}
-                                        onChange={(e) => setMediaUrl(e.target.value)}
-                                        className={`h-9 bg-background text-sm border-primary/20 focus-visible:ring-primary/30 ${workspaceId ? 'pr-9' : ''}`}
-                                    />
+                        {/* Media URL Section */}
+                        {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(template.type?.toUpperCase()) && (
+                            <div className="space-y-3 bg-primary/5 p-4 rounded-xl border border-primary/20">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                                        <span className="flex h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                        {template.type} Header Required
+                                    </h4>
                                     {workspaceId && (
                                         <Button
                                             type="button"
                                             variant="ghost"
-                                            size="icon"
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                            size="sm"
+                                            className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
                                             onClick={() => onOpen('mediaLibrary', {
                                                 workspaceId,
                                                 onSelect: (url) => setMediaUrl(url)
                                             })}
                                         >
-                                            <ImageIcon className="w-3.5 h-3.5" />
+                                            Choose from Hub
                                         </Button>
                                     )}
                                 </div>
-                                <p className="text-[9px] text-muted-foreground">
-                                    This template requires an {template.type.toLowerCase()} header. Enter a public link or select from Media Hub.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Variable Mapping Section */}
-                    {detectedVariables.length > 0 && (
-                        <div className="space-y-3 bg-muted/20 p-4 rounded-xl border border-border/50">
-                            <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                <span className="flex h-1.5 w-1.5 rounded-full bg-primary" />
-                                Variable Mapping ({"{{n}}"})
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {detectedVariables.map((v) => (
-                                    <div key={v} className="space-y-1.5">
-                                        <label className="text-[11px] font-bold text-foreground opacity-70">
-                                            Variable {"{{"}{v}{"}}"}
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                placeholder={`Value for {{${v}}}`}
-                                                value={variableMappings[v] || ''}
-                                                onChange={(e) => setVariableMappings({ ...variableMappings, [v]: e.target.value })}
-                                                className="h-9 bg-background text-sm flex-1"
-                                            />
-                                            <Select
-                                                onValueChange={(val) => setVariableMappings({ ...variableMappings, [v]: (variableMappings[v] || '') + `{{contact.${val}}}` })}
-                                            >
-                                                <SelectTrigger className="w-[120px] h-9 text-[11px] bg-muted/50 border-border">
-                                                    <SelectValue placeholder="Insert Field" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {availableFields.length > 0 ? (
-                                                        availableFields.map(f => (
-                                                            <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
-                                                        ))
-                                                    ) : (
-                                                        <SelectItem value="none" disabled>No valid fields</SelectItem>
-                                                    )}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Recipient Selection */}
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-foreground">Manual Numbers</label>
-                            <Input
-                                placeholder="Enter numbers separated by comma (e.g. 91987..., 9188...)"
-                                value={testRecipient}
-                                onChange={(e) => setTestRecipient(e.target.value)}
-                                className="bg-background border-border"
-                            />
-                            {testNumbers.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase py-1">Saved Test Numbers:</span>
-                                    {testNumbers.map((num) => {
-                                        const isActive = testRecipient.split(',').map(n => n.trim()).includes(num);
-                                        return (
-                                            <button
-                                                key={num}
+                                <div className="space-y-1.5">
+                                    <label className="text-[11px] font-bold text-foreground opacity-70">
+                                        Provide {template.type} URL or ID
+                                    </label>
+                                    <div className="relative group/input">
+                                        <Input
+                                            placeholder={`https://... or Meta Media ID`}
+                                            value={mediaUrl || ''}
+                                            onChange={(e) => setMediaUrl(e.target.value)}
+                                            className={`h-9 bg-background text-sm border-primary/20 focus-visible:ring-primary/30 ${workspaceId ? 'pr-9' : ''}`}
+                                        />
+                                        {workspaceId && (
+                                            <Button
                                                 type="button"
-                                                onClick={() => toggleTestNumber(num)}
-                                                className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all border ${
-                                                    isActive 
-                                                        ? 'bg-primary/10 border-primary text-primary shadow-sm' 
-                                                        : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30 hover:bg-muted'
-                                                }`}
+                                                variant="ghost"
+                                                size="icon"
+                                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                onClick={() => onOpen('mediaLibrary', {
+                                                    workspaceId,
+                                                    onSelect: (url) => setMediaUrl(url)
+                                                })}
                                             >
-                                                <Phone className="w-2.5 h-2.5" />
-                                                {num}
-                                                {isActive && <Check className="w-2.5 h-2.5" />}
-                                            </button>
-                                        );
-                                    })}
+                                                <ImageIcon className="w-3.5 h-3.5" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">
+                                        This template requires an {template.type.toLowerCase()} header. Enter a public link or select from Media Hub.
+                                    </p>
                                 </div>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-bold text-foreground flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-muted-foreground" />
-                                    Select Contacts
-                                </label>
-                                <span className="text-[10px] font-bold text-primary uppercase">
-                                    {selectedContactIds.length} Selected
-                                </span>
                             </div>
+                        )}
 
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search contacts..."
-                                    className="pl-9 h-9 text-sm bg-background/50 border-border"
-                                    value={contactSearch}
-                                    onChange={(e) => setContactSearch(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="h-[200px] overflow-hidden border border-border rounded-xl bg-background/30">
-                                <ScrollArea className="h-full">
-                                    {isFetchingContacts ? (
-                                        <div className="flex items-center justify-center h-full gap-2 text-xs text-muted-foreground">
-                                            <Loader2 className="w-3 h-3 animate-spin" /> Fetching CRM contacts...
-                                        </div>
-                                    ) : filteredContacts.length === 0 ? (
-                                        <div className="flex flex-col items-center justify-center h-full gap-1 p-4 text-center grayscale opacity-60">
-                                            <Users className="w-8 h-8 text-muted-foreground/20" />
-                                            <p className="text-[11px] text-muted-foreground">No contacts found</p>
-                                        </div>
-                                    ) : (
-                                        <div className="p-2 space-y-1">
-                                            {filteredContacts.map((contact) => (
-                                                <div
-                                                    key={contact.id}
-                                                    className={`group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all duration-200 border ${
-                                                        selectedContactIds.includes(contact.id)
-                                                            ? 'bg-primary/5 border-primary/20'
-                                                            : 'hover:bg-muted/30 border-transparent'
-                                                    }`}
-                                                    onClick={() => toggleContact(contact.id)}
+                        {/* Variable Mapping Section */}
+                        {detectedVariables.length > 0 && (
+                            <div className="space-y-3 bg-muted/20 p-4 rounded-xl border border-border/50">
+                                <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <span className="flex h-1.5 w-1.5 rounded-full bg-primary" />
+                                    Variable Mapping ({"{{n}}"})
+                                </h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {detectedVariables.map((v) => (
+                                        <div key={v} className="space-y-1.5">
+                                            <label className="text-[11px] font-bold text-foreground opacity-70">
+                                                Variable {"{{"}{v}{"}}"}
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder={`Value for {{${v}}}`}
+                                                    value={variableMappings[v] || ''}
+                                                    onChange={(e) => setVariableMappings({ ...variableMappings, [v]: e.target.value })}
+                                                    className="h-9 bg-background text-sm flex-1"
+                                                />
+                                                <Select
+                                                    onValueChange={(val) => setVariableMappings({ ...variableMappings, [v]: (variableMappings[v] || '') + `{{contact.${val}}}` })}
                                                 >
-                                                    <Checkbox
-                                                        checked={selectedContactIds.includes(contact.id)}
-                                                        className="pointer-events-none"
-                                                    />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className={`text-xs font-bold truncate ${selectedContactIds.includes(contact.id) ? 'text-primary' : 'text-foreground'}`}>
-                                                            {contact.name}
-                                                        </p>
-                                                        <div className="flex items-center gap-2 opacity-50">
-                                                            <Phone className="w-2.5 h-2.5" />
-                                                            <span className="text-[10px] font-mono">{contact.phone}</span>
-                                                        </div>
-                                                    </div>
-                                                    {selectedContactIds.includes(contact.id) && (
-                                                        <Check className="w-3.5 h-3.5 text-primary" />
-                                                    )}
-                                                </div>
-                                            ))}
+                                                    <SelectTrigger className="w-[120px] h-9 text-[11px] bg-muted/50 border-border">
+                                                        <SelectValue placeholder="Insert Field" />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        {availableFields.length > 0 ? (
+                                                            availableFields.map(f => (
+                                                                <SelectItem key={f.key} value={f.key}>{f.label}</SelectItem>
+                                                            ))
+                                                        ) : (
+                                                            <SelectItem value="none" disabled>No valid fields</SelectItem>
+                                                        )}
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
-                                    )}
-                                </ScrollArea>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Recipient Selection */}
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-bold text-foreground">Manual Numbers</label>
+                                <Input
+                                    placeholder="Enter numbers separated by comma (e.g. 91987..., 9188...)"
+                                    value={testRecipient}
+                                    onChange={(e) => setTestRecipient(e.target.value)}
+                                    className="bg-background border-border text-sm h-10"
+                                />
+                                {testNumbers.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase py-1">Saved Test Numbers:</span>
+                                        {testNumbers.map((num) => {
+                                            const isActive = testRecipient.split(',').map(n => n.trim()).includes(num);
+                                            return (
+                                                <button
+                                                    key={num}
+                                                    type="button"
+                                                    onClick={() => toggleTestNumber(num)}
+                                                    className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-all border ${isActive
+                                                        ? 'bg-primary/10 border-primary text-primary shadow-sm'
+                                                        : 'bg-muted/50 border-border text-muted-foreground hover:border-primary/30 hover:bg-muted'
+                                                        }`}
+                                                >
+                                                    <Phone className="w-2.5 h-2.5" />
+                                                    {num}
+                                                    {isActive && <Check className="w-2.5 h-2.5" />}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-bold text-foreground flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-muted-foreground" />
+                                        Select Contacts
+                                    </label>
+                                    <span className="text-xs font-bold text-primary uppercase">
+                                        {selectedContactIds.length} Selected
+                                    </span>
+                                </div>
+
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Search contacts by name or phone..."
+                                        className="pl-9 h-9 text-sm bg-background border-border"
+                                        value={contactSearch}
+                                        onChange={(e) => setContactSearch(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="h-[220px] overflow-hidden border border-border rounded-xl bg-background/40">
+                                    <ScrollArea className="h-full">
+                                        {isFetchingContacts ? (
+                                            <div className="flex items-center justify-center h-40 gap-2 text-xs text-muted-foreground">
+                                                <Loader2 className="w-4 h-4 animate-spin" /> Fetching CRM contacts...
+                                            </div>
+                                        ) : filteredContacts.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center h-40 gap-1 p-4 text-center grayscale opacity-60">
+                                                <Users className="w-8 h-8 text-muted-foreground/20" />
+                                                <p className="text-xs text-muted-foreground">No contacts found</p>
+                                            </div>
+                                        ) : (
+                                            <div className="p-2 space-y-1">
+                                                {filteredContacts.map((contact) => (
+                                                    <div
+                                                        key={contact.id}
+                                                        className={`group flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all duration-200 border ${selectedContactIds.includes(contact.id)
+                                                            ? 'bg-primary/10 border-primary/30 shadow-xs'
+                                                            : 'hover:bg-muted/40 border-transparent'
+                                                            }`}
+                                                        onClick={() => toggleContact(contact.id)}
+                                                    >
+                                                        <Checkbox
+                                                            checked={selectedContactIds.includes(contact.id)}
+                                                            className="pointer-events-none"
+                                                        />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className={`text-xs font-bold truncate ${selectedContactIds.includes(contact.id) ? 'text-primary' : 'text-foreground'}`}>
+                                                                {contact.name}
+                                                            </p>
+                                                            <div className="flex items-center gap-2 opacity-60">
+                                                                <Phone className="w-2.5 h-2.5" />
+                                                                <span className="text-[10px] font-mono">{contact.phone}</span>
+                                                            </div>
+                                                        </div>
+                                                        {selectedContactIds.includes(contact.id) && (
+                                                            <Check className="w-3.5 h-3.5 text-primary shrink-0" />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </ScrollArea>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </ScrollArea>
 
-                <DialogFooter className="p-6 bg-muted/20 border-t border-border mt-0">
-                    <Button variant="ghost" onClick={onClose} disabled={isTesting}>
+                {/* Fixed Footer with Action Buttons */}
+                <DialogFooter className="p-4 px-6 bg-muted/20 border-t border-border shrink-0 flex items-center justify-end gap-3 mt-0">
+                    <Button variant="outline" onClick={onClose} disabled={isTesting} className="h-9 px-4 text-xs font-semibold">
                         Cancel
                     </Button>
                     <Button
                         onClick={onSend}
-                        className="bg-primary hover:bg-primary/90 min-w-[120px] font-bold shadow-lg shadow-primary/20"
+                        className="bg-primary hover:bg-primary/90 min-w-[140px] h-9 font-bold shadow-md shadow-primary/20 text-xs gap-2"
                         disabled={isTesting}
                     >
                         {isTesting ? (
                             <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <Loader2 className="w-4 h-4 animate-spin" />
                                 Sending...
                             </>
                         ) : (
                             <>
-                                <Send className="w-4 h-4 mr-2" />
+                                <Send className="w-4 h-4" />
                                 Send Test Message
                             </>
                         )}

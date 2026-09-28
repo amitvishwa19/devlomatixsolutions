@@ -83,6 +83,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [isTypePopoverOpen, setIsTypePopoverOpen] = useState(false);
     const [salaryRange, setSalaryRange] = useState("");
+    const [status, setStatus] = useState("OPEN");
     const [description, setDescription] = useState('');
     const [editorType, setEditorType] = useState('jodit');
 
@@ -141,6 +142,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                     setSelectedTypes([]);
                 }
                 setSalaryRange(data.salaryRange || "");
+                setStatus(data.status || "OPEN");
                 setDescription(data.description || '');
             } else {
                 resetForm();
@@ -164,7 +166,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                 location,
                 type: typeString || 'FULL_TIME',
                 salaryRange,
-                status: data?.status || 'OPEN'
+                status: status || 'OPEN'
             };
 
             if (isEdit && data?.id) {
@@ -193,6 +195,7 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
         setLocation("");
         setSelectedTypes([]);
         setSalaryRange("");
+        setStatus("OPEN");
         setDescription('');
     };
 
@@ -203,14 +206,27 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                     {/* Header */}
                     <div className="p-2 border-b border-white/5 bg-primary/5">
                         <SheetHeader className="space-y-1">
-                            <div className="flex items-center gap-2 text-primary/60   mb-2">
-                                <Rocket className="w-4 h-4" />
-                                ATS Module
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-primary/60">
+                                    <Rocket className="w-4 h-4" />
+                                    ATS Module
+                                </div>
+                                <Badge
+                                    variant="outline"
+                                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                                        status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' :
+                                        status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' :
+                                        status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
+                                        'bg-muted text-muted-foreground'
+                                    }`}
+                                >
+                                    {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
+                                </Badge>
                             </div>
                             <SheetTitle className="text-xl font-bold">
                                 {isEdit ? "Update Position" : "New Position"}
                             </SheetTitle>
-                            <p className="text-xs font-bold text-muted-foreground/60   mt-1">
+                            <p className="text-xs font-bold text-muted-foreground/60 mt-1">
                                 {isEdit ? `Editing: ${data?.title}` : "Configure your job posting details"}
                             </p>
                         </SheetHeader>
@@ -406,6 +422,100 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                             value={salaryRange}
                                             onChange={(e) => setSalaryRange(e.target.value)}
                                         />
+                                    </div>
+                                </div>
+
+                                {/* Status Section (Open / Close / Draft) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center p-4 rounded-xl border border-border/50 bg-muted/10">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                                            <span>Position Status</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                                status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' :
+                                                status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30' :
+                                                status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
+                                                'bg-muted text-muted-foreground border border-border'
+                                            }`}>
+                                                {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
+                                            </span>
+                                        </label>
+                                        <Select value={status} onValueChange={setStatus}>
+                                            <SelectTrigger className="bg-background border rounded-md text-xs font-bold shadow-xs focus:ring-1 focus:ring-primary/40 w-full h-10">
+                                                <SelectValue placeholder="Select Status" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
+                                                <SelectItem value="OPEN" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-emerald-500 font-bold">Open (Active)</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Accepting applications & visible publicly</span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value="CLOSED" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-rose-500 font-bold">Closed</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Applications closed, no longer accepting submissions</span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value="DRAFT" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-blue-500 font-bold">Draft</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Internal draft, not open to applicants</span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                                <SelectItem value="ARCHIVED" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-muted-foreground font-bold">Archived</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Archived past position</span>
+                                                        </div>
+                                                    </div>
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-bold text-foreground">Quick Status Switch</label>
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                type="button"
+                                                variant={status === 'OPEN' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setStatus('OPEN')}
+                                                className={`flex-1 h-10 text-xs font-bold gap-2 transition-all ${
+                                                    status === 'OPEN'
+                                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-900/20'
+                                                        : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'
+                                                }`}
+                                            >
+                                                <div className={`w-2 h-2 rounded-full ${status === 'OPEN' ? 'bg-white' : 'bg-emerald-500'}`} />
+                                                Open Position
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant={status === 'CLOSED' ? 'default' : 'outline'}
+                                                size="sm"
+                                                onClick={() => setStatus('CLOSED')}
+                                                className={`flex-1 h-10 text-xs font-bold gap-2 transition-all ${
+                                                    status === 'CLOSED'
+                                                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-900/20'
+                                                        : 'border-rose-500/30 text-rose-500 hover:bg-rose-500/10'
+                                                }`}
+                                            >
+                                                <div className={`w-2 h-2 rounded-full ${status === 'CLOSED' ? 'bg-white' : 'bg-rose-500'}`} />
+                                                Close Position
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

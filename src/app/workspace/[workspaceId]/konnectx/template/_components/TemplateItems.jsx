@@ -12,7 +12,9 @@ import {
     RefreshCw, 
     Loader2,
     Eye,
-    Share2
+    Share2,
+    FolderPlus,
+    Layers
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,9 +37,13 @@ export const TemplatePreviewCard = ({
     onSubmit, 
     onCheckStatus,
     onShare,
+    onAssignGroup,
     isSubmittingId,
     isDeletingId
 }) => {
+    const groupName = template.metadata?.groupName;
+    const groupColor = template.metadata?.groupColor || '#3b82f6';
+
     return (
         <div className="group relative flex flex-col h-full bg-card/50 hover:bg-card border hover:border-primary/30 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
             {/* Template Bubble Preview */}
@@ -52,7 +58,7 @@ export const TemplatePreviewCard = ({
                         <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
-                                className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
+                                className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold shrink-0 ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
                                     (template.status === 'PENDING_APPROVAL' || template.status === 'IN_APPEAL') ? 'bg-orange-500/20 text-orange-500 hover:bg-orange-500/30' :
                                         template.status === 'REJECTED' ? 'bg-destructive/20 text-destructive hover:bg-destructive/30' :
                                             'bg-muted text-muted-foreground'
@@ -64,10 +70,25 @@ export const TemplatePreviewCard = ({
                             </Badge>
                         )}
                     </div>
-                    <div className="flex items-center">
-                        <code className="text-[10px] font-mono text-muted-foreground/60 truncate bg-muted/40 px-1.5 py-0.5 rounded border border-border/20 max-w-full">
+                    <div className="flex items-center justify-between gap-2">
+                        <code className="text-[10px] font-mono text-muted-foreground/60 truncate bg-muted/40 px-1.5 py-0.5 rounded border border-border/20 max-w-[180px]">
                             {template.templateName || template.name.toLowerCase().replace(/\s+/g, '_')}
                         </code>
+                        {groupName && (
+                            <Badge
+                                variant="outline"
+                                className="h-4 text-[9px] px-1.5 font-semibold flex items-center gap-1 border shrink-0 truncate max-w-[120px]"
+                                style={{
+                                    borderColor: `${groupColor}60`,
+                                    color: groupColor,
+                                    backgroundColor: `${groupColor}15`
+                                }}
+                                title={`Group: ${groupName}`}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: groupColor }} />
+                                <span className="truncate">{groupName}</span>
+                            </Badge>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[10px] text-muted-foreground uppercase opacity-60 tracking-wider font-semibold">
@@ -144,6 +165,10 @@ export const TemplatePreviewCard = ({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                                <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onAssignGroup?.(template)}>
+                                    <FolderPlus className="w-3.5 h-3.5 opacity-70 text-primary" /> Assign Group
+                                </DropdownMenuItem>
+
                                 <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onClone(template)}>
                                     <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
                                 </DropdownMenuItem>
@@ -155,7 +180,7 @@ export const TemplatePreviewCard = ({
                                 {template.platform === 'WHATSAPP_CLOUD' && (
                                     <>
                                         {(!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') ? (
-                                            <DropdownMenuItem
+                                             <DropdownMenuItem
                                                 className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary"
                                                 onClick={() => onSubmit(template.id)}
                                                 disabled={isSubmittingId === template.id}
@@ -209,9 +234,13 @@ export const TemplateListRow = ({
     onSubmit, 
     onCheckStatus,
     onShare,
+    onAssignGroup,
     isSubmittingId,
     isDeletingId
 }) => {
+    const groupName = template.metadata?.groupName;
+    const groupColor = template.metadata?.groupColor || '#3b82f6';
+
     return (
         <div className="group relative flex items-center gap-4 p-3 bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl transition-all duration-200">
             {/* Info Section */}
@@ -220,8 +249,22 @@ export const TemplateListRow = ({
                     <MessageSquare className="w-5 h-5 text-primary/40" />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                         <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
+                        {groupName && (
+                            <Badge
+                                variant="outline"
+                                className="h-4 text-[9px] px-1.5 font-semibold flex items-center gap-1 border shrink-0"
+                                style={{
+                                    borderColor: `${groupColor}60`,
+                                    color: groupColor,
+                                    backgroundColor: `${groupColor}15`
+                                }}
+                            >
+                                <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: groupColor }} />
+                                {groupName}
+                            </Badge>
+                        )}
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
                                 className={`h-3.5 text-[8px] px-1.5 uppercase tracking-tighter border-0 font-bold ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
@@ -324,6 +367,10 @@ export const TemplateListRow = ({
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                        <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onAssignGroup?.(template)}>
+                            <FolderPlus className="w-3.5 h-3.5 opacity-70 text-primary" /> Assign Group
+                        </DropdownMenuItem>
+
                         <DropdownMenuItem className="text-xs flex items-center gap-2 cursor-pointer py-2" onClick={() => onClone(template)}>
                             <Copy className="w-3.5 h-3.5 opacity-60" /> Clone Template
                         </DropdownMenuItem>

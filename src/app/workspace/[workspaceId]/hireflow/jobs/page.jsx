@@ -38,6 +38,7 @@ export default function JobManagementPage() {
     const { workspaceId } = useParams();
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("ALL");
     const [viewMode, setViewMode] = useState("list"); // 'list' or 'grid'
 
     // Sheet State
@@ -50,21 +51,25 @@ export default function JobManagementPage() {
         () => getJobsAction(workspaceId).then(res => res.data)
     );
 
-    const displayJobs = (jobs || []).filter(job =>
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.category?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const displayJobs = (jobs || []).filter(job => {
+        const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            job.category?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matchesSearch) return false;
 
-    const handleClosePosition = async (jobId) => {
+        if (statusFilter === "ALL") return true;
+        return job.status === statusFilter;
+    });
+
+    const handleToggleStatus = async (jobId, newStatus) => {
         try {
             const res = await updateJobAction(workspaceId, jobId, {
-                status: 'CLOSED'
+                status: newStatus
             });
             if (!res.success) throw new Error(res.error);
-            toast.success("Position closed successfully");
+            toast.success(newStatus === 'OPEN' ? "Position is now Open & accepting applications" : "Position marked as closed");
             mutate();
         } catch (error) {
-            toast.error(error.message || "Failed to close position");
+            toast.error(error.message || `Failed to update status to ${newStatus}`);
         }
     };
 
@@ -159,9 +164,37 @@ export default function JobManagementPage() {
                         <Filter size={14} className="opacity-40" />
                         Departments
                     </Button>
-                    <Button variant="ghost" className="rounded-md px-4 text-xs font-bold gap-2">
-                        Status
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="rounded-md px-3 text-xs font-bold gap-2">
+                                <div className={`w-2 h-2 rounded-full ${
+                                    statusFilter === 'OPEN' ? 'bg-emerald-500' :
+                                    statusFilter === 'CLOSED' ? 'bg-rose-500' :
+                                    statusFilter === 'DRAFT' ? 'bg-blue-500' :
+                                    statusFilter === 'ARCHIVED' ? 'bg-muted-foreground' :
+                                    'bg-primary'
+                                }`} />
+                                Status: {statusFilter === 'ALL' ? 'All' : statusFilter === 'OPEN' ? 'Open' : statusFilter === 'CLOSED' ? 'Closed' : statusFilter}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40 rounded-md bg-card/95 backdrop-blur-xl">
+                            <DropdownMenuItem className="text-xs font-semibold cursor-pointer" onClick={() => setStatusFilter('ALL')}>
+                                All Statuses
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-semibold text-emerald-500 cursor-pointer flex items-center gap-2" onClick={() => setStatusFilter('OPEN')}>
+                                <div className="w-2 h-2 rounded-full bg-emerald-500" /> Open Positions
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-semibold text-rose-500 cursor-pointer flex items-center gap-2" onClick={() => setStatusFilter('CLOSED')}>
+                                <div className="w-2 h-2 rounded-full bg-rose-500" /> Closed Positions
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-semibold text-blue-500 cursor-pointer flex items-center gap-2" onClick={() => setStatusFilter('DRAFT')}>
+                                <div className="w-2 h-2 rounded-full bg-blue-500" /> Drafts
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-xs font-semibold text-muted-foreground cursor-pointer flex items-center gap-2" onClick={() => setStatusFilter('ARCHIVED')}>
+                                <div className="w-2 h-2 rounded-full bg-muted-foreground" /> Archived
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <div className="flex bg-muted/40 p-1 rounded-md ml-2">
                         <Button
                             variant="ghost"
@@ -291,15 +324,27 @@ export default function JobManagementPage() {
                                                                 >
                                                                     Preview Public Page
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    className="text-xs p-3 gap-2 text-rose-500 font-semibold"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleClosePosition(job.id);
-                                                                    }}
-                                                                >
-                                                                    Close Position
-                                                                </DropdownMenuItem>
+                                                                {job.status === 'OPEN' ? (
+                                                                    <DropdownMenuItem
+                                                                        className="text-xs p-3 gap-2 text-rose-500 font-semibold cursor-pointer"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleToggleStatus(job.id, 'CLOSED');
+                                                                        }}
+                                                                    >
+                                                                        <div className="w-2 h-2 rounded-full bg-rose-500" /> Close Position
+                                                                    </DropdownMenuItem>
+                                                                ) : (
+                                                                    <DropdownMenuItem
+                                                                        className="text-xs p-3 gap-2 text-emerald-500 font-semibold cursor-pointer"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            handleToggleStatus(job.id, 'OPEN');
+                                                                        }}
+                                                                    >
+                                                                        <div className="w-2 h-2 rounded-full bg-emerald-500" /> Mark as Open (Active)
+                                                                    </DropdownMenuItem>
+                                                                )}
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
                                                     </div>
@@ -375,15 +420,27 @@ export default function JobManagementPage() {
                                                 >
                                                     Preview Public Page
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    className="text-xs p-3 gap-2 text-rose-500"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleClosePosition(job.id);
-                                                    }}
-                                                >
-                                                    Close Position
-                                                </DropdownMenuItem>
+                                                {job.status === 'OPEN' ? (
+                                                    <DropdownMenuItem
+                                                        className="text-xs p-3 gap-2 text-rose-500 font-semibold cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleToggleStatus(job.id, 'CLOSED');
+                                                        }}
+                                                    >
+                                                        <div className="w-2 h-2 rounded-full bg-rose-500" /> Close Position
+                                                    </DropdownMenuItem>
+                                                ) : (
+                                                    <DropdownMenuItem
+                                                        className="text-xs p-3 gap-2 text-emerald-500 font-semibold cursor-pointer"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleToggleStatus(job.id, 'OPEN');
+                                                        }}
+                                                    >
+                                                        <div className="w-2 h-2 rounded-full bg-emerald-500" /> Mark as Open (Active)
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>

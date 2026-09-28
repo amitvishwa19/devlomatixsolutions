@@ -15,6 +15,10 @@ export async function POST(req) {
 
         console.log('mobile api login', location)
 
+        if (!email || !password || typeof password !== "string") {
+            return NextResponse.json({ message: "Email and password are required", status: 400 }, { status: 400 })
+        }
+
         //Checking for user if already exixts
         user = await db.user.findUnique({
             where: { email },
@@ -24,12 +28,16 @@ export async function POST(req) {
 
 
         if (!user) {
-            return NextResponse.json({ message: "User does not exist", status: 401 })
+            return NextResponse.json({ message: "User does not exist", status: 401 }, { status: 401 })
+        }
+
+        if (!user.password || typeof user.password !== "string") {
+            return NextResponse.json({ message: "Invalid credentials", status: 401 }, { status: 401 })
         }
 
         const validPassword = await bcryptjs.compare(password, user.password)
         if (!validPassword) {
-            return NextResponse.json({ message: "Invalid credentials", status: 401 })
+            return NextResponse.json({ message: "Invalid credentials", status: 401 }, { status: 401 })
         }
 
         const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
@@ -42,11 +50,18 @@ export async function POST(req) {
                 refreshToken,
                 deviceToken,
                 expoPushToken,
-                profile: {
-                    update: {
-                        location: location,
+                ...(location ? {
+                    profile: {
+                        upsert: {
+                            create: {
+                                info: { location }
+                            },
+                            update: {
+                                info: { location }
+                            }
+                        }
                     }
-                }
+                } : {})
             },
         })
 
