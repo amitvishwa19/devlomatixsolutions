@@ -161,24 +161,31 @@ export const WA_NODE_REGISTRY = {
                 displayName: 'Variable to Check',
                 name: 'variable',
                 type: 'string',
-                default: 'last_response'
+                default: 'last_response',
+                placeholder: 'e.g. last_response, from, order_total',
+                description: 'The variable or message text to evaluate (default: last_response)'
             },
             {
                 displayName: 'Operation',
                 name: 'operation',
                 type: 'options',
                 options: [
-                    { name: 'Equals', value: 'eq' },
-                    { name: 'Contains', value: 'contains' },
-                    { name: 'Exists', value: 'exists' }
+                    { name: 'Contains Text (contains)', value: 'contains' },
+                    { name: 'Equals Exactly (==)', value: 'eq' },
+                    { name: 'Starts With (starts_with)', value: 'starts_with' },
+                    { name: 'Ends With (ends_with)', value: 'ends_with' },
+                    { name: 'Exists / Not Empty (exists)', value: 'exists' }
                 ],
-                default: 'eq'
+                default: 'contains',
+                description: 'Comparison operator'
             },
             {
-                displayName: 'Value',
+                displayName: 'Value to Match',
                 name: 'value',
                 type: 'string',
-                default: ''
+                default: '',
+                placeholder: 'e.g. yes, order, support, 100',
+                description: 'The target value to match against'
             }
         ]
     },
@@ -194,7 +201,8 @@ export const WA_NODE_REGISTRY = {
                 displayName: 'Wait Duration (seconds)',
                 name: 'seconds',
                 type: 'number',
-                default: 5
+                default: 5,
+                description: 'Number of seconds to pause before next step'
             }
         ]
     },
@@ -220,7 +228,8 @@ export const WA_NODE_REGISTRY = {
                 displayName: 'URL',
                 name: 'url',
                 type: 'string',
-                default: ''
+                default: '',
+                placeholder: 'https://api.example.com/data'
             }
         ]
     },
@@ -274,9 +283,30 @@ export const WA_NODE_REGISTRY = {
     }
 };
 
+// Aliases for seamless lookups by node.name or subType
+WA_NODE_REGISTRY.welcome = WA_NODE_REGISTRY.welcomeTrigger;
+WA_NODE_REGISTRY.keyword = WA_NODE_REGISTRY.keywordTrigger;
+WA_NODE_REGISTRY.orderCreated = WA_NODE_REGISTRY.orderTrigger;
+WA_NODE_REGISTRY.abandonedCart = WA_NODE_REGISTRY.abandonedCartTrigger;
+WA_NODE_REGISTRY.fulfillmentUpdate = WA_NODE_REGISTRY.fulfillmentTrigger;
+WA_NODE_REGISTRY.condition = WA_NODE_REGISTRY.conditionNode;
+WA_NODE_REGISTRY.delay = WA_NODE_REGISTRY.delayNode;
+WA_NODE_REGISTRY.http = WA_NODE_REGISTRY.httpRequest;
+
+export const getNodeDefinition = (subTypeOrType) => {
+    if (!subTypeOrType) return null;
+    if (WA_NODE_REGISTRY[subTypeOrType]) return WA_NODE_REGISTRY[subTypeOrType];
+    return Object.values(WA_NODE_REGISTRY).find(
+        (node) => node.name === subTypeOrType || node.type === subTypeOrType || node.displayName?.toLowerCase() === String(subTypeOrType).toLowerCase()
+    ) || null;
+};
+
 export const getWaNodesByCategory = () => {
     const categories = {};
+    const seenNames = new Set();
     Object.values(WA_NODE_REGISTRY).forEach(node => {
+        if (!node?.name || seenNames.has(node.name)) return;
+        seenNames.add(node.name);
         if (!categories[node.group]) categories[node.group] = [];
         categories[node.group].push(node);
     });

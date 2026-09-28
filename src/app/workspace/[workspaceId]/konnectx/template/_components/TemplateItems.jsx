@@ -303,7 +303,7 @@ export const TemplateListRow = ({
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="w-8 h-8 rounded-full text-primary hover:bg-primary/10"
+                            className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10"
                             onClick={() => template.isDefault ? onClone(template) : onEdit(template)}
                         >
                             <Edit2 className="w-3.5 h-3.5" />
@@ -319,7 +319,7 @@ export const TemplateListRow = ({
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
+                            className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10" 
                             onClick={() => onPreview(template)}
                         >
                             <Eye className="w-3.5 h-3.5" />
@@ -347,7 +347,7 @@ export const TemplateListRow = ({
                             <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="w-8 h-8 rounded-full text-primary hover:bg-primary/10" 
+                                className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10" 
                                 onClick={() => onSubmit(template.id)}
                                 disabled={isSubmittingId === template.id}
                             >

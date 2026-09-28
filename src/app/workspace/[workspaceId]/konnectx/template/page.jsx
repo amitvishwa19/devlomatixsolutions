@@ -737,7 +737,7 @@ export default function TemplatePage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 text-xs text-primary font-semibold gap-1.5 rounded-lg hover:bg-primary/10"
+                            className="h-8 text-xs text-primary hover:text-primary font-semibold gap-1.5 rounded-lg hover:bg-primary/10"
                             onClick={() => setIsManageGroupsOpen(true)}
                             title="Add or Manage Groups"
                         >

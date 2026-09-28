@@ -253,16 +253,25 @@ export class WhatsAppBotEngine {
 
     pickConditionTarget(node, context) {
         const branches = context.edges.filter(e => e.source === node.id);
+        if (!branches.length) return null;
+
+        const variable = node.data?.variable || 'last_response';
         const operation = node.data?.operation || 'contains';
-        const expected = String(node.data?.value || '').toLowerCase();
-        const actual = String(context.messageText || '').toLowerCase();
+        const expected = String(node.data?.value || '').toLowerCase().trim();
+
+        let rawActual = context.messageText;
+        if (variable === 'from') rawActual = context.from;
+        else if (variable === 'order_total') rawActual = context.orderTotal || '';
+        const actual = String(rawActual || '').toLowerCase().trim();
 
         const matched = branches.find(edge => {
-            const label = String(edge.label || edge.data?.label || '').toLowerCase();
+            const label = String(edge.label || edge.data?.label || '').toLowerCase().trim();
             if (label && actual.includes(label)) return true;
+            if (operation === 'exists') return actual.length > 0;
             if (!expected) return false;
             if (operation === 'eq') return actual === expected;
-            if (operation === 'exists') return actual.length > 0;
+            if (operation === 'starts_with') return actual.startsWith(expected);
+            if (operation === 'ends_with') return actual.endsWith(expected);
             return actual.includes(expected);
         });
 

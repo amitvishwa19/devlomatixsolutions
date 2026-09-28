@@ -281,7 +281,7 @@ export default function ManageTemplateGroupsDialog({
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="w-7 h-7 text-destructive hover:bg-destructive/10"
+                                                        className="w-7 h-7 text-destructive hover:text-destructive hover:bg-destructive/10"
                                                         onClick={() => handleDelete(group)}
                                                         disabled={isDeletingId === group.id}
                                                         title="Delete group"

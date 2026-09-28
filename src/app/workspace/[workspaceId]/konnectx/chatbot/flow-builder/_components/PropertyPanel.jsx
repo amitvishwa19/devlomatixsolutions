@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { WA_NODE_REGISTRY } from "../_lib/node-registry";
+import { WA_NODE_REGISTRY, getNodeDefinition } from "../_lib/node-registry";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info, FileText, Loader2 } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -35,7 +35,11 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     const [templates, setTemplates] = useState([]);
     const [loadingTemplates, setLoadingTemplates] = useState(false);
 
-    const nodeDef = WA_NODE_REGISTRY[selectedNode?.data?.subType] || WA_NODE_REGISTRY[selectedNode?.data?.type];
+    const nodeDef = getNodeDefinition(selectedNode?.data?.subType) || 
+                    getNodeDefinition(selectedNode?.data?.type) || 
+                    getNodeDefinition(selectedNode?.type) ||
+                    WA_NODE_REGISTRY[selectedNode?.data?.subType] || 
+                    WA_NODE_REGISTRY[selectedNode?.data?.type];
 
     useEffect(() => {
         setConfig(sanitize(selectedNode?.data));
@@ -63,7 +67,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
     const onChange = (key, value) => {
         console.log('[PropertyPanel] onChange key:', key, 'value:', value, 'type:', typeof value);
-        const newConfig = { ...config, [key]: value };
+        const newConfig = { ...config, [key]: value, configured: true };
         setConfig(newConfig);
         updateNodeData(selectedNode.id, newConfig);
     };
@@ -106,7 +110,28 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         selectedNode?.data?.subType === 'imageMessage' ||
         nodeDef?.type === 'messageNode';
 
+    const isConditionNode = nodeDef?.name === 'condition' || 
+        selectedNode?.data?.subType === 'condition' || 
+        selectedNode?.data?.subType === 'conditionNode';
+
     const selectedTemplateObj = templates.find(t => t.id === config.templateId || t.name === config.templateName);
+
+    const conditionPresets = [
+        { label: 'Incoming Message', value: 'last_response' },
+        { label: 'Sender Phone', value: 'from' },
+        { label: 'Order Total', value: 'order_total' },
+    ];
+
+    const getOperatorDisplay = (op) => {
+        switch (op) {
+            case 'eq': return 'equals exactly';
+            case 'contains': return 'contains text';
+            case 'starts_with': return 'starts with';
+            case 'ends_with': return 'ends with';
+            case 'exists': return 'is not empty / exists';
+            default: return op || 'contains';
+        }
+    };
 
     return (
         <div className="w-96 h-full border-l border-white/10 bg-background flex flex-col shadow-2xl z-20">
@@ -138,6 +163,95 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                             />
                         </div>
                     </div>
+
+                    {/* Condition Rule Builder for Logic & Flow -> Condition */}
+                    {isConditionNode && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400">
+                                    <GitBranch size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">Condition Rule</h4>
+                                    <p className="text-[10px] text-muted-foreground">Branch execution based on message or variable</p>
+                                </div>
+                            </div>
+
+                            {/* Variable to Check */}
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Variable to Inspect</Label>
+                                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                                    {conditionPresets.map(preset => (
+                                        <button
+                                            key={preset.value}
+                                            type="button"
+                                            onClick={() => onChange('variable', preset.value)}
+                                            className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
+                                                (config.variable || 'last_response') === preset.value
+                                                    ? 'bg-blue-500 text-white shadow-sm'
+                                                    : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
+                                            }`}
+                                        >
+                                            {preset.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.variable ?? 'last_response'}
+                                    onChange={(e) => onChange('variable', e.target.value)}
+                                    placeholder="e.g. last_response, from, custom_var"
+                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-xl"
+                                />
+                            </div>
+
+                            {/* Operator */}
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Operator / Condition</Label>
+                                <Select
+                                    value={config.operation || 'contains'}
+                                    onValueChange={(val) => onChange('operation', val)}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-white/10 z-[100]">
+                                        <SelectItem value="contains" className="text-xs">Contains Text (contains)</SelectItem>
+                                        <SelectItem value="eq" className="text-xs">Equals Exactly (==)</SelectItem>
+                                        <SelectItem value="starts_with" className="text-xs">Starts With (starts_with)</SelectItem>
+                                        <SelectItem value="ends_with" className="text-xs">Ends With (ends_with)</SelectItem>
+                                        <SelectItem value="exists" className="text-xs">Is Not Empty / Exists (exists)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Value to match */}
+                            {config.operation !== 'exists' && (
+                                <div className="space-y-2">
+                                    <Label className="text-[11px] text-muted-foreground">Value to Match</Label>
+                                    <Input
+                                        value={config.value ?? ''}
+                                        onChange={(e) => onChange('value', e.target.value)}
+                                        placeholder="e.g. yes, order, support, 100"
+                                        className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                    />
+                                </div>
+                            )}
+
+                            {/* Live Rule Preview */}
+                            <div className="p-3 rounded-xl bg-black/40 border border-blue-500/20 text-xs space-y-1">
+                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">
+                                    Evaluation Preview
+                                </span>
+                                <div className="text-xs text-white leading-relaxed">
+                                    IF <span className="font-mono text-primary font-bold">{config.variable || 'last_response'}</span>{' '}
+                                    <span className="text-blue-300 font-semibold">{getOperatorDisplay(config.operation)}</span>{' '}
+                                    {config.operation !== 'exists' && (
+                                        <span className="font-bold text-emerald-400">"{config.value || '...'}"</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Select Existing Template Section */}
                     {isMessageOrTemplateNode && (
@@ -199,7 +313,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         </div>
                     )}
 
-                    {nodeDef.properties.length > 0 && (
+                    {!isConditionNode && nodeDef.properties.length > 0 && (
                         <div className="space-y-6 pt-6 border-t border-white/5">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Node Properties</h3>
                             {nodeDef.properties.map((prop, idx) => (

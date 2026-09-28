@@ -11,7 +11,10 @@ import {
     Clock,
     Play,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    Globe,
+    CreditCard,
+    Package
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -56,8 +59,8 @@ export const TriggerNode = memo(({ id, data, selected }) => {
         <>
             <NodeWrapper
                 selected={selected}
-                title={data.type === 'welcome' ? 'Welcome' : 'Keyword'}
-                icon={data.type === 'welcome' ? Play : Zap}
+                title={data.type === 'welcome' || data.subType === 'welcome' ? 'Welcome' : 'Keyword'}
+                icon={data.type === 'welcome' || data.subType === 'welcome' ? Play : Zap}
                 colorClass="amber-500"
                 configured={true}
                 data={data}
@@ -65,7 +68,7 @@ export const TriggerNode = memo(({ id, data, selected }) => {
             >
                 <div className="text-sm font-semibold text-white truncate">{data.label || 'Start Flow'}</div>
                 <div className="text-[10px] text-muted-foreground italic truncate">
-                    {data.type === 'welcome' ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
+                    {data.type === 'welcome' || data.subType === 'welcome' ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500" />
@@ -100,26 +103,58 @@ export const MessageNode = memo(({ id, data, selected }) => {
 });
 
 export const LogicNode = memo(({ id, data, selected }) => {
-    const isDelay = data.subType === 'delayNode';
+    const isDelay = data.subType === 'delayNode' || data.subType === 'delay';
+    const isConfigured = isDelay ? !!data.seconds : !!(data.variable && (data.value !== undefined || data.operation === 'exists'));
 
     return (
         <>
             <Handle type="target" position={Position.Left} className="w-3 h-3 border-2 border-[#1e1e2e] bg-blue-500" />
             <NodeWrapper
                 selected={selected}
-                title={isDelay ? 'Delay' : 'Branch'}
+                title={isDelay ? 'Delay' : 'Condition'}
                 icon={isDelay ? Clock : GitBranch}
                 colorClass="blue-500"
-                configured={true}
+                configured={isConfigured}
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label}</div>
-                <div className="text-[10px] text-muted-foreground truncate">
-                    {isDelay ? `Wait for ${data.seconds || 5}s` : `Check: ${data.variable || '...'}`}
+                <div className="text-sm font-semibold text-white truncate">{data.label || (isDelay ? 'Delay' : 'Condition')}</div>
+                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
+                    {isDelay ? (
+                        <span>Wait for {data.seconds || 5}s</span>
+                    ) : (
+                        <span>IF {data.variable || 'last_response'} {data.operation || 'contains'} "{data.value || ''}"</span>
+                    )}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-blue-500" />
+        </>
+    );
+});
+
+export const ActionNode = memo(({ id, data, selected }) => {
+    const isHttp = data.subType === 'httpRequest' || data.subType === 'http';
+    const isProduct = data.subType === 'productShowcase';
+    const isPayment = data.subType === 'paymentRequest';
+
+    return (
+        <>
+            <Handle type="target" position={Position.Left} className="w-3 h-3 border-2 border-[#1e1e2e] bg-purple-500" />
+            <NodeWrapper
+                selected={selected}
+                title={isHttp ? 'HTTP API' : isProduct ? 'Product' : isPayment ? 'Payment' : 'Action'}
+                icon={isHttp ? Globe : isProduct ? Package : isPayment ? CreditCard : Zap}
+                colorClass="purple-500"
+                configured={!!(data.url || data.sku || data.gateway || data.configured)}
+                data={data}
+                id={id}
+            >
+                <div className="text-sm font-semibold text-white truncate">{data.label || 'Action'}</div>
+                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
+                    {isHttp ? `${data.method || 'GET'} ${data.url || 'Configure URL...'}` : isProduct ? `Mode: ${data.selectionMode || 'Last Viewed'}` : isPayment ? `Gateway: ${data.gateway || 'Razorpay'}` : 'Configured'}
+                </div>
+            </NodeWrapper>
+            <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-purple-500" />
         </>
     );
 });
@@ -128,4 +163,5 @@ export const nodeTypes = {
     triggerNode: TriggerNode,
     messageNode: MessageNode,
     logicNode: LogicNode,
+    actionNode: ActionNode,
 };

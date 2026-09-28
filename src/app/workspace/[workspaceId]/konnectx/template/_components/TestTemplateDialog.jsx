@@ -144,7 +144,7 @@ export default function TestTemplateDialog({
                                             type="button"
                                             variant="ghost"
                                             size="sm"
-                                            className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold"
                                             onClick={() => onOpen('mediaLibrary', {
                                                 workspaceId,
                                                 onSelect: (url) => setMediaUrl(url)
@@ -170,7 +170,7 @@ export default function TestTemplateDialog({
                                                 type="button"
                                                 variant="ghost"
                                                 size="icon"
-                                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                 onClick={() => onOpen('mediaLibrary', {
                                                     workspaceId,
                                                     onSelect: (url) => setMediaUrl(url)

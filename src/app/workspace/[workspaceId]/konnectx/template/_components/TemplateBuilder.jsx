@@ -224,7 +224,7 @@ export default function TemplateBuilder({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-5 px-1 text-[9px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                                className="h-5 px-1.5 text-[9px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold"
                                                 onClick={() => {
                                                     if (!formData.body) return;
                                                     executeGetAiSuggestion({
@@ -355,7 +355,7 @@ export default function TemplateBuilder({
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-6 text-[10px] text-primary hover:bg-primary/5 uppercase font-bold"
+                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold"
                                             onClick={() => onOpen('mediaLibrary', {
                                                 workspaceId,
                                                 onSelect: (url) => setFormData({
@@ -380,7 +380,7 @@ export default function TemplateBuilder({
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
                                             onClick={() => onOpen('mediaLibrary', {
                                                 workspaceId,
                                                 onSelect: (url) => setFormData({
@@ -509,7 +509,7 @@ export default function TemplateBuilder({
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                className="h-6 text-[10px] text-primary"
+                                                className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 font-semibold"
                                                 onClick={() => {
                                                     const sections = [...(formData.metadata?.listSections || [])];
                                                     sections.push({ title: 'New Section', rows: [{ title: 'New Row', description: '' }] });
@@ -533,7 +533,7 @@ export default function TemplateBuilder({
                                                         }}
                                                         className="h-8 text-xs font-bold"
                                                     />
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => {
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
                                                         const sections = formData.metadata.listSections.filter((_, i) => i !== sIdx);
                                                         setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
                                                     }}><Trash2 className="w-3 h-3" /></Button>
@@ -564,7 +564,7 @@ export default function TemplateBuilder({
                                                                     className="h-7 text-[10px]"
                                                                 />
                                                             </div>
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={() => {
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => {
                                                                 const sections = [...formData.metadata.listSections];
                                                                 sections[sIdx].rows = sections[sIdx].rows.filter((_, i) => i !== rIdx);
                                                                 setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
@@ -574,7 +574,7 @@ export default function TemplateBuilder({
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="h-6 text-[9px] text-primary"
+                                                        className="h-6 text-[9px] text-primary hover:text-primary hover:bg-primary/10 font-semibold"
                                                         onClick={() => {
                                                             const sections = [...formData.metadata.listSections];
                                                             sections[sIdx].rows.push({ title: 'New Item', description: '' });
@@ -602,7 +602,7 @@ export default function TemplateBuilder({
                                             <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border">
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-[10px] font-bold text-muted-foreground uppercase">Card {cIdx + 1}</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
                                                         const cards = formData.metadata.cards.filter((_, i) => i !== cIdx);
                                                         setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                     }}><Trash2 className="w-3 h-3" /></Button>
@@ -621,7 +621,7 @@ export default function TemplateBuilder({
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/5"
+                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10"
                                                         onClick={() => onOpen('mediaLibrary', {
                                                             workspaceId,
                                                             onSelect: (url) => {
@@ -700,7 +700,7 @@ export default function TemplateBuilder({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={addButton}
-                                                className="h-7 text-[11px] text-primary hover:bg-primary/5 font-bold"
+                                                className="h-7 text-[11px] text-primary hover:text-primary hover:bg-primary/10 font-bold"
                                             >
                                                 <Plus className="w-3 h-3 mr-1" /> Add Button
                                             </Button>
@@ -736,7 +736,7 @@ export default function TemplateBuilder({
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-7 w-7 ml-auto text-muted-foreground hover:text-destructive shrink-0"
+                                                            className="h-7 w-7 ml-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                                                             onClick={() => removeButton(idx)}
                                                         >
                                                             <Trash2 className="w-3.5 h-3.5" />
