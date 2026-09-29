@@ -26,13 +26,14 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { getTemplates } from "../../../template/_actions/get-templates";
 
 const extractTemplateDetails = (tpl) => {
     if (!tpl) return { headerText: '', headerType: 'TEXT', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] };
     let metadata = {};
     if (typeof tpl.metadata === 'string') {
         try { metadata = JSON.parse(tpl.metadata); } catch (e) { metadata = {}; }
-    } else if (tpl.metadata) {
+    } else if (tpl.metadata && typeof tpl.metadata === 'object') {
         metadata = tpl.metadata;
     }
 
@@ -41,17 +42,27 @@ const extractTemplateDetails = (tpl) => {
         try { buttons = JSON.parse(tpl.buttons); } catch (e) { buttons = []; }
     } else if (Array.isArray(tpl.buttons)) {
         buttons = tpl.buttons;
+    } else if (tpl.buttons && typeof tpl.buttons === 'object' && Array.isArray(tpl.buttons.buttons)) {
+        buttons = tpl.buttons.buttons;
+    } else if (metadata.buttons && Array.isArray(metadata.buttons)) {
+        buttons = metadata.buttons;
+    } else if (typeof metadata.buttons === 'string') {
+        try { buttons = JSON.parse(metadata.buttons); } catch (e) { }
     }
 
-    let headerText = tpl.header || metadata.headerText || '';
-    let headerType = (tpl.type || metadata.headerType || 'TEXT').toUpperCase();
-    let headerMediaUrl = metadata.mediaUrl || '';
-    let footerText = tpl.footer || metadata.footerText || '';
-    let bodyText = tpl.body || tpl.text || '';
+    let headerText = tpl.headerText || tpl.header || metadata.headerText || '';
+    let headerType = (tpl.headerType || tpl.type || metadata.headerType || (tpl.imageUrl || metadata.mediaUrl ? 'IMAGE' : 'TEXT')).toUpperCase();
+    let headerMediaUrl = tpl.headerMediaUrl || tpl.imageUrl || metadata.mediaUrl || '';
+    let footerText = tpl.footerText || tpl.footer || metadata.footerText || '';
+    let bodyText = tpl.bodyText || tpl.body || tpl.text || tpl.message || '';
 
     // Check components if provided (Meta structure)
-    if (Array.isArray(tpl.components)) {
-        const headerComp = tpl.components.find(c => c.type === 'HEADER' || c.type === 'header');
+    const components = Array.isArray(tpl.components) 
+        ? tpl.components 
+        : (Array.isArray(tpl.rawComponents) ? tpl.rawComponents : (typeof tpl.components === 'string' ? (() => { try { return JSON.parse(tpl.components); } catch(e) { return []; } })() : []));
+
+    if (Array.isArray(components) && components.length > 0) {
+        const headerComp = components.find(c => c.type === 'HEADER' || c.type === 'header');
         if (headerComp) {
             headerType = headerComp.format || headerType;
             if (headerComp.text) headerText = headerComp.text;
@@ -60,23 +71,31 @@ const extractTemplateDetails = (tpl) => {
             }
         }
 
-        const bodyComp = tpl.components.find(c => c.type === 'BODY' || c.type === 'body');
+        const bodyComp = components.find(c => c.type === 'BODY' || c.type === 'body');
         if (bodyComp?.text) bodyText = bodyComp.text;
 
-        const footerComp = tpl.components.find(c => c.type === 'FOOTER' || c.type === 'footer');
+        const footerComp = components.find(c => c.type === 'FOOTER' || c.type === 'footer');
         if (footerComp?.text) footerText = footerComp.text;
 
-        const buttonsComp = tpl.components.find(c => c.type === 'BUTTONS' || c.type === 'buttons');
+        const buttonsComp = components.find(c => c.type === 'BUTTONS' || c.type === 'buttons');
         if (buttonsComp?.buttons && Array.isArray(buttonsComp.buttons)) {
             buttons = buttonsComp.buttons;
         }
     }
 
-    const normalizedButtons = (buttons || []).filter(Boolean).map(b => {
+    if (metadata.cards && Array.isArray(metadata.cards) && buttons.length === 0) {
+        metadata.cards.forEach(card => {
+            if (Array.isArray(card.buttons)) {
+                buttons.push(...card.buttons);
+            }
+        });
+    }
+
+    const normalizedButtons = (buttons || []).filter(Boolean).map((b, idx) => {
         if (typeof b === 'string') return { type: 'QUICK_REPLY', text: b };
         return {
-            type: b.type || (b.url ? 'URL' : b.phone_number ? 'PHONE_NUMBER' : 'QUICK_REPLY'),
-            text: b.text || b.title || 'Button',
+            type: b.type || (b.url ? 'URL' : b.phone_number || b.phoneNumber ? 'PHONE_NUMBER' : 'QUICK_REPLY'),
+            text: b.text || b.title || `Option ${idx + 1}`,
             url: b.url || '',
             phoneNumber: b.phone_number || b.phoneNumber || ''
         };
@@ -112,6 +131,7 @@ async function executeFlowSimulation({
     waitingForInputNode,
     nodes,
     edges,
+    templates = [],
     addLog,
     setSessionVariables,
     setMessages,
@@ -264,25 +284,42 @@ async function executeFlowSimulation({
                 };
                 setMessages(prev => [...prev, imgMsg]);
                 addLog(label, 'image_sent', `Sent image: ${stepData.imageUrl || 'Default Image'}`);
-            } else if (subType === 'templateMessage' || (nodeType === 'messageNode' && (stepData.templateName || stepData.templateId || (Array.isArray(stepData.buttons) && stepData.buttons.length > 0)))) {
-                const templateName = stepData.templateName || (stepData.label?.startsWith('Template:') ? stepData.label.replace('Template:', '').trim() : 'welcome_notification');
-                const text = interpolate(stepData.text || stepData.body || 'Official Verified WhatsApp Template Message', currentVars);
-                const headerText = interpolate(stepData.headerText || stepData.header || '', currentVars);
-                const footerText = interpolate(stepData.footerText || stepData.footer || '', currentVars);
-                const headerType = (stepData.headerType || (stepData.headerMediaUrl || stepData.imageUrl ? 'IMAGE' : 'TEXT')).toUpperCase();
-                const headerMediaUrl = stepData.headerMediaUrl || stepData.imageUrl || '';
+            } else {
+                // Find matching template in workspace templates list if any template identifier is present
+                const matchedTemplate = (templates || []).find(t => 
+                    (stepData.templateId && (t.id === stepData.templateId || t.templateId === stepData.templateId)) ||
+                    (stepData.templateName && (String(t.name || '').toLowerCase() === String(stepData.templateName || '').toLowerCase() || String(t.templateName || '').toLowerCase() === String(stepData.templateName || '').toLowerCase())) ||
+                    (stepData.label && (String(t.name || '').toLowerCase() === String(stepData.label).replace(/^Template:\s*/i, '').toLowerCase().trim()))
+                );
+
+                const isTemplate = subType === 'templateMessage' || !!matchedTemplate || !!stepData.templateName || !!stepData.templateId || (stepData.label && String(stepData.label).toLowerCase().includes('template'));
+
+                const tplDetails = extractTemplateDetails(matchedTemplate || stepData.templateData || stepData);
+
+                const templateName = stepData.templateName || matchedTemplate?.name || (stepData.label?.startsWith('Template:') ? stepData.label.replace('Template:', '').trim() : (isTemplate ? 'Official WhatsApp Template' : ''));
+                
+                const rawText = stepData.text || stepData.body || tplDetails.bodyText || matchedTemplate?.body || matchedTemplate?.text || stepData.message || (isTemplate ? 'Official Verified WhatsApp Template Message' : 'Hello! How can we assist you?');
+                const text = interpolate(rawText, currentVars);
+
+                const rawHeader = stepData.headerText || stepData.header || tplDetails.headerText || matchedTemplate?.header || '';
+                const headerText = interpolate(rawHeader, currentVars);
+
+                const rawFooter = stepData.footerText || stepData.footer || tplDetails.footerText || matchedTemplate?.footer || '';
+                const footerText = interpolate(rawFooter, currentVars);
+
+                const headerType = (stepData.headerType || tplDetails.headerType || matchedTemplate?.type || (tplDetails.headerMediaUrl || stepData.imageUrl ? 'IMAGE' : 'TEXT')).toUpperCase();
+                const headerMediaUrl = stepData.headerMediaUrl || stepData.imageUrl || tplDetails.headerMediaUrl || '';
 
                 let buttons = [];
-                if (Array.isArray(stepData.buttons) && stepData.buttons.length > 0) {
+                if (tplDetails.buttons && tplDetails.buttons.length > 0) {
+                    buttons = tplDetails.buttons;
+                } else if (Array.isArray(stepData.buttons) && stepData.buttons.length > 0) {
                     buttons = stepData.buttons;
                 } else if (typeof stepData.buttons === 'string') {
                     try { buttons = JSON.parse(stepData.buttons); } catch(e) { buttons = []; }
-                } else if (stepData.templateData) {
-                    const details = extractTemplateDetails(stepData.templateData);
-                    buttons = details.buttons || [];
                 }
 
-                // If no buttons configured on template node, check if downstream connected node is a Trigger with keywords
+                // If no buttons configured directly on template node, check if downstream connected node is a Trigger with keywords
                 if (buttons.length === 0) {
                     const outEdge = edges.find(e => e.source === currentStep.id);
                     const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
@@ -296,34 +333,34 @@ async function executeFlowSimulation({
                     }
                 }
 
-                const tplMsg = {
-                    id: `msg_${Date.now()}_${Math.random()}`,
-                    sender: 'bot',
-                    type: 'template',
-                    templateName,
-                    headerText,
-                    headerType,
-                    headerMediaUrl,
-                    text,
-                    footer: footerText,
-                    buttons: (buttons || []).map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
-                setMessages(prev => [...prev, tplMsg]);
-                addLog(label, 'template_sent', `Template "${templateName}" sent (${tplMsg.buttons.length} buttons)`);
-            } else {
-                const text = interpolate(stepData.text || stepData.message || 'Hello! How can we assist you?', currentVars);
-                let buttons = Array.isArray(stepData.buttons) ? stepData.buttons : [];
-                const txtMsg = {
-                    id: `msg_${Date.now()}_${Math.random()}`,
-                    sender: 'bot',
-                    type: 'text',
-                    text,
-                    buttons: buttons.map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                };
-                setMessages(prev => [...prev, txtMsg]);
-                addLog(label, 'message_sent', text);
+                if (isTemplate) {
+                    const tplMsg = {
+                        id: `msg_${Date.now()}_${Math.random()}`,
+                        sender: 'bot',
+                        type: 'template',
+                        templateName: templateName || 'WhatsApp Template',
+                        headerText,
+                        headerType,
+                        headerMediaUrl,
+                        text,
+                        footer: footerText,
+                        buttons: (buttons || []).map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    setMessages(prev => [...prev, tplMsg]);
+                    addLog(label, 'template_sent', `Template "${templateName}" sent (${tplMsg.buttons.length} buttons)`);
+                } else {
+                    const txtMsg = {
+                        id: `msg_${Date.now()}_${Math.random()}`,
+                        sender: 'bot',
+                        type: 'text',
+                        text,
+                        buttons: (buttons || []).map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    };
+                    setMessages(prev => [...prev, txtMsg]);
+                    addLog(label, 'message_sent', text);
+                }
             }
 
             // If connected directly to another node, pause and await user reply before triggering it!
@@ -625,8 +662,10 @@ export const WhatsAppSimulator = ({
     nodes = [],
     edges = [],
     flowName = 'WhatsApp Bot',
-    onHighlightNode
+    onHighlightNode,
+    workspaceId
 }) => {
+    const [templates, setTemplates] = useState([]);
     const [messages, setMessages] = useState([
         {
             id: 'init_welcome',
@@ -648,6 +687,19 @@ export const WhatsAppSimulator = ({
     const [waitingForInputNode, setWaitingForInputNode] = useState(null);
 
     const chatEndRef = useRef(null);
+
+    useEffect(() => {
+        if (!workspaceId) return;
+        let isMounted = true;
+        getTemplates({ workspaceId })
+            .then(res => {
+                if (isMounted && res?.data?.templates) {
+                    setTemplates(res.data.templates);
+                }
+            })
+            .catch(err => console.error('[WhatsAppSimulator] Error loading templates:', err));
+        return () => { isMounted = false; };
+    }, [workspaceId, isOpen]);
 
     const dynamicPrompts = useMemo(() => {
         const list = [];
@@ -678,12 +730,22 @@ export const WhatsAppSimulator = ({
                     if (clean && !list.includes(clean)) list.push(clean);
                 });
             }
+            if (n.data?.templateId || n.data?.templateName) {
+                const t = templates.find(tpl => (n.data.templateId && tpl.id === n.data.templateId) || (n.data.templateName && (tpl.name === n.data.templateName || tpl.templateName === n.data.templateName)));
+                if (t) {
+                    const d = extractTemplateDetails(t);
+                    d.buttons.forEach(b => {
+                        const clean = String(b.text || '').trim();
+                        if (clean && !list.includes(clean)) list.push(clean);
+                    });
+                }
+            }
         });
         if (list.length === 0) {
-            return ['hello', 'order', 'support', 'alex@example.com', 'yes'];
+            return ['hello', 'start', 'support', 'order', 'yes'];
         }
         return list;
-    }, [nodes]);
+    }, [nodes, templates]);
 
     useEffect(() => {
         if (chatEndRef.current) {
@@ -748,6 +810,7 @@ export const WhatsAppSimulator = ({
             waitingForInputNode,
             nodes,
             edges,
+            templates,
             addLog,
             setSessionVariables,
             setMessages,
@@ -836,10 +899,25 @@ export const WhatsAppSimulator = ({
                                 {messages.map((msg) => {
                                     if (msg.type === 'system') {
                                         return (
-                                            <div key={msg.id} className="flex justify-center my-2">
-                                                <div className="bg-[#182229] border border-white/5 text-[10px] text-white/60 px-3 py-1 rounded-lg shadow-sm text-center max-w-[280px]">
-                                                    {msg.text}
+                                            <div key={msg.id} className="space-y-3 my-2">
+                                                <div className="flex justify-center">
+                                                    <div className="bg-[#182229] border border-white/5 text-[10px] text-white/60 px-3 py-1 rounded-lg shadow-sm text-center max-w-[280px]">
+                                                        {msg.text}
+                                                    </div>
                                                 </div>
+                                                {messages.length <= 1 && (
+                                                    <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
+                                                        <p className="text-[11px] text-white/80 font-medium">Ready to test this chatbot flow?</p>
+                                                        <Button
+                                                            size="sm"
+                                                            type="button"
+                                                            onClick={() => handleSendMessage(dynamicPrompts[0] || 'hello')}
+                                                            className="h-7 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 font-semibold shadow-md mx-auto"
+                                                        >
+                                                            ▶ Start Test Flow ({dynamicPrompts[0] || 'hello'})
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     }

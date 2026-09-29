@@ -565,6 +565,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     edges={edges}
                     flowName={flowData?.name || 'WhatsApp Bot'}
                     onHighlightNode={handleHighlightNode}
+                    workspaceId={wsId}
                 />
 
                 {selectedNode && (
