@@ -38,17 +38,17 @@ const COMPONENT_TYPES = [
     { id: 'TextHeading', label: 'Heading', icon: Type, default: { text: 'New Heading' } },
     { id: 'TextBody', label: 'Body Text', icon: Type, default: { text: 'Body text content' } },
     { id: 'TextCaption', label: 'Caption', icon: Type, default: { text: 'Small caption text' } },
-    { id: 'TextInput', label: 'Text Input', icon: ArrowRight, default: { label: 'Text Input', name: 'input_1', required: true, placeholder: 'Enter text...' } },
-    { id: 'Select', label: 'Dropdown', icon: List, default: { label: 'Select Option', name: 'select_1', options: [{ label: 'Option 1', value: 'opt1' }] } },
-    { id: 'RadioButtons', label: 'Radio Buttons', icon: CircleDot, default: { label: 'Choose One', name: 'radio_1', options: [{ label: 'Option 1', value: 'opt1' }] } },
-    { id: 'CheckboxGroup', label: 'Checkboxes', icon: CheckSquare, default: { label: 'Choose Multiple', name: 'check_1', options: [{ label: 'Option 1', value: 'opt1' }] } },
-    { id: 'DatePicker', label: 'Date Picker', icon: Calendar, default: { label: 'Select Date', name: 'date_1', required: true } },
-    { id: 'TimePicker', label: 'Time Picker', icon: Clock, default: { label: 'Select Time', name: 'time_1', required: true } },
-    { id: 'FileInput', label: 'File Upload', icon: FileIcon, default: { label: 'Upload File', name: 'file_1', required: false, accept: '*/*', multiple: false } },
-    { id: 'LocationPicker', label: 'Location', icon: MapPin, default: { label: 'Pick Location', name: 'location_1', required: true } },
-    { id: 'ConsentCheckbox', label: 'Consent', icon: Check, default: { label: 'I agree to the terms', name: 'consent_1', required: true } },
-    { id: 'APIAction', label: 'API Action', icon: Database, default: { label: 'Submit Data', name: 'api_1', dataSourceUrl: '', requestBody: '{}', responseKey: 'result' } },
-    { id: 'DataGrid', label: 'Data Table', icon: Code, default: { label: 'Data', name: 'grid_1', columns: [{ key: 'col1', label: 'Column 1', type: 'text' }] } },
+    { id: 'TextInput', label: 'Text Input', icon: ArrowRight, default: { label: 'Text Input', name: 'input_one', required: true, placeholder: 'Enter text...' } },
+    { id: 'Select', label: 'Dropdown', icon: List, default: { label: 'Select Option', name: 'select_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
+    { id: 'RadioButtons', label: 'Radio Buttons', icon: CircleDot, default: { label: 'Choose One', name: 'radio_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
+    { id: 'CheckboxGroup', label: 'Checkboxes', icon: CheckSquare, default: { label: 'Choose Multiple', name: 'check_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
+    { id: 'DatePicker', label: 'Date Picker', icon: Calendar, default: { label: 'Select Date', name: 'date_one', required: true } },
+    { id: 'TimePicker', label: 'Time Picker', icon: Clock, default: { label: 'Select Time', name: 'time_one', required: true } },
+    { id: 'FileInput', label: 'File Upload', icon: FileIcon, default: { label: 'Upload File', name: 'file_one', required: false, accept: '*/*', multiple: false } },
+    { id: 'LocationPicker', label: 'Location', icon: MapPin, default: { label: 'Pick Location', name: 'location_one', required: true } },
+    { id: 'ConsentCheckbox', label: 'Consent', icon: Check, default: { label: 'I agree to the terms', name: 'consent_one', required: true } },
+    { id: 'APIAction', label: 'API Action', icon: Database, default: { label: 'Submit Data', name: 'api_one', dataSourceUrl: '', requestBody: '{}', responseKey: 'result' } },
+    { id: 'DataGrid', label: 'Data Table', icon: Code, default: { label: 'Data', name: 'grid_one', columns: [{ key: 'col_one', label: 'Column 1', type: 'text' }] } },
 ];
 
 const COMPONENT_CATEGORIES = [
@@ -101,9 +101,11 @@ const getComponentDisplayLabel = (c) => {
     return c.text || c.label || 'Text Input';
 };
 
+const DIGIT_WORDS = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE'];
+
 const FlowBuilder = ({ initialScreens = [], onSave, endpointUrl = '' }) => {
     const [screens, setScreens] = useState(initialScreens.length > 0 ? initialScreens : [
-        { id: 'SCREEN_1', title: 'Welcome', children: [], footerAction: { type: 'navigate', label: 'Next', screen: 'SCREEN_2' } }
+        { id: 'SCREEN_ONE', title: 'Welcome', children: [], footerAction: { type: 'navigate', label: 'Next', screen: 'SCREEN_TWO' } }
     ]);
     const [activeScreenId, setActiveScreenId] = useState(screens[0]?.id);
     const [selectedComponentId, setSelectedComponentId] = useState(null);
@@ -121,8 +123,10 @@ const FlowBuilder = ({ initialScreens = [], onSave, endpointUrl = '' }) => {
 
     const addScreen = () => {
         const idx = screens.length + 1;
-        const newId = `SCREEN_${idx}`;
-        const nextId = `SCREEN_${idx + 1}`;
+        const word = DIGIT_WORDS[idx] || `S_${idx}`;
+        const nextWord = DIGIT_WORDS[idx + 1] || `S_${idx + 1}`;
+        const newId = `SCREEN_${word}`;
+        const nextId = `SCREEN_${nextWord}`;
         setScreens([...screens, {
             id: newId,
             title: `New Screen ${idx}`,

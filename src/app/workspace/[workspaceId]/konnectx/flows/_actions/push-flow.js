@@ -48,14 +48,15 @@ const handler = async (data) => {
         if (!metaId) {
             const normalizedName = sanitizeFlowName(flow.name);
             const categories = flow.categories?.length > 0 ? flow.categories : ["OTHER"];
-            const createRes = await cloudApi.createFlowMeta(credentials, normalizedName, categories);
+            const createRes = await cloudApi.createFlowMeta(credentials, normalizedName, categories, flow.endpointUrl || null);
             if (!createRes.success) throw new Error(`Meta Create Error: ${createRes.error}`);
             metaId = createRes.data.id;
         } else {
-            // Update flow metadata on Meta (name, categories)
+            // Update flow metadata on Meta (name, categories, endpoint_uri)
             const updateRes = await cloudApi.updateFlowMeta(credentials, metaId, {
                 name: sanitizeFlowName(flow.name),
-                categories: flow.categories?.length > 0 ? flow.categories : ["OTHER"]
+                categories: flow.categories?.length > 0 ? flow.categories : ["OTHER"],
+                ...(flow.endpointUrl ? { endpoint_uri: flow.endpointUrl } : {})
             });
             if (!updateRes.success) {
                 console.warn("[PushFlow] Meta metadata update failed (non-fatal):", updateRes.error);

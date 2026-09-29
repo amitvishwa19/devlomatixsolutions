@@ -10,10 +10,12 @@
 const DEFAULT_VERSION = process.env.FACEBOOK_API_VERSION || process.env.NEXT_PUBLIC_META_API_VERSION || 'v25.0';
 const BASE_URL = 'https://graph.facebook.com';
 
-/**
- * Standardizes API responses
- */
-const response = (success, data = null, error = null) => ({ success, data, error });
+const response = (success, data = null, error = null, validationErrors = null) => ({
+    success,
+    data,
+    error,
+    ...(validationErrors && validationErrors.length > 0 ? { validationErrors } : {})
+});
 
 /**
  * Common fetch handler for Meta Graph API
@@ -380,13 +382,17 @@ async function fetchFlowsMeta(credentials) {
     }
 }
 
-async function createFlowMeta(credentials, name, categories = ["OTHER"]) {
+async function createFlowMeta(credentials, name, categories = ["OTHER"], endpointUri = null) {
     const { accessToken, wabaId } = credentials;
     const version = credentials.version || DEFAULT_VERSION;
     if (!wabaId) return response(false, null, 'Missing wabaId');
 
     const url = `${BASE_URL}/${version}/${wabaId}/flows`;
-    const payload = { name, categories };
+    const payload = {
+        name,
+        categories,
+        ...(endpointUri ? { endpoint_uri: endpointUri } : {})
+    };
 
     console.log("[WA_FLOW_CREATE_REQUEST]", { url, payload });
 
@@ -402,7 +408,8 @@ async function createFlowMeta(credentials, name, categories = ["OTHER"]) {
         const data = await res.json();
         if (!res.ok) {
             console.error('[WA_FLOW_CREATE_ERROR]', data.error);
-            return response(false, null, data.error?.message || 'Failed to create flow');
+            const errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to create flow';
+            return response(false, null, errorMsg);
         }
         return response(true, data);
     } catch (err) {
@@ -437,6 +444,13 @@ async function updateFlowAssetMeta(credentials, flowId, flowJson) {
             const validationErrors = data.error?.error_data?.validation_errors || [];
             return response(false, data, errorMsg, validationErrors);
         }
+
+        if (data.validation_errors && data.validation_errors.length > 0) {
+            console.warn('[WA_FLOW_ASSET_VALIDATION_ERRORS]', data.validation_errors);
+            const errorMsg = data.validation_errors.map(v => v.error || v.message || JSON.stringify(v)).join('; ');
+            return response(false, data, `Validation Error: ${errorMsg}`, data.validation_errors);
+        }
+
         return response(true, data);
     } catch (err) {
         return response(false, null, err.message);
@@ -481,7 +495,10 @@ async function updateFlowMeta(credentials, flowId, updates) {
             body: JSON.stringify(updates)
         });
         const data = await res.json();
-        if (!res.ok) return response(false, null, data.error?.message || 'Failed to update flow');
+        if (!res.ok) {
+            const errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to update flow';
+            return response(false, null, errorMsg);
+        }
         return response(true, data);
     } catch (err) {
         return response(false, null, err.message);

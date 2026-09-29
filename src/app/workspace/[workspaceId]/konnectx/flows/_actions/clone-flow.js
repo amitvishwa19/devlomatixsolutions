@@ -26,11 +26,12 @@ const handler = async (data) => {
         if (!source) throw new Error("Source flow not found");
 
         // 2. Create Clone
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
         const clone = await db.whatsAppFlow.create({
             data: {
                 workspaceId,
                 userId,
-                name: `${source.name} (Copy)`,
+                name: `${source.name} Copy ${randomSuffix}`,
                 description: source.description,
                 status: 'DRAFT',
                 categories: source.categories,
@@ -40,7 +41,7 @@ const handler = async (data) => {
             }
         });
 
-        revalidatePath(`/workspace/${workspaceId}/wa-cloud-api/flows`);
+        revalidatePath(`/workspace/${workspaceId}/konnectx/flows`);
         return { success: true, id: clone.id };
 
     } catch (error) {
