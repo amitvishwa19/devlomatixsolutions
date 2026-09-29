@@ -154,6 +154,14 @@ html {
 }
 
 /* React Flow overrides */
+.react-flow__node {
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
 .react-flow__background {
   background-color: hsl(var(--n8n-canvas-bg)) !important;
 }

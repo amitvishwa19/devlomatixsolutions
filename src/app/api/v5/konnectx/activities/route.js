@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { resolveActiveCredential } from "@/lib/konnectx-active-credential";
 
 export async function GET(request) {
   try {
@@ -9,33 +10,13 @@ export async function GET(request) {
 
     const userId = searchParams.get("userId");
 
-    const defaultCredential = await db.credentials.findFirst({
-      where: { ...(userId && { userId }), platform: 'WHATSAPP_CLOUD', isDefault: true }
-    });
+    const active = await resolveActiveCredential(request);
 
-    if (!defaultCredential) {
+    if (!active.credential) {
       return NextResponse.json({ data: { success: true, activities: [], pagination: { currentPage: 1, pageSize, hasMore: false, totalOnPage: 0 } } });
     }
 
-    let cloudCreds = null;
-    const stored = defaultCredential.credentials;
-    if (typeof stored === 'string' && stored.includes(':')) {
-      try {
-        const { symmetricDecrypt } = await import("@/lib/encryption");
-        cloudCreds = JSON.parse(symmetricDecrypt(stored));
-      } catch (e) {}
-    } else if (typeof stored === 'string') {
-      try { cloudCreds = JSON.parse(stored); } catch (e) {}
-    } else { cloudCreds = stored; }
-
-    if (cloudCreds?.enc) {
-      try {
-        const { symmetricDecrypt } = await import("@/lib/encryption");
-        cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
-      } catch (e) {}
-    }
-
-    const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+    const activePhoneId = active.phoneNumberId;
     const bufferSize = page * pageSize + 10;
 
     const recentMessages = await db.whatsAppMessage.findMany({

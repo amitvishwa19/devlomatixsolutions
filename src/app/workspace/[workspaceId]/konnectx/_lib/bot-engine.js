@@ -170,6 +170,38 @@ export class WhatsAppBotEngine {
                         await new Promise(resolve => setTimeout(resolve, Math.min(seconds, 30) * 1000));
                         break;
                     }
+                    if (subType === 'setVariable') {
+                        context.variables = context.variables || {};
+                        const varName = node.data?.variable || 'custom_var';
+                        const varVal = this.interpolate(node.data?.value || '', context);
+                        context.variables[varName] = varVal;
+                        console.log(`[BotEngine] Set variable {{${varName}}} = "${varVal}"`);
+                        break;
+                    }
+                    if (subType === 'waitForInput') {
+                        context.variables = context.variables || {};
+                        const varName = node.data?.variable || 'last_response';
+                        const validation = node.data?.validation || 'any';
+                        const incoming = String(context.messageText || '').trim();
+
+                        let isValid = true;
+                        if (validation === 'email') {
+                            isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(incoming);
+                        } else if (validation === 'phone') {
+                            isValid = /^\+?[\d\s-]{7,15}$/.test(incoming);
+                        } else if (validation === 'number') {
+                            isValid = /^\d+(\.\d+)?$/.test(incoming);
+                        }
+
+                        if (!isValid) {
+                            const retryText = node.data?.retryPrompt || "Please provide a valid format to proceed.";
+                            await cloudApi.sendTextMessage(creds, context.from, retryText);
+                            return; // Stop execution until user provides valid input
+                        }
+
+                        context.variables[varName] = incoming;
+                        break;
+                    }
                     if (subType === 'conditionNode' || subType === 'condition') {
                         nextNodeId = this.pickConditionTarget(node, context);
                     }
@@ -220,10 +252,57 @@ export class WhatsAppBotEngine {
                 result = await cloudApi.sendTemplateMessage(creds, from, node.data?.templateName, node.data?.languageCode || 'en_US', []);
                 break;
 
-            case 'aiAssistant':
-                logText = await waAIService.generateRAGResponse(workspaceId, messageText, node.data?.category || 'GENERAL');
+            case 'aiAgent':
+            case 'aiAssistant': {
+                const category = node.data?.category || 'GENERAL';
+                const fallbackText = node.data?.fallbackText || "I am not sure about that. Let me connect you with our team.";
+                try {
+                    logText = await waAIService.generateRAGResponse(workspaceId, messageText, category);
+                    if (!logText || !logText.trim()) logText = fallbackText;
+                } catch (e) {
+                    console.error('[BotEngine] AI Agent generation error:', e);
+                    logText = fallbackText;
+                }
                 result = await cloudApi.sendTextMessage(creds, from, logText);
                 break;
+            }
+
+            case 'deskflowHandoff':
+            case 'deskflow': {
+                const dept = node.data?.department || 'Support';
+                const handoffMsg = this.interpolate(node.data?.handoffMessage || `Connecting you with our ${dept} team...`, context);
+                logText = `[Handoff: ${dept}] ${handoffMsg}`;
+                result = await cloudApi.sendTextMessage(creds, from, handoffMsg);
+                break;
+            }
+
+            case 'crmTag':
+            case 'tag': {
+                const tag = node.data?.tag || 'Lead';
+                const action = node.data?.action || 'add';
+                logText = `[CRM Tag ${action === 'remove' ? 'Removed' : 'Added'}: ${tag}]`;
+                result = { success: true, data: { messages: [{ id: `tag_${Date.now()}` }] } };
+                break;
+            }
+
+            case 'httpRequest':
+            case 'http': {
+                const url = this.interpolate(node.data?.url || '', context);
+                if (url) {
+                    try {
+                        const res = await fetch(url, { method: node.data?.method || 'GET' });
+                        const data = await res.json();
+                        context.variables = context.variables || {};
+                        context.variables['http_response'] = JSON.stringify(data);
+                        logText = `[HTTP ${node.data?.method || 'GET'} 200 OK]`;
+                    } catch (err) {
+                        console.error('[BotEngine] HTTP Request Node failed:', err);
+                        logText = `[HTTP Request Failed]`;
+                    }
+                }
+                result = { success: true, data: { messages: [{ id: `http_${Date.now()}` }] } };
+                break;
+            }
 
             case 'interactive':
                 logText = "[Interactive Message]";
@@ -260,22 +339,48 @@ export class WhatsAppBotEngine {
         const expected = String(node.data?.value || '').toLowerCase().trim();
 
         let rawActual = context.messageText;
-        if (variable === 'from') rawActual = context.from;
-        else if (variable === 'order_total') rawActual = context.orderTotal || '';
+        if (context.variables && context.variables[variable] !== undefined) {
+            rawActual = context.variables[variable];
+        } else if (variable === 'from') {
+            rawActual = context.from;
+        } else if (variable === 'order_total') {
+            rawActual = context.orderTotal || '';
+        }
         const actual = String(rawActual || '').toLowerCase().trim();
 
-        const matched = branches.find(edge => {
-            const label = String(edge.label || edge.data?.label || '').toLowerCase().trim();
-            if (label && actual.includes(label)) return true;
-            if (operation === 'exists') return actual.length > 0;
-            if (!expected) return false;
-            if (operation === 'eq') return actual === expected;
-            if (operation === 'starts_with') return actual.startsWith(expected);
-            if (operation === 'ends_with') return actual.endsWith(expected);
-            return actual.includes(expected);
-        });
+        let isTrue = false;
+        if (operation === 'exists') {
+            isTrue = actual.length > 0;
+        } else if (operation === 'eq') {
+            isTrue = actual === expected;
+        } else if (operation === 'starts_with') {
+            isTrue = actual.startsWith(expected);
+        } else if (operation === 'ends_with') {
+            isTrue = actual.endsWith(expected);
+        } else {
+            isTrue = actual.includes(expected);
+        }
 
-        return matched?.target || branches[0]?.target || null;
+        console.log(`[BotEngine] Condition Evaluation: IF "${actual}" ${operation} "${expected}" => ${isTrue}`);
+
+        // 1. Try matching by multi-port handle ID ('true' or 'false')
+        const targetHandleId = isTrue ? 'true' : 'false';
+        const handleMatchedEdge = branches.find(e => e.sourceHandle === targetHandleId);
+        if (handleMatchedEdge) {
+            return handleMatchedEdge.target;
+        }
+
+        // 2. Fallback: match by edge label
+        const labelMatchedEdge = branches.find(edge => {
+            const label = String(edge.label || edge.data?.label || '').toLowerCase().trim();
+            if (isTrue && (label === 'true' || label === 'yes' || label === 'matched')) return true;
+            if (!isTrue && (label === 'false' || label === 'no' || label === 'else' || label === 'default')) return true;
+            return false;
+        });
+        if (labelMatchedEdge) return labelMatchedEdge.target;
+
+        // 3. Positional fallback: 1st branch = true, 2nd branch = false
+        return isTrue ? branches[0]?.target : (branches[1]?.target || null);
     }
 
     async logBotReply({ userId, from, text, result, phoneNumberId }) {
@@ -301,10 +406,14 @@ export class WhatsAppBotEngine {
     }
 
     interpolate(text, context) {
-        return text.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+        return String(text || '').replace(/\{\{(.*?)\}\}/g, (match, key) => {
             const k = key.trim();
-            if (k === 'message') return context.messageText;
-            if (k === 'from') return context.from;
+            if (k === 'message') return context.messageText || '';
+            if (k === 'from') return context.from || '';
+            if (k === 'now') return new Date().toLocaleTimeString();
+            if (context.variables && context.variables[k] !== undefined) {
+                return context.variables[k];
+            }
             return match;
         });
     }

@@ -113,6 +113,22 @@ function sanitizeScreenId(id, fallbackIndex) {
         || `SCREEN_${fallbackIndex}`;
 }
 
+function getSafeDisplayLabel(c, fallback) {
+    if (c.label && c.label !== 'Label' && c.label !== 'Text Input') {
+        return String(c.label);
+    }
+    if (c.name && c.name !== 'input_1' && !c.name.match(/^field_\d+$/)) {
+        return String(c.name)
+            .replace(/_/g, ' ')
+            .replace(/([a-z])([A-Z])/g, '$1 $2')
+            .replace(/\b\w/g, l => l.toUpperCase());
+    }
+    if (c.label && c.label !== 'Label') {
+        return String(c.label);
+    }
+    return fallback;
+}
+
 function buildComponentNode(c) {
     if (!c || !c.type) return [];
 
@@ -151,7 +167,7 @@ function buildComponentNode(c) {
             return [{
                 type: 'TextInput',
                 name: safeName,
-                label: String(c.label || 'Text Input'),
+                label: getSafeDisplayLabel(c, 'Text Input'),
                 'input-type': c.inputType || 'text',
                 required: Boolean(c.required),
                 ...(c.placeholder ? { placeholder: c.placeholder } : {}),
@@ -171,7 +187,7 @@ function buildComponentNode(c) {
             return [{
                 type: 'Dropdown',
                 name: safeName,
-                label: String(c.label || 'Select Option'),
+                label: getSafeDisplayLabel(c, 'Select Option'),
                 required: Boolean(c.required),
                 options
             }];

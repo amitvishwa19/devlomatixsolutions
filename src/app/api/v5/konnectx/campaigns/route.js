@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { resolveActiveCredential } from "@/lib/konnectx-active-credential";
 
 const mapApiCampaignToUI = (campaign) => {
   const total = campaign._count?.recipients ?? (Array.isArray(campaign.recipients) ? campaign.recipients.length : 0);
@@ -28,8 +29,10 @@ export async function GET(request) {
 
     const userId = searchParams.get("userId");
 
+    const active = await resolveActiveCredential(request);
+
     const campaigns = await db.campaign.findMany({
-      where: { ...(userId && { userId }) },
+      where: { ...(userId && { userId }), ...(active.credentialId && { credentialId: active.credentialId }) },
       orderBy: { createdAt: 'desc' },
       include: {
         template: true,
@@ -52,9 +55,7 @@ export async function POST(request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
-    const credential = await db.credentials.findFirst({
-      where: { ...(userId && { userId }), platform: 'WHATSAPP_CLOUD', isDefault: true }
-    });
+    const active = await resolveActiveCredential(request);
 
     const campaign = await db.campaign.create({
       data: {
@@ -65,7 +66,7 @@ export async function POST(request) {
         templateId: templateId || null,
         messageType: messageType || 'text',
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-        credentialId: credential?.id || null,
+        credentialId: active.credentialId || null,
         recipients: recipients?.length ? {
           create: recipients.map(r => ({
             phone: r.phone,

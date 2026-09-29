@@ -173,7 +173,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                 </div>
                                 <div>
                                     <h4 className="text-xs font-bold text-white">Condition Rule</h4>
-                                    <p className="text-[10px] text-muted-foreground">Branch execution based on message or variable</p>
+                                    <p className="text-[10px] text-muted-foreground">Branch execution with True / False handles</p>
                                 </div>
                             </div>
 
@@ -240,15 +240,352 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                             {/* Live Rule Preview */}
                             <div className="p-3 rounded-xl bg-black/40 border border-blue-500/20 text-xs space-y-1">
                                 <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">
-                                    Evaluation Preview
+                                    Branching Routing Preview
                                 </span>
                                 <div className="text-xs text-white leading-relaxed">
                                     IF <span className="font-mono text-primary font-bold">{config.variable || 'last_response'}</span>{' '}
                                     <span className="text-blue-300 font-semibold">{getOperatorDisplay(config.operation)}</span>{' '}
                                     {config.operation !== 'exists' && (
-                                        <span className="font-bold text-emerald-400">"{config.value || '...'}"</span>
+                                        <span className="font-bold text-emerald-400">&quot;{config.value || '...'}&quot;</span>
                                     )}
                                 </div>
+                                <div className="flex items-center gap-3 pt-1 text-[10px]">
+                                    <span className="text-emerald-400 font-semibold">✓ Top Handle: MATCHED (True)</span>
+                                    <span className="text-rose-400 font-semibold">✗ Bottom Handle: ELSE (False)</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Wait for Input Configuration */}
+                    {(selectedNode?.data?.subType === 'waitForInput' || nodeDef?.name === 'waitForInput') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-cyan-500/5 border border-cyan-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-cyan-500/15 text-cyan-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">Wait For Customer Reply</h4>
+                                    <p className="text-[10px] text-muted-foreground">Pause flow and extract verified user responses</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Store Response in Variable</Label>
+                                <div className="flex flex-wrap gap-1 mb-1">
+                                    {['user_email', 'user_name', 'shipping_address', 'feedback'].map(v => (
+                                        <button
+                                            key={v}
+                                            type="button"
+                                            onClick={() => onChange('variable', v)}
+                                            className="px-2 py-0.5 rounded text-[9px] bg-white/5 text-cyan-300 hover:bg-cyan-500/20 border border-cyan-500/20 transition-all font-mono"
+                                        >
+                                            {v}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.variable ?? 'last_response'}
+                                    onChange={(e) => onChange('variable', e.target.value)}
+                                    placeholder="e.g. user_email"
+                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-xl"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Validation Format</Label>
+                                <Select
+                                    value={config.validation || 'any'}
+                                    onValueChange={(val) => onChange('validation', val)}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-white/10 z-[100]">
+                                        <SelectItem value="any" className="text-xs">Any Text / Message</SelectItem>
+                                        <SelectItem value="email" className="text-xs">Valid Email Address (name@domain.com)</SelectItem>
+                                        <SelectItem value="phone" className="text-xs">Valid Phone Number (Digits)</SelectItem>
+                                        <SelectItem value="number" className="text-xs">Numeric Digits Only</SelectItem>
+                                        <SelectItem value="location" className="text-xs">WhatsApp Location Pin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Retry Message (if invalid)</Label>
+                                <Textarea
+                                    value={config.retryPrompt ?? 'Please provide a valid format to proceed.'}
+                                    onChange={(e) => onChange('retryPrompt', e.target.value)}
+                                    placeholder="e.g. That doesn't look like a valid email. Please try again!"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl min-h-[60px]"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Set Variable Configuration */}
+                    {(selectedNode?.data?.subType === 'setVariable' || nodeDef?.name === 'setVariable') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-indigo-500/15 text-indigo-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">Set Session Variable</h4>
+                                    <p className="text-[10px] text-muted-foreground">Assign or calculate memory variables</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Variable Name</Label>
+                                <Input
+                                    value={config.variable ?? 'custom_var'}
+                                    onChange={(e) => onChange('variable', e.target.value)}
+                                    placeholder="e.g. user_tier, lead_score"
+                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-xl"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Value to Set</Label>
+                                <div className="flex flex-wrap gap-1 mb-1">
+                                    {['{{last_response}}', '{{from}}', 'VIP', 'true'].map(v => (
+                                        <button
+                                            key={v}
+                                            type="button"
+                                            onClick={() => onChange('value', v)}
+                                            className="px-2 py-0.5 rounded text-[9px] bg-white/5 text-indigo-300 hover:bg-indigo-500/20 border border-indigo-500/20 transition-all font-mono"
+                                        >
+                                            {v}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.value ?? ''}
+                                    onChange={(e) => onChange('value', e.target.value)}
+                                    placeholder="e.g. VIP or {{last_response}}"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* AI Agent Configuration */}
+                    {(selectedNode?.data?.subType === 'aiAgent' || nodeDef?.name === 'aiAgent') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-purple-500/5 border border-purple-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-purple-500/15 text-purple-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">AI Agent (Gemini RAG)</h4>
+                                    <p className="text-[10px] text-muted-foreground">Dynamic answers grounded in your Knowledge Base</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Knowledge Base Category</Label>
+                                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                                    {['GENERAL', 'PRODUCTS', 'PRICING', 'SUPPORT'].map(cat => (
+                                        <button
+                                            key={cat}
+                                            type="button"
+                                            onClick={() => onChange('category', cat)}
+                                            className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
+                                                (config.category || 'GENERAL') === cat
+                                                    ? 'bg-purple-500 text-white shadow-sm'
+                                                    : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
+                                            }`}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.category ?? 'GENERAL'}
+                                    onChange={(e) => onChange('category', e.target.value)}
+                                    placeholder="e.g. GENERAL, PRODUCTS, FAQ"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">System Persona & Prompt</Label>
+                                <Textarea
+                                    value={config.systemPrompt ?? 'You are a helpful customer support agent for Devlomatix. Answer questions accurately and concisely.'}
+                                    onChange={(e) => onChange('systemPrompt', e.target.value)}
+                                    placeholder="Instructions for how the AI should respond..."
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl min-h-[90px]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Fallback Message (if unanswerable)</Label>
+                                <Input
+                                    value={config.fallbackText ?? 'I am not sure about that. Let me connect you with our support team.'}
+                                    onChange={(e) => onChange('fallbackText', e.target.value)}
+                                    placeholder="Message sent when confidence is low"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Deskflow Handoff Configuration */}
+                    {(selectedNode?.data?.subType === 'deskflowHandoff' || selectedNode?.data?.subType === 'deskflow' || nodeDef?.name === 'deskflowHandoff') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">DeskFlow Human Handoff</h4>
+                                    <p className="text-[10px] text-muted-foreground">Transfer bot chat to human support agents</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Target Department Queue</Label>
+                                <div className="flex flex-wrap gap-1.5 mb-1.5">
+                                    {['Support', 'Sales', 'Billing', 'VIP Desk'].map(dept => (
+                                        <button
+                                            key={dept}
+                                            type="button"
+                                            onClick={() => onChange('department', dept)}
+                                            className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
+                                                (config.department || 'Support') === dept
+                                                    ? 'bg-amber-500 text-black shadow-sm'
+                                                    : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
+                                            }`}
+                                        >
+                                            {dept}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.department ?? 'Support'}
+                                    onChange={(e) => onChange('department', e.target.value)}
+                                    placeholder="e.g. Support, Sales"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Handoff Notification to User</Label>
+                                <Textarea
+                                    value={config.handoffMessage ?? 'Connecting you with a team representative right now...'}
+                                    onChange={(e) => onChange('handoffMessage', e.target.value)}
+                                    placeholder="Message sent to the customer..."
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl min-h-[60px]"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CRM Tag Configuration */}
+                    {(selectedNode?.data?.subType === 'crmTag' || selectedNode?.data?.subType === 'tag' || nodeDef?.name === 'crmTag') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">CRM Contact Tagging</h4>
+                                    <p className="text-[10px] text-muted-foreground">Automatically label & segment customers</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Action</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => onChange('action', 'add')}
+                                        className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                                            (config.action || 'add') === 'add'
+                                                ? 'bg-emerald-500 text-black shadow-sm'
+                                                : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                        }`}
+                                    >
+                                        + Add Tag
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => onChange('action', 'remove')}
+                                        className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                                            config.action === 'remove'
+                                                ? 'bg-rose-500 text-white shadow-sm'
+                                                : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                        }`}
+                                    >
+                                        - Remove Tag
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Tag Name</Label>
+                                <div className="flex flex-wrap gap-1 mb-1">
+                                    {['VIP', 'Hot_Lead', 'Customer', 'Quote_Sent', 'Support_Pending'].map(t => (
+                                        <button
+                                            key={t}
+                                            type="button"
+                                            onClick={() => onChange('tag', t)}
+                                            className="px-2 py-0.5 rounded text-[9px] bg-white/5 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all font-mono"
+                                        >
+                                            #{t}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Input
+                                    value={config.tag ?? 'Lead'}
+                                    onChange={(e) => onChange('tag', e.target.value)}
+                                    placeholder="e.g. VIP, Hot_Lead"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* HTTP Request Configuration */}
+                    {(selectedNode?.data?.subType === 'httpRequest' || selectedNode?.data?.subType === 'http' || nodeDef?.name === 'httpRequest') && (
+                        <div className="space-y-4 p-4 rounded-2xl bg-orange-500/5 border border-orange-500/20">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1.5 rounded-lg bg-orange-500/15 text-orange-400">
+                                    <Sparkles size={14} />
+                                </div>
+                                <div>
+                                    <h4 className="text-xs font-bold text-white">HTTP Webhook / API</h4>
+                                    <p className="text-[10px] text-muted-foreground">Query or push data to external REST endpoints</p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">HTTP Method</Label>
+                                <Select
+                                    value={config.method || 'GET'}
+                                    onValueChange={(val) => onChange('method', val)}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-white/10 z-[100]">
+                                        <SelectItem value="GET" className="text-xs">GET (Fetch Data)</SelectItem>
+                                        <SelectItem value="POST" className="text-xs">POST (Send Payload)</SelectItem>
+                                        <SelectItem value="PUT" className="text-xs">PUT (Update Data)</SelectItem>
+                                        <SelectItem value="DELETE" className="text-xs">DELETE</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-[11px] text-muted-foreground">Endpoint URL</Label>
+                                <Input
+                                    value={config.url ?? ''}
+                                    onChange={(e) => onChange('url', e.target.value)}
+                                    placeholder="https://api.yourdomain.com/v1/user"
+                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-xl"
+                                />
                             </div>
                         </div>
                     )}
@@ -305,7 +642,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                                     {getTemplateBodyText(selectedTemplateObj) && (
                                         <div className="text-[11px] text-muted-foreground line-clamp-3 italic bg-white/5 p-2 rounded-lg border border-white/5 leading-relaxed">
-                                            "{getTemplateBodyText(selectedTemplateObj)}"
+                                            &quot;{getTemplateBodyText(selectedTemplateObj)}&quot;
                                         </div>
                                     )}
                                 </div>
@@ -313,7 +650,18 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                         </div>
                     )}
 
-                    {!isConditionNode && nodeDef.properties.length > 0 && (
+                    {/* Generic Fallback Node Properties for custom or default properties */}
+                    {!isConditionNode && 
+                     selectedNode?.data?.subType !== 'waitForInput' && 
+                     selectedNode?.data?.subType !== 'setVariable' && 
+                     selectedNode?.data?.subType !== 'aiAgent' && 
+                     selectedNode?.data?.subType !== 'deskflowHandoff' && 
+                     selectedNode?.data?.subType !== 'deskflow' && 
+                     selectedNode?.data?.subType !== 'crmTag' && 
+                     selectedNode?.data?.subType !== 'tag' && 
+                     selectedNode?.data?.subType !== 'httpRequest' && 
+                     selectedNode?.data?.subType !== 'http' && 
+                     nodeDef.properties.length > 0 && (
                         <div className="space-y-6 pt-6 border-t border-white/5">
                             <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Node Properties</h3>
                             {nodeDef.properties.map((prop, idx) => (

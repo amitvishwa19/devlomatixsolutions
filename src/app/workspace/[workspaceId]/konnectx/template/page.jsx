@@ -12,8 +12,7 @@ import {
     RefreshCw,
     FolderPlus,
     Layers,
-    Tag,
-    Filter
+    Tag
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +22,6 @@ import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
-import { useModal } from '@/hooks/useModal';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { DeleteConfirmDialog } from '@/app/workspace/_components/DeleteConfirmDialog';
 
@@ -52,7 +50,6 @@ import ShareTemplateDialog from './_components/ShareTemplateDialog';
 export default function TemplatePage() {
     const params = useParams();
     const workspaceId = params.workspaceId;
-    const { onOpen } = useModal();
     const [templates, setTemplates] = useState([]);
     const [groups, setGroups] = useState([]);
     const [selectedGroupFilter, setSelectedGroupFilter] = useState('ALL'); // 'ALL', 'UNGROUPED', or groupId
@@ -147,7 +144,6 @@ export default function TemplatePage() {
     });
 
     const fetchTemplates = () => {
-        setIsLoading(true);
         if (workspaceId) {
             executeGetTemplates({ workspaceId });
         }
@@ -169,6 +165,19 @@ export default function TemplatePage() {
         if (workspaceId) {
             executeGetMetadata({ workspaceId });
         }
+    };
+
+    const { execute: executeGetContacts } = useAction(getContactsAction, {
+        onSuccess: (data) => {
+            setAllContacts(Array.isArray(data) ? data : []);
+            setIsFetchingContacts(false);
+        },
+        onError: () => setIsFetchingContacts(false)
+    });
+
+    const fetchContacts = () => {
+        if (!workspaceId) return;
+        executeGetContacts({ workspaceId });
     };
 
     useEffect(() => {
@@ -267,26 +276,12 @@ export default function TemplatePage() {
         }
     });
 
-    const { execute: executeGetContacts } = useAction(getContactsAction, {
-        onSuccess: (data) => {
-            setAllContacts(Array.isArray(data) ? data : []);
-            setIsFetchingContacts(false);
-        },
-        onError: () => setIsFetchingContacts(false)
-    });
-
     const { execute: executeSendTest, isLoading: isSendingTest } = useAction(sendMessageAction, {
         onSuccess: () => {
             // We track successes for multiple recipients
         },
         onError: (err) => toast.error(err || "Failed to send test message")
     });
-
-    const fetchContacts = () => {
-        if (!workspaceId) return;
-        setIsFetchingContacts(true);
-        executeGetContacts({ workspaceId });
-    };
 
     // UI Handlers
     const handleOpenBuilder = (template = null) => {
@@ -670,80 +665,78 @@ export default function TemplatePage() {
                 </div>
 
                 {/* Group Filter Segment Bar */}
-                <div className="bg-card p-2 rounded-xl border border-border/50 shadow-sm flex items-center justify-between gap-3 overflow-x-auto">
-                    <div className="flex items-center gap-1.5 min-w-max">
-                        <Button
-                            variant={selectedGroupFilter === 'ALL' ? 'default' : 'ghost'}
-                            size="sm"
-                            className="h-8 text-xs font-semibold gap-2 rounded-lg"
-                            onClick={() => setSelectedGroupFilter('ALL')}
+                <div className="bg-card p-2.5 rounded-xl border border-border/50 shadow-sm flex flex-wrap items-center gap-1.5">
+                    <Button
+                        variant={selectedGroupFilter === 'ALL' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                        onClick={() => setSelectedGroupFilter('ALL')}
+                    >
+                        <Layers className="w-3.5 h-3.5" />
+                        All Templates
+                        <Badge
+                            variant={selectedGroupFilter === 'ALL' ? 'secondary' : 'outline'}
+                            className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
                         >
-                            <Layers className="w-3.5 h-3.5" />
-                            All Templates
-                            <Badge
-                                variant={selectedGroupFilter === 'ALL' ? 'secondary' : 'outline'}
-                                className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
-                            >
-                                {totalAllCount}
-                            </Badge>
-                        </Button>
+                            {totalAllCount}
+                        </Badge>
+                    </Button>
 
-                        <Button
-                            variant={selectedGroupFilter === 'UNGROUPED' ? 'default' : 'ghost'}
-                            size="sm"
-                            className="h-8 text-xs font-semibold gap-2 rounded-lg"
-                            onClick={() => setSelectedGroupFilter('UNGROUPED')}
+                    <Button
+                        variant={selectedGroupFilter === 'UNGROUPED' ? 'default' : 'ghost'}
+                        size="sm"
+                        className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                        onClick={() => setSelectedGroupFilter('UNGROUPED')}
+                    >
+                        <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                        Ungrouped
+                        <Badge
+                            variant={selectedGroupFilter === 'UNGROUPED' ? 'secondary' : 'outline'}
+                            className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
                         >
-                            <Tag className="w-3.5 h-3.5 text-muted-foreground" />
-                            Ungrouped
-                            <Badge
-                                variant={selectedGroupFilter === 'UNGROUPED' ? 'secondary' : 'outline'}
-                                className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
+                            {totalUngroupedCount}
+                        </Badge>
+                    </Button>
+
+                    <div className="h-4 w-px bg-border/60 mx-1" />
+
+                    {groups.map((group) => {
+                        const isSelected = selectedGroupFilter === group.id;
+                        const groupColor = group.color || '#3b82f6';
+                        const count = templates.filter(t => t.metadata?.groupId === group.id).length;
+
+                        return (
+                            <Button
+                                key={group.id}
+                                variant={isSelected ? 'default' : 'ghost'}
+                                size="sm"
+                                className={`h-8 text-xs font-semibold gap-2 rounded-lg transition-all ${isSelected ? '' : 'hover:bg-muted/40'}`}
+                                onClick={() => setSelectedGroupFilter(group.id)}
                             >
-                                {totalUngroupedCount}
-                            </Badge>
-                        </Button>
-
-                        <div className="h-4 w-px bg-border/60 mx-1" />
-
-                        {groups.map((group) => {
-                            const isSelected = selectedGroupFilter === group.id;
-                            const groupColor = group.color || '#3b82f6';
-                            const count = templates.filter(t => t.metadata?.groupId === group.id).length;
-
-                            return (
-                                <Button
-                                    key={group.id}
-                                    variant={isSelected ? 'default' : 'ghost'}
-                                    size="sm"
-                                    className={`h-8 text-xs font-semibold gap-2 rounded-lg transition-all ${isSelected ? '' : 'hover:bg-muted/40'}`}
-                                    onClick={() => setSelectedGroupFilter(group.id)}
+                                <span
+                                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                                    style={{ backgroundColor: groupColor }}
+                                />
+                                {group.name}
+                                <Badge
+                                    variant={isSelected ? 'secondary' : 'outline'}
+                                    className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
                                 >
-                                    <span
-                                        className="w-2.5 h-2.5 rounded-full shrink-0"
-                                        style={{ backgroundColor: groupColor }}
-                                    />
-                                    {group.name}
-                                    <Badge
-                                        variant={isSelected ? 'secondary' : 'outline'}
-                                        className="h-4 px-1.5 text-[10px] font-mono ml-0.5"
-                                    >
-                                        {count}
-                                    </Badge>
-                                </Button>
-                            );
-                        })}
+                                    {count}
+                                </Badge>
+                            </Button>
+                        );
+                    })}
 
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 text-xs text-primary hover:text-primary font-semibold gap-1.5 rounded-lg hover:bg-primary/10"
-                            onClick={() => setIsManageGroupsOpen(true)}
-                            title="Add or Manage Groups"
-                        >
-                            <Plus className="w-3.5 h-3.5" /> New Group
-                        </Button>
-                    </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-primary hover:text-primary font-semibold gap-1.5 rounded-lg hover:bg-primary/10"
+                        onClick={() => setIsManageGroupsOpen(true)}
+                        title="Add or Manage Groups"
+                    >
+                        <Plus className="w-3.5 h-3.5" /> New Group
+                    </Button>
                 </div>
 
                 {/* Toolbar */}

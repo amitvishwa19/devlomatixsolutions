@@ -14,23 +14,34 @@ import {
     AlertCircle,
     Globe,
     CreditCard,
-    Package
+    Package,
+    Sparkles,
+    UserCheck,
+    Tag,
+    Sliders,
+    MessageSquareText
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, configured, data, id }) => {
+const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, id }) => {
     const handleContextMenu = (e) => {
         e.preventDefault();
         e.stopPropagation();
         data?.onContextMenu?.(e, id);
     };
 
+    const isHighlighted = selected || data?.isHighlighted;
+
     return (
         <div
             style={{ width: '200px', maxWidth: '200px', minWidth: '200px' }}
             className={cn(
-                "relative rounded-sm border transition-all duration-300 w-[200px] max-w-[200px] overflow-hidden border border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
-                selected ? " border-primary/60 -translate-y-1 shadow-primary/10" : "hover:border-primary/40"
+                "relative rounded-sm border transition-all duration-300 w-[200px] max-w-[200px] overflow-hidden border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
+                isHighlighted 
+                    ? "border-emerald-400 ring-2 ring-emerald-500/40 -translate-y-1 shadow-emerald-500/20" 
+                    : selected 
+                    ? "border-primary/60 -translate-y-1 shadow-primary/10" 
+                    : "hover:border-primary/40"
             )}
             onContextMenu={handleContextMenu}
         >
@@ -55,26 +66,27 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, colorClass, config
 };
 
 export const TriggerNode = memo(({ id, data, selected }) => {
+    const isWelcome = data.type === 'welcome' || data.subType === 'welcome';
     return (
         <>
             <NodeWrapper
                 selected={selected}
-                title={data.type === 'welcome' || data.subType === 'welcome' ? 'Welcome' : 'Keyword'}
-                icon={data.type === 'welcome' || data.subType === 'welcome' ? Play : Zap}
-                colorClass="amber-500"
+                title={isWelcome ? 'Welcome' : 'Keyword'}
+                icon={isWelcome ? Play : Zap}
                 configured={true}
                 data={data}
                 id={id}
             >
                 <div className="text-sm font-semibold text-white truncate">{data.label || 'Start Flow'}</div>
                 <div className="text-[10px] text-muted-foreground italic truncate">
-                    {data.type === 'welcome' || data.subType === 'welcome' ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
+                    {isWelcome ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500" />
         </>
     );
 });
+TriggerNode.displayName = 'TriggerNode';
 
 export const MessageNode = memo(({ id, data, selected }) => {
     const isImage = data.subType === 'imageMessage';
@@ -87,7 +99,6 @@ export const MessageNode = memo(({ id, data, selected }) => {
                 selected={selected}
                 title={isImage ? 'Image' : isTemplate ? 'Template' : 'Message'}
                 icon={isImage ? Image : isTemplate ? FileText : MessageSquare}
-                colorClass="emerald-500"
                 configured={!!(data.text || data.imageUrl || data.templateName)}
                 data={data}
                 id={id}
@@ -101,63 +112,144 @@ export const MessageNode = memo(({ id, data, selected }) => {
         </>
     );
 });
+MessageNode.displayName = 'MessageNode';
 
 export const LogicNode = memo(({ id, data, selected }) => {
     const isDelay = data.subType === 'delayNode' || data.subType === 'delay';
-    const isConfigured = isDelay ? !!data.seconds : !!(data.variable && (data.value !== undefined || data.operation === 'exists'));
+    const isWaitForInput = data.subType === 'waitForInput';
+    const isSetVariable = data.subType === 'setVariable';
+    const isCondition = !isDelay && !isWaitForInput && !isSetVariable;
+
+    const isConfigured = isDelay
+        ? !!data.seconds
+        : isWaitForInput
+        ? !!(data.variable)
+        : isSetVariable
+        ? !!(data.variable && data.value)
+        : !!(data.variable && (data.value !== undefined || data.operation === 'exists'));
 
     return (
         <>
             <Handle type="target" position={Position.Left} className="w-3 h-3 border-2 border-[#1e1e2e] bg-blue-500" />
             <NodeWrapper
                 selected={selected}
-                title={isDelay ? 'Delay' : 'Condition'}
-                icon={isDelay ? Clock : GitBranch}
-                colorClass="blue-500"
+                title={isDelay ? 'Delay' : isWaitForInput ? 'Wait for Input' : isSetVariable ? 'Set Variable' : 'Condition'}
+                icon={isDelay ? Clock : isWaitForInput ? MessageSquareText : isSetVariable ? Sliders : GitBranch}
                 configured={isConfigured}
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || (isDelay ? 'Delay' : 'Condition')}</div>
-                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
+                <div className="text-sm font-semibold text-white truncate">
+                    {data.label || (isDelay ? 'Delay' : isWaitForInput ? 'Wait for Input' : isSetVariable ? 'Set Variable' : 'Condition Branch')}
+                </div>
+
+                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground leading-snug break-all overflow-hidden">
                     {isDelay ? (
-                        <span>Wait for {data.seconds || 5}s</span>
+                        <span>Wait for <strong className="text-white">{data.seconds || 5}s</strong></span>
+                    ) : isWaitForInput ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="text-[9px] uppercase font-bold text-blue-400">Save to:</span>
+                            <span className="font-mono font-bold text-primary truncate">{`{{${data.variable || 'last_response'}}}`}</span>
+                            <span className="text-[9px] text-muted-foreground capitalize">Format: {data.validation || 'any'}</span>
+                        </div>
+                    ) : isSetVariable ? (
+                        <div className="flex flex-col gap-0.5">
+                            <span className="font-mono text-primary font-bold">{data.variable || 'custom_var'}</span>
+                            <span className="text-white text-[9px] truncate">= &quot;{data.value || 'true'}&quot;</span>
+                        </div>
                     ) : (
-                        <span>IF {data.variable || 'last_response'} {data.operation || 'contains'} "{data.value || ''}"</span>
+                        <div className="flex flex-col gap-0.5">
+                            <span className="font-mono text-primary text-[9px] font-bold">IF {data.variable || 'last_response'}</span>
+                            <span className="text-white font-semibold">{data.operation || 'contains'} &quot;{data.value || ''}&quot;</span>
+                        </div>
                     )}
                 </div>
+
+                {isCondition && (
+                    <div className="flex items-center justify-between pt-1 text-[9px] font-bold text-muted-foreground">
+                        <span className="text-emerald-400 flex items-center gap-1">● TRUE (Top)</span>
+                        <span className="text-rose-400 flex items-center gap-1">● FALSE (Btm)</span>
+                    </div>
+                )}
             </NodeWrapper>
-            <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-blue-500" />
+
+            {/* Condition multi-handles: True (top) vs False (bottom) */}
+            {isCondition ? (
+                <>
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="true"
+                        style={{ top: '35%' }}
+                        className="w-3 h-3 border-2 border-[#1e1e2e] !bg-emerald-500 hover:scale-125 transition-transform"
+                        title="Matched (True Branch)"
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="false"
+                        style={{ top: '65%' }}
+                        className="w-3 h-3 border-2 border-[#1e1e2e] !bg-rose-500 hover:scale-125 transition-transform"
+                        title="Unmatched (False Branch)"
+                    />
+                </>
+            ) : (
+                <Handle
+                    type="source"
+                    position={Position.Right}
+                    className="w-3 h-3 border-2 border-[#1e1e2e] bg-blue-500"
+                />
+            )}
         </>
     );
 });
+LogicNode.displayName = 'LogicNode';
 
 export const ActionNode = memo(({ id, data, selected }) => {
     const isHttp = data.subType === 'httpRequest' || data.subType === 'http';
     const isProduct = data.subType === 'productShowcase';
     const isPayment = data.subType === 'paymentRequest';
+    const isAi = data.subType === 'aiAgent';
+    const isHandoff = data.subType === 'deskflowHandoff' || data.subType === 'deskflow';
+    const isTag = data.subType === 'crmTag' || data.subType === 'tag';
+
+    const isConfigured = !!(data.url || data.sku || data.gateway || data.category || data.department || data.tag || data.configured);
 
     return (
         <>
             <Handle type="target" position={Position.Left} className="w-3 h-3 border-2 border-[#1e1e2e] bg-purple-500" />
             <NodeWrapper
                 selected={selected}
-                title={isHttp ? 'HTTP API' : isProduct ? 'Product' : isPayment ? 'Payment' : 'Action'}
-                icon={isHttp ? Globe : isProduct ? Package : isPayment ? CreditCard : Zap}
-                colorClass="purple-500"
-                configured={!!(data.url || data.sku || data.gateway || data.configured)}
+                title={isHttp ? 'HTTP API' : isProduct ? 'Product Card' : isPayment ? 'Payment Link' : isAi ? 'AI Agent' : isHandoff ? 'Handoff' : isTag ? 'Tag' : 'Action'}
+                icon={isHttp ? Globe : isProduct ? Package : isPayment ? CreditCard : isAi ? Sparkles : isHandoff ? UserCheck : isTag ? Tag : Zap}
+                configured={isConfigured}
                 data={data}
                 id={id}
             >
                 <div className="text-sm font-semibold text-white truncate">{data.label || 'Action'}</div>
-                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
-                    {isHttp ? `${data.method || 'GET'} ${data.url || 'Configure URL...'}` : isProduct ? `Mode: ${data.selectionMode || 'Last Viewed'}` : isPayment ? `Gateway: ${data.gateway || 'Razorpay'}` : 'Configured'}
+                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 leading-snug break-all overflow-hidden">
+                    {isHttp ? (
+                        <span>{data.method || 'GET'} <span className="font-mono text-primary">{data.url || 'https://...'}</span></span>
+                    ) : isAi ? (
+                        <span>Category: <strong className="text-purple-400">{data.category || 'GENERAL'}</strong></span>
+                    ) : isHandoff ? (
+                        <span>Transfer to: <strong className="text-amber-400">{data.department || 'Support'}</strong></span>
+                    ) : isTag ? (
+                        <span>{data.action === 'remove' ? 'Remove' : 'Add'}: <strong className="text-emerald-400">#{data.tag || 'Lead'}</strong></span>
+                    ) : isProduct ? (
+                        <span>Mode: {data.selectionMode || 'Last Viewed'}</span>
+                    ) : isPayment ? (
+                        <span>Gateway: {data.gateway || 'Razorpay'}</span>
+                    ) : (
+                        'Configured'
+                    )}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-purple-500" />
         </>
     );
 });
+ActionNode.displayName = 'ActionNode';
 
 export const nodeTypes = {
     triggerNode: TriggerNode,

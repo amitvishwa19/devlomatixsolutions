@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { resolveActiveCredential } from "@/lib/konnectx-active-credential";
 
 export async function GET(request) {
   try {
@@ -7,38 +8,20 @@ export async function GET(request) {
 
     const userId = searchParams.get("userId");
 
-    const defaultCredential = await db.credentials.findFirst({
-      where: { ...(userId && { userId }), platform: 'WHATSAPP_CLOUD', isDefault: true }
-    });
+    const active = await resolveActiveCredential(request);
 
-    if (!defaultCredential) {
+    if (!active.credential) {
       return NextResponse.json({ data: { stats: null } });
     }
 
-    let cloudCreds = null;
-    const stored = defaultCredential.credentials;
-    if (typeof stored === 'string' && stored.includes(':')) {
-      try {
-        const { symmetricDecrypt } = await import("@/lib/encryption");
-        cloudCreds = JSON.parse(symmetricDecrypt(stored));
-      } catch (e) {}
-    } else if (typeof stored === 'string') {
-      try { cloudCreds = JSON.parse(stored); } catch (e) {}
-    } else { cloudCreds = stored; }
-
-    if (cloudCreds?.enc) {
-      try {
-        const { symmetricDecrypt } = await import("@/lib/encryption");
-        cloudCreds = JSON.parse(symmetricDecrypt(cloudCreds.enc));
-      } catch (e) {}
-    }
-    const activePhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+    const activeCredentialId = active.credentialId;
+    const activePhoneId = active.phoneNumberId;
 
     const totalCampaigns = await db.campaign.count({
-      where: { ...(userId && { userId }), credentialId: defaultCredential.id }
+      where: { ...(userId && { userId }), credentialId: activeCredentialId }
     });
     const activeCampaigns = await db.campaign.count({
-      where: { ...(userId && { userId }), credentialId: defaultCredential.id, status: 'active' }
+      where: { ...(userId && { userId }), credentialId: activeCredentialId, status: 'active' }
     });
 
     const msgWhere = {
@@ -65,7 +48,7 @@ export async function GET(request) {
     const readRate = sentMessages > 0 ? ((readMessages / sentMessages) * 100).toFixed(1) : 0;
 
     const recentCampaigns = await db.campaign.findMany({
-      where: { ...(userId && { userId }), credentialId: defaultCredential.id },
+      where: { ...(userId && { userId }), credentialId: activeCredentialId },
       orderBy: { updatedAt: 'desc' },
       take: 20,
       select: { id: true, name: true, status: true, messageType: true, recipients: { select: { status: true } } }

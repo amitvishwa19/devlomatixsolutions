@@ -10,7 +10,14 @@ import {
     ShoppingCart,
     Truck,
     CreditCard,
-    Package
+    Package,
+    Sparkles,
+    UserCheck,
+    Tag,
+    Sliders,
+    Inbox,
+    MessageSquareText,
+    Bot
 } from 'lucide-react';
 
 /**
@@ -150,12 +157,12 @@ export const WA_NODE_REGISTRY = {
         ]
     },
     conditionNode: {
-        displayName: 'Condition',
+        displayName: 'Condition (True / False)',
         name: 'condition',
         icon: GitBranch,
         group: 'Logic & flow',
         type: 'logicNode',
-        description: 'Branch the flow based on a condition',
+        description: 'Branch the flow with True / False outputs based on a condition',
         properties: [
             {
                 displayName: 'Variable to Check',
@@ -189,6 +196,69 @@ export const WA_NODE_REGISTRY = {
             }
         ]
     },
+    waitForInput: {
+        displayName: 'Wait for Input',
+        name: 'waitForInput',
+        icon: MessageSquareText,
+        group: 'Logic & flow',
+        type: 'logicNode',
+        description: 'Pause flow and wait for user reply, with format validation',
+        properties: [
+            {
+                displayName: 'Store Answer in Variable',
+                name: 'variable',
+                type: 'string',
+                default: 'last_response',
+                placeholder: 'e.g. user_email, user_name, delivery_address',
+                description: 'Variable key name where response is saved'
+            },
+            {
+                displayName: 'Expected Validation Format',
+                name: 'validation',
+                type: 'options',
+                options: [
+                    { name: 'Any Text / Response', value: 'any' },
+                    { name: 'Valid Email Address', value: 'email' },
+                    { name: 'Valid Phone Number', value: 'phone' },
+                    { name: 'Number / Digits', value: 'number' },
+                    { name: 'Location Pin', value: 'location' }
+                ],
+                default: 'any',
+                description: 'Validation rule required from user'
+            },
+            {
+                displayName: 'Retry Message (if invalid)',
+                name: 'retryPrompt',
+                type: 'string',
+                default: 'Please enter a valid format to proceed.',
+                placeholder: 'e.g. Please provide a valid email address.'
+            }
+        ]
+    },
+    setVariable: {
+        displayName: 'Set Variable',
+        name: 'setVariable',
+        icon: Sliders,
+        group: 'Logic & flow',
+        type: 'logicNode',
+        description: 'Assign or update custom flow memory variable',
+        properties: [
+            {
+                displayName: 'Variable Name',
+                name: 'variable',
+                type: 'string',
+                default: 'custom_var',
+                placeholder: 'e.g. lead_score, user_stage'
+            },
+            {
+                displayName: 'Value to Set',
+                name: 'value',
+                type: 'string',
+                default: 'true',
+                placeholder: 'e.g. VIP, {{last_response}}, 100'
+            }
+        ]
+    },
     delayNode: {
         displayName: 'Delay',
         name: 'delay',
@@ -203,6 +273,88 @@ export const WA_NODE_REGISTRY = {
                 type: 'number',
                 default: 5,
                 description: 'Number of seconds to pause before next step'
+            }
+        ]
+    },
+    aiAgent: {
+        displayName: 'AI Agent (RAG)',
+        name: 'aiAgent',
+        icon: Sparkles,
+        group: 'AI & Knowledge',
+        type: 'actionNode',
+        description: 'Generate dynamic answers using Gemini AI & Knowledge Base',
+        properties: [
+            {
+                displayName: 'Knowledge Category / Scope',
+                name: 'category',
+                type: 'string',
+                default: 'GENERAL',
+                placeholder: 'e.g. GENERAL, PRODUCTS, SUPPORT'
+            },
+            {
+                displayName: 'System Instructions / Persona',
+                name: 'systemPrompt',
+                type: 'string',
+                typeOptions: { rows: 3 },
+                default: 'You are a helpful customer support agent for Devlomatix. Answer questions accurately and concisely.',
+                placeholder: 'Custom instructions for the AI'
+            },
+            {
+                displayName: 'Fallback Message (if unanswerable)',
+                name: 'fallbackText',
+                type: 'string',
+                default: 'I am not sure about that. Let me connect you with our team.'
+            }
+        ]
+    },
+    deskflowHandoff: {
+        displayName: 'Human Agent Handoff',
+        name: 'deskflowHandoff',
+        icon: UserCheck,
+        group: 'Team & Support',
+        type: 'actionNode',
+        description: 'Pause bot and transfer conversation to human support in DeskFlow',
+        properties: [
+            {
+                displayName: 'Department / Queue',
+                name: 'department',
+                type: 'string',
+                default: 'Support',
+                placeholder: 'e.g. Support, Sales, Billing'
+            },
+            {
+                displayName: 'Handoff Notification Message',
+                name: 'handoffMessage',
+                type: 'string',
+                default: 'Connecting you with a team representative right now...',
+                placeholder: 'Message sent to user upon escalation'
+            }
+        ]
+    },
+    crmTag: {
+        displayName: 'Manage Contact Tag',
+        name: 'crmTag',
+        icon: Tag,
+        group: 'CRM & Contacts',
+        type: 'actionNode',
+        description: 'Add or remove tags on the customer contact profile',
+        properties: [
+            {
+                displayName: 'Action',
+                name: 'action',
+                type: 'options',
+                options: [
+                    { name: 'Add Tag', value: 'add' },
+                    { name: 'Remove Tag', value: 'remove' }
+                ],
+                default: 'add'
+            },
+            {
+                displayName: 'Tag Name',
+                name: 'tag',
+                type: 'string',
+                default: 'Lead',
+                placeholder: 'e.g. VIP, Hot_Lead, Quote_Requested'
             }
         ]
     },
@@ -292,6 +444,8 @@ WA_NODE_REGISTRY.fulfillmentUpdate = WA_NODE_REGISTRY.fulfillmentTrigger;
 WA_NODE_REGISTRY.condition = WA_NODE_REGISTRY.conditionNode;
 WA_NODE_REGISTRY.delay = WA_NODE_REGISTRY.delayNode;
 WA_NODE_REGISTRY.http = WA_NODE_REGISTRY.httpRequest;
+WA_NODE_REGISTRY.deskflow = WA_NODE_REGISTRY.deskflowHandoff;
+WA_NODE_REGISTRY.tag = WA_NODE_REGISTRY.crmTag;
 
 export const getNodeDefinition = (subTypeOrType) => {
     if (!subTypeOrType) return null;
