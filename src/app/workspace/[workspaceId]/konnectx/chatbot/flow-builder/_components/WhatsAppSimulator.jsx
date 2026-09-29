@@ -47,65 +47,76 @@ async function executeFlowSimulation({
     setSessionVariables(currentVars);
 
     let resumeTargetNodeId = null;
+    let isResumingTrigger = false;
 
-    // 1. Check if we were paused waiting for input
+    // 1. Check if we were paused waiting for input or mid-flow keyword router
     if (waitingForInputNode) {
         const waitNode = waitingForInputNode;
         setWaitingForInputNode(null);
 
-        const varName = waitNode.data?.variable || 'last_response';
-        const validation = waitNode.data?.validation || 'any';
+        if (waitNode.type === 'triggerNode' || waitNode.type === 'trigger' || waitNode.type === 'start') {
+            currentVars = { ...currentVars, last_response: userMessage, message: userMessage };
+            setSessionVariables(currentVars);
+            resumeTargetNodeId = waitNode.id;
+            isResumingTrigger = true;
+            addLog(waitNode.data?.label || 'Keyword Router', 'user_reply_received', `Received reply: "${userMessage}"`);
+        } else {
+            const varName = waitNode.data?.variable || 'last_response';
+            const validation = waitNode.data?.validation || 'any';
 
-        let isValid = true;
-        if (validation === 'email') {
-            isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userMessage);
-        } else if (validation === 'phone') {
-            isValid = /^\+?[\d\s-]{7,15}$/.test(userMessage);
-        } else if (validation === 'number') {
-            isValid = /^\d+(\.\d+)?$/.test(userMessage);
-        }
+            let isValid = true;
+            if (validation === 'email') {
+                isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userMessage);
+            } else if (validation === 'phone') {
+                isValid = /^\+?[\d\s-]{7,15}$/.test(userMessage);
+            } else if (validation === 'number') {
+                isValid = /^\d+(\.\d+)?$/.test(userMessage);
+            }
 
-        if (!isValid) {
-            const retryText = waitNode.data?.retryPrompt || 'Please enter a valid format to proceed.';
-            setIsTyping(true);
-            await new Promise(r => setTimeout(r, 600));
-            setIsTyping(false);
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: `retry_${Date.now()}`,
-                    sender: 'bot',
-                    type: 'text',
-                    text: retryText,
-                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                }
-            ]);
-            addLog(waitNode.data?.label || 'Wait For Input', 'validation_failed', `Format "${validation}" failed for: "${userMessage}"`);
-            setWaitingForInputNode(waitNode); // stay waiting
-            return;
-        }
+            if (!isValid) {
+                const retryText = waitNode.data?.retryPrompt || 'Please enter a valid format to proceed.';
+                setIsTyping(true);
+                await new Promise(r => setTimeout(r, 600));
+                setIsTyping(false);
+                setMessages(prev => [
+                    ...prev,
+                    {
+                        id: `retry_${Date.now()}`,
+                        sender: 'bot',
+                        type: 'text',
+                        text: retryText,
+                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    }
+                ]);
+                addLog(waitNode.data?.label || 'Wait For Input', 'validation_failed', `Format "${validation}" failed for: "${userMessage}"`);
+                setWaitingForInputNode(waitNode); // stay waiting
+                return;
+            }
 
-        currentVars = { ...currentVars, [varName]: userMessage };
-        setSessionVariables(currentVars);
-        addLog(waitNode.data?.label || 'Wait For Input', 'variable_saved', `Saved {{${varName}}} = "${userMessage}"`);
+            currentVars = { ...currentVars, [varName]: userMessage };
+            setSessionVariables(currentVars);
+            addLog(waitNode.data?.label || 'Wait For Input', 'variable_saved', `Saved {{${varName}}} = "${userMessage}"`);
 
-        // Find next node from waitNode
-        const nextEdge = edges.find(e => e.source === waitNode.id);
-        if (nextEdge) {
-            resumeTargetNodeId = nextEdge.target;
+            // Find next node from waitNode
+            const nextEdge = edges.find(e => e.source === waitNode.id);
+            if (nextEdge) {
+                resumeTargetNodeId = nextEdge.target;
+            }
         }
     }
 
     let startNode = null;
     if (!resumeTargetNodeId) {
-        // Find matching trigger
-        const trigger = nodes.find(node => {
-            if (node.type !== 'triggerNode') return false;
+        // Find matching trigger (prioritize root triggers without incoming edges)
+        const incomingEdgeSet = new Set(edges.map(e => e.target));
+        const rootTriggers = nodes.filter(node => (node.type === 'triggerNode' || node.type === 'trigger') && !incomingEdgeSet.has(node.id));
+
+        const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+        const cleanUserMsg = clean(userMessage);
+
+        const matchTrigger = (node) => {
             const subType = node.data?.subType || node.data?.type || node.type;
             if (subType === 'welcome') return true;
-
-            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
-            const cleanUserMsg = clean(userMessage);
 
             const keywords = Array.isArray(node.data?.keywordList) && node.data.keywordList.length > 0
                 ? node.data.keywordList.map(k => clean(k)).filter(Boolean)
@@ -124,10 +135,11 @@ async function executeFlowSimulation({
             } else {
                 return keywords.some(k => cleanUserMsg === k || cleanUserMsg.includes(k));
             }
-        });
+        };
 
+        const trigger = rootTriggers.find(matchTrigger) || nodes.find(n => n.type === 'triggerNode' && matchTrigger(n));
         const fallback = nodes.find(node => node.data?.isFallback);
-        startNode = trigger || fallback || nodes.find(n => n.type === 'triggerNode');
+        startNode = trigger || fallback || rootTriggers[0] || nodes.find(n => n.type === 'triggerNode');
     }
 
     let activeStep = resumeTargetNodeId 
@@ -369,15 +381,27 @@ async function executeFlowSimulation({
                 }
             }
         } else if (nodeType === 'triggerNode' || nodeType === 'trigger' || nodeType === 'start') {
-            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
-            const cleanUserMsg = clean(userMessage);
-
+            const isWelcome = stepData.type === 'welcome' || stepData.subType === 'welcome';
             const rawKeywords = Array.isArray(stepData.keywordList) && stepData.keywordList.length > 0
                 ? stepData.keywordList.map(k => String(k).trim())
                 : String(stepData.keywords || stepData.keyword || '')
                     .split(',')
                     .map(k => k.trim())
                     .filter(Boolean);
+
+            // If reached mid-flow as a downstream step from a message/template, pause & wait for user reply!
+            if (visited.size > 1 && !isResumingTrigger && !isWelcome) {
+                setIsTyping(false);
+                setWaitingForInputNode(currentStep);
+                addLog(label, 'waiting_reply', `Paused: Awaiting customer reply or button selection (${rawKeywords.join(', ') || 'configured keywords'})`);
+                break;
+            }
+
+            // Reset resuming flag after passing through
+            isResumingTrigger = false;
+
+            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+            const cleanUserMsg = clean(userMessage);
 
             const matchMode = stepData.matchMode || 'contains';
             const isKeywordMatch = (kw) => {
@@ -764,7 +788,7 @@ export const WhatsAppSimulator = ({
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter') handleSendMessage();
                                     }}
-                                    placeholder={waitingForInputNode ? "Type response for waiting step..." : "Type a WhatsApp message..."}
+                                    placeholder={waitingForInputNode ? (waitingForInputNode.type === 'triggerNode' ? "Reply to template or select button option..." : "Type response for waiting step...") : "Type a WhatsApp message..."}
                                     className="flex-1 bg-transparent border-0 text-xs text-white placeholder:text-white/40 focus:outline-none"
                                 />
                                 <Paperclip size={16} className="text-white/40" />

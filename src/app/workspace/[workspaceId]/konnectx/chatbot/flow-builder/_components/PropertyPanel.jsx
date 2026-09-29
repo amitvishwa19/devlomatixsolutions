@@ -318,8 +318,8 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                         <Zap size={16} />
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <h4 className="text-xs font-bold text-white truncate">Trigger Keywords</h4>
-                                        <p className="text-[10px] text-muted-foreground truncate">Flow starts when user sends keyword</p>
+                                        <h4 className="text-xs font-bold text-white truncate">Keywords & Reply Router</h4>
+                                        <p className="text-[10px] text-muted-foreground truncate">Root entry trigger or mid-flow reply router</p>
                                     </div>
                                 </div>
                                 {rawKeywords.length > 0 && (
@@ -337,7 +337,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                             {/* Add Keyword Input */}
                             <div className="space-y-1.5 w-full min-w-0">
-                                <Label className="text-[10px] text-muted-foreground font-semibold">Add Keywords (Press Enter or Comma)</Label>
+                                <Label className="text-[10px] text-muted-foreground font-semibold">Add Keywords / Button Titles (Press Enter or Comma)</Label>
                                 <div className="flex gap-2 items-center w-full min-w-0">
                                     <Input
                                         value={keywordInput}
@@ -348,7 +348,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                                 handleAddKeyword();
                                             }
                                         }}
-                                        placeholder="e.g. hello, support, pricing"
+                                        placeholder="e.g. I'm Interested, Unsubscribe, Apply Now"
                                         className="bg-white/5 border-white/10 text-xs rounded-xl h-9 font-mono flex-1 min-w-0 w-full"
                                     />
                                     <Button
@@ -407,7 +407,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     </div>
                                 )}
                                 <p className="text-[9px] text-muted-foreground italic">
-                                    💡 Each keyword creates a dedicated output handle on the node so you can connect separate flows.
+                                    💡 Connect after a Template or Message to wait for user reply and route down separate paths.
                                 </p>
                             </div>
 

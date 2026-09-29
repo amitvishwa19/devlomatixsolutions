@@ -89,6 +89,11 @@ export const TriggerNode = memo(({ id, data, selected }) => {
 
     return (
         <>
+            <Handle 
+                type="target" 
+                position={Position.Left} 
+                className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500 shadow-md hover:scale-125 transition-transform z-20 cursor-crosshair" 
+            />
             <NodeWrapper
                 selected={selected}
                 title={isWelcome ? 'Welcome' : 'Keyword Trigger'}
