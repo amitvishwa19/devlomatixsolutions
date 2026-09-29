@@ -208,9 +208,6 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                         if (condIndex !== -1) {
                             edgeLabel = conditions[condIndex].label || `Result ${condIndex + 1}`;
                             strokeColor = BRANCH_COLORS[condIndex % BRANCH_COLORS.length];
-                        } else if (params.sourceHandle === 'else' || params.sourceHandle === 'false' || params.sourceHandle === 'default') {
-                            edgeLabel = sourceNode.data?.elseLabel || 'Else / Fallback';
-                            strokeColor = '#f43f5e';
                         }
                     } else {
                         if (params.sourceHandle === 'true') {
@@ -295,7 +292,6 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     { id: 'cond_1', label: 'Result 1 (Option A)', variable: 'last_response', operation: 'contains', value: '1' },
                     { id: 'cond_2', label: 'Result 2 (Option B)', variable: 'last_response', operation: 'contains', value: '2' }
                 ];
-                defaultProps.elseLabel = 'Else / Fallback';
             }
 
             const newNode = {
@@ -488,39 +484,44 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                         </div>
 
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => handleAutoLayout('LR')}
-                            className="bg-card/80 border-white/10 hover:bg-white/10 text-white rounded-xl gap-1.5 font-semibold text-xs shadow-lg"
+                            className="bg-card/90 dark:bg-[#1e1e2e] border-white/10 hover:border-white/20 hover:bg-white/10 text-white hover:text-white dark:text-white dark:hover:text-white rounded-xl gap-1.5 font-semibold text-xs shadow-lg transition-all cursor-pointer"
                             title="Auto arrange nodes with Dagre"
                         >
-                            <Wand2 size={14} className="text-emerald-400" />
-                            Auto Layout
+                            <Wand2 size={14} className="text-emerald-400 shrink-0" />
+                            <span className="text-white dark:text-white font-bold">Auto Layout</span>
                         </Button>
 
                         <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => setIsSimulatorOpen(prev => !prev)}
-                            className={`rounded-xl gap-1.5 font-semibold text-xs shadow-lg transition-all ${
+                            className={`rounded-xl gap-1.5 font-semibold text-xs shadow-lg transition-all cursor-pointer ${
                                 isSimulatorOpen
-                                    ? 'bg-emerald-500 text-black border-emerald-400 font-bold'
-                                    : 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400'
+                                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white hover:text-white dark:text-white dark:hover:text-white border-emerald-400 font-bold'
+                                    : 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 dark:text-emerald-400 dark:hover:text-emerald-300 font-bold'
                             }`}
                         >
-                            <Smartphone size={14} />
-                            {isSimulatorOpen ? 'Close Phone' : 'Live Phone Test'}
+                            <Smartphone size={14} className={isSimulatorOpen ? 'text-white shrink-0' : 'text-emerald-400 shrink-0'} />
+                            <span className={isSimulatorOpen ? 'text-white dark:text-white' : 'text-emerald-400 dark:text-emerald-400'}>
+                                {isSimulatorOpen ? 'Close Phone' : 'Live Phone Test'}
+                            </span>
                         </Button>
 
                         <Button
+                            type="button"
                             variant="default"
                             size="sm"
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="rounded-xl shadow-lg"
+                            className="rounded-xl shadow-lg bg-primary hover:bg-primary/90 text-white dark:text-white font-bold cursor-pointer"
                         >
                             {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save size={16} className="mr-1.5" />}
-                            Save Changes
+                            <span className="text-white dark:text-white">Save Changes</span>
                         </Button>
                     </Panel>
 

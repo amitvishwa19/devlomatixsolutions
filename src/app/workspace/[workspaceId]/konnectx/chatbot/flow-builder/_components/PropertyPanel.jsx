@@ -166,8 +166,8 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
             configured: true
         };
 
-        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:')) {
-            newConfig.label = `Template: ${template.name}`;
+        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:') || config.label === template.name) {
+            newConfig.label = template.name;
         }
 
         setConfig(newConfig);
@@ -757,32 +757,6 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                         </div>
                                     );
                                 })}
-                            </div>
-
-                            {/* Else / Fallback Branch */}
-                            <div className="p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/20 space-y-2.5" style={{ borderLeftColor: '#f43f5e', borderLeftWidth: '4px' }}>
-                                <div className="flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-rose-500 shadow-sm shrink-0">
-                                        ★
-                                    </span>
-                                    <div>
-                                        <h5 className="text-xs font-bold text-rose-300">Else / Fallback Branch</h5>
-                                        <p className="text-[10px] text-muted-foreground">Executed if none of the above conditions match</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-[10px] text-muted-foreground font-semibold">Fallback Handle Label</Label>
-                                    <Input
-                                        value={config.elseLabel ?? 'Else / Fallback'}
-                                        onChange={(e) => {
-                                            const newConfig = { ...config, elseLabel: e.target.value, configured: true };
-                                            setConfig(newConfig);
-                                            updateNodeData(selectedNode.id, newConfig);
-                                        }}
-                                        placeholder="e.g. Else / Fallback"
-                                        className="bg-white/5 border-white/10 text-xs rounded-lg h-8"
-                                    />
-                                </div>
                             </div>
                         </div>
                     )}

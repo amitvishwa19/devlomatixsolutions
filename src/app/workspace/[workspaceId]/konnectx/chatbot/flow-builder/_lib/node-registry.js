@@ -190,7 +190,7 @@ export const WA_NODE_REGISTRY = {
         icon: GitBranch,
         group: 'Logic & flow',
         type: 'logicNode',
-        description: 'Branch the flow into multiple paths (If A -> Result 1, If B -> Result 2, Else -> Fallback)',
+        description: 'Branch the flow into multiple paths (If A -> Result 1, If B -> Result 2)',
         properties: [
             {
                 displayName: 'Conditions',
@@ -201,12 +201,6 @@ export const WA_NODE_REGISTRY = {
                     { id: 'cond_2', label: 'Result 2 (Option B)', variable: 'last_response', operation: 'contains', value: '2' }
                 ],
                 description: 'List of condition branches to evaluate in order'
-            },
-            {
-                displayName: 'Else / Fallback Label',
-                name: 'elseLabel',
-                type: 'string',
-                default: 'Else / Fallback'
             }
         ]
     },

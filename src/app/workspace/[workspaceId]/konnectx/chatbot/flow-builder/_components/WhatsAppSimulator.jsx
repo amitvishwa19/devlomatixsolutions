@@ -125,6 +125,36 @@ const interpolate = (text, vars = {}) => {
     });
 };
 
+const isConditionNode = (node) => {
+    if (!node) return false;
+    const t = String(node.type || '').toLowerCase();
+    const st = String(node.data?.subType || node.data?.type || node.data?.name || '').toLowerCase();
+    const lbl = String(node.data?.label || '').toLowerCase();
+    return (
+        t === 'conditionnode' || 
+        t === 'condition' || 
+        st === 'condition' || 
+        st === 'conditionnode' || 
+        lbl.includes('condition') || 
+        Array.isArray(node.data?.conditions) ||
+        (t === 'logicnode' && (st === 'condition' || st === 'conditionnode' || !st || lbl.includes('condition')))
+    );
+};
+
+const isMessageNode = (node) => {
+    if (!node) return false;
+    const t = String(node.type || '').toLowerCase();
+    const st = String(node.data?.subType || node.data?.type || node.data?.name || '').toLowerCase();
+    return t === 'messagenode' || t === 'message' || st.includes('message') || st.includes('template');
+};
+
+const isTriggerNode = (node) => {
+    if (!node) return false;
+    const t = String(node.type || '').toLowerCase();
+    const st = String(node.data?.subType || node.data?.type || node.data?.name || '').toLowerCase();
+    return t === 'triggernode' || t === 'trigger' || t === 'start' || st.includes('trigger') || st.includes('welcome');
+};
+
 async function executeFlowSimulation({
     userMessage,
     sessionVariables,
@@ -151,7 +181,7 @@ async function executeFlowSimulation({
         const waitNode = waitingForInputNode;
         setWaitingForInputNode(null);
 
-        if (waitNode.type === 'messageNode' || waitNode.type === 'message') {
+        if (isMessageNode(waitNode)) {
             const varName = waitNode.data?.variable || 'last_response';
             currentVars = { ...currentVars, [varName]: userMessage, last_response: userMessage, message: userMessage };
             setSessionVariables(currentVars);
@@ -160,7 +190,7 @@ async function executeFlowSimulation({
             if (nextEdge) {
                 resumeTargetNodeId = nextEdge.target;
             }
-        } else if (waitNode.type === 'triggerNode' || waitNode.type === 'trigger' || waitNode.type === 'start') {
+        } else if (isTriggerNode(waitNode)) {
             currentVars = { ...currentVars, last_response: userMessage, message: userMessage };
             setSessionVariables(currentVars);
             resumeTargetNodeId = waitNode.id;
@@ -215,14 +245,20 @@ async function executeFlowSimulation({
     if (!resumeTargetNodeId) {
         // Find matching trigger (prioritize root triggers without incoming edges)
         const incomingEdgeSet = new Set(edges.map(e => e.target));
-        const rootTriggers = nodes.filter(node => (node.type === 'triggerNode' || node.type === 'trigger') && !incomingEdgeSet.has(node.id));
+        const rootTriggers = nodes.filter(node => isTriggerNode(node) && !incomingEdgeSet.has(node.id));
 
         const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
         const cleanUserMsg = clean(userMessage);
 
         const matchTrigger = (node) => {
             const subType = node.data?.subType || node.data?.type || node.type;
-            if (subType === 'welcome') return true;
+            
+            // Welcome trigger only matches on greeting or first interaction
+            if (subType === 'welcome') {
+                const WELCOME_WORDS = ['hi', 'hello', 'hey', 'start', 'restart', 'menu', 'welcome'];
+                return cleanUserMsg === '' || WELCOME_WORDS.includes(cleanUserMsg);
+            }
+
             if (subType === 'any_response' || subType === 'response' || subType === 'responseTrigger') return true;
 
             const keywords = Array.isArray(node.data?.keywordList) && node.data.keywordList.length > 0
@@ -244,9 +280,13 @@ async function executeFlowSimulation({
             }
         };
 
-        const trigger = rootTriggers.find(matchTrigger) || nodes.find(n => n.type === 'triggerNode' && matchTrigger(n));
-        const fallback = nodes.find(node => node.data?.isFallback);
-        startNode = trigger || fallback || rootTriggers[0] || nodes.find(n => n.type === 'triggerNode');
+        const trigger = rootTriggers.find(matchTrigger) || nodes.find(n => isTriggerNode(n) && matchTrigger(n));
+        const fallback = nodes.find(node => node.data?.isFallback && isTriggerNode(node));
+        startNode = trigger || fallback || null;
+
+        if (!startNode) {
+            addLog('Bot Router', 'no_match', `No active flow or trigger matched: "${userMessage}"`);
+        }
     }
 
     let activeStep = resumeTargetNodeId 
@@ -271,7 +311,7 @@ async function executeFlowSimulation({
         await new Promise(r => setTimeout(r, 600));
 
         // Execute node behavior
-        if (nodeType === 'messageNode') {
+        if (isMessageNode(currentStep)) {
             setIsTyping(false);
             if (subType === 'imageMessage') {
                 const imgMsg = {
@@ -323,7 +363,7 @@ async function executeFlowSimulation({
                 if (buttons.length === 0) {
                     const outEdge = edges.find(e => e.source === currentStep.id);
                     const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
-                    if (nextNode && (nextNode.type === 'triggerNode' || nextNode.type === 'trigger')) {
+                    if (nextNode && isTriggerNode(nextNode)) {
                         const kws = Array.isArray(nextNode.data?.keywordList) && nextNode.data.keywordList.length > 0
                             ? nextNode.data.keywordList
                             : String(nextNode.data?.keywords || nextNode.data?.keyword || '').split(',').map(k => k.trim()).filter(Boolean);
@@ -363,17 +403,14 @@ async function executeFlowSimulation({
                 }
             }
 
-            // If connected directly to another node, pause and await user reply before triggering it!
-            const outEdge = edges.find(e => e.source === currentStep.id);
-            const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
-            if (nextNode) {
-                if (nextNode.type === 'messageNode' || nextNode.type === 'message') {
+            // If connected directly to ANY downstream node, pause and await customer reply/button tap!
+            const outEdges = edges.filter(e => e.source === currentStep.id);
+            if (outEdges.length > 0) {
+                const nextNodes = outEdges.map(e => nodes.find(n => n.id === e.target)).filter(Boolean);
+                const hasNextStep = nextNodes.some(n => isMessageNode(n) || isConditionNode(n) || isTriggerNode(n) || n.type === 'actionNode' || n.type === 'logicNode');
+                if (hasNextStep) {
                     setWaitingForInputNode(currentStep);
-                    addLog(label, 'waiting_reply', `Sent message. Awaiting customer reply/button tap before triggering: ${nextNode.data?.label || nextNode.id}`);
-                    break;
-                } else if (nextNode.type === 'conditionNode' || nextNode.type === 'condition' || (nextNode.type === 'logicNode' && nextNode.data?.subType === 'condition')) {
-                    setWaitingForInputNode(currentStep);
-                    addLog(label, 'waiting_reply', `Sent message. Awaiting customer button tap or reply before evaluating: ${nextNode.data?.label || nextNode.id}`);
+                    addLog(label, 'waiting_reply', `Sent message. Awaiting customer reply/button tap before evaluating next step.`);
                     break;
                 }
             }
@@ -422,7 +459,7 @@ async function executeFlowSimulation({
             } else if (subType === 'httpRequest' || subType === 'http') {
                 addLog(label, 'http_api_call', `${stepData.method || 'GET'} ${stepData.url || 'https://api.devlomatix.com'}`);
             }
-        } else if (nodeType === 'logicNode') {
+        } else if (nodeType === 'logicNode' && !isConditionNode(currentStep)) {
             if (subType === 'delayNode' || subType === 'delay') {
                 const sec = Math.min(Number(stepData.seconds || 2), 5);
                 addLog(label, 'delay_pause', `Waiting ${sec} seconds...`);
@@ -444,21 +481,29 @@ async function executeFlowSimulation({
         // Find Next Node
         let nextNodeId = null;
 
-        if (subType === 'conditionNode' || subType === 'condition' || nodeType === 'condition') {
+        if (isConditionNode(currentStep)) {
+            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+            const cleanUserMsg = clean(userMessage);
+
             const evaluateRule = (variable, op, targetVal) => {
+                const rawTarget = String(targetVal ?? '').trim();
+                if (op !== 'exists' && rawTarget === '') return false;
+
                 let actualVal = currentVars[variable] !== undefined ? currentVars[variable] : userMessage;
                 actualVal = String(actualVal || '').toLowerCase().trim();
-                const expVal = String(targetVal || '').toLowerCase().trim();
+                const expVal = clean(targetVal);
 
                 if (op === 'exists') return actualVal.length > 0;
-                if (op === 'eq' || op === '==') return actualVal === expVal;
-                if (op === 'starts_with') return actualVal.startsWith(expVal);
-                if (op === 'ends_with') return actualVal.endsWith(expVal);
+                if (op === 'eq' || op === '==') return actualVal === expVal || cleanUserMsg === expVal;
+                if (op === 'starts_with') return actualVal.startsWith(expVal) || cleanUserMsg.startsWith(expVal);
+                if (op === 'ends_with') return actualVal.endsWith(expVal) || cleanUserMsg.endsWith(expVal);
                 if (op === 'gt') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) > Number(expVal) : actualVal > expVal;
                 if (op === 'gte') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) >= Number(expVal) : actualVal >= expVal;
                 if (op === 'lt') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) < Number(expVal) : actualVal < expVal;
                 if (op === 'lte') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) <= Number(expVal) : actualVal <= expVal;
-                return actualVal.includes(expVal);
+                
+                // contains
+                return actualVal.includes(expVal) || cleanUserMsg.includes(expVal) || (actualVal && expVal.includes(actualVal)) || (cleanUserMsg && expVal.includes(cleanUserMsg));
             };
 
             const branchEdges = edges.filter(e => e.source === currentStep.id);
@@ -474,7 +519,7 @@ async function executeFlowSimulation({
                     const cond = conditions[i];
                     const vName = cond.variable || 'last_response';
                     const op = cond.operation || 'contains';
-                    const vVal = cond.value || '';
+                    const vVal = cond.value ?? '';
 
                     if (evaluateRule(vName, op, vVal)) {
                         matchedCondition = cond;
@@ -483,49 +528,70 @@ async function executeFlowSimulation({
                     }
                 }
 
+                // Fallback: direct matching by button click / user message against condition value or label
+                if (!matchedCondition) {
+                    for (let i = 0; i < conditions.length; i++) {
+                        const cond = conditions[i];
+                        const cleanVal = clean(cond.value || '');
+                        const cleanLabel = clean(cond.label || '');
+                        if ((cleanVal && (cleanUserMsg === cleanVal || cleanUserMsg.includes(cleanVal) || cleanVal.includes(cleanUserMsg))) ||
+                            (cleanLabel && (cleanUserMsg === cleanLabel || cleanUserMsg.includes(cleanLabel) || cleanLabel.includes(cleanUserMsg)))) {
+                            matchedCondition = cond;
+                            matchedIndex = i;
+                            break;
+                        }
+                    }
+                }
+
                 if (matchedCondition) {
-                    const condId = matchedCondition.id || `cond_${matchedIndex}`;
+                    const condId = matchedCondition.id;
+                    const cleanCondLabel = clean(matchedCondition.label || '');
+                    const cleanCondVal = clean(matchedCondition.value || '');
+
                     addLog(
                         label,
                         'condition_eval',
-                        `✓ MATCHED Branch #${matchedIndex + 1} (${matchedCondition.label || condId}): IF "${matchedCondition.variable || 'last_response'}" ${matchedCondition.operation || 'contains'} "${matchedCondition.value || ''}"`
+                        `✓ MATCHED Branch #${matchedIndex + 1} (${matchedCondition.label || condId || `Case ${matchedIndex + 1}`}): IF "${matchedCondition.variable || 'last_response'}" ${matchedCondition.operation || 'contains'} "${matchedCondition.value || ''}"`
                     );
 
-                    const handleEdge = branchEdges.find(e => 
-                        e.sourceHandle === condId || 
-                        e.sourceHandle === `cond_${matchedIndex}` ||
-                        (matchedIndex === 0 && e.sourceHandle === 'true')
-                    );
-
-                    if (handleEdge) {
-                        nextNodeId = handleEdge.target;
-                    } else {
-                        const fallbackEdge = branchEdges.find(e => {
-                            const l = String(e.label || '').toLowerCase().trim();
-                            return l === String(matchedCondition.label || '').toLowerCase().trim() || l === `case ${matchedIndex + 1}` || l === `branch ${matchedIndex + 1}`;
-                        });
-                        nextNodeId = fallbackEdge?.target || branchEdges[matchedIndex]?.target;
+                    // 1. Priority A: Match by EXACT edge label matching condition label (e.g. "Continue")
+                    let targetEdge = null;
+                    if (cleanCondLabel) {
+                        targetEdge = branchEdges.find(e => clean(e.label || e.data?.label || '') === cleanCondLabel);
                     }
+
+                    // 2. Priority B: Match by edge label matching condition value (e.g. edge labeled "Continue")
+                    if (!targetEdge && cleanCondVal) {
+                        targetEdge = branchEdges.find(e => clean(e.label || e.data?.label || '') === cleanCondVal);
+                    }
+
+                    // 3. Priority C: Match by exact handle ID (e.g. cond_2 or condId)
+                    if (!targetEdge && condId) {
+                        targetEdge = branchEdges.find(e => e.sourceHandle === condId);
+                    }
+
+                    // 4. Priority D: Positional handle ID fallback
+                    if (!targetEdge) {
+                        targetEdge = branchEdges.find(e => 
+                            e.sourceHandle === `cond_${matchedIndex}` ||
+                            e.sourceHandle === `cond_${matchedIndex + 1}` ||
+                            (matchedIndex === 0 && e.sourceHandle === 'true')
+                        );
+                    }
+
+                    // 5. Priority E: Positional index in branchEdges
+                    if (!targetEdge) {
+                        targetEdge = branchEdges[matchedIndex] || branchEdges[0];
+                    }
+
+                    nextNodeId = targetEdge?.target || null;
                 } else {
                     addLog(
                         label,
                         'condition_eval',
-                        `✗ NO CONDITIONS MATCHED => Routing to Fallback (Else) Branch`
+                        `✗ NO CONDITIONS MATCHED => Flow stopped (no matching condition branch)`
                     );
-                    const elseEdge = branchEdges.find(e => 
-                        e.sourceHandle === 'else' || 
-                        e.sourceHandle === 'default' || 
-                        e.sourceHandle === 'false'
-                    );
-                    if (elseEdge) {
-                        nextNodeId = elseEdge.target;
-                    } else {
-                        const elseLabelEdge = branchEdges.find(e => {
-                            const l = String(e.label || '').toLowerCase().trim();
-                            return l === 'else' || l === 'fallback' || l === 'default' || l === 'false' || l === 'no';
-                        });
-                        nextNodeId = elseLabelEdge?.target || branchEdges[branchEdges.length - 1]?.target;
-                    }
+                    nextNodeId = null;
                 }
             } else {
                 // Legacy 2-branch condition
@@ -539,21 +605,16 @@ async function executeFlowSimulation({
                 addLog(
                     label,
                     'condition_eval',
-                    `IF "${actualVal}" ${op} "${targetVal}" => ${conditionPassed ? 'TRUE (Top Handle)' : 'FALSE (Bottom Handle)'}`
+                    `IF "${actualVal}" ${op} "${targetVal}" => ${conditionPassed ? 'TRUE' : 'FALSE'}`
                 );
 
                 const targetHandle = conditionPassed ? 'true' : 'false';
-                const handleEdge = branchEdges.find(e => e.sourceHandle === targetHandle);
+                const handleEdge = branchEdges.find(e => 
+                    e.sourceHandle === targetHandle ||
+                    (conditionPassed ? (clean(e.label) === 'true' || clean(e.label) === 'yes') : (clean(e.label) === 'false' || clean(e.label) === 'no'))
+                );
 
-                if (handleEdge) {
-                    nextNodeId = handleEdge.target;
-                } else {
-                    const fallbackEdge = branchEdges.find(e => {
-                        const l = String(e.label || '').toLowerCase();
-                        return conditionPassed ? (l === 'true' || l === 'yes') : (l === 'false' || l === 'no');
-                    });
-                    nextNodeId = fallbackEdge?.target || (conditionPassed ? branchEdges[0]?.target : branchEdges[1]?.target);
-                }
+                nextNodeId = conditionPassed ? (handleEdge?.target || branchEdges[0]?.target || null) : null;
             }
         } else if (nodeType === 'triggerNode' || nodeType === 'trigger' || nodeType === 'start') {
             const isWelcome = stepData.type === 'welcome' || stepData.subType === 'welcome';
@@ -671,7 +732,7 @@ export const WhatsAppSimulator = ({
             id: 'init_welcome',
             sender: 'bot',
             type: 'system',
-            text: 'WhatsApp Chat Simulation Started. Send a message or use quick test prompts below.',
+            text: 'WhatsApp Chat Simulation Started. Type a message or click Start Test Flow below.',
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
     ]);
@@ -821,19 +882,18 @@ export const WhatsAppSimulator = ({
     };
 
     return (
-        <div className="fixed inset-y-0 right-0 z-50 flex items-center justify-end p-4 pointer-events-none">
-            <div className="w-[420px] h-[92vh] max-h-[860px] bg-[#0c1317] border border-white/10 rounded-3xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto backdrop-blur-xl animate-in slide-in-from-right-8 duration-300">
-                {/* Smartphone Notch & Status Bar */}
-                <div className="h-6 bg-[#1f2c34] flex items-center justify-between px-6 text-[11px] font-semibold text-white/70 select-none">
-                    <span>9:41</span>
-                    <div className="w-20 h-3.5 bg-black rounded-full mx-auto" />
-                    <div className="flex items-center gap-1.5">
-                        <span className="text-[9px]">5G</span>
-                        <div className="w-4 h-2 border border-white/70 rounded-sm p-0.5">
-                            <div className="w-full h-full bg-white/70 rounded-[1px]" />
-                        </div>
+        <div className="absolute right-0 top-0 bottom-0 z-50 w-full sm:w-[420px] max-w-[100vw] h-full bg-[#0c1317] border-l border-white/10 shadow-2xl flex flex-col overflow-hidden pointer-events-auto backdrop-blur-xl animate-in slide-in-from-right duration-300">
+            {/* Smartphone Notch & Status Bar */}
+            <div className="h-6 bg-[#1f2c34] flex items-center justify-between px-6 text-[11px] font-semibold text-white/70 select-none border-b border-white/5 shrink-0">
+                <span>9:41</span>
+                <div className="w-20 h-3.5 bg-black rounded-full mx-auto" />
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[9px]">5G</span>
+                    <div className="w-4 h-2 border border-white/70 rounded-sm p-0.5">
+                        <div className="w-full h-full bg-white/70 rounded-[1px]" />
                     </div>
                 </div>
+            </div>
 
                 {/* WhatsApp Chat App Header */}
                 <div className="bg-[#1f2c34] px-4 py-3 border-b border-white/5 flex items-center justify-between text-white">
@@ -1209,6 +1269,5 @@ export const WhatsAppSimulator = ({
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
-    );
-};
+        );
+    };

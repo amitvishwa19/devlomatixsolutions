@@ -201,6 +201,10 @@ export const MessageNode = memo(({ id, data, selected }) => {
     const isImage = data.subType === 'imageMessage';
     const isTemplate = data.subType === 'templateMessage';
 
+    const displayLabel = isTemplate && data.label
+        ? data.label.replace(/^Template:\s*/i, '')
+        : (data.label || (isTemplate ? 'Official Template' : 'Send Message'));
+
     return (
         <>
             <Handle type="target" position={Position.Left} className="w-3 h-3 border-2 border-[#1e1e2e] bg-emerald-500" />
@@ -212,9 +216,11 @@ export const MessageNode = memo(({ id, data, selected }) => {
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || 'Send Message'}</div>
+                <div className={cn("text-sm font-semibold text-white leading-snug", isTemplate ? "break-words whitespace-normal" : "truncate")}>
+                    {displayLabel}
+                </div>
                 <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
-                    {data.text || data.imageUrl || (data.templateName ? `Template: ${data.templateName}` : 'Click to configure...')}
+                    {data.text || data.imageUrl || (data.templateName ? data.templateName.replace(/^Template:\s*/i, '') : 'Click to configure...')}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-emerald-500" />
@@ -321,28 +327,6 @@ export const LogicNode = memo(({ id, data, selected }) => {
                                     </div>
                                 );
                             })}
-                            <div className="relative flex items-center justify-between p-1.5 rounded bg-rose-500/10 border border-rose-500/20 text-[10px] min-w-0">
-                                <div className="flex items-center gap-1.5 min-w-0 pr-3">
-                                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                                    <span className="font-semibold text-rose-300 truncate max-w-[95px]">
-                                        {data.elseLabel || 'Else / Fallback'}
-                                    </span>
-                                </div>
-                                <span className="text-[9px] text-rose-400 font-mono">Fallback</span>
-                                <Handle
-                                    type="source"
-                                    position={Position.Right}
-                                    id={!hasConditionsArray ? "false" : "else"}
-                                    style={{
-                                        right: -7,
-                                        top: '50%',
-                                        transform: 'translateY(-50%)',
-                                        backgroundColor: '#f43f5e'
-                                    }}
-                                    className="w-3 h-3 border-2 border-[#1e1e2e] hover:scale-125 transition-transform"
-                                    title="Else / Fallback Branch"
-                                />
-                            </div>
                         </div>
                     )}
                 </div>
