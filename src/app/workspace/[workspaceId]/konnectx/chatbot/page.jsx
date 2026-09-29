@@ -179,7 +179,7 @@ export default function ChatbotPage() {
     }
 
     return (
-        <div className="min-h-screen  p-6">
+        <div className="p-4">
             <div className=" mx-auto space-y-6">
                 {/* Header */}
                 <motion.div

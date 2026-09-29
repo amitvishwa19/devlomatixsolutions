@@ -12,7 +12,14 @@ import {
     Tag,
     UserCheck,
     Smile,
-    Paperclip
+    Paperclip,
+    ExternalLink,
+    Phone,
+    Workflow,
+    CornerDownLeft,
+    FileText,
+    Video,
+    Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,11 +27,81 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-const interpolate = (text, vars) => {
+const extractTemplateDetails = (tpl) => {
+    if (!tpl) return { headerText: '', headerType: 'TEXT', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] };
+    let metadata = {};
+    if (typeof tpl.metadata === 'string') {
+        try { metadata = JSON.parse(tpl.metadata); } catch (e) { metadata = {}; }
+    } else if (tpl.metadata) {
+        metadata = tpl.metadata;
+    }
+
+    let buttons = [];
+    if (typeof tpl.buttons === 'string') {
+        try { buttons = JSON.parse(tpl.buttons); } catch (e) { buttons = []; }
+    } else if (Array.isArray(tpl.buttons)) {
+        buttons = tpl.buttons;
+    }
+
+    let headerText = tpl.header || metadata.headerText || '';
+    let headerType = (tpl.type || metadata.headerType || 'TEXT').toUpperCase();
+    let headerMediaUrl = metadata.mediaUrl || '';
+    let footerText = tpl.footer || metadata.footerText || '';
+    let bodyText = tpl.body || tpl.text || '';
+
+    // Check components if provided (Meta structure)
+    if (Array.isArray(tpl.components)) {
+        const headerComp = tpl.components.find(c => c.type === 'HEADER' || c.type === 'header');
+        if (headerComp) {
+            headerType = headerComp.format || headerType;
+            if (headerComp.text) headerText = headerComp.text;
+            if (headerComp.example?.header_handle?.[0] || headerComp.mediaUrl) {
+                headerMediaUrl = headerComp.example?.header_handle?.[0] || headerComp.mediaUrl;
+            }
+        }
+
+        const bodyComp = tpl.components.find(c => c.type === 'BODY' || c.type === 'body');
+        if (bodyComp?.text) bodyText = bodyComp.text;
+
+        const footerComp = tpl.components.find(c => c.type === 'FOOTER' || c.type === 'footer');
+        if (footerComp?.text) footerText = footerComp.text;
+
+        const buttonsComp = tpl.components.find(c => c.type === 'BUTTONS' || c.type === 'buttons');
+        if (buttonsComp?.buttons && Array.isArray(buttonsComp.buttons)) {
+            buttons = buttonsComp.buttons;
+        }
+    }
+
+    const normalizedButtons = (buttons || []).filter(Boolean).map(b => {
+        if (typeof b === 'string') return { type: 'QUICK_REPLY', text: b };
+        return {
+            type: b.type || (b.url ? 'URL' : b.phone_number ? 'PHONE_NUMBER' : 'QUICK_REPLY'),
+            text: b.text || b.title || 'Button',
+            url: b.url || '',
+            phoneNumber: b.phone_number || b.phoneNumber || ''
+        };
+    });
+
+    return {
+        headerText,
+        headerType,
+        headerMediaUrl,
+        bodyText,
+        footerText,
+        buttons: normalizedButtons,
+        metadata,
+        category: tpl.category || 'UTILITY'
+    };
+};
+
+const interpolate = (text, vars = {}) => {
     return String(text || '').replace(/\{\{(.*?)\}\}/g, (match, key) => {
         const k = key.trim();
         if (vars[k] !== undefined) return vars[k];
         if (k === 'now') return new Date().toLocaleTimeString();
+        if (k === '1') return vars.customer_name || 'Alex Johnson';
+        if (k === '2') return vars.order_total || '1250';
+        if (k === '3') return vars.from || '919876543210';
         return match;
     });
 };
@@ -187,39 +264,81 @@ async function executeFlowSimulation({
                 };
                 setMessages(prev => [...prev, imgMsg]);
                 addLog(label, 'image_sent', `Sent image: ${stepData.imageUrl || 'Default Image'}`);
-            } else if (subType === 'templateMessage') {
-                const templateName = stepData.templateName || 'welcome_notification';
-                const text = interpolate(stepData.text || 'Official Verified WhatsApp Template Message', currentVars);
+            } else if (subType === 'templateMessage' || (nodeType === 'messageNode' && (stepData.templateName || stepData.templateId || (Array.isArray(stepData.buttons) && stepData.buttons.length > 0)))) {
+                const templateName = stepData.templateName || (stepData.label?.startsWith('Template:') ? stepData.label.replace('Template:', '').trim() : 'welcome_notification');
+                const text = interpolate(stepData.text || stepData.body || 'Official Verified WhatsApp Template Message', currentVars);
+                const headerText = interpolate(stepData.headerText || stepData.header || '', currentVars);
+                const footerText = interpolate(stepData.footerText || stepData.footer || '', currentVars);
+                const headerType = (stepData.headerType || (stepData.headerMediaUrl || stepData.imageUrl ? 'IMAGE' : 'TEXT')).toUpperCase();
+                const headerMediaUrl = stepData.headerMediaUrl || stepData.imageUrl || '';
+
+                let buttons = [];
+                if (Array.isArray(stepData.buttons) && stepData.buttons.length > 0) {
+                    buttons = stepData.buttons;
+                } else if (typeof stepData.buttons === 'string') {
+                    try { buttons = JSON.parse(stepData.buttons); } catch(e) { buttons = []; }
+                } else if (stepData.templateData) {
+                    const details = extractTemplateDetails(stepData.templateData);
+                    buttons = details.buttons || [];
+                }
+
+                // If no buttons configured on template node, check if downstream connected node is a Trigger with keywords
+                if (buttons.length === 0) {
+                    const outEdge = edges.find(e => e.source === currentStep.id);
+                    const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
+                    if (nextNode && (nextNode.type === 'triggerNode' || nextNode.type === 'trigger')) {
+                        const kws = Array.isArray(nextNode.data?.keywordList) && nextNode.data.keywordList.length > 0
+                            ? nextNode.data.keywordList
+                            : String(nextNode.data?.keywords || nextNode.data?.keyword || '').split(',').map(k => k.trim()).filter(Boolean);
+                        if (kws.length > 0) {
+                            buttons = kws.map(k => ({ type: 'QUICK_REPLY', text: k }));
+                        }
+                    }
+                }
+
                 const tplMsg = {
                     id: `msg_${Date.now()}_${Math.random()}`,
                     sender: 'bot',
                     type: 'template',
                     templateName,
+                    headerText,
+                    headerType,
+                    headerMediaUrl,
                     text,
+                    footer: footerText,
+                    buttons: (buttons || []).map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 };
                 setMessages(prev => [...prev, tplMsg]);
-                addLog(label, 'template_sent', `Template: ${templateName}`);
+                addLog(label, 'template_sent', `Template "${templateName}" sent (${tplMsg.buttons.length} buttons)`);
             } else {
                 const text = interpolate(stepData.text || stepData.message || 'Hello! How can we assist you?', currentVars);
+                let buttons = Array.isArray(stepData.buttons) ? stepData.buttons : [];
                 const txtMsg = {
                     id: `msg_${Date.now()}_${Math.random()}`,
                     sender: 'bot',
                     type: 'text',
                     text,
+                    buttons: buttons.map(b => typeof b === 'string' ? { type: 'QUICK_REPLY', text: b } : b),
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 };
                 setMessages(prev => [...prev, txtMsg]);
                 addLog(label, 'message_sent', text);
             }
 
-            // If connected directly to another messageNode, pause and await user reply before triggering it!
+            // If connected directly to another node, pause and await user reply before triggering it!
             const outEdge = edges.find(e => e.source === currentStep.id);
             const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
-            if (nextNode && (nextNode.type === 'messageNode' || nextNode.type === 'message')) {
-                setWaitingForInputNode(currentStep);
-                addLog(label, 'waiting_reply', `Sent message. Awaiting customer reply before triggering connected: ${nextNode.data?.label || nextNode.id}`);
-                break;
+            if (nextNode) {
+                if (nextNode.type === 'messageNode' || nextNode.type === 'message') {
+                    setWaitingForInputNode(currentStep);
+                    addLog(label, 'waiting_reply', `Sent message. Awaiting customer reply/button tap before triggering: ${nextNode.data?.label || nextNode.id}`);
+                    break;
+                } else if (nextNode.type === 'conditionNode' || nextNode.type === 'condition' || (nextNode.type === 'logicNode' && nextNode.data?.subType === 'condition')) {
+                    setWaitingForInputNode(currentStep);
+                    addLog(label, 'waiting_reply', `Sent message. Awaiting customer button tap or reply before evaluating: ${nextNode.data?.label || nextNode.id}`);
+                    break;
+                }
             }
         } else if (nodeType === 'actionNode') {
             if (subType === 'aiAgent' || subType === 'aiAssistant') {
@@ -546,6 +665,19 @@ export const WhatsAppSimulator = ({
                     });
                 }
             }
+            if (n.data?.buttons && Array.isArray(n.data.buttons)) {
+                n.data.buttons.forEach(b => {
+                    const txt = typeof b === 'object' ? (b.text || b.title) : b;
+                    const clean = String(txt || '').trim();
+                    if (clean && !list.includes(clean)) list.push(clean);
+                });
+            }
+            if (n.data?.conditions && Array.isArray(n.data.conditions)) {
+                n.data.conditions.forEach(c => {
+                    const clean = String(c.value || '').trim();
+                    if (clean && !list.includes(clean)) list.push(clean);
+                });
+            }
         });
         if (list.length === 0) {
             return ['hello', 'order', 'support', 'alex@example.com', 'yes'];
@@ -742,7 +874,7 @@ export const WhatsAppSimulator = ({
                                             className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div
-                                                className={`max-w-[82%] rounded-2xl p-3 shadow-md relative text-xs leading-relaxed ${
+                                                className={`max-w-[85%] rounded-2xl p-3 shadow-md relative text-xs leading-relaxed ${
                                                     isUser
                                                         ? 'bg-[#005c4b] text-white rounded-tr-none'
                                                         : 'bg-[#202c33] text-white rounded-tl-none border border-white/5'
@@ -761,11 +893,87 @@ export const WhatsAppSimulator = ({
                                                 )}
 
                                                 {msg.type === 'template' && (
-                                                    <div className="space-y-1.5 border-l-2 border-emerald-400 pl-2 mb-1">
-                                                        <div className="text-[9px] font-black uppercase text-emerald-400 tracking-wider">
-                                                            Template • {msg.templateName}
+                                                    <div className="space-y-2">
+                                                        {/* Template Header Badge */}
+                                                        <div className="flex items-center gap-1.5 pb-1 text-[9px] font-black uppercase text-emerald-400 tracking-wider border-b border-white/5">
+                                                            <FileText size={11} className="text-emerald-400" />
+                                                            <span>Official Template • {msg.templateName}</span>
                                                         </div>
-                                                        <p>{msg.text}</p>
+
+                                                        {/* Media Header Banner */}
+                                                        {msg.headerMediaUrl && (
+                                                            <div className="rounded-xl overflow-hidden bg-black/40 border border-white/10 my-1">
+                                                                {msg.headerType === 'VIDEO' ? (
+                                                                    <div className="aspect-video bg-zinc-900 flex items-center justify-center">
+                                                                        <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                                                                            <Video className="w-5 h-5 text-white" />
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    /* eslint-disable-next-line @next/next/no-img-element */
+                                                                    <img
+                                                                        src={msg.headerMediaUrl}
+                                                                        alt="Template Header"
+                                                                        className="w-full h-36 object-cover"
+                                                                    />
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Text Header */}
+                                                        {msg.headerText && (
+                                                            <div className="text-[13px] font-bold text-white leading-snug">
+                                                                {msg.headerText}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Body Text */}
+                                                        <div className="text-xs leading-relaxed text-white/90 whitespace-pre-wrap">
+                                                            {msg.text}
+                                                        </div>
+
+                                                        {/* Footer Text */}
+                                                        {msg.footer && (
+                                                            <div className="text-[10px] text-white/50 italic leading-tight">
+                                                                {msg.footer}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Time Stamp */}
+                                                        <div className="flex items-center justify-end gap-1 text-[9px] text-white/40 pt-0.5">
+                                                            <span>{msg.time}</span>
+                                                        </div>
+
+                                                        {/* Interactive Working Action Buttons */}
+                                                        {Array.isArray(msg.buttons) && msg.buttons.length > 0 && (
+                                                            <div className="mt-2 -mx-3 -mb-3 border-t border-white/10 flex flex-col divide-y divide-white/10 rounded-b-2xl overflow-hidden bg-white/[0.02]">
+                                                                {msg.buttons.map((btn, bIdx) => {
+                                                                    const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn };
+                                                                    const bText = b.text || b.title || `Button ${bIdx + 1}`;
+                                                                    const isUrl = b.type === 'URL';
+                                                                    const isCall = b.type === 'PHONE_NUMBER';
+                                                                    const isFlow = b.type === 'FLOW';
+
+                                                                    return (
+                                                                        <button
+                                                                            key={bIdx}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                addLog(msg.templateName || 'Template', 'button_click', `👉 Clicked button: "${bText}"`);
+                                                                                handleSendMessage(bText);
+                                                                            }}
+                                                                            className="w-full py-2.5 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 active:bg-emerald-500/25 active:scale-[0.99] transition-all cursor-pointer group select-none text-center"
+                                                                        >
+                                                                            {isUrl && <ExternalLink size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
+                                                                            {isCall && <Phone size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
+                                                                            {isFlow && <Workflow size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
+                                                                            {!isUrl && !isCall && !isFlow && <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
+                                                                            <span className="truncate">{bText}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -778,12 +986,40 @@ export const WhatsAppSimulator = ({
                                                     </div>
                                                 )}
 
-                                                {msg.type === 'text' && <p>{msg.text}</p>}
+                                                {msg.type === 'text' && (
+                                                    <div className="space-y-1.5">
+                                                        <p>{msg.text}</p>
+                                                        {Array.isArray(msg.buttons) && msg.buttons.length > 0 && (
+                                                            <div className="mt-2 -mx-3 -mb-3 border-t border-white/10 flex flex-col divide-y divide-white/10 rounded-b-2xl overflow-hidden bg-white/[0.02]">
+                                                                {msg.buttons.map((btn, bIdx) => {
+                                                                    const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn };
+                                                                    const bText = b.text || b.title || `Button ${bIdx + 1}`;
+                                                                    return (
+                                                                        <button
+                                                                            key={bIdx}
+                                                                            type="button"
+                                                                            onClick={() => {
+                                                                                addLog('Message', 'button_click', `👉 Clicked button: "${bText}"`);
+                                                                                handleSendMessage(bText);
+                                                                            }}
+                                                                            className="w-full py-2.5 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 active:bg-emerald-500/25 active:scale-[0.99] transition-all cursor-pointer group select-none text-center"
+                                                                        >
+                                                                            <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                                                                            <span className="truncate">{bText}</span>
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
 
-                                                <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-white/50">
-                                                    <span>{msg.time}</span>
-                                                    {isUser && <CheckCheck size={12} className="text-cyan-400" />}
-                                                </div>
+                                                {msg.type !== 'template' && (
+                                                    <div className="flex items-center justify-end gap-1 mt-1 text-[9px] text-white/50">
+                                                        <span>{msg.time}</span>
+                                                        {isUser && <CheckCheck size={12} className="text-cyan-400" />}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );

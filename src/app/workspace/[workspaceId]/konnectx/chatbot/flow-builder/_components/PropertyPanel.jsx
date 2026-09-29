@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight, Zap, MessageSquareText, MessageSquare } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight, Zap, MessageSquareText, MessageSquare, ExternalLink, Phone, Workflow, CornerDownLeft } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -73,27 +73,96 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         updateNodeData(selectedNode.id, newConfig);
     };
 
-    const getTemplateBodyText = (tpl) => {
-        if (!tpl) return '';
-        if (tpl.text) return tpl.text;
-        if (tpl.body) return tpl.body;
-        if (Array.isArray(tpl.components)) {
-            const bodyComp = tpl.components.find(c => c.type === 'BODY' || c.type === 'body');
-            if (bodyComp?.text) return bodyComp.text;
+    const extractTemplateDetails = (tpl) => {
+        if (!tpl) return { headerText: '', headerType: 'TEXT', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] };
+        let metadata = {};
+        if (typeof tpl.metadata === 'string') {
+            try { metadata = JSON.parse(tpl.metadata); } catch (e) { metadata = {}; }
+        } else if (tpl.metadata) {
+            metadata = tpl.metadata;
         }
-        return '';
+
+        let buttons = [];
+        if (typeof tpl.buttons === 'string') {
+            try { buttons = JSON.parse(tpl.buttons); } catch (e) { buttons = []; }
+        } else if (Array.isArray(tpl.buttons)) {
+            buttons = tpl.buttons;
+        }
+
+        let headerText = tpl.header || metadata.headerText || '';
+        let headerType = (tpl.type || metadata.headerType || 'TEXT').toUpperCase();
+        let headerMediaUrl = metadata.mediaUrl || '';
+        let footerText = tpl.footer || metadata.footerText || '';
+        let bodyText = tpl.body || tpl.text || '';
+
+        // Check components if provided (Meta structure)
+        if (Array.isArray(tpl.components)) {
+            const headerComp = tpl.components.find(c => c.type === 'HEADER' || c.type === 'header');
+            if (headerComp) {
+                headerType = headerComp.format || headerType;
+                if (headerComp.text) headerText = headerComp.text;
+                if (headerComp.example?.header_handle?.[0] || headerComp.mediaUrl) {
+                    headerMediaUrl = headerComp.example?.header_handle?.[0] || headerComp.mediaUrl;
+                }
+            }
+
+            const bodyComp = tpl.components.find(c => c.type === 'BODY' || c.type === 'body');
+            if (bodyComp?.text) bodyText = bodyComp.text;
+
+            const footerComp = tpl.components.find(c => c.type === 'FOOTER' || c.type === 'footer');
+            if (footerComp?.text) footerText = footerComp.text;
+
+            const buttonsComp = tpl.components.find(c => c.type === 'BUTTONS' || c.type === 'buttons');
+            if (buttonsComp?.buttons && Array.isArray(buttonsComp.buttons)) {
+                buttons = buttonsComp.buttons;
+            }
+        }
+
+        const normalizedButtons = (buttons || []).filter(Boolean).map(b => {
+            if (typeof b === 'string') return { type: 'QUICK_REPLY', text: b };
+            return {
+                type: b.type || (b.url ? 'URL' : b.phone_number ? 'PHONE_NUMBER' : 'QUICK_REPLY'),
+                text: b.text || b.title || 'Button',
+                url: b.url || '',
+                phoneNumber: b.phone_number || b.phoneNumber || ''
+            };
+        });
+
+        return {
+            headerText,
+            headerType,
+            headerMediaUrl,
+            bodyText,
+            footerText,
+            buttons: normalizedButtons,
+            metadata,
+            category: tpl.category || 'UTILITY'
+        };
+    };
+
+    const getTemplateBodyText = (tpl) => {
+        return extractTemplateDetails(tpl).bodyText;
     };
 
     const onSelectTemplate = (template) => {
         if (!template) return;
-        const bodyText = getTemplateBodyText(template);
+        const details = extractTemplateDetails(template);
 
         const newConfig = {
             ...config,
             templateId: template.id,
             templateName: template.name,
             languageCode: template.language || 'en_US',
-            text: bodyText || config.text || '',
+            text: details.bodyText || config.text || '',
+            header: details.headerText,
+            headerText: details.headerText,
+            headerType: details.headerType,
+            headerMediaUrl: details.headerMediaUrl,
+            footer: details.footerText,
+            footerText: details.footerText,
+            buttons: details.buttons,
+            templateCategory: details.category,
+            templateData: template,
             configured: true
         };
 
@@ -1084,30 +1153,68 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                 </SelectContent>
                             </Select>
 
-                            {selectedTemplateObj && (
-                                <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <span className="font-bold text-white text-xs truncate max-w-[170px]">{selectedTemplateObj.name}</span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                                            selectedTemplateObj.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                        }`}>
-                                            {selectedTemplateObj.status || 'APPROVED'}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                        {selectedTemplateObj.category && <span>Cat: {selectedTemplateObj.category}</span>}
-                                        <span>•</span>
-                                        <span>Lang: {selectedTemplateObj.language || 'en_US'}</span>
-                                    </div>
-
-                                    {getTemplateBodyText(selectedTemplateObj) && (
-                                        <div className="text-[11px] text-muted-foreground line-clamp-3 italic bg-white/5 p-2 rounded-lg border border-white/5 leading-relaxed">
-                                            &quot;{getTemplateBodyText(selectedTemplateObj)}&quot;
+                            {selectedTemplateObj && (() => {
+                                const details = extractTemplateDetails(selectedTemplateObj);
+                                return (
+                                    <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs space-y-2.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-bold text-white text-xs truncate max-w-[170px]">{selectedTemplateObj.name}</span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                                                selectedTemplateObj.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                            }`}>
+                                                {selectedTemplateObj.status || 'APPROVED'}
+                                            </span>
                                         </div>
-                                    )}
-                                </div>
-                            )}
+
+                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                            {selectedTemplateObj.category && <span>Cat: {selectedTemplateObj.category}</span>}
+                                            <span>•</span>
+                                            <span>Lang: {selectedTemplateObj.language || 'en_US'}</span>
+                                            {details.buttons.length > 0 && (
+                                                <>
+                                                    <span>•</span>
+                                                    <span className="text-emerald-400 font-semibold">{details.buttons.length} Buttons</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {details.headerText && (
+                                            <div className="text-[11px] font-bold text-white/90 bg-white/5 px-2 py-1 rounded border border-white/5">
+                                                Header: {details.headerText}
+                                            </div>
+                                        )}
+
+                                        {details.bodyText && (
+                                            <div className="text-[11px] text-muted-foreground line-clamp-3 italic bg-white/5 p-2 rounded-lg border border-white/5 leading-relaxed">
+                                                &quot;{details.bodyText}&quot;
+                                            </div>
+                                        )}
+
+                                        {details.footerText && (
+                                            <div className="text-[10px] text-white/50 italic px-1">
+                                                Footer: {details.footerText}
+                                            </div>
+                                        )}
+
+                                        {details.buttons.length > 0 && (
+                                            <div className="space-y-1.5 pt-1 border-t border-white/5">
+                                                <div className="text-[9px] uppercase font-bold text-white/60">Template Buttons (Interactive in Simulator)</div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {details.buttons.map((btn, bIdx) => (
+                                                        <span key={bIdx} className="px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                            {btn.type === 'URL' && <ExternalLink size={10} />}
+                                                            {btn.type === 'PHONE_NUMBER' && <Phone size={10} />}
+                                                            {btn.type === 'FLOW' && <Workflow size={10} />}
+                                                            {(!btn.type || btn.type === 'QUICK_REPLY') && <CornerDownLeft size={10} />}
+                                                            {btn.text}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     )}
 
