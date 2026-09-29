@@ -894,14 +894,14 @@ export const WhatsAppSimulator = ({
 
                     {/* Chat Stream View */}
                     <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 overflow-hidden bg-[#0b141a]">
-                        <ScrollArea className="flex-1 p-4 bg-dot-white/[0.04]">
+                        <ScrollArea className="flex-1 p-4 bg-dot-white/[0.04] overflow-x-hidden [&_[data-orientation=horizontal]]:!hidden [&_[data-radix-scroll-area-viewport]]:!overflow-x-hidden">
                             <div className="space-y-3">
                                 {messages.map((msg) => {
                                     if (msg.type === 'system') {
                                         return (
                                             <div key={msg.id} className="space-y-3 my-2">
                                                 <div className="flex justify-center">
-                                                    <div className="bg-[#182229] border border-white/5 text-[10px] text-white/60 px-3 py-1 rounded-lg shadow-sm text-center max-w-[280px]">
+                                                    <div className="bg-[#182229] border border-white/5 text-[10px] text-white/60 px-3 py-1 rounded-lg shadow-sm text-center max-w-[280px] break-words">
                                                         {msg.text}
                                                     </div>
                                                 </div>
@@ -924,12 +924,12 @@ export const WhatsAppSimulator = ({
 
                                     if (msg.type === 'handoff') {
                                         return (
-                                            <div key={msg.id} className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1 my-2">
+                                            <div key={msg.id} className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs space-y-1 my-2 overflow-hidden break-words">
                                                 <div className="flex items-center gap-1.5 font-bold">
-                                                    <UserCheck size={14} className="text-amber-400" />
-                                                    DeskFlow Agent Handoff: {msg.department}
+                                                    <UserCheck size={14} className="text-amber-400 shrink-0" />
+                                                    <span className="truncate">DeskFlow Agent Handoff: {msg.department}</span>
                                                 </div>
-                                                <p className="text-[11px] text-white/90">{msg.text}</p>
+                                                <p className="text-[11px] text-white/90 break-words">{msg.text}</p>
                                             </div>
                                         );
                                     }
@@ -937,8 +937,8 @@ export const WhatsAppSimulator = ({
                                     if (msg.type === 'tag_event') {
                                         return (
                                             <div key={msg.id} className="flex justify-center my-1.5">
-                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                                                    <Tag size={10} /> {msg.action === 'remove' ? 'Removed' : 'Added'} Tag: #{msg.tag}
+                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 max-w-[280px] truncate">
+                                                    <Tag size={10} className="shrink-0" /> {msg.action === 'remove' ? 'Removed' : 'Added'} Tag: #{msg.tag}
                                                 </span>
                                             </div>
                                         );
@@ -952,7 +952,7 @@ export const WhatsAppSimulator = ({
                                             className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div
-                                                className={`max-w-[85%] rounded-2xl p-3 shadow-md relative text-xs leading-relaxed ${
+                                                className={`max-w-[85%] rounded-2xl p-3 shadow-md relative text-xs leading-relaxed overflow-hidden break-words ${
                                                     isUser
                                                         ? 'bg-[#005c4b] text-white rounded-tr-none'
                                                         : 'bg-[#202c33] text-white rounded-tl-none border border-white/5'
@@ -966,7 +966,7 @@ export const WhatsAppSimulator = ({
                                                             alt="Chat Media"
                                                             className="rounded-xl w-full h-36 object-cover bg-black/40"
                                                         />
-                                                        {msg.caption && <p>{msg.caption}</p>}
+                                                        {msg.caption && <p className="break-words">{msg.caption}</p>}
                                                     </div>
                                                 )}
 
@@ -974,8 +974,8 @@ export const WhatsAppSimulator = ({
                                                     <div className="space-y-2">
                                                         {/* Template Header Badge */}
                                                         <div className="flex items-center gap-1.5 pb-1 text-[9px] font-black uppercase text-emerald-400 tracking-wider border-b border-white/5">
-                                                            <FileText size={11} className="text-emerald-400" />
-                                                            <span>Official Template • {msg.templateName}</span>
+                                                            <FileText size={11} className="text-emerald-400 shrink-0" />
+                                                            <span className="truncate">Official Template • {msg.templateName}</span>
                                                         </div>
 
                                                         {/* Media Header Banner */}
@@ -1000,19 +1000,19 @@ export const WhatsAppSimulator = ({
 
                                                         {/* Text Header */}
                                                         {msg.headerText && (
-                                                            <div className="text-[13px] font-bold text-white leading-snug">
+                                                            <div className="text-[13px] font-bold text-white leading-snug break-words">
                                                                 {msg.headerText}
                                                             </div>
                                                         )}
 
                                                         {/* Body Text */}
-                                                        <div className="text-xs leading-relaxed text-white/90 whitespace-pre-wrap">
+                                                        <div className="text-xs leading-relaxed text-white/90 whitespace-pre-wrap break-words">
                                                             {msg.text}
                                                         </div>
 
                                                         {/* Footer Text */}
                                                         {msg.footer && (
-                                                            <div className="text-[10px] text-white/50 italic leading-tight">
+                                                            <div className="text-[10px] text-white/50 italic leading-tight break-words">
                                                                 {msg.footer}
                                                             </div>
                                                         )}
@@ -1042,10 +1042,10 @@ export const WhatsAppSimulator = ({
                                                                             }}
                                                                             className="w-full py-2.5 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 active:bg-emerald-500/25 active:scale-[0.99] transition-all cursor-pointer group select-none text-center"
                                                                         >
-                                                                            {isUrl && <ExternalLink size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
-                                                                            {isCall && <Phone size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
-                                                                            {isFlow && <Workflow size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
-                                                                            {!isUrl && !isCall && !isFlow && <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />}
+                                                                            {isUrl && <ExternalLink size={13} className="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />}
+                                                                            {isCall && <Phone size={13} className="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />}
+                                                                            {isFlow && <Workflow size={13} className="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />}
+                                                                            {!isUrl && !isCall && !isFlow && <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />}
                                                                             <span className="truncate">{bText}</span>
                                                                         </button>
                                                                     );
@@ -1058,15 +1058,15 @@ export const WhatsAppSimulator = ({
                                                 {msg.type === 'ai' && (
                                                     <div className="space-y-1">
                                                         <div className="flex items-center gap-1 text-[9px] font-black uppercase text-purple-400 tracking-wider">
-                                                            <Sparkles size={11} /> AI Gemini RAG • {msg.category}
+                                                            <Sparkles size={11} className="shrink-0" /> <span className="truncate">AI Gemini RAG • {msg.category}</span>
                                                         </div>
-                                                        <p>{msg.text}</p>
+                                                        <p className="break-words">{msg.text}</p>
                                                     </div>
                                                 )}
 
                                                 {msg.type === 'text' && (
                                                     <div className="space-y-1.5">
-                                                        <p>{msg.text}</p>
+                                                        <p className="break-words">{msg.text}</p>
                                                         {Array.isArray(msg.buttons) && msg.buttons.length > 0 && (
                                                             <div className="mt-2 -mx-3 -mb-3 border-t border-white/10 flex flex-col divide-y divide-white/10 rounded-b-2xl overflow-hidden bg-white/[0.02]">
                                                                 {msg.buttons.map((btn, bIdx) => {
@@ -1082,7 +1082,7 @@ export const WhatsAppSimulator = ({
                                                                             }}
                                                                             className="w-full py-2.5 px-3 flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/10 active:bg-emerald-500/25 active:scale-[0.99] transition-all cursor-pointer group select-none text-center"
                                                                         >
-                                                                            <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform" />
+                                                                            <CornerDownLeft size={13} className="text-emerald-400 group-hover:scale-110 transition-transform shrink-0" />
                                                                             <span className="truncate">{bText}</span>
                                                                         </button>
                                                                     );
@@ -1116,20 +1116,6 @@ export const WhatsAppSimulator = ({
                             </div>
                         </ScrollArea>
 
-                        {/* Quick Interactive Test Chips */}
-                        <div className="p-2 border-t border-white/5 bg-[#1f2c34]/50 flex gap-1.5 overflow-x-auto scrollbar-hide">
-                            {dynamicPrompts.map((prompt) => (
-                                <button
-                                    key={prompt}
-                                    type="button"
-                                    onClick={() => handleSendMessage(prompt)}
-                                    className="px-2.5 py-1 rounded-full text-[10px] font-medium bg-white/5 text-white/80 hover:bg-emerald-600 hover:text-white transition-all whitespace-nowrap border border-white/5"
-                                >
-                                    &quot;{prompt}&quot;
-                                </button>
-                            ))}
-                        </div>
-
                         {/* WhatsApp Input Bar */}
                         <div className="p-2.5 bg-[#1f2c34] flex items-center gap-2 border-t border-white/5">
                             <div className="flex-1 bg-[#2a3942] rounded-2xl px-3 py-1.5 flex items-center gap-2">
@@ -1157,7 +1143,7 @@ export const WhatsAppSimulator = ({
                     </TabsContent>
 
                     {/* Session Memory / Variables View */}
-                    <TabsContent value="memory" className="flex-1 p-4 bg-[#0b141a] overflow-y-auto m-0 space-y-4">
+                    <TabsContent value="memory" className="flex-1 p-4 bg-[#0b141a] overflow-y-auto overflow-x-hidden m-0 space-y-4 [scrollbar-width:thin]">
                         <div>
                             <h4 className="text-xs font-bold text-white mb-1">Session Variables Memory</h4>
                             <p className="text-[10px] text-muted-foreground">Live state accessible via {`{{variable_name}}`}</p>
@@ -1190,7 +1176,7 @@ export const WhatsAppSimulator = ({
                     </TabsContent>
 
                     {/* Execution Logs View */}
-                    <TabsContent value="logs" className="flex-1 p-4 bg-[#0b141a] overflow-y-auto m-0 space-y-3">
+                    <TabsContent value="logs" className="flex-1 p-4 bg-[#0b141a] overflow-y-auto overflow-x-hidden m-0 space-y-3 [scrollbar-width:thin]">
                         <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold text-white">Execution Node Trace</h4>
                             <Button
@@ -1212,8 +1198,8 @@ export const WhatsAppSimulator = ({
                                 {executionLogs.map((log) => (
                                     <div key={log.id} className="p-2 rounded-lg bg-white/5 border border-white/10 text-xs space-y-1">
                                         <div className="flex items-center justify-between text-[10px]">
-                                            <span className="font-bold text-emerald-400">{log.nodeName}</span>
-                                            <span className="text-white/40">{log.time}</span>
+                                            <span className="font-bold text-emerald-400 truncate">{log.nodeName}</span>
+                                            <span className="text-white/40 shrink-0">{log.time}</span>
                                         </div>
                                         <div className="text-[11px] text-white/80 font-mono break-all">{log.details}</div>
                                     </div>
