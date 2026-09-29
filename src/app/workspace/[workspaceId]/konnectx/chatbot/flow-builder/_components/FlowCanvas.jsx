@@ -245,6 +245,12 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                             strokeColor = '#f59e0b';
                         }
                     }
+                } else if (sourceNode.type === 'messageNode' || sourceNode.type === 'message') {
+                    const targetNode = nodes.find(n => n.id === params.target);
+                    if (targetNode && (targetNode.type === 'messageNode' || targetNode.type === 'message')) {
+                        edgeLabel = 'On Reply';
+                        strokeColor = '#38bdf8';
+                    }
                 }
             }
 

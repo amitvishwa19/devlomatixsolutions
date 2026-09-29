@@ -54,7 +54,16 @@ async function executeFlowSimulation({
         const waitNode = waitingForInputNode;
         setWaitingForInputNode(null);
 
-        if (waitNode.type === 'triggerNode' || waitNode.type === 'trigger' || waitNode.type === 'start') {
+        if (waitNode.type === 'messageNode' || waitNode.type === 'message') {
+            const varName = waitNode.data?.variable || 'last_response';
+            currentVars = { ...currentVars, [varName]: userMessage, last_response: userMessage, message: userMessage };
+            setSessionVariables(currentVars);
+            addLog(waitNode.data?.label || 'Message', 'user_reply_received', `Customer replied: "${userMessage}" => Triggering connected next step`);
+            const nextEdge = edges.find(e => e.source === waitNode.id);
+            if (nextEdge) {
+                resumeTargetNodeId = nextEdge.target;
+            }
+        } else if (waitNode.type === 'triggerNode' || waitNode.type === 'trigger' || waitNode.type === 'start') {
             currentVars = { ...currentVars, last_response: userMessage, message: userMessage };
             setSessionVariables(currentVars);
             resumeTargetNodeId = waitNode.id;
@@ -202,6 +211,15 @@ async function executeFlowSimulation({
                 };
                 setMessages(prev => [...prev, txtMsg]);
                 addLog(label, 'message_sent', text);
+            }
+
+            // If connected directly to another messageNode, pause and await user reply before triggering it!
+            const outEdge = edges.find(e => e.source === currentStep.id);
+            const nextNode = outEdge ? nodes.find(n => n.id === outEdge.target) : null;
+            if (nextNode && (nextNode.type === 'messageNode' || nextNode.type === 'message')) {
+                setWaitingForInputNode(currentStep);
+                addLog(label, 'waiting_reply', `Sent message. Awaiting customer reply before triggering connected: ${nextNode.data?.label || nextNode.id}`);
+                break;
             }
         } else if (nodeType === 'actionNode') {
             if (subType === 'aiAgent' || subType === 'aiAssistant') {

@@ -74,6 +74,11 @@ export class WhatsAppBotEngine {
      */
     async processIncomingMessage(userId, workspaceId, from, messageText) {
         try {
+            const normalizedMessage = String(messageText || '').trim();
+            const sessionKey = `${userId}_${from}`;
+            this.userSessions = this.userSessions || new Map();
+            const pendingSession = this.userSessions.get(sessionKey);
+
             const flows = await db.botFlow.findMany({
                 where: { userId, active: true },
                 orderBy: { updatedAt: 'desc' }
@@ -81,7 +86,28 @@ export class WhatsAppBotEngine {
 
             if (!flows.length) return;
 
-            const normalizedMessage = String(messageText || '').trim();
+            // 1. If customer was waiting for response after a previous template/message, resume connected next node
+            if (pendingSession && (Date.now() - pendingSession.timestamp) < 24 * 60 * 60 * 1000) {
+                this.userSessions.delete(sessionKey);
+                const matchingFlow = flows.find(f => Array.isArray(f.nodes) && f.nodes.some(n => n.id === pendingSession.nextNodeId));
+                if (matchingFlow) {
+                    console.log(`[BotEngine] Resuming pending message connection for ${from} -> Node: ${pendingSession.nextNodeId}`);
+                    const nodes = Array.isArray(matchingFlow.nodes) ? matchingFlow.nodes : [];
+                    const edges = Array.isArray(matchingFlow.edges) ? matchingFlow.edges : [];
+                    await this.executeNode(pendingSession.nextNodeId, {
+                        userId,
+                        workspaceId,
+                        from,
+                        messageText: normalizedMessage,
+                        variables: { ...(pendingSession.variables || {}), last_response: normalizedMessage, message: normalizedMessage },
+                        nodes,
+                        edges,
+                        visited: new Set()
+                    });
+                    return;
+                }
+            }
+
             const flow = this.pickMatchingFlow(flows, normalizedMessage);
             if (!flow) return;
 
@@ -227,7 +253,26 @@ export class WhatsAppBotEngine {
 
             if (!nextNodeId) {
                 const outgoingEdge = edges.find(e => e.source === nodeId);
-                if (outgoingEdge) nextNodeId = outgoingEdge.target;
+                if (outgoingEdge) {
+                    const nextNode = nodes.find(n => n.id === outgoingEdge.target);
+                    const isCurrentMessage = nodeKind === 'message' || nodeKind === 'messageNode';
+                    const isNextMessage = nextNode && (nextNode.type === 'message' || nextNode.type === 'messageNode');
+
+                    // If two message/template nodes are directly connected, pause and wait for customer response before triggering the next one
+                    if (isCurrentMessage && isNextMessage) {
+                        const sessionKey = `${userId}_${context.from}`;
+                        this.userSessions = this.userSessions || new Map();
+                        this.userSessions.set(sessionKey, {
+                            nextNodeId: nextNode.id,
+                            variables: context.variables || {},
+                            timestamp: Date.now()
+                        });
+                        console.log(`[BotEngine] Message sent. Saved pending response session for ${context.from} -> Next Node: ${nextNode.id}`);
+                        return; // Stop synchronous execution and wait for user's reply
+                    }
+
+                    nextNodeId = outgoingEdge.target;
+                }
             }
 
             if (nextNodeId) {
