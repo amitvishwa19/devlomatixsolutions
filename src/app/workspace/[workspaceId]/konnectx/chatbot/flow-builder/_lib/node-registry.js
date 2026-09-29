@@ -157,42 +157,28 @@ export const WA_NODE_REGISTRY = {
         ]
     },
     conditionNode: {
-        displayName: 'Condition (True / False)',
+        displayName: 'Condition / Multi-Branch',
         name: 'condition',
         icon: GitBranch,
         group: 'Logic & flow',
         type: 'logicNode',
-        description: 'Branch the flow with True / False outputs based on a condition',
+        description: 'Branch the flow into multiple paths (If A -> Result 1, If B -> Result 2, Else -> Fallback)',
         properties: [
             {
-                displayName: 'Variable to Check',
-                name: 'variable',
-                type: 'string',
-                default: 'last_response',
-                placeholder: 'e.g. last_response, from, order_total',
-                description: 'The variable or message text to evaluate (default: last_response)'
-            },
-            {
-                displayName: 'Operation',
-                name: 'operation',
-                type: 'options',
-                options: [
-                    { name: 'Contains Text (contains)', value: 'contains' },
-                    { name: 'Equals Exactly (==)', value: 'eq' },
-                    { name: 'Starts With (starts_with)', value: 'starts_with' },
-                    { name: 'Ends With (ends_with)', value: 'ends_with' },
-                    { name: 'Exists / Not Empty (exists)', value: 'exists' }
+                displayName: 'Conditions',
+                name: 'conditions',
+                type: 'array',
+                default: [
+                    { id: 'cond_1', label: 'Result 1 (Option A)', variable: 'last_response', operation: 'contains', value: '1' },
+                    { id: 'cond_2', label: 'Result 2 (Option B)', variable: 'last_response', operation: 'contains', value: '2' }
                 ],
-                default: 'contains',
-                description: 'Comparison operator'
+                description: 'List of condition branches to evaluate in order'
             },
             {
-                displayName: 'Value to Match',
-                name: 'value',
+                displayName: 'Else / Fallback Label',
+                name: 'elseLabel',
                 type: 'string',
-                default: '',
-                placeholder: 'e.g. yes, order, support, 100',
-                description: 'The target value to match against'
+                default: 'Else / Fallback'
             }
         ]
     },

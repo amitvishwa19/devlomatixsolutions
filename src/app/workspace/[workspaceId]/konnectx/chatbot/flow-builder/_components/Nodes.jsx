@@ -23,7 +23,18 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
-const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, id }) => {
+const BRANCH_PALETTE = [
+    { bg: 'bg-emerald-500', hex: '#10b981', text: 'text-emerald-400' },
+    { bg: 'bg-blue-500', hex: '#3b82f6', text: 'text-blue-400' },
+    { bg: 'bg-amber-500', hex: '#f59e0b', text: 'text-amber-400' },
+    { bg: 'bg-purple-500', hex: '#a855f7', text: 'text-purple-400' },
+    { bg: 'bg-cyan-500', hex: '#06b6d4', text: 'text-cyan-400' },
+    { bg: 'bg-pink-500', hex: '#ec4899', text: 'text-pink-400' },
+    { bg: 'bg-lime-500', hex: '#84cc16', text: 'text-lime-400' },
+    { bg: 'bg-orange-500', hex: '#f97316', text: 'text-orange-400' },
+];
+
+const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, id, isMultiBranch }) => {
     const handleContextMenu = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -34,9 +45,9 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, 
 
     return (
         <div
-            style={{ width: '200px', maxWidth: '200px', minWidth: '200px' }}
+            style={{ width: isMultiBranch ? '240px' : '200px', maxWidth: isMultiBranch ? '260px' : '200px', minWidth: isMultiBranch ? '220px' : '200px' }}
             className={cn(
-                "relative rounded-sm border transition-all duration-300 w-[200px] max-w-[200px] overflow-hidden border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
+                "relative rounded-sm border transition-all duration-300 overflow-hidden border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
                 isHighlighted 
                     ? "border-emerald-400 ring-2 ring-emerald-500/40 -translate-y-1 shadow-emerald-500/20" 
                     : selected 
@@ -120,12 +131,29 @@ export const LogicNode = memo(({ id, data, selected }) => {
     const isSetVariable = data.subType === 'setVariable';
     const isCondition = !isDelay && !isWaitForInput && !isSetVariable;
 
+    const hasConditionsArray = Array.isArray(data.conditions) && data.conditions.length > 0;
+    const conditions = hasConditionsArray
+        ? data.conditions
+        : isCondition
+        ? [
+            {
+                id: 'true',
+                label: 'Condition 1',
+                variable: data.variable || 'last_response',
+                operation: data.operation || 'contains',
+                value: data.value || ''
+            }
+        ]
+        : [];
+
     const isConfigured = isDelay
         ? !!data.seconds
         : isWaitForInput
         ? !!(data.variable)
         : isSetVariable
         ? !!(data.variable && data.value)
+        : hasConditionsArray
+        ? data.conditions.every(c => c.variable && (c.value !== undefined || c.operation === 'exists'))
         : !!(data.variable && (data.value !== undefined || data.operation === 'exists'));
 
     return (
@@ -138,62 +166,90 @@ export const LogicNode = memo(({ id, data, selected }) => {
                 configured={isConfigured}
                 data={data}
                 id={id}
+                isMultiBranch={isCondition && conditions.length > 1}
             >
                 <div className="text-sm font-semibold text-white truncate">
                     {data.label || (isDelay ? 'Delay' : isWaitForInput ? 'Wait for Input' : isSetVariable ? 'Set Variable' : 'Condition Branch')}
                 </div>
 
-                <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground leading-snug break-all overflow-hidden">
+                <div className="space-y-1.5">
                     {isDelay ? (
-                        <span>Wait for <strong className="text-white">{data.seconds || 5}s</strong></span>
+                        <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground leading-snug break-all overflow-hidden">
+                            <span>Wait for <strong className="text-white">{data.seconds || 5}s</strong></span>
+                        </div>
                     ) : isWaitForInput ? (
-                        <div className="flex flex-col gap-0.5">
+                        <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground leading-snug break-all overflow-hidden flex flex-col gap-0.5">
                             <span className="text-[9px] uppercase font-bold text-blue-400">Save to:</span>
                             <span className="font-mono font-bold text-primary truncate">{`{{${data.variable || 'last_response'}}}`}</span>
                             <span className="text-[9px] text-muted-foreground capitalize">Format: {data.validation || 'any'}</span>
                         </div>
                     ) : isSetVariable ? (
-                        <div className="flex flex-col gap-0.5">
+                        <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground leading-snug break-all overflow-hidden flex flex-col gap-0.5">
                             <span className="font-mono text-primary font-bold">{data.variable || 'custom_var'}</span>
                             <span className="text-white text-[9px] truncate">= &quot;{data.value || 'true'}&quot;</span>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-0.5">
-                            <span className="font-mono text-primary text-[9px] font-bold">IF {data.variable || 'last_response'}</span>
-                            <span className="text-white font-semibold">{data.operation || 'contains'} &quot;{data.value || ''}&quot;</span>
+                        <div className="space-y-1.5">
+                            {conditions.map((cond, idx) => {
+                                const palette = BRANCH_PALETTE[idx % BRANCH_PALETTE.length];
+                                const condId = cond.id || `cond_${idx}`;
+                                return (
+                                    <div
+                                        key={condId}
+                                        className="relative flex items-center justify-between p-1.5 rounded bg-white/5 border border-white/5 text-[10px] min-w-0"
+                                    >
+                                        <div className="flex items-center gap-1.5 min-w-0 pr-3">
+                                            <span className={cn("w-2 h-2 rounded-full shrink-0", palette.bg)} />
+                                            <span className="font-semibold text-white truncate max-w-[95px]">
+                                                {cond.label || `Case ${idx + 1}`}
+                                            </span>
+                                        </div>
+                                        <span className="text-[9px] text-muted-foreground font-mono truncate max-w-[75px]">
+                                            {cond.operation === 'exists' ? 'exists' : cond.value ? `"${cond.value}"` : cond.operation}
+                                        </span>
+                                        <Handle
+                                            type="source"
+                                            position={Position.Right}
+                                            id={condId}
+                                            style={{
+                                                right: -7,
+                                                top: '50%',
+                                                transform: 'translateY(-50%)',
+                                                backgroundColor: palette.hex
+                                            }}
+                                            className="w-3 h-3 border-2 border-[#1e1e2e] hover:scale-125 transition-transform"
+                                            title={`Branch ${idx + 1}: ${cond.label || `Condition ${idx + 1}`}`}
+                                        />
+                                    </div>
+                                );
+                            })}
+                            <div className="relative flex items-center justify-between p-1.5 rounded bg-rose-500/10 border border-rose-500/20 text-[10px] min-w-0">
+                                <div className="flex items-center gap-1.5 min-w-0 pr-3">
+                                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                                    <span className="font-semibold text-rose-300 truncate max-w-[95px]">
+                                        {data.elseLabel || 'Else / Fallback'}
+                                    </span>
+                                </div>
+                                <span className="text-[9px] text-rose-400 font-mono">Fallback</span>
+                                <Handle
+                                    type="source"
+                                    position={Position.Right}
+                                    id={!hasConditionsArray ? "false" : "else"}
+                                    style={{
+                                        right: -7,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        backgroundColor: '#f43f5e'
+                                    }}
+                                    className="w-3 h-3 border-2 border-[#1e1e2e] hover:scale-125 transition-transform"
+                                    title="Else / Fallback Branch"
+                                />
+                            </div>
                         </div>
                     )}
                 </div>
-
-                {isCondition && (
-                    <div className="flex items-center justify-between pt-1 text-[9px] font-bold text-muted-foreground">
-                        <span className="text-emerald-400 flex items-center gap-1">● TRUE (Top)</span>
-                        <span className="text-rose-400 flex items-center gap-1">● FALSE (Btm)</span>
-                    </div>
-                )}
             </NodeWrapper>
-
-            {/* Condition multi-handles: True (top) vs False (bottom) */}
-            {isCondition ? (
-                <>
-                    <Handle
-                        type="source"
-                        position={Position.Right}
-                        id="true"
-                        style={{ top: '35%' }}
-                        className="w-3 h-3 border-2 border-[#1e1e2e] !bg-emerald-500 hover:scale-125 transition-transform"
-                        title="Matched (True Branch)"
-                    />
-                    <Handle
-                        type="source"
-                        position={Position.Right}
-                        id="false"
-                        style={{ top: '65%' }}
-                        className="w-3 h-3 border-2 border-[#1e1e2e] !bg-rose-500 hover:scale-125 transition-transform"
-                        title="Unmatched (False Branch)"
-                    />
-                </>
-            ) : (
+            {!isCondition && (
                 <Handle
                     type="source"
                     position={Position.Right}

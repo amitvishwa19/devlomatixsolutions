@@ -185,14 +185,53 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
         executeGetDetails({ workspaceId: wsId, id: flowId });
     }, [flowId, wsId]);
 
+    const BRANCH_COLORS = [
+        '#10b981', '#3b82f6', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16', '#f97316'
+    ];
+
     const onConnect = useCallback(
-        (params) => setEdges((eds) => addEdge({
-            ...params,
-            type: 'step',
-            animated: true,
-            style: { stroke: '#10b981', strokeWidth: 2 }
-        }, eds)),
-        [setEdges],
+        (params) => {
+            const sourceNode = nodes.find(n => n.id === params.source);
+            let edgeLabel = undefined;
+            let strokeColor = '#10b981';
+
+            if (sourceNode) {
+                const subType = sourceNode.data?.subType || sourceNode.data?.type || sourceNode.type;
+                const isCondition = subType === 'condition' || subType === 'conditionNode' || sourceNode.type === 'condition';
+
+                if (isCondition) {
+                    const conditions = sourceNode.data?.conditions;
+                    if (Array.isArray(conditions) && conditions.length > 0) {
+                        const condIndex = conditions.findIndex((c, i) => (c.id || `cond_${i}`) === params.sourceHandle);
+                        if (condIndex !== -1) {
+                            edgeLabel = conditions[condIndex].label || `Result ${condIndex + 1}`;
+                            strokeColor = BRANCH_COLORS[condIndex % BRANCH_COLORS.length];
+                        } else if (params.sourceHandle === 'else' || params.sourceHandle === 'false' || params.sourceHandle === 'default') {
+                            edgeLabel = sourceNode.data?.elseLabel || 'Else / Fallback';
+                            strokeColor = '#f43f5e';
+                        }
+                    } else {
+                        if (params.sourceHandle === 'true') {
+                            edgeLabel = 'True';
+                            strokeColor = '#10b981';
+                        } else if (params.sourceHandle === 'false') {
+                            edgeLabel = 'False';
+                            strokeColor = '#f43f5e';
+                        }
+                    }
+                }
+            }
+
+            setEdges((eds) => addEdge({
+                ...params,
+                type: 'step',
+                animated: true,
+                label: edgeLabel,
+                data: { label: edgeLabel },
+                style: { stroke: strokeColor, strokeWidth: 2 }
+            }, eds));
+        },
+        [nodes, setEdges],
     );
 
     const onDragOver = useCallback((event) => {
@@ -213,6 +252,20 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                 y: event.clientY,
             });
 
+            const defaultProps = parsedNode.properties?.reduce((acc, p) => ({ 
+                ...acc, 
+                [p.name]: typeof p.default === 'object' && p.default !== null ? JSON.parse(JSON.stringify(p.default)) : p.default 
+            }), {}) || {};
+
+            const isCondition = parsedNode.subType === 'condition' || parsedNode.name === 'condition';
+            if (isCondition && !defaultProps.conditions) {
+                defaultProps.conditions = [
+                    { id: 'cond_1', label: 'Result 1 (Option A)', variable: 'last_response', operation: 'contains', value: '1' },
+                    { id: 'cond_2', label: 'Result 2 (Option B)', variable: 'last_response', operation: 'contains', value: '2' }
+                ];
+                defaultProps.elseLabel = 'Else / Fallback';
+            }
+
             const newNode = {
                 id: getNextId(parsedNode.type),
                 type: parsedNode.type,
@@ -221,7 +274,7 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                     label: parsedNode.label,
                     subType: parsedNode.subType || parsedNode.name,
                     configured: false,
-                    ...parsedNode.properties?.reduce((acc, p) => ({ ...acc, [p.name]: p.default }), {})
+                    ...defaultProps
                 },
             };
 

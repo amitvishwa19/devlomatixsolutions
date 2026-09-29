@@ -13,6 +13,8 @@ export const DeletableEdge = ({
     targetPosition,
     markerEnd,
     style,
+    label,
+    data
 }) => {
     const { setEdges } = useReactFlow();
     const [edgePath, labelX, labelY] = getSmoothStepPath({
@@ -24,6 +26,8 @@ export const DeletableEdge = ({
         targetPosition,
     });
 
+    const displayLabel = label || data?.label;
+
     const onDelete = (e) => {
         e.stopPropagation();
         setEdges((es) => es.filter((edge) => edge.id !== id));
@@ -34,18 +38,27 @@ export const DeletableEdge = ({
         <>
             <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />
             <EdgeLabelRenderer>
-                <button
-                    type="button"
-                    onClick={onDelete}
+                <div
                     style={{
                         position: 'absolute',
                         transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
                     }}
-                    className="nodrag nopan pointer-events-auto absolute flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-background hover:bg-rose-600 text-rose-500 hover:text-white shadow-md transition-all duration-200 cursor-pointer"
-                    title="Delete connection"
+                    className="nodrag nopan pointer-events-auto flex items-center gap-1.5"
                 >
-                    <Trash2 className="h-3 w-3" />
-                </button>
+                    {displayLabel && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#1e1e2e]/95 text-white border border-white/20 shadow-md truncate max-w-[120px]">
+                            {displayLabel}
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        onClick={onDelete}
+                        className="flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-background hover:bg-rose-600 text-rose-500 hover:text-white shadow-md transition-all duration-200 cursor-pointer"
+                        title="Delete connection"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </button>
+                </div>
             </EdgeLabelRenderer>
         </>
     );

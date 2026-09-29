@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -122,15 +122,89 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         { label: 'Order Total', value: 'order_total' },
     ];
 
+    const BRANCH_COLORS = [
+        '#10b981', '#3b82f6', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16', '#f97316'
+    ];
+
     const getOperatorDisplay = (op) => {
         switch (op) {
-            case 'eq': return 'equals exactly';
+            case 'eq': return '== (equals exactly)';
             case 'contains': return 'contains text';
             case 'starts_with': return 'starts with';
             case 'ends_with': return 'ends with';
+            case 'gt': return '> (greater than)';
+            case 'gte': return '>= (greater or equal)';
+            case 'lt': return '< (less than)';
+            case 'lte': return '<= (less or equal)';
             case 'exists': return 'is not empty / exists';
             default: return op || 'contains';
         }
+    };
+
+    const currentConditions = Array.isArray(config.conditions) && config.conditions.length > 0
+        ? config.conditions
+        : [
+            {
+                id: 'cond_1',
+                label: 'Result 1 (Option A)',
+                variable: config.variable || 'last_response',
+                operation: config.operation || 'contains',
+                value: config.value || '1'
+            },
+            {
+                id: 'cond_2',
+                label: 'Result 2 (Option B)',
+                variable: config.variable || 'last_response',
+                operation: 'contains',
+                value: '2'
+            }
+        ];
+
+    const updateConditions = (newConditions, extraFields = {}) => {
+        const newConfig = {
+            ...config,
+            conditions: newConditions,
+            variable: newConditions[0]?.variable || 'last_response',
+            operation: newConditions[0]?.operation || 'contains',
+            value: newConditions[0]?.value || '',
+            ...extraFields,
+            configured: true
+        };
+        setConfig(newConfig);
+        updateNodeData(selectedNode.id, newConfig);
+    };
+
+    const handleAddCondition = () => {
+        const nextIdx = currentConditions.length + 1;
+        const newCond = {
+            id: `cond_${Date.now()}_${nextIdx}`,
+            label: `Result ${nextIdx}`,
+            variable: currentConditions[0]?.variable || 'last_response',
+            operation: 'contains',
+            value: ''
+        };
+        updateConditions([...currentConditions, newCond]);
+    };
+
+    const handleUpdateCondition = (index, key, val) => {
+        const updated = currentConditions.map((c, i) => i === index ? { ...c, [key]: val } : c);
+        updateConditions(updated);
+    };
+
+    const handleRemoveCondition = (index) => {
+        if (currentConditions.length <= 1) return;
+        const updated = currentConditions.filter((_, i) => i !== index);
+        updateConditions(updated);
+    };
+
+    const handleMoveCondition = (index, direction) => {
+        const targetIdx = index + direction;
+        if (targetIdx < 0 || targetIdx >= currentConditions.length) return;
+        const updated = [...currentConditions];
+        const temp = updated[index];
+        updated[index] = updated[targetIdx];
+        updated[targetIdx] = temp;
+        updateConditions(updated);
     };
 
     return (
@@ -166,92 +240,208 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                     {/* Condition Rule Builder for Logic & Flow -> Condition */}
                     {isConditionNode && (
-                        <div className="space-y-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400">
-                                    <GitBranch size={14} />
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg bg-blue-500/15 text-blue-400">
+                                        <GitBranch size={16} />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-xs font-bold text-white">Condition Branches</h4>
+                                        <p className="text-[10px] text-muted-foreground">Branch execution based on multiple rules</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 className="text-xs font-bold text-white">Condition Rule</h4>
-                                    <p className="text-[10px] text-muted-foreground">Branch execution with True / False handles</p>
-                                </div>
-                            </div>
-
-                            {/* Variable to Check */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] text-muted-foreground">Variable to Inspect</Label>
-                                <div className="flex flex-wrap gap-1.5 mb-1.5">
-                                    {conditionPresets.map(preset => (
-                                        <button
-                                            key={preset.value}
-                                            type="button"
-                                            onClick={() => onChange('variable', preset.value)}
-                                            className={`px-2 py-1 rounded-md text-[10px] font-semibold transition-all ${
-                                                (config.variable || 'last_response') === preset.value
-                                                    ? 'bg-blue-500 text-white shadow-sm'
-                                                    : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
-                                            }`}
-                                        >
-                                            {preset.label}
-                                        </button>
-                                    ))}
-                                </div>
-                                <Input
-                                    value={config.variable ?? 'last_response'}
-                                    onChange={(e) => onChange('variable', e.target.value)}
-                                    placeholder="e.g. last_response, from, custom_var"
-                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-xl"
-                                />
-                            </div>
-
-                            {/* Operator */}
-                            <div className="space-y-2">
-                                <Label className="text-[11px] text-muted-foreground">Operator / Condition</Label>
-                                <Select
-                                    value={config.operation || 'contains'}
-                                    onValueChange={(val) => onChange('operation', val)}
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleAddCondition}
+                                    className="h-7 px-2.5 text-[11px] gap-1.5 bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20 hover:text-white"
                                 >
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-background border-white/10 z-[100]">
-                                        <SelectItem value="contains" className="text-xs">Contains Text (contains)</SelectItem>
-                                        <SelectItem value="eq" className="text-xs">Equals Exactly (==)</SelectItem>
-                                        <SelectItem value="starts_with" className="text-xs">Starts With (starts_with)</SelectItem>
-                                        <SelectItem value="ends_with" className="text-xs">Ends With (ends_with)</SelectItem>
-                                        <SelectItem value="exists" className="text-xs">Is Not Empty / Exists (exists)</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                    <Plus size={13} />
+                                    Add Condition
+                                </Button>
                             </div>
 
-                            {/* Value to match */}
-                            {config.operation !== 'exists' && (
-                                <div className="space-y-2">
-                                    <Label className="text-[11px] text-muted-foreground">Value to Match</Label>
-                                    <Input
-                                        value={config.value ?? ''}
-                                        onChange={(e) => onChange('value', e.target.value)}
-                                        placeholder="e.g. yes, order, support, 100"
-                                        className="bg-white/5 border-white/10 text-xs rounded-xl"
-                                    />
-                                </div>
-                            )}
+                            {/* Conditions List */}
+                            <div className="space-y-3">
+                                {currentConditions.map((cond, idx) => {
+                                    const branchColor = BRANCH_COLORS[idx % BRANCH_COLORS.length];
+                                    return (
+                                        <div
+                                            key={cond.id || idx}
+                                            className="p-3 rounded-xl bg-card border border-white/10 space-y-2.5 relative overflow-hidden"
+                                            style={{ borderLeftColor: branchColor, borderLeftWidth: '4px' }}
+                                        >
+                                            {/* Branch Header */}
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <span
+                                                        className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-sm shrink-0"
+                                                        style={{ backgroundColor: branchColor }}
+                                                    >
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span className="text-xs font-bold text-white truncate max-w-[170px]">
+                                                        {cond.label || `Branch #${idx + 1}`}
+                                                    </span>
+                                                </div>
 
-                            {/* Live Rule Preview */}
-                            <div className="p-3 rounded-xl bg-black/40 border border-blue-500/20 text-xs space-y-1">
-                                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">
-                                    Branching Routing Preview
-                                </span>
-                                <div className="text-xs text-white leading-relaxed">
-                                    IF <span className="font-mono text-primary font-bold">{config.variable || 'last_response'}</span>{' '}
-                                    <span className="text-blue-300 font-semibold">{getOperatorDisplay(config.operation)}</span>{' '}
-                                    {config.operation !== 'exists' && (
-                                        <span className="font-bold text-emerald-400">&quot;{config.value || '...'}&quot;</span>
-                                    )}
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    {idx > 0 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-muted-foreground hover:text-white"
+                                                            onClick={() => handleMoveCondition(idx, -1)}
+                                                            title="Move Up"
+                                                        >
+                                                            <ArrowUp size={12} />
+                                                        </Button>
+                                                    )}
+                                                    {idx < currentConditions.length - 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-muted-foreground hover:text-white"
+                                                            onClick={() => handleMoveCondition(idx, 1)}
+                                                            title="Move Down"
+                                                        >
+                                                            <ArrowDown size={12} />
+                                                        </Button>
+                                                    )}
+                                                    {currentConditions.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300"
+                                                            onClick={() => handleRemoveCondition(idx)}
+                                                            title="Remove Branch"
+                                                        >
+                                                            <Trash2 size={12} />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Branch Label */}
+                                            <div className="space-y-1">
+                                                <Label className="text-[10px] text-muted-foreground font-semibold">Branch Name / Label</Label>
+                                                <Input
+                                                    value={cond.label || ''}
+                                                    onChange={(e) => handleUpdateCondition(idx, 'label', e.target.value)}
+                                                    placeholder={`e.g. Result-${idx + 1}, Sales Inquiry`}
+                                                    className="bg-white/5 border-white/10 text-xs rounded-lg h-8"
+                                                />
+                                            </div>
+
+                                            {/* Variable to Inspect */}
+                                            <div className="space-y-1.5">
+                                                <Label className="text-[10px] text-muted-foreground font-semibold">Variable to Inspect</Label>
+                                                <div className="flex flex-wrap gap-1 mb-1">
+                                                    {conditionPresets.map(preset => (
+                                                        <button
+                                                            key={preset.value}
+                                                            type="button"
+                                                            onClick={() => handleUpdateCondition(idx, 'variable', preset.value)}
+                                                            className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-all ${
+                                                                (cond.variable || 'last_response') === preset.value
+                                                                    ? 'bg-blue-500 text-white shadow-sm'
+                                                                    : 'bg-white/5 text-muted-foreground hover:text-white hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            {preset.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <Input
+                                                    value={cond.variable ?? 'last_response'}
+                                                    onChange={(e) => handleUpdateCondition(idx, 'variable', e.target.value)}
+                                                    placeholder="e.g. last_response, from, order_total"
+                                                    className="bg-white/5 border-white/10 text-xs font-mono rounded-lg h-8"
+                                                />
+                                            </div>
+
+                                            {/* Operator & Value Row */}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <div className="space-y-1">
+                                                    <Label className="text-[10px] text-muted-foreground font-semibold">Operator</Label>
+                                                    <Select
+                                                        value={cond.operation || 'contains'}
+                                                        onValueChange={(val) => handleUpdateCondition(idx, 'operation', val)}
+                                                    >
+                                                        <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-lg h-8">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent className="bg-background border-white/10 z-[100]">
+                                                            <SelectItem value="contains" className="text-xs">Contains (contains)</SelectItem>
+                                                            <SelectItem value="eq" className="text-xs">Equals (==)</SelectItem>
+                                                            <SelectItem value="starts_with" className="text-xs">Starts With</SelectItem>
+                                                            <SelectItem value="ends_with" className="text-xs">Ends With</SelectItem>
+                                                            <SelectItem value="gt" className="text-xs">Greater Than (&gt;)</SelectItem>
+                                                            <SelectItem value="gte" className="text-xs">Greater or Equal (&gt;=)</SelectItem>
+                                                            <SelectItem value="lt" className="text-xs">Less Than (&lt;)</SelectItem>
+                                                            <SelectItem value="lte" className="text-xs">Less or Equal (&lt;=)</SelectItem>
+                                                            <SelectItem value="exists" className="text-xs">Is Not Empty (exists)</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+
+                                                {cond.operation !== 'exists' && (
+                                                    <div className="space-y-1">
+                                                        <Label className="text-[10px] text-muted-foreground font-semibold">Value to Match</Label>
+                                                        <Input
+                                                            value={cond.value ?? ''}
+                                                            onChange={(e) => handleUpdateCondition(idx, 'value', e.target.value)}
+                                                            placeholder="e.g. 1, sales, yes"
+                                                            className="bg-white/5 border-white/10 text-xs rounded-lg h-8"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Branch Rule Preview */}
+                                            <div className="p-2 rounded-lg bg-black/40 border border-white/5 text-[10px] flex items-center gap-1.5 text-muted-foreground">
+                                                <CornerDownRight size={12} className="text-primary shrink-0" />
+                                                <span className="truncate">
+                                                    IF <span className="font-mono text-primary font-bold">{cond.variable || 'last_response'}</span>{' '}
+                                                    <span className="text-blue-300 font-semibold">{getOperatorDisplay(cond.operation)}</span>{' '}
+                                                    {cond.operation !== 'exists' && (
+                                                        <span className="font-bold text-emerald-400">&quot;{cond.value || ''}&quot;</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Else / Fallback Branch */}
+                            <div className="p-3.5 rounded-xl bg-rose-500/5 border border-rose-500/20 space-y-2.5" style={{ borderLeftColor: '#f43f5e', borderLeftWidth: '4px' }}>
+                                <div className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white bg-rose-500 shadow-sm shrink-0">
+                                        ★
+                                    </span>
+                                    <div>
+                                        <h5 className="text-xs font-bold text-rose-300">Else / Fallback Branch</h5>
+                                        <p className="text-[10px] text-muted-foreground">Executed if none of the above conditions match</p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-3 pt-1 text-[10px]">
-                                    <span className="text-emerald-400 font-semibold">✓ Top Handle: MATCHED (True)</span>
-                                    <span className="text-rose-400 font-semibold">✗ Bottom Handle: ELSE (False)</span>
+                                <div className="space-y-1">
+                                    <Label className="text-[10px] text-muted-foreground font-semibold">Fallback Handle Label</Label>
+                                    <Input
+                                        value={config.elseLabel ?? 'Else / Fallback'}
+                                        onChange={(e) => {
+                                            const newConfig = { ...config, elseLabel: e.target.value, configured: true };
+                                            setConfig(newConfig);
+                                            updateNodeData(selectedNode.id, newConfig);
+                                        }}
+                                        placeholder="e.g. Else / Fallback"
+                                        className="bg-white/5 border-white/10 text-xs rounded-lg h-8"
+                                    />
                                 </div>
                             </div>
                         </div>

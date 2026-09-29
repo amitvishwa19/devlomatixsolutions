@@ -334,34 +334,90 @@ export class WhatsAppBotEngine {
         const branches = context.edges.filter(e => e.source === node.id);
         if (!branches.length) return null;
 
+        const evaluateRule = (variable, operation, expectedVal) => {
+            let rawActual = context.messageText;
+            if (context.variables && context.variables[variable] !== undefined) {
+                rawActual = context.variables[variable];
+            } else if (variable === 'from') {
+                rawActual = context.from;
+            } else if (variable === 'order_total') {
+                rawActual = context.orderTotal || '';
+            }
+            const actual = String(rawActual || '').toLowerCase().trim();
+            const expected = String(expectedVal || '').toLowerCase().trim();
+
+            if (operation === 'exists') return actual.length > 0;
+            if (operation === 'eq' || operation === '==') return actual === expected;
+            if (operation === 'starts_with') return actual.startsWith(expected);
+            if (operation === 'ends_with') return actual.endsWith(expected);
+            if (operation === 'gt') return !isNaN(Number(actual)) && !isNaN(Number(expected)) ? Number(actual) > Number(expected) : actual > expected;
+            if (operation === 'gte') return !isNaN(Number(actual)) && !isNaN(Number(expected)) ? Number(actual) >= Number(expected) : actual >= expected;
+            if (operation === 'lt') return !isNaN(Number(actual)) && !isNaN(Number(expected)) ? Number(actual) < Number(expected) : actual < expected;
+            if (operation === 'lte') return !isNaN(Number(actual)) && !isNaN(Number(expected)) ? Number(actual) <= Number(expected) : actual <= expected;
+            return actual.includes(expected);
+        };
+
+        const conditions = Array.isArray(node.data?.conditions) && node.data.conditions.length > 0
+            ? node.data.conditions
+            : null;
+
+        if (conditions) {
+            // Evaluate multiple conditions in sequential order (If ... Else If ... Else If ...)
+            for (let i = 0; i < conditions.length; i++) {
+                const cond = conditions[i];
+                const condId = cond.id || `cond_${i}`;
+                const varName = cond.variable || 'last_response';
+                const op = cond.operation || 'contains';
+                const val = cond.value || '';
+
+                const isMatched = evaluateRule(varName, op, val);
+                console.log(`[BotEngine] Multi-Condition #${i + 1} (${cond.label || condId}): IF "${varName}" ${op} "${val}" => ${isMatched}`);
+
+                if (isMatched) {
+                    // 1. Match by sourceHandle ID
+                    const handleMatchedEdge = branches.find(e => 
+                        e.sourceHandle === condId || 
+                        e.sourceHandle === `cond_${i}` || 
+                        (i === 0 && e.sourceHandle === 'true')
+                    );
+                    if (handleMatchedEdge) return handleMatchedEdge.target;
+
+                    // 2. Match by edge label
+                    const labelMatchedEdge = branches.find(e => {
+                        const l = String(e.label || e.data?.label || '').toLowerCase().trim();
+                        return l === String(cond.label || '').toLowerCase().trim() || l === `case ${i + 1}` || l === `branch ${i + 1}`;
+                    });
+                    if (labelMatchedEdge) return labelMatchedEdge.target;
+
+                    // 3. Fallback by branch order
+                    if (branches[i]) return branches[i].target;
+                }
+            }
+
+            // No conditions matched -> Route to ELSE / Fallback handle
+            const elseHandleEdge = branches.find(e => 
+                e.sourceHandle === 'else' || 
+                e.sourceHandle === 'default' || 
+                e.sourceHandle === 'false'
+            );
+            if (elseHandleEdge) return elseHandleEdge.target;
+
+            const elseLabelEdge = branches.find(e => {
+                const l = String(e.label || e.data?.label || '').toLowerCase().trim();
+                return l === 'else' || l === 'fallback' || l === 'default' || l === 'false' || l === 'no';
+            });
+            if (elseLabelEdge) return elseLabelEdge.target;
+
+            return branches[branches.length - 1]?.target || null;
+        }
+
+        // Legacy 2-port condition evaluation
         const variable = node.data?.variable || 'last_response';
         const operation = node.data?.operation || 'contains';
         const expected = String(node.data?.value || '').toLowerCase().trim();
+        const isTrue = evaluateRule(variable, operation, expected);
 
-        let rawActual = context.messageText;
-        if (context.variables && context.variables[variable] !== undefined) {
-            rawActual = context.variables[variable];
-        } else if (variable === 'from') {
-            rawActual = context.from;
-        } else if (variable === 'order_total') {
-            rawActual = context.orderTotal || '';
-        }
-        const actual = String(rawActual || '').toLowerCase().trim();
-
-        let isTrue = false;
-        if (operation === 'exists') {
-            isTrue = actual.length > 0;
-        } else if (operation === 'eq') {
-            isTrue = actual === expected;
-        } else if (operation === 'starts_with') {
-            isTrue = actual.startsWith(expected);
-        } else if (operation === 'ends_with') {
-            isTrue = actual.endsWith(expected);
-        } else {
-            isTrue = actual.includes(expected);
-        }
-
-        console.log(`[BotEngine] Condition Evaluation: IF "${actual}" ${operation} "${expected}" => ${isTrue}`);
+        console.log(`[BotEngine] Condition Evaluation: IF "${variable}" ${operation} "${expected}" => ${isTrue}`);
 
         // 1. Try matching by multi-port handle ID ('true' or 'false')
         const targetHandleId = isTrue ? 'true' : 'false';

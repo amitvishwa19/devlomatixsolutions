@@ -250,38 +250,115 @@ async function executeFlowSimulation({
         let nextNodeId = null;
 
         if (subType === 'conditionNode' || subType === 'condition' || nodeType === 'condition') {
-            const varToCheck = activeStep.data?.variable || 'last_response';
-            const op = activeStep.data?.operation || 'contains';
-            const targetVal = String(activeStep.data?.value || '').toLowerCase().trim();
+            const evaluateRule = (variable, op, targetVal) => {
+                let actualVal = currentVars[variable] !== undefined ? currentVars[variable] : userMessage;
+                actualVal = String(actualVal || '').toLowerCase().trim();
+                const expVal = String(targetVal || '').toLowerCase().trim();
 
-            let actualVal = currentVars[varToCheck] !== undefined ? currentVars[varToCheck] : userMessage;
-            actualVal = String(actualVal || '').toLowerCase().trim();
-
-            let conditionPassed = false;
-            if (op === 'exists') conditionPassed = actualVal.length > 0;
-            else if (op === 'eq') conditionPassed = actualVal === targetVal;
-            else if (op === 'starts_with') conditionPassed = actualVal.startsWith(targetVal);
-            else if (op === 'ends_with') conditionPassed = actualVal.endsWith(targetVal);
-            else conditionPassed = actualVal.includes(targetVal);
-
-            addLog(
-                label,
-                'condition_eval',
-                `IF "${actualVal}" ${op} "${targetVal}" => ${conditionPassed ? 'TRUE (Top Handle)' : 'FALSE (Bottom Handle)'}`
-            );
+                if (op === 'exists') return actualVal.length > 0;
+                if (op === 'eq' || op === '==') return actualVal === expVal;
+                if (op === 'starts_with') return actualVal.startsWith(expVal);
+                if (op === 'ends_with') return actualVal.endsWith(expVal);
+                if (op === 'gt') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) > Number(expVal) : actualVal > expVal;
+                if (op === 'gte') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) >= Number(expVal) : actualVal >= expVal;
+                if (op === 'lt') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) < Number(expVal) : actualVal < expVal;
+                if (op === 'lte') return !isNaN(Number(actualVal)) && !isNaN(Number(expVal)) ? Number(actualVal) <= Number(expVal) : actualVal <= expVal;
+                return actualVal.includes(expVal);
+            };
 
             const branchEdges = edges.filter(e => e.source === activeStep.id);
-            const targetHandle = conditionPassed ? 'true' : 'false';
-            const handleEdge = branchEdges.find(e => e.sourceHandle === targetHandle);
+            const conditions = Array.isArray(activeStep.data?.conditions) && activeStep.data.conditions.length > 0
+                ? activeStep.data.conditions
+                : null;
 
-            if (handleEdge) {
-                nextNodeId = handleEdge.target;
+            if (conditions) {
+                let matchedCondition = null;
+                let matchedIndex = -1;
+
+                for (let i = 0; i < conditions.length; i++) {
+                    const cond = conditions[i];
+                    const vName = cond.variable || 'last_response';
+                    const op = cond.operation || 'contains';
+                    const vVal = cond.value || '';
+
+                    if (evaluateRule(vName, op, vVal)) {
+                        matchedCondition = cond;
+                        matchedIndex = i;
+                        break;
+                    }
+                }
+
+                if (matchedCondition) {
+                    const condId = matchedCondition.id || `cond_${matchedIndex}`;
+                    addLog(
+                        label,
+                        'condition_eval',
+                        `✓ MATCHED Branch #${matchedIndex + 1} (${matchedCondition.label || condId}): IF "${matchedCondition.variable || 'last_response'}" ${matchedCondition.operation || 'contains'} "${matchedCondition.value || ''}"`
+                    );
+
+                    const handleEdge = branchEdges.find(e => 
+                        e.sourceHandle === condId || 
+                        e.sourceHandle === `cond_${matchedIndex}` ||
+                        (matchedIndex === 0 && e.sourceHandle === 'true')
+                    );
+
+                    if (handleEdge) {
+                        nextNodeId = handleEdge.target;
+                    } else {
+                        const fallbackEdge = branchEdges.find(e => {
+                            const l = String(e.label || '').toLowerCase().trim();
+                            return l === String(matchedCondition.label || '').toLowerCase().trim() || l === `case ${matchedIndex + 1}` || l === `branch ${matchedIndex + 1}`;
+                        });
+                        nextNodeId = fallbackEdge?.target || branchEdges[matchedIndex]?.target;
+                    }
+                } else {
+                    addLog(
+                        label,
+                        'condition_eval',
+                        `✗ NO CONDITIONS MATCHED => Routing to Fallback (Else) Branch`
+                    );
+                    const elseEdge = branchEdges.find(e => 
+                        e.sourceHandle === 'else' || 
+                        e.sourceHandle === 'default' || 
+                        e.sourceHandle === 'false'
+                    );
+                    if (elseEdge) {
+                        nextNodeId = elseEdge.target;
+                    } else {
+                        const elseLabelEdge = branchEdges.find(e => {
+                            const l = String(e.label || '').toLowerCase().trim();
+                            return l === 'else' || l === 'fallback' || l === 'default' || l === 'false' || l === 'no';
+                        });
+                        nextNodeId = elseLabelEdge?.target || branchEdges[branchEdges.length - 1]?.target;
+                    }
+                }
             } else {
-                const fallbackEdge = branchEdges.find(e => {
-                    const l = String(e.label || '').toLowerCase();
-                    return conditionPassed ? (l === 'true' || l === 'yes') : (l === 'false' || l === 'no');
-                });
-                nextNodeId = fallbackEdge?.target || (conditionPassed ? branchEdges[0]?.target : branchEdges[1]?.target);
+                // Legacy 2-branch condition
+                const varToCheck = activeStep.data?.variable || 'last_response';
+                const op = activeStep.data?.operation || 'contains';
+                const targetVal = String(activeStep.data?.value || '').toLowerCase().trim();
+                const conditionPassed = evaluateRule(varToCheck, op, targetVal);
+
+                let actualVal = currentVars[varToCheck] !== undefined ? currentVars[varToCheck] : userMessage;
+
+                addLog(
+                    label,
+                    'condition_eval',
+                    `IF "${actualVal}" ${op} "${targetVal}" => ${conditionPassed ? 'TRUE (Top Handle)' : 'FALSE (Bottom Handle)'}`
+                );
+
+                const targetHandle = conditionPassed ? 'true' : 'false';
+                const handleEdge = branchEdges.find(e => e.sourceHandle === targetHandle);
+
+                if (handleEdge) {
+                    nextNodeId = handleEdge.target;
+                } else {
+                    const fallbackEdge = branchEdges.find(e => {
+                        const l = String(e.label || '').toLowerCase();
+                        return conditionPassed ? (l === 'true' || l === 'yes') : (l === 'false' || l === 'no');
+                    });
+                    nextNodeId = fallbackEdge?.target || (conditionPassed ? branchEdges[0]?.target : branchEdges[1]?.target);
+                }
             }
         } else {
             const outEdge = edges.find(e => e.source === activeStep.id);
