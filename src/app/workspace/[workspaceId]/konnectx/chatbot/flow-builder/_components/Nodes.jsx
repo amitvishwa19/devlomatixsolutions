@@ -77,7 +77,9 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, 
 };
 
 export const TriggerNode = memo(({ id, data, selected }) => {
-    const isWelcome = data.type === 'welcome' || data.subType === 'welcome';
+    const subType = data.subType || data.type || 'keyword';
+    const isWelcome = subType === 'welcome';
+    const isAnyResponse = subType === 'any_response' || subType === 'response' || subType === 'responseTrigger';
     const keywordList = Array.isArray(data.keywordList) && data.keywordList.length > 0
         ? data.keywordList
         : String(data.keywords || data.keyword || '')
@@ -85,7 +87,9 @@ export const TriggerNode = memo(({ id, data, selected }) => {
             .map(k => k.trim())
             .filter(Boolean);
 
-    const isMultiKeyword = !isWelcome && keywordList.length > 1;
+    const isMultiKeyword = !isWelcome && !isAnyResponse && keywordList.length > 1;
+    const nodeTitle = isWelcome ? 'Welcome' : isAnyResponse ? 'Response Trigger' : 'Keyword Trigger';
+    const NodeIcon = isWelcome ? Play : isAnyResponse ? MessageSquareText : Zap;
 
     return (
         <>
@@ -96,17 +100,27 @@ export const TriggerNode = memo(({ id, data, selected }) => {
             />
             <NodeWrapper
                 selected={selected}
-                title={isWelcome ? 'Welcome' : 'Keyword Trigger'}
-                icon={isWelcome ? Play : Zap}
+                title={nodeTitle}
+                icon={NodeIcon}
                 configured={true}
                 data={data}
                 id={id}
                 isMultiBranch={isMultiKeyword}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || (isWelcome ? 'Welcome Trigger' : 'Keyword Trigger')}</div>
+                <div className="text-sm font-semibold text-white truncate">{data.label || nodeTitle}</div>
                 {isWelcome ? (
                     <div className="text-[10px] text-muted-foreground italic truncate">
                         Triggered on first contact
+                    </div>
+                ) : isAnyResponse ? (
+                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-[10px] text-amber-300 flex items-center justify-between min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                            <span className="w-2 h-2 rounded-full shrink-0 bg-amber-400 animate-pulse" />
+                            <span className="font-semibold truncate">Any User Reply / Tap</span>
+                        </div>
+                        <span className="text-[9px] text-amber-400/80 font-mono shrink-0 pl-1">
+                            {`{{${data.variable || 'last_response'}}}`}
+                        </span>
                     </div>
                 ) : keywordList.length === 0 ? (
                     <div className="p-2 rounded bg-white/5 border border-dashed border-white/10 text-[10px] text-muted-foreground italic text-center">
@@ -175,7 +189,7 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                     </div>
                 )}
             </NodeWrapper>
-            {(isWelcome || keywordList.length === 0) && (
+            {(isWelcome || isAnyResponse || keywordList.length === 0) && (
                 <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500" />
             )}
         </>

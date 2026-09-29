@@ -61,6 +61,23 @@ export const WA_NODE_REGISTRY = {
             }
         ]
     },
+    responseTrigger: {
+        displayName: 'Response Trigger',
+        name: 'any_response',
+        icon: MessageSquareText,
+        group: 'Triggers',
+        type: 'triggerNode',
+        description: 'Triggers on any incoming user reply or button click irrespective of content',
+        properties: [
+            {
+                displayName: 'Save Response To Variable',
+                name: 'variable',
+                type: 'string',
+                default: 'last_response',
+                description: 'Variable name to save the incoming reply into'
+            }
+        ]
+    },
     orderTrigger: {
         displayName: 'Order Created',
         name: 'orderCreated',
@@ -432,9 +449,11 @@ export const WA_NODE_REGISTRY = {
     }
 };
 
-// Aliases for seamless lookups by node.name or subType
 WA_NODE_REGISTRY.welcome = WA_NODE_REGISTRY.welcomeTrigger;
 WA_NODE_REGISTRY.keyword = WA_NODE_REGISTRY.keywordTrigger;
+WA_NODE_REGISTRY.any_response = WA_NODE_REGISTRY.responseTrigger;
+WA_NODE_REGISTRY.response = WA_NODE_REGISTRY.responseTrigger;
+WA_NODE_REGISTRY.responseTrigger = WA_NODE_REGISTRY.responseTrigger;
 WA_NODE_REGISTRY.orderCreated = WA_NODE_REGISTRY.orderTrigger;
 WA_NODE_REGISTRY.abandonedCart = WA_NODE_REGISTRY.abandonedCartTrigger;
 WA_NODE_REGISTRY.fulfillmentUpdate = WA_NODE_REGISTRY.fulfillmentTrigger;

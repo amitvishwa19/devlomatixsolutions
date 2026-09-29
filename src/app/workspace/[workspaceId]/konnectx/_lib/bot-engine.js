@@ -122,6 +122,7 @@ export class WhatsAppBotEngine {
             const data = node.data || {};
             const triggerType = data.subType || data.type || node.type;
             if (triggerType === 'welcome') return cleanUserMsg.length > 0;
+            if (triggerType === 'any_response' || triggerType === 'response' || triggerType === 'responseTrigger') return cleanUserMsg.length > 0;
 
             const keywords = Array.isArray(data.keywordList) && data.keywordList.length > 0
                 ? data.keywordList.map(k => clean(k)).filter(Boolean)
@@ -349,6 +350,16 @@ export class WhatsAppBotEngine {
 
         const data = node.data || {};
         const isWelcome = data.type === 'welcome' || data.subType === 'welcome';
+        const isAnyResponse = data.type === 'any_response' || data.subType === 'any_response' || data.type === 'response' || data.subType === 'response' || data.subType === 'responseTrigger';
+
+        if (isAnyResponse) {
+            const varToSave = data.variable || 'last_response';
+            context.variables = context.variables || {};
+            context.variables[varToSave] = context.messageText;
+            console.log(`[BotEngine] Response Trigger saved {{${varToSave}}} = "${context.messageText}"`);
+            return branches[0]?.target || null;
+        }
+
         if (isWelcome) return branches[0]?.target || null;
 
         const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();

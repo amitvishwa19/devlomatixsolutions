@@ -117,6 +117,7 @@ async function executeFlowSimulation({
         const matchTrigger = (node) => {
             const subType = node.data?.subType || node.data?.type || node.type;
             if (subType === 'welcome') return true;
+            if (subType === 'any_response' || subType === 'response' || subType === 'responseTrigger') return true;
 
             const keywords = Array.isArray(node.data?.keywordList) && node.data.keywordList.length > 0
                 ? node.data.keywordList.map(k => clean(k)).filter(Boolean)
@@ -382,6 +383,8 @@ async function executeFlowSimulation({
             }
         } else if (nodeType === 'triggerNode' || nodeType === 'trigger' || nodeType === 'start') {
             const isWelcome = stepData.type === 'welcome' || stepData.subType === 'welcome';
+            const isAnyResponse = stepData.type === 'any_response' || stepData.subType === 'any_response' || stepData.type === 'response' || stepData.subType === 'response' || stepData.subType === 'responseTrigger';
+
             const rawKeywords = Array.isArray(stepData.keywordList) && stepData.keywordList.length > 0
                 ? stepData.keywordList.map(k => String(k).trim())
                 : String(stepData.keywords || stepData.keyword || '')
@@ -393,63 +396,80 @@ async function executeFlowSimulation({
             if (visited.size > 1 && !isResumingTrigger && !isWelcome) {
                 setIsTyping(false);
                 setWaitingForInputNode(currentStep);
-                addLog(label, 'waiting_reply', `Paused: Awaiting customer reply or button selection (${rawKeywords.join(', ') || 'configured keywords'})`);
+                addLog(label, 'waiting_reply', isAnyResponse 
+                    ? `Paused: Awaiting ANY customer reply or button selection` 
+                    : `Paused: Awaiting customer reply matching: ${rawKeywords.join(', ') || 'configured keywords'}`);
                 break;
             }
+
+            // Save user reply into configured variable
+            const varToSave = stepData.variable || 'last_response';
+            currentVars = { ...currentVars, [varToSave]: userMessage, last_response: userMessage, message: userMessage };
+            setSessionVariables(currentVars);
 
             // Reset resuming flag after passing through
             isResumingTrigger = false;
 
-            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
-            const cleanUserMsg = clean(userMessage);
-
-            const matchMode = stepData.matchMode || 'contains';
-            const isKeywordMatch = (kw) => {
-                const k = clean(kw);
-                if (!k) return false;
-                if (matchMode === 'exact') return cleanUserMsg === k;
-                if (matchMode === 'starts_with') return cleanUserMsg.startsWith(k);
-                return cleanUserMsg === k || cleanUserMsg.includes(k);
-            };
-
             const branchEdges = edges.filter(e => e.source === currentStep.id);
-            const matchedIdx = rawKeywords.findIndex(k => isKeywordMatch(k));
 
-            if (matchedIdx !== -1) {
-                const matchedKw = rawKeywords[matchedIdx];
-                const handleId = `kw_${matchedIdx}`;
-                const cleanKw = clean(matchedKw);
-
+            if (isAnyResponse || isWelcome) {
                 addLog(
                     label,
-                    'keyword_matched',
-                    `✓ Trigger matched keyword "${matchedKw}" (Path ${matchedIdx + 1})`
+                    'response_triggered',
+                    isAnyResponse ? `✓ Captured user reply ("${userMessage}") into {{${varToSave}}} => Proceeding` : '✓ Triggered initial Welcome flow'
                 );
-
-                // 1. Priority A: Match by Edge Label (Explicit user intent)
-                const labelEdge = branchEdges.find(e => {
-                    const edgeLabel = clean(e.label || e.data?.label || e.data?.name || '');
-                    return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw));
-                });
-
-                if (labelEdge) {
-                    nextNodeId = labelEdge.target;
-                } else {
-                    // 2. Priority B: Match by Source Handle ID
-                    const handleEdge = branchEdges.find(e => 
-                        e.sourceHandle === handleId || 
-                        clean(e.sourceHandle) === cleanKw ||
-                        clean(e.sourceHandle) === clean(`kw_${matchedIdx}`)
-                    );
-                    if (handleEdge) {
-                        nextNodeId = handleEdge.target;
-                    } else {
-                        // 3. Priority C: Positional Index Fallback
-                        nextNodeId = branchEdges[matchedIdx]?.target || branchEdges[0]?.target;
-                    }
-                }
+                nextNodeId = branchEdges[0]?.target || null;
             } else {
-                nextNodeId = branchEdges[0]?.target;
+                const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+                const cleanUserMsg = clean(userMessage);
+
+                const matchMode = stepData.matchMode || 'contains';
+                const isKeywordMatch = (kw) => {
+                    const k = clean(kw);
+                    if (!k) return false;
+                    if (matchMode === 'exact') return cleanUserMsg === k;
+                    if (matchMode === 'starts_with') return cleanUserMsg.startsWith(k);
+                    return cleanUserMsg === k || cleanUserMsg.includes(k);
+                };
+
+                const matchedIdx = rawKeywords.findIndex(k => isKeywordMatch(k));
+
+                if (matchedIdx !== -1) {
+                    const matchedKw = rawKeywords[matchedIdx];
+                    const handleId = `kw_${matchedIdx}`;
+                    const cleanKw = clean(matchedKw);
+
+                    addLog(
+                        label,
+                        'keyword_matched',
+                        `✓ Trigger matched keyword "${matchedKw}" (Path ${matchedIdx + 1})`
+                    );
+
+                    // 1. Priority A: Match by Edge Label (Explicit user intent)
+                    const labelEdge = branchEdges.find(e => {
+                        const edgeLabel = clean(e.label || e.data?.label || e.data?.name || '');
+                        return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw));
+                    });
+
+                    if (labelEdge) {
+                        nextNodeId = labelEdge.target;
+                    } else {
+                        // 2. Priority B: Match by Source Handle ID
+                        const handleEdge = branchEdges.find(e => 
+                            e.sourceHandle === handleId || 
+                            clean(e.sourceHandle) === cleanKw ||
+                            clean(e.sourceHandle) === clean(`kw_${matchedIdx}`)
+                        );
+                        if (handleEdge) {
+                            nextNodeId = handleEdge.target;
+                        } else {
+                            // 3. Priority C: Positional Index Fallback
+                            nextNodeId = branchEdges[matchedIdx]?.target || branchEdges[0]?.target;
+                        }
+                    }
+                } else {
+                    nextNodeId = branchEdges[0]?.target;
+                }
             }
         } else {
             const outEdge = edges.find(e => e.source === currentStep.id);

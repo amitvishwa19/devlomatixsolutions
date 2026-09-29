@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight, Zap } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight, Zap, MessageSquareText, MessageSquare } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -115,12 +115,21 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         selectedNode?.data?.subType === 'condition' || 
         selectedNode?.data?.subType === 'conditionNode';
 
-    const isKeywordTrigger = selectedNode?.data?.subType === 'keyword' || 
+    const isAnyResponseTrigger = selectedNode?.data?.subType === 'any_response' || 
+        selectedNode?.data?.type === 'any_response' || 
+        selectedNode?.data?.subType === 'response' ||
+        selectedNode?.data?.subType === 'responseTrigger' ||
+        nodeDef?.name === 'any_response' ||
+        nodeDef?.name === 'responseTrigger';
+
+    const isKeywordTrigger = !isAnyResponseTrigger && (
+        selectedNode?.data?.subType === 'keyword' || 
         selectedNode?.data?.type === 'keyword' || 
         selectedNode?.data?.subType === 'keywordTrigger' ||
         nodeDef?.name === 'keyword' ||
         nodeDef?.name === 'keywordTrigger' ||
-        (selectedNode?.type === 'triggerNode' && selectedNode?.data?.subType !== 'welcome' && selectedNode?.data?.type !== 'welcome');
+        (selectedNode?.type === 'triggerNode' && selectedNode?.data?.subType !== 'welcome' && selectedNode?.data?.type !== 'welcome' && selectedNode?.data?.subType !== 'any_response')
+    );
 
     const selectedTemplateObj = templates.find(t => t.id === config.templateId || t.name === config.templateName);
 
@@ -308,6 +317,44 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                             />
                         </div>
                     </div>
+
+                    {/* Response Trigger Configuration */}
+                    {isAnyResponseTrigger && (
+                        <div className="space-y-3.5 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/20 w-full overflow-hidden">
+                            <div className="flex items-center gap-2 min-w-0">
+                                <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0">
+                                    <MessageSquareText size={16} />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h4 className="text-xs font-bold text-white truncate">Response Trigger</h4>
+                                    <p className="text-[10px] text-muted-foreground truncate">Triggers on ANY user reply or button click</p>
+                                </div>
+                            </div>
+
+                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200 space-y-1">
+                                <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+                                    <Sparkles size={13} className="text-amber-400" />
+                                    <span>Universal Reply Listener</span>
+                                </div>
+                                <p className="text-[11px] text-white/80 leading-relaxed">
+                                    This node triggers immediately when the user sends <strong>any message</strong> or taps <strong>any button</strong>. Perfect after a Template message with multiple interactive buttons.
+                                </p>
+                            </div>
+
+                            <div className="space-y-1.5 w-full min-w-0">
+                                <Label className="text-[10px] text-muted-foreground font-semibold">Save Response To Variable</Label>
+                                <Input
+                                    value={config.variable || 'last_response'}
+                                    onChange={(e) => onChange('variable', e.target.value)}
+                                    placeholder="last_response"
+                                    className="bg-white/5 border-white/10 text-xs rounded-xl h-9 font-mono"
+                                />
+                                <p className="text-[9px] text-muted-foreground italic">
+                                    Access the user&apos;s reply later in the flow using {`{{${config.variable || 'last_response'}}}`}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Keyword Trigger Configuration */}
                     {isKeywordTrigger && (
