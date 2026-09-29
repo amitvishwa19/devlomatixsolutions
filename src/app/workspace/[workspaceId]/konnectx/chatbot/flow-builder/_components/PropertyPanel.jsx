@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight } from 'lucide-react';
+import { X, Trash2, Info, FileText, Loader2, GitBranch, Sparkles, Plus, ArrowUp, ArrowDown, CornerDownRight, Zap } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -32,6 +32,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     };
 
     const [config, setConfig] = useState(() => sanitize(selectedNode?.data));
+    const [keywordInput, setKeywordInput] = useState('');
     const [templates, setTemplates] = useState([]);
     const [loadingTemplates, setLoadingTemplates] = useState(false);
 
@@ -114,6 +115,13 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         selectedNode?.data?.subType === 'condition' || 
         selectedNode?.data?.subType === 'conditionNode';
 
+    const isKeywordTrigger = selectedNode?.data?.subType === 'keyword' || 
+        selectedNode?.data?.type === 'keyword' || 
+        selectedNode?.data?.subType === 'keywordTrigger' ||
+        nodeDef?.name === 'keyword' ||
+        nodeDef?.name === 'keywordTrigger' ||
+        (selectedNode?.type === 'triggerNode' && selectedNode?.data?.subType !== 'welcome' && selectedNode?.data?.type !== 'welcome');
+
     const selectedTemplateObj = templates.find(t => t.id === config.templateId || t.name === config.templateName);
 
     const conditionPresets = [
@@ -121,6 +129,69 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
         { label: 'Sender Phone', value: 'from' },
         { label: 'Order Total', value: 'order_total' },
     ];
+
+    const rawKeywords = Array.isArray(config.keywordList) && config.keywordList.length > 0
+        ? config.keywordList
+        : String(config.keywords || config.keyword || '')
+            .split(',')
+            .map(k => k.trim())
+            .filter(Boolean);
+
+    const KEYWORD_SUGGESTIONS = [
+        'hello', 'hi', 'hey', 'start', 'menu', 'help', 'support', 'sales', 'order', 'pricing', 'catalog', 'status', 'restart'
+    ];
+
+    const handleAddKeyword = (kw) => {
+        const text = (kw !== undefined ? kw : keywordInput).trim();
+        if (!text) return;
+
+        const newItems = text
+            .split(',')
+            .map(k => k.trim())
+            .filter(k => k.length > 0);
+
+        const currentLower = new Set(rawKeywords.map(k => k.toLowerCase()));
+        const toAdd = newItems.filter(k => !currentLower.has(k.toLowerCase()));
+
+        if (toAdd.length === 0) {
+            setKeywordInput('');
+            return;
+        }
+
+        const updated = [...rawKeywords, ...toAdd];
+        const newConfig = {
+            ...config,
+            keywordList: updated,
+            keywords: updated.join(', '),
+            configured: true
+        };
+        setConfig(newConfig);
+        updateNodeData(selectedNode.id, newConfig);
+        setKeywordInput('');
+    };
+
+    const handleRemoveKeyword = (keywordToRemove) => {
+        const updated = rawKeywords.filter(k => k !== keywordToRemove && k.toLowerCase() !== keywordToRemove.toLowerCase());
+        const newConfig = {
+            ...config,
+            keywordList: updated,
+            keywords: updated.join(', '),
+            configured: updated.length > 0
+        };
+        setConfig(newConfig);
+        updateNodeData(selectedNode.id, newConfig);
+    };
+
+    const handleClearKeywords = () => {
+        const newConfig = {
+            ...config,
+            keywordList: [],
+            keywords: '',
+            configured: false
+        };
+        setConfig(newConfig);
+        updateNodeData(selectedNode.id, newConfig);
+    };
 
     const BRANCH_COLORS = [
         '#10b981', '#3b82f6', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899', '#84cc16', '#f97316'
@@ -208,27 +279,27 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     };
 
     return (
-        <div className="w-96 h-full border-l border-white/10 bg-background flex flex-col shadow-2xl z-20">
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+        <div className="w-full sm:w-[420px] max-w-[100vw] h-full border-l border-white/10 bg-background flex flex-col shadow-2xl z-20 overflow-hidden">
+            <div className="p-4 border-b border-white/5 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
                         <nodeDef.icon size={18} />
                     </div>
-                    <div>
-                        <h2 className="text-sm font-bold text-white">{nodeDef.displayName}</h2>
-                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none">Node ID: {selectedNode.id.substring(0, 8)}...</span>
+                    <div className="min-w-0">
+                        <h2 className="text-sm font-bold text-white truncate">{nodeDef.displayName}</h2>
+                        <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none truncate block">Node ID: {selectedNode.id.substring(0, 8)}...</span>
                     </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-full hover:bg-white/5">
+                <Button variant="ghost" size="icon" onClick={closePanel} className="rounded-full hover:bg-white/5 shrink-0">
                     <X size={18} className="text-muted-foreground" />
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1 p-6">
-                <div className="space-y-8">
-                    <div className="space-y-4">
+            <ScrollArea className="flex-1 w-full overflow-hidden">
+                <div className="p-4 space-y-6 w-full max-w-full overflow-hidden">
+                    <div className="space-y-3">
                         <h3 className="text-[10px] font-black uppercase tracking-widest text-primary/60">Core Configuration</h3>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                             <Label className="text-[11px] text-muted-foreground">Label</Label>
                             <Input
                                 value={config.label || ''}
@@ -237,6 +308,159 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                             />
                         </div>
                     </div>
+
+                    {/* Keyword Trigger Configuration */}
+                    {isKeywordTrigger && (
+                        <div className="space-y-3.5 p-3.5 rounded-2xl bg-amber-500/5 border border-amber-500/20 w-full overflow-hidden">
+                            <div className="flex items-center justify-between gap-2 w-full min-w-0">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <div className="p-1.5 rounded-lg bg-amber-500/15 text-amber-400 shrink-0">
+                                        <Zap size={16} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-xs font-bold text-white truncate">Trigger Keywords</h4>
+                                        <p className="text-[10px] text-muted-foreground truncate">Flow starts when user sends keyword</p>
+                                    </div>
+                                </div>
+                                {rawKeywords.length > 0 && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleClearKeywords}
+                                        className="h-6 px-2 text-[10px] text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 shrink-0 font-medium whitespace-nowrap"
+                                    >
+                                        Clear All
+                                    </Button>
+                                )}
+                            </div>
+
+                            {/* Add Keyword Input */}
+                            <div className="space-y-1.5 w-full min-w-0">
+                                <Label className="text-[10px] text-muted-foreground font-semibold">Add Keywords (Press Enter or Comma)</Label>
+                                <div className="flex gap-2 items-center w-full min-w-0">
+                                    <Input
+                                        value={keywordInput}
+                                        onChange={(e) => setKeywordInput(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ',') {
+                                                e.preventDefault();
+                                                handleAddKeyword();
+                                            }
+                                        }}
+                                        placeholder="e.g. hello, support, pricing"
+                                        className="bg-white/5 border-white/10 text-xs rounded-xl h-9 font-mono flex-1 min-w-0 w-full"
+                                    />
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        onClick={() => handleAddKeyword()}
+                                        className="h-9 px-3 text-xs font-bold bg-amber-500 text-black hover:bg-amber-400 shrink-0 rounded-xl flex items-center gap-1 whitespace-nowrap"
+                                    >
+                                        <Plus size={14} className="shrink-0" />
+                                        <span>Add</span>
+                                    </Button>
+                                </div>
+                            </div>
+
+                            {/* Keyword Tag Pills */}
+                            <div className="space-y-1.5 w-full min-w-0">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-[10px] text-muted-foreground font-semibold">
+                                        Keyword Outputs ({rawKeywords.length})
+                                    </Label>
+                                    <span className="text-[9px] text-amber-400/80 font-medium">
+                                        {rawKeywords.length > 1 ? `${rawKeywords.length} separate paths` : '1 path'}
+                                    </span>
+                                </div>
+
+                                {rawKeywords.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-black/40 border border-white/5 max-h-[140px] overflow-y-auto w-full">
+                                        {rawKeywords.map((kw, i) => {
+                                            const palette = BRANCH_COLORS[i % BRANCH_COLORS.length];
+                                            return (
+                                                <span
+                                                    key={i}
+                                                    className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 text-xs font-mono font-medium shadow-sm transition-all hover:bg-amber-500/25 max-w-full min-w-0"
+                                                >
+                                                    <span
+                                                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                                                        style={{ backgroundColor: palette }}
+                                                    />
+                                                    <span className="text-[9px] text-muted-foreground font-sans font-bold">Path {i + 1}:</span>
+                                                    <span className="truncate max-w-[140px] font-semibold">{kw}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveKeyword(kw)}
+                                                        className="text-amber-400/60 hover:text-amber-200 ml-0.5 shrink-0"
+                                                        title="Remove keyword"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="p-3 rounded-xl bg-white/5 border border-dashed border-white/10 text-center text-xs text-muted-foreground">
+                                        No keywords configured. Type a word above or click suggestions below.
+                                    </div>
+                                )}
+                                <p className="text-[9px] text-muted-foreground italic">
+                                    💡 Each keyword creates a dedicated output handle on the node so you can connect separate flows.
+                                </p>
+                            </div>
+
+                            {/* Match Mode */}
+                            <div className="space-y-1.5 w-full min-w-0">
+                                <Label className="text-[10px] text-muted-foreground font-semibold">Match Precision</Label>
+                                <Select
+                                    value={config.matchMode || 'contains'}
+                                    onValueChange={(val) => onChange('matchMode', val)}
+                                >
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-9 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-background border-white/10 z-[100]">
+                                        <SelectItem value="contains" className="text-xs">
+                                            Contains Keyword (Partial match)
+                                        </SelectItem>
+                                        <SelectItem value="exact" className="text-xs">
+                                            Exact Match (Full message match)
+                                        </SelectItem>
+                                        <SelectItem value="starts_with" className="text-xs">
+                                            Starts With (Begins with keyword)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Quick Suggestions */}
+                            <div className="space-y-1.5 pt-1 w-full min-w-0">
+                                <Label className="text-[10px] text-muted-foreground font-semibold">Quick Suggestions</Label>
+                                <div className="flex flex-wrap gap-1 w-full">
+                                    {KEYWORD_SUGGESTIONS.map(sug => {
+                                        const isAlreadyAdded = rawKeywords.some(k => k.toLowerCase() === sug.toLowerCase());
+                                        return (
+                                            <button
+                                                key={sug}
+                                                type="button"
+                                                onClick={() => !isAlreadyAdded && handleAddKeyword(sug)}
+                                                disabled={isAlreadyAdded}
+                                                className={`px-2 py-0.5 rounded-md text-[9px] font-semibold transition-all shrink-0 ${
+                                                    isAlreadyAdded
+                                                        ? 'bg-amber-500/30 text-amber-200 border border-amber-500/40 cursor-default opacity-60'
+                                                        : 'bg-white/5 text-muted-foreground hover:text-amber-300 hover:bg-amber-500/10 border border-white/5'
+                                                }`}
+                                            >
+                                                +{sug}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Condition Rule Builder for Logic & Flow -> Condition */}
                     {isConditionNode && (
@@ -373,7 +597,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                                         value={cond.operation || 'contains'}
                                                         onValueChange={(val) => handleUpdateCondition(idx, 'operation', val)}
                                                     >
-                                                        <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-lg h-8">
+                                                        <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-lg h-8 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent className="bg-background border-white/10 z-[100]">
@@ -488,7 +712,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     value={config.validation || 'any'}
                                     onValueChange={(val) => onChange('validation', val)}
                                 >
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="bg-background border-white/10 z-[100]">
@@ -756,7 +980,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     value={config.method || 'GET'}
                                     onValueChange={(val) => onChange('method', val)}
                                 >
-                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                    <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent className="bg-background border-white/10 z-[100]">
@@ -798,7 +1022,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     if (found) onSelectTemplate(found);
                                 }}
                             >
-                                <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
                                     <SelectValue placeholder={loadingTemplates ? "Loading templates..." : templates.length === 0 ? "No templates available" : "Choose existing template..."} />
                                 </SelectTrigger>
                                 <SelectContent className="bg-background border-white/10 z-[100] max-h-60">
@@ -842,6 +1066,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
 
                     {/* Generic Fallback Node Properties for custom or default properties */}
                     {!isConditionNode && 
+                     !isKeywordTrigger &&
                      selectedNode?.data?.subType !== 'waitForInput' && 
                      selectedNode?.data?.subType !== 'setVariable' && 
                      selectedNode?.data?.subType !== 'aiAgent' && 
@@ -899,7 +1124,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                             value={config[prop.name] ?? prop.default ?? ''}
                                             onValueChange={(val) => onChange(prop.name, val)}
                                         >
-                                            <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10">
+                                            <SelectTrigger className="bg-white/5 border-white/10 text-xs rounded-xl h-10 w-full min-w-0 overflow-hidden [&>span]:truncate [&>span]:block">
                                                 <SelectValue />
                                             </SelectTrigger>
                                             <SelectContent className="bg-background border-white/10">

@@ -198,6 +198,8 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
             if (sourceNode) {
                 const subType = sourceNode.data?.subType || sourceNode.data?.type || sourceNode.type;
                 const isCondition = subType === 'condition' || subType === 'conditionNode' || sourceNode.type === 'condition';
+                const isTrigger = sourceNode.type === 'triggerNode' || subType === 'keyword' || subType === 'keywordTrigger' || subType === 'welcome';
+                const isKeywordTrigger = isTrigger && subType !== 'welcome';
 
                 if (isCondition) {
                     const conditions = sourceNode.data?.conditions;
@@ -217,6 +219,30 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
                         } else if (params.sourceHandle === 'false') {
                             edgeLabel = 'False';
                             strokeColor = '#f43f5e';
+                        }
+                    }
+                } else if (isKeywordTrigger) {
+                    const keywordList = Array.isArray(sourceNode.data?.keywordList) && sourceNode.data.keywordList.length > 0
+                        ? sourceNode.data.keywordList
+                        : String(sourceNode.data?.keywords || sourceNode.data?.keyword || '')
+                            .split(',')
+                            .map(k => k.trim())
+                            .filter(Boolean);
+
+                    if (keywordList.length > 0) {
+                        let kwIdx = -1;
+                        if (params.sourceHandle?.startsWith('kw_')) {
+                            kwIdx = parseInt(params.sourceHandle.replace('kw_', ''), 10);
+                        } else if (params.sourceHandle) {
+                            kwIdx = keywordList.findIndex(k => k.toLowerCase() === params.sourceHandle.toLowerCase());
+                        }
+
+                        if (kwIdx !== -1 && keywordList[kwIdx]) {
+                            edgeLabel = keywordList[kwIdx];
+                            strokeColor = BRANCH_COLORS[kwIdx % BRANCH_COLORS.length];
+                        } else if (keywordList.length === 1) {
+                            edgeLabel = keywordList[0];
+                            strokeColor = '#f59e0b';
                         }
                     }
                 }
@@ -328,14 +354,29 @@ export const FlowCanvas = ({ flowId, standalone = false }) => {
     };
 
     const runPreview = () => {
-        const lower = testMessage.toLowerCase();
+        const lower = testMessage.toLowerCase().trim();
         const trigger = nodes.find((node) => {
             if (node.type !== 'triggerNode') return false;
-            const keywords = String(node.data?.keywords || '')
-                .split(',')
-                .map((keyword) => keyword.trim().toLowerCase())
-                .filter(Boolean);
-            return keywords.some((keyword) => lower === keyword || lower.includes(keyword));
+            const subType = node.data?.subType || node.data?.type || node.type;
+            if (subType === 'welcome') return true;
+
+            const keywords = Array.isArray(node.data?.keywordList) && node.data.keywordList.length > 0
+                ? node.data.keywordList.map(k => String(k).trim().toLowerCase()).filter(Boolean)
+                : String(node.data?.keywords || node.data?.keyword || '')
+                    .split(',')
+                    .map((keyword) => keyword.trim().toLowerCase())
+                    .filter(Boolean);
+
+            if (keywords.length === 0) return false;
+
+            const matchMode = node.data?.matchMode || 'contains';
+            if (matchMode === 'exact') {
+                return keywords.some((k) => lower === k);
+            } else if (matchMode === 'starts_with') {
+                return keywords.some((k) => lower.startsWith(k));
+            } else {
+                return keywords.some((k) => lower === k || lower.includes(k));
+            }
         });
         const fallback = nodes.find((node) => node.data?.isFallback && node.data?.text);
         let current = trigger || fallback;

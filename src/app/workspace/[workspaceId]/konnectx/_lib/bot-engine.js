@@ -115,20 +115,31 @@ export class WhatsAppBotEngine {
 
     findMatchingTrigger(nodes, messageText) {
         const triggers = nodes.filter(n => n.type === 'triggerNode' || n.type === 'trigger' || n.type === 'start');
-        const lowerMessage = String(messageText || '').toLowerCase();
+        const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+        const cleanUserMsg = clean(messageText);
 
         return triggers.find(node => {
             const data = node.data || {};
             const triggerType = data.subType || data.type || node.type;
-            if (triggerType === 'welcome') return lowerMessage.length > 0;
+            if (triggerType === 'welcome') return cleanUserMsg.length > 0;
 
-            const keywords = String(data.keywords || data.keyword || '')
-                .split(',')
-                .map(k => k.trim().toLowerCase())
-                .filter(Boolean);
+            const keywords = Array.isArray(data.keywordList) && data.keywordList.length > 0
+                ? data.keywordList.map(k => clean(k)).filter(Boolean)
+                : String(data.keywords || data.keyword || '')
+                    .split(',')
+                    .map(k => clean(k))
+                    .filter(Boolean);
 
             if (keywords.length === 0) return false;
-            return keywords.some(keyword => lowerMessage === keyword || lowerMessage.includes(keyword));
+
+            const matchMode = data.matchMode || 'contains';
+            if (matchMode === 'exact') {
+                return keywords.some(keyword => cleanUserMsg === keyword);
+            } else if (matchMode === 'starts_with') {
+                return keywords.some(keyword => cleanUserMsg.startsWith(keyword));
+            } else {
+                return keywords.some(keyword => cleanUserMsg === keyword || cleanUserMsg.includes(keyword));
+            }
         });
     }
 
@@ -156,6 +167,7 @@ export class WhatsAppBotEngine {
                 case 'triggerNode':
                 case 'trigger':
                 case 'start':
+                    nextNodeId = this.pickTriggerTarget(node, context);
                     break;
 
                 case 'message':
@@ -328,6 +340,74 @@ export class WhatsAppBotEngine {
             result,
             phoneNumberId: creds?.phoneNumberId || creds?.phone_number_id
         });
+    }
+
+    pickTriggerTarget(node, context) {
+        const branches = context.edges.filter(e => e.source === node.id);
+        if (!branches.length) return null;
+        if (branches.length === 1 && !branches[0].sourceHandle) return branches[0].target;
+
+        const data = node.data || {};
+        const isWelcome = data.type === 'welcome' || data.subType === 'welcome';
+        if (isWelcome) return branches[0]?.target || null;
+
+        const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+        const cleanUserMsg = clean(context.messageText || '');
+
+        const keywords = Array.isArray(data.keywordList) && data.keywordList.length > 0
+            ? data.keywordList.map(k => String(k).trim())
+            : String(data.keywords || data.keyword || '').split(',').map(k => k.trim()).filter(Boolean);
+
+        if (keywords.length === 0) return branches[0]?.target || null;
+
+        const matchMode = data.matchMode || 'contains';
+
+        const isMatch = (kw) => {
+            const k = clean(kw);
+            if (!k) return false;
+            if (matchMode === 'exact') return cleanUserMsg === k;
+            if (matchMode === 'starts_with') return cleanUserMsg.startsWith(k);
+            return cleanUserMsg === k || cleanUserMsg.includes(k);
+        };
+
+        const matchedIdx = keywords.findIndex(k => isMatch(k));
+        if (matchedIdx !== -1) {
+            const matchedKw = keywords[matchedIdx];
+            const handleId = `kw_${matchedIdx}`;
+            const cleanKw = clean(matchedKw);
+            console.log(`[BotEngine] Trigger Matched Keyword "${matchedKw}" (Index: ${matchedIdx}, Handle: ${handleId})`);
+
+            // 1. Priority A: Match by Edge Label (Explicit Intent)
+            const labelEdge = branches.find(e => {
+                const edgeLabel = clean(e.label || e.data?.label || e.data?.name || '');
+                return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw));
+            });
+            if (labelEdge) {
+                console.log(`[BotEngine] Found matching branch by label: "${labelEdge.label || labelEdge.data?.label}" -> ${labelEdge.target}`);
+                return labelEdge.target;
+            }
+
+            // 2. Priority B: Match by Source Handle ID
+            const handleEdge = branches.find(e => 
+                e.sourceHandle === handleId || 
+                clean(e.sourceHandle) === cleanKw ||
+                clean(e.sourceHandle) === clean(`kw_${matchedIdx}`)
+            );
+            if (handleEdge) {
+                console.log(`[BotEngine] Found matching branch by handle (${handleId}) -> ${handleEdge.target}`);
+                return handleEdge.target;
+            }
+
+            // 3. Priority C: Positional Index Fallback
+            if (branches[matchedIdx]) {
+                console.log(`[BotEngine] Fallback to branch at index ${matchedIdx} -> ${branches[matchedIdx].target}`);
+                return branches[matchedIdx].target;
+            }
+
+            return branches[0]?.target;
+        }
+
+        return branches[0]?.target || null;
     }
 
     pickConditionTarget(node, context) {

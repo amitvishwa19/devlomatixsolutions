@@ -47,7 +47,7 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, 
         <div
             style={{ width: isMultiBranch ? '240px' : '200px', maxWidth: isMultiBranch ? '260px' : '200px', minWidth: isMultiBranch ? '220px' : '200px' }}
             className={cn(
-                "relative rounded-sm border transition-all duration-300 overflow-hidden border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
+                "relative rounded-sm border transition-all duration-300 overflow-visible border-primary/20 bg-card dark:bg-[#1e1e2e]/90",
                 isHighlighted 
                     ? "border-emerald-400 ring-2 ring-emerald-500/40 -translate-y-1 shadow-emerald-500/20" 
                     : selected 
@@ -78,22 +78,101 @@ const NodeWrapper = ({ children, selected, title, icon: Icon, configured, data, 
 
 export const TriggerNode = memo(({ id, data, selected }) => {
     const isWelcome = data.type === 'welcome' || data.subType === 'welcome';
+    const keywordList = Array.isArray(data.keywordList) && data.keywordList.length > 0
+        ? data.keywordList
+        : String(data.keywords || data.keyword || '')
+            .split(',')
+            .map(k => k.trim())
+            .filter(Boolean);
+
+    const isMultiKeyword = !isWelcome && keywordList.length > 1;
+
     return (
         <>
             <NodeWrapper
                 selected={selected}
-                title={isWelcome ? 'Welcome' : 'Keyword'}
+                title={isWelcome ? 'Welcome' : 'Keyword Trigger'}
                 icon={isWelcome ? Play : Zap}
                 configured={true}
                 data={data}
                 id={id}
+                isMultiBranch={isMultiKeyword}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || 'Start Flow'}</div>
-                <div className="text-[10px] text-muted-foreground italic truncate">
-                    {isWelcome ? 'Triggered on first contact' : `Keywords: ${data.keywords || '...'}`}
-                </div>
+                <div className="text-sm font-semibold text-white truncate">{data.label || (isWelcome ? 'Welcome Trigger' : 'Keyword Trigger')}</div>
+                {isWelcome ? (
+                    <div className="text-[10px] text-muted-foreground italic truncate">
+                        Triggered on first contact
+                    </div>
+                ) : keywordList.length === 0 ? (
+                    <div className="p-2 rounded bg-white/5 border border-dashed border-white/10 text-[10px] text-muted-foreground italic text-center">
+                        No keywords configured
+                    </div>
+                ) : keywordList.length === 1 ? (
+                    <div className="relative flex items-center justify-between p-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-[10px] min-w-0">
+                        <div className="flex items-center gap-1.5 min-w-0 pr-3">
+                            <span className="w-2 h-2 rounded-full shrink-0 bg-amber-500" />
+                            <span className="font-mono font-bold text-amber-300 truncate">
+                                {keywordList[0]}
+                            </span>
+                        </div>
+                        <span className="text-[9px] text-amber-400/70 font-semibold uppercase shrink-0">Output</span>
+                        <Handle
+                            type="source"
+                            position={Position.Right}
+                            id="kw_0"
+                            style={{
+                                right: -7,
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                backgroundColor: '#f59e0b'
+                            }}
+                            className="w-3 h-3 border-2 border-[#1e1e2e]"
+                        />
+                    </div>
+                ) : (
+                    <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[9px] uppercase font-bold text-amber-400 px-0.5">
+                            <span>Keyword Outputs</span>
+                            <span>{keywordList.length} paths</span>
+                        </div>
+                        {keywordList.map((kw, idx) => {
+                            const palette = BRANCH_PALETTE[idx % BRANCH_PALETTE.length];
+                            const handleId = `kw_${idx}`;
+                            return (
+                                <div
+                                    key={handleId}
+                                    className="relative flex items-center justify-between p-1.5 rounded bg-white/5 border border-white/5 text-[10px] min-w-0"
+                                >
+                                    <div className="flex items-center gap-1.5 min-w-0 pr-3">
+                                        <span className={cn("w-2 h-2 rounded-full shrink-0", palette.bg)} />
+                                        <span className="font-mono font-bold text-white truncate max-w-[120px]">
+                                            {kw}
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-muted-foreground font-semibold shrink-0 pr-1">
+                                        Path {idx + 1}
+                                    </span>
+                                    <Handle
+                                        type="source"
+                                        position={Position.Right}
+                                        id={handleId}
+                                        style={{
+                                            right: -7,
+                                            top: '50%',
+                                            transform: 'translateY(-50%)',
+                                            backgroundColor: palette.hex
+                                        }}
+                                        className="w-3.5 h-3.5 border-2 border-[#1e1e2e] shadow-md hover:scale-125 transition-transform z-20 cursor-crosshair"
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </NodeWrapper>
-            <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500" />
+            {(isWelcome || keywordList.length === 0) && (
+                <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-amber-500" />
+            )}
         </>
     );
 });

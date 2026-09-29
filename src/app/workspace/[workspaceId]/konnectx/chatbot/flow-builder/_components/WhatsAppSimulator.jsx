@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     X,
     Send,
@@ -104,12 +104,26 @@ async function executeFlowSimulation({
             const subType = node.data?.subType || node.data?.type || node.type;
             if (subType === 'welcome') return true;
 
-            const keywords = String(node.data?.keywords || '')
-                .split(',')
-                .map(k => k.trim().toLowerCase())
-                .filter(Boolean);
+            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+            const cleanUserMsg = clean(userMessage);
 
-            return keywords.some(k => lowerMsg === k || lowerMsg.includes(k));
+            const keywords = Array.isArray(node.data?.keywordList) && node.data.keywordList.length > 0
+                ? node.data.keywordList.map(k => clean(k)).filter(Boolean)
+                : String(node.data?.keywords || node.data?.keyword || '')
+                    .split(',')
+                    .map(k => clean(k))
+                    .filter(Boolean);
+
+            if (keywords.length === 0) return false;
+
+            const matchMode = node.data?.matchMode || 'contains';
+            if (matchMode === 'exact') {
+                return keywords.some(k => cleanUserMsg === k);
+            } else if (matchMode === 'starts_with') {
+                return keywords.some(k => cleanUserMsg.startsWith(k));
+            } else {
+                return keywords.some(k => cleanUserMsg === k || cleanUserMsg.includes(k));
+            }
         });
 
         const fallback = nodes.find(node => node.data?.isFallback);
@@ -117,18 +131,21 @@ async function executeFlowSimulation({
     }
 
     let activeStep = resumeTargetNodeId 
-        ? nodes.find(n => n.id === resumeTargetNodeId) 
-        : startNode;
+        ? (nodes.find(n => n.id === resumeTargetNodeId) || null) 
+        : (startNode || null);
 
     const visited = new Set();
 
     while (activeStep && !visited.has(activeStep.id) && visited.size < 25) {
-        visited.add(activeStep.id);
-        if (onHighlightNode) onHighlightNode(activeStep.id);
+        const currentStep = activeStep;
+        if (!currentStep) break;
+        visited.add(currentStep.id);
+        if (onHighlightNode) onHighlightNode(currentStep.id);
 
-        const nodeType = activeStep.type;
-        const subType = activeStep.data?.subType || activeStep.data?.type || nodeType;
-        const label = activeStep.data?.label || activeStep.id;
+        const nodeType = currentStep.type;
+        const stepData = currentStep.data || {};
+        const subType = stepData.subType || stepData.type || nodeType;
+        const label = stepData.label || currentStep.id;
 
         // Highlight pause for realism
         setIsTyping(true);
@@ -138,110 +155,101 @@ async function executeFlowSimulation({
         if (nodeType === 'messageNode') {
             setIsTyping(false);
             if (subType === 'imageMessage') {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `msg_${Date.now()}_${Math.random()}`,
-                        sender: 'bot',
-                        type: 'image',
-                        imageUrl: activeStep.data?.imageUrl || 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400&auto=format&fit=crop&q=80',
-                        caption: interpolate(activeStep.data?.caption || '', currentVars),
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
-                addLog(label, 'image_sent', `Sent image: ${activeStep.data?.imageUrl || 'Default Image'}`);
+                const imgMsg = {
+                    id: `msg_${Date.now()}_${Math.random()}`,
+                    sender: 'bot',
+                    type: 'image',
+                    imageUrl: stepData.imageUrl || 'https://images.unsplash.com/photo-1579202673506-ca3ce28943ef?w=400&auto=format&fit=crop&q=80',
+                    caption: interpolate(stepData.caption || '', currentVars),
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, imgMsg]);
+                addLog(label, 'image_sent', `Sent image: ${stepData.imageUrl || 'Default Image'}`);
             } else if (subType === 'templateMessage') {
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `msg_${Date.now()}_${Math.random()}`,
-                        sender: 'bot',
-                        type: 'template',
-                        templateName: activeStep.data?.templateName || 'welcome_notification',
-                        text: interpolate(activeStep.data?.text || 'Official Verified WhatsApp Template Message', currentVars),
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
-                addLog(label, 'template_sent', `Template: ${activeStep.data?.templateName}`);
+                const templateName = stepData.templateName || 'welcome_notification';
+                const text = interpolate(stepData.text || 'Official Verified WhatsApp Template Message', currentVars);
+                const tplMsg = {
+                    id: `msg_${Date.now()}_${Math.random()}`,
+                    sender: 'bot',
+                    type: 'template',
+                    templateName,
+                    text,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, tplMsg]);
+                addLog(label, 'template_sent', `Template: ${templateName}`);
             } else {
-                const text = interpolate(activeStep.data?.text || activeStep.data?.message || 'Hello! How can we assist you?', currentVars);
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `msg_${Date.now()}_${Math.random()}`,
-                        sender: 'bot',
-                        type: 'text',
-                        text,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
+                const text = interpolate(stepData.text || stepData.message || 'Hello! How can we assist you?', currentVars);
+                const txtMsg = {
+                    id: `msg_${Date.now()}_${Math.random()}`,
+                    sender: 'bot',
+                    type: 'text',
+                    text,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, txtMsg]);
                 addLog(label, 'message_sent', text);
             }
         } else if (nodeType === 'actionNode') {
             if (subType === 'aiAgent' || subType === 'aiAssistant') {
                 setIsTyping(false);
-                const answer = `[AI • ${activeStep.data?.category || 'Knowledge Base'}] Based on your inquiry, here is the answer from our documentation.`;
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `ai_${Date.now()}`,
-                        sender: 'bot',
-                        type: 'ai',
-                        category: activeStep.data?.category || 'GENERAL',
-                        text: answer,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
-                addLog(label, 'ai_rag_response', `Category: ${activeStep.data?.category || 'GENERAL'}`);
+                const cat = stepData.category || 'GENERAL';
+                const answer = `[AI • ${cat}] Based on your inquiry, here is the answer from our documentation.`;
+                const aiMsg = {
+                    id: `ai_${Date.now()}`,
+                    sender: 'bot',
+                    type: 'ai',
+                    category: cat,
+                    text: answer,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, aiMsg]);
+                addLog(label, 'ai_rag_response', `Category: ${cat}`);
             } else if (subType === 'deskflowHandoff' || subType === 'deskflow') {
                 setIsTyping(false);
-                const dept = activeStep.data?.department || 'Support';
-                const handoffText = interpolate(activeStep.data?.handoffMessage || `Connecting you with our ${dept} team...`, currentVars);
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `handoff_${Date.now()}`,
-                        sender: 'bot',
-                        type: 'handoff',
-                        department: dept,
-                        text: handoffText,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
+                const dept = stepData.department || 'Support';
+                const handoffText = interpolate(stepData.handoffMessage || `Connecting you with our ${dept} team...`, currentVars);
+                const handoffMsg = {
+                    id: `handoff_${Date.now()}`,
+                    sender: 'bot',
+                    type: 'handoff',
+                    department: dept,
+                    text: handoffText,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, handoffMsg]);
                 addLog(label, 'deskflow_escalated', `Department: ${dept}`);
             } else if (subType === 'crmTag' || subType === 'tag') {
-                const tag = activeStep.data?.tag || 'Lead';
-                const action = activeStep.data?.action || 'add';
-                setMessages(prev => [
-                    ...prev,
-                    {
-                        id: `tag_${Date.now()}`,
-                        sender: 'bot',
-                        type: 'tag_event',
-                        tag,
-                        action,
-                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    }
-                ]);
+                const tag = stepData.tag || 'Lead';
+                const action = stepData.action || 'add';
+                const tagMsg = {
+                    id: `tag_${Date.now()}`,
+                    sender: 'bot',
+                    type: 'tag_event',
+                    tag,
+                    action,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages(prev => [...prev, tagMsg]);
                 addLog(label, 'crm_tag', `${action === 'remove' ? 'Removed' : 'Added'} Tag: #${tag}`);
             } else if (subType === 'httpRequest' || subType === 'http') {
-                addLog(label, 'http_api_call', `${activeStep.data?.method || 'GET'} ${activeStep.data?.url || 'https://api.devlomatix.com'}`);
+                addLog(label, 'http_api_call', `${stepData.method || 'GET'} ${stepData.url || 'https://api.devlomatix.com'}`);
             }
         } else if (nodeType === 'logicNode') {
             if (subType === 'delayNode' || subType === 'delay') {
-                const sec = Math.min(Number(activeStep.data?.seconds || 2), 5);
+                const sec = Math.min(Number(stepData.seconds || 2), 5);
                 addLog(label, 'delay_pause', `Waiting ${sec} seconds...`);
                 await new Promise(r => setTimeout(r, sec * 1000));
             } else if (subType === 'setVariable') {
-                const vName = activeStep.data?.variable || 'custom_var';
-                const vVal = interpolate(activeStep.data?.value || 'true', currentVars);
+                const vName = stepData.variable || 'custom_var';
+                const vVal = interpolate(stepData.value || 'true', currentVars);
                 currentVars = { ...currentVars, [vName]: vVal };
                 setSessionVariables(currentVars);
                 addLog(label, 'set_variable', `{{${vName}}} = "${vVal}"`);
             } else if (subType === 'waitForInput') {
                 setIsTyping(false);
-                setWaitingForInputNode(activeStep);
-                addLog(label, 'waiting_input', `Paused waiting for user input (${activeStep.data?.validation || 'any'})`);
+                setWaitingForInputNode(currentStep);
+                addLog(label, 'waiting_input', `Paused waiting for user input (${stepData.validation || 'any'})`);
                 break; // stop traversal until next user message
             }
         }
@@ -266,9 +274,9 @@ async function executeFlowSimulation({
                 return actualVal.includes(expVal);
             };
 
-            const branchEdges = edges.filter(e => e.source === activeStep.id);
-            const conditions = Array.isArray(activeStep.data?.conditions) && activeStep.data.conditions.length > 0
-                ? activeStep.data.conditions
+            const branchEdges = edges.filter(e => e.source === currentStep.id);
+            const conditions = Array.isArray(stepData.conditions) && stepData.conditions.length > 0
+                ? stepData.conditions
                 : null;
 
             if (conditions) {
@@ -334,9 +342,9 @@ async function executeFlowSimulation({
                 }
             } else {
                 // Legacy 2-branch condition
-                const varToCheck = activeStep.data?.variable || 'last_response';
-                const op = activeStep.data?.operation || 'contains';
-                const targetVal = String(activeStep.data?.value || '').toLowerCase().trim();
+                const varToCheck = stepData.variable || 'last_response';
+                const op = stepData.operation || 'contains';
+                const targetVal = String(stepData.value || '').toLowerCase().trim();
                 const conditionPassed = evaluateRule(varToCheck, op, targetVal);
 
                 let actualVal = currentVars[varToCheck] !== undefined ? currentVars[varToCheck] : userMessage;
@@ -360,12 +368,71 @@ async function executeFlowSimulation({
                     nextNodeId = fallbackEdge?.target || (conditionPassed ? branchEdges[0]?.target : branchEdges[1]?.target);
                 }
             }
+        } else if (nodeType === 'triggerNode' || nodeType === 'trigger' || nodeType === 'start') {
+            const clean = (s) => String(s || '').toLowerCase().replace(/[#’'`"“”]/g, '').trim();
+            const cleanUserMsg = clean(userMessage);
+
+            const rawKeywords = Array.isArray(stepData.keywordList) && stepData.keywordList.length > 0
+                ? stepData.keywordList.map(k => String(k).trim())
+                : String(stepData.keywords || stepData.keyword || '')
+                    .split(',')
+                    .map(k => k.trim())
+                    .filter(Boolean);
+
+            const matchMode = stepData.matchMode || 'contains';
+            const isKeywordMatch = (kw) => {
+                const k = clean(kw);
+                if (!k) return false;
+                if (matchMode === 'exact') return cleanUserMsg === k;
+                if (matchMode === 'starts_with') return cleanUserMsg.startsWith(k);
+                return cleanUserMsg === k || cleanUserMsg.includes(k);
+            };
+
+            const branchEdges = edges.filter(e => e.source === currentStep.id);
+            const matchedIdx = rawKeywords.findIndex(k => isKeywordMatch(k));
+
+            if (matchedIdx !== -1) {
+                const matchedKw = rawKeywords[matchedIdx];
+                const handleId = `kw_${matchedIdx}`;
+                const cleanKw = clean(matchedKw);
+
+                addLog(
+                    label,
+                    'keyword_matched',
+                    `✓ Trigger matched keyword "${matchedKw}" (Path ${matchedIdx + 1})`
+                );
+
+                // 1. Priority A: Match by Edge Label (Explicit user intent)
+                const labelEdge = branchEdges.find(e => {
+                    const edgeLabel = clean(e.label || e.data?.label || e.data?.name || '');
+                    return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw));
+                });
+
+                if (labelEdge) {
+                    nextNodeId = labelEdge.target;
+                } else {
+                    // 2. Priority B: Match by Source Handle ID
+                    const handleEdge = branchEdges.find(e => 
+                        e.sourceHandle === handleId || 
+                        clean(e.sourceHandle) === cleanKw ||
+                        clean(e.sourceHandle) === clean(`kw_${matchedIdx}`)
+                    );
+                    if (handleEdge) {
+                        nextNodeId = handleEdge.target;
+                    } else {
+                        // 3. Priority C: Positional Index Fallback
+                        nextNodeId = branchEdges[matchedIdx]?.target || branchEdges[0]?.target;
+                    }
+                }
+            } else {
+                nextNodeId = branchEdges[0]?.target;
+            }
         } else {
-            const outEdge = edges.find(e => e.source === activeStep.id);
+            const outEdge = edges.find(e => e.source === currentStep.id);
             if (outEdge) nextNodeId = outEdge.target;
         }
 
-        activeStep = nextNodeId ? nodes.find(n => n.id === nextNodeId) : null;
+        activeStep = nextNodeId ? (nodes.find(n => n.id === nextNodeId) || null) : null;
     }
 
     setIsTyping(false);
@@ -400,6 +467,29 @@ export const WhatsAppSimulator = ({
     const [waitingForInputNode, setWaitingForInputNode] = useState(null);
 
     const chatEndRef = useRef(null);
+
+    const dynamicPrompts = useMemo(() => {
+        const list = [];
+        (nodes || []).forEach(n => {
+            if (n.type === 'triggerNode' || n.type === 'trigger' || n.type === 'start') {
+                if (Array.isArray(n.data?.keywordList) && n.data.keywordList.length > 0) {
+                    n.data.keywordList.forEach(k => {
+                        const clean = String(k || '').replace(/^#/, '').trim();
+                        if (clean && !list.includes(clean)) list.push(clean);
+                    });
+                } else if (n.data?.keywords || n.data?.keyword) {
+                    String(n.data.keywords || n.data.keyword).split(',').forEach(k => {
+                        const clean = String(k || '').replace(/^#/, '').trim();
+                        if (clean && !list.includes(clean)) list.push(clean);
+                    });
+                }
+            }
+        });
+        if (list.length === 0) {
+            return ['hello', 'order', 'support', 'alex@example.com', 'yes'];
+        }
+        return list;
+    }, [nodes]);
 
     useEffect(() => {
         if (chatEndRef.current) {
@@ -652,7 +742,7 @@ export const WhatsAppSimulator = ({
 
                         {/* Quick Interactive Test Chips */}
                         <div className="p-2 border-t border-white/5 bg-[#1f2c34]/50 flex gap-1.5 overflow-x-auto scrollbar-hide">
-                            {['hello', 'order', 'support', 'alex@example.com', 'yes'].map((prompt) => (
+                            {dynamicPrompts.map((prompt) => (
                                 <button
                                     key={prompt}
                                     type="button"

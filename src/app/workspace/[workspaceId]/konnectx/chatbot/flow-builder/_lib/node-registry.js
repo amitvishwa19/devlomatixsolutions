@@ -39,14 +39,25 @@ export const WA_NODE_REGISTRY = {
         icon: MessageSquare,
         group: 'Triggers',
         type: 'triggerNode',
-        description: 'Triggered when a specific keyword is received',
+        description: 'Trigger flow when any of the configured keywords are received',
         properties: [
             {
                 displayName: 'Keywords',
                 name: 'keywords',
                 type: 'string',
-                default: 'hello, hi, start',
-                description: 'Comma separated list of keywords'
+                default: 'hello, hi, start, menu',
+                description: 'List of keywords that trigger this flow'
+            },
+            {
+                displayName: 'Match Mode',
+                name: 'matchMode',
+                type: 'options',
+                options: [
+                    { name: 'Contains Keyword (contains)', value: 'contains' },
+                    { name: 'Exact Match (==)', value: 'exact' },
+                    { name: 'Starts With (starts_with)', value: 'starts_with' }
+                ],
+                default: 'contains'
             }
         ]
     },
