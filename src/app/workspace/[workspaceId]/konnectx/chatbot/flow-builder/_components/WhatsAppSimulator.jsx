@@ -27,6 +27,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getTemplates } from "../../../template/_actions/get-templates";
+import { getTemplateDisplayName } from "../../../_lib/template-formatter";
 
 const extractTemplateDetails = (tpl) => {
     if (!tpl) return { headerText: '', headerType: 'TEXT', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] };
@@ -374,11 +375,12 @@ async function executeFlowSimulation({
                 }
 
                 if (isTemplate) {
+                    const displayTplName = getTemplateDisplayName(templateName || matchedTemplate || 'WhatsApp Template');
                     const tplMsg = {
                         id: `msg_${Date.now()}_${Math.random()}`,
                         sender: 'bot',
                         type: 'template',
-                        templateName: templateName || 'WhatsApp Template',
+                        templateName: displayTplName,
                         headerText,
                         headerType,
                         headerMediaUrl,
@@ -388,7 +390,7 @@ async function executeFlowSimulation({
                         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     };
                     setMessages(prev => [...prev, tplMsg]);
-                    addLog(label, 'template_sent', `Template "${templateName}" sent (${tplMsg.buttons.length} buttons)`);
+                    addLog(label, 'template_sent', `Template "${displayTplName}" sent (${tplMsg.buttons.length} buttons)`);
                 } else {
                     const txtMsg = {
                         id: `msg_${Date.now()}_${Math.random()}`,

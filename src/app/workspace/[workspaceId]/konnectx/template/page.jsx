@@ -38,6 +38,7 @@ import { saveTemplate } from "./_actions/save-template";
 import { syncTemplates } from "./_actions/sync-templates-v2";
 import { deleteTemplate } from "./_actions/delete-template";
 import { submitTemplate } from "./_actions/submit-template";
+import { getTemplateDisplayName } from "../_lib/template-formatter";
 import { checkTemplateStatus } from "./_actions/check-template-status";
 import { getTemplateGroups } from "./_actions/get-template-groups";
 import { MediaLibraryModal } from "../../article/_components/MediaLibraryModal";
@@ -907,16 +908,16 @@ export default function TemplatePage() {
                     }}
                     onConfirm={confirmDelete}
                     title="Delete Template"
-                    entityName={deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}
+                    entityName={getTemplateDisplayName(deleteTargetTemplate)}
                     description={
                         deleteTargetTemplate?.templateId ? (
                             <>
-                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>?
+                                Are you sure you want to delete <span className="font-bold text-foreground">{getTemplateDisplayName(deleteTargetTemplate)}</span>?
                                 This will remove the template from your workspace and submit a deletion request to <strong>Meta Cloud API</strong>. This action cannot be undone.
                             </>
                         ) : (
                             <>
-                                Are you sure you want to delete <span className="font-bold text-foreground">{deleteTargetTemplate?.name || deleteTargetTemplate?.templateName}</span>?
+                                Are you sure you want to delete <span className="font-bold text-foreground">{getTemplateDisplayName(deleteTargetTemplate)}</span>?
                                 This action cannot be undone and will permanently remove this draft template.
                             </>
                         )

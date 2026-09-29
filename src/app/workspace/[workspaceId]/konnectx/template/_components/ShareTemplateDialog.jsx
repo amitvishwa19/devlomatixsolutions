@@ -24,6 +24,7 @@ import { useAction } from "@/hooks/use-action";
 import { shareTemplate } from '../_actions/share-template';
 import { removeTemplateShare } from '../_actions/remove-template-share';
 import { searchUsers } from '../_actions/search-users';
+import { getTemplateDisplayName } from '../../_lib/template-formatter';
 
 export default function ShareTemplateDialog({ isOpen, onOpenChange, template, workspaceId, currentUserId, onShareUpdate }) {
     const [selectedUserId, setSelectedUserId] = useState('');
@@ -83,7 +84,7 @@ export default function ShareTemplateDialog({ isOpen, onOpenChange, template, wo
                         <Share2 className="w-4 h-4" /> Share Template
                     </DialogTitle>
                     <DialogDescription>
-                        Share &quot;{template.name}&quot; with other users.
+                        Share &quot;{getTemplateDisplayName(template)}&quot; with other users.
                     </DialogDescription>
                 </DialogHeader>
 

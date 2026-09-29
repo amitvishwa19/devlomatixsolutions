@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import * as cloudApi from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
 import { symmetricDecrypt } from "@/lib/encryption";
+import { getTemplateDisplayName } from "@/app/workspace/[workspaceId]/konnectx/_lib/template-formatter";
 
 const SyncTemplatesSchema = z.object({
     workspaceId: z.string(),
@@ -156,10 +157,14 @@ const handler = async (data) => {
                         };
                     }
 
+                    const displayName = (existing?.name && existing.name !== metaT.name)
+                        ? existing.name
+                        : getTemplateDisplayName(metaT.name);
+
                     const templateData = {
                         userId,
                         templateId: metaT.id,
-                        name: metaT.name,
+                        name: displayName,
                         templateName: metaT.name,
                         category: metaT.category,
                         language: metaT.language,

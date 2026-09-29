@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getTemplates } from "../../../template/_actions/get-templates";
+import { getTemplateDisplayName } from "../../../_lib/template-formatter";
 
 export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closePanel, workspaceId }) => {
     // Sanitize node data by extracting only plain, serializable values
@@ -166,8 +167,9 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
             configured: true
         };
 
-        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:') || config.label === template.name) {
-            newConfig.label = template.name;
+        const displayName = getTemplateDisplayName(template);
+        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:') || config.label === template.name || config.label === displayName) {
+            newConfig.label = displayName;
         }
 
         setConfig(newConfig);
@@ -1119,8 +1121,8 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                     {templates.map((tpl) => (
                                         <SelectItem key={tpl.id} value={tpl.id} className="text-xs">
                                             <div className="flex items-center justify-between gap-3 w-full">
-                                                <span className="font-semibold">{tpl.name}</span>
-                                                <span className="text-[10px] text-muted-foreground">({tpl.language || 'en_US'})</span>
+                                                <span className="font-semibold">{getTemplateDisplayName(tpl)}</span>
+                                                <span className="text-[10px] text-muted-foreground font-mono">({tpl.language || 'en_US'})</span>
                                             </div>
                                         </SelectItem>
                                     ))}
@@ -1132,7 +1134,7 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
                                 return (
                                     <div className="p-3 rounded-xl bg-black/40 border border-white/10 text-xs space-y-2.5">
                                         <div className="flex items-center justify-between">
-                                            <span className="font-bold text-white text-xs truncate max-w-[170px]">{selectedTemplateObj.name}</span>
+                                            <span className="font-bold text-white text-xs truncate max-w-[170px]" title={getTemplateDisplayName(selectedTemplateObj)}>{getTemplateDisplayName(selectedTemplateObj)}</span>
                                             <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                                                 selectedTemplateObj.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                                             }`}>

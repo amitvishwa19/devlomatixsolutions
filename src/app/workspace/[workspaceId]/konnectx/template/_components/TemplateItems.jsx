@@ -26,6 +26,7 @@ import {
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import TemplatePreview from './TemplatePreview';
+import { getTemplateDisplayName } from '../../_lib/template-formatter';
 
 export const TemplatePreviewCard = ({ 
     template, 
@@ -43,6 +44,7 @@ export const TemplatePreviewCard = ({
 }) => {
     const groupName = template.metadata?.groupName;
     const groupColor = template.metadata?.groupColor || '#3b82f6';
+    const displayName = getTemplateDisplayName(template);
 
     return (
         <div className="group relative flex flex-col h-full bg-card/50 hover:bg-card border hover:border-primary/30 rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
@@ -55,7 +57,7 @@ export const TemplatePreviewCard = ({
             <div className="px-5 py-4 bg-background border-t border-border/50 flex flex-col gap-3">
                 <div className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
+                        <span className="text-sm font-bold text-foreground truncate" title={displayName}>{displayName}</span>
                         {template.platform === 'WHATSAPP_CLOUD' && (
                             <Badge
                                 className={`h-4 text-[9px] px-1.5 uppercase tracking-tighter border-0 font-bold shrink-0 ${template.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-500 hover:bg-emerald-500/30' :
@@ -241,6 +243,8 @@ export const TemplateListRow = ({
     const groupName = template.metadata?.groupName;
     const groupColor = template.metadata?.groupColor || '#3b82f6';
 
+    const displayName = getTemplateDisplayName(template);
+
     return (
         <div className="group relative flex items-center gap-4 p-3 bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl transition-all duration-200">
             {/* Info Section */}
@@ -250,7 +254,7 @@ export const TemplateListRow = ({
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-sm font-bold text-foreground truncate">{template.name}</span>
+                        <span className="text-sm font-bold text-foreground truncate" title={displayName}>{displayName}</span>
                         {groupName && (
                             <Badge
                                 variant="outline"

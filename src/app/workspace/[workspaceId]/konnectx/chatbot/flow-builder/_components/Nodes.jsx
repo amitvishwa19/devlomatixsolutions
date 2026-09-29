@@ -22,6 +22,7 @@ import {
     MessageSquareText
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { getTemplateDisplayName } from '../../../_lib/template-formatter';
 
 const BRANCH_PALETTE = [
     { bg: 'bg-emerald-500', hex: '#10b981', text: 'text-emerald-400' },
@@ -201,9 +202,11 @@ export const MessageNode = memo(({ id, data, selected }) => {
     const isImage = data.subType === 'imageMessage';
     const isTemplate = data.subType === 'templateMessage';
 
-    const displayLabel = isTemplate && data.label
-        ? data.label.replace(/^Template:\s*/i, '')
-        : (data.label || (isTemplate ? 'Official Template' : 'Send Message'));
+    const displayLabel = isTemplate
+        ? getTemplateDisplayName(data.label || data.templateName || (data.templateData?.name) || 'Official Template')
+        : (data.label || 'Send Message');
+
+    const detailText = data.text || data.imageUrl || (data.templateName ? getTemplateDisplayName(data.templateName) : 'Click to configure...');
 
     return (
         <>
@@ -220,7 +223,7 @@ export const MessageNode = memo(({ id, data, selected }) => {
                     {displayLabel}
                 </div>
                 <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
-                    {data.text || data.imageUrl || (data.templateName ? data.templateName.replace(/^Template:\s*/i, '') : 'Click to configure...')}
+                    {detailText}
                 </div>
             </NodeWrapper>
             <Handle type="source" position={Position.Right} className="w-3 h-3 border-2 border-[#1e1e2e] bg-emerald-500" />

@@ -32,6 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { getTemplateDisplayName } from '../../_lib/template-formatter';
 
 export default function TestTemplateDialog({
     isOpen,
@@ -115,7 +116,7 @@ export default function TestTemplateDialog({
                         <div className="bg-primary/5 border border-primary/10 rounded-xl p-3.5 flex flex-col gap-2">
                             <div className="flex items-center justify-between gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-primary uppercase tracking-wider">
-                                    Template: {template.name}
+                                    {getTemplateDisplayName(template)}
                                 </span>
                                 <div className="flex gap-2">
                                     <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-semibold">

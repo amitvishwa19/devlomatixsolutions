@@ -22,6 +22,7 @@ import { FolderPlus, Layers, Loader2, Tag } from 'lucide-react';
 import { useAction } from '@/hooks/use-action';
 import { assignTemplateGroup } from '../_actions/assign-template-group';
 import { toast } from 'sonner';
+import { getTemplateDisplayName } from '../../_lib/template-formatter';
 
 export default function AssignTemplateGroupDialog({
     isOpen,
@@ -76,7 +77,7 @@ export default function AssignTemplateGroupDialog({
                         Assign Template Group
                     </DialogTitle>
                     <DialogDescription className="text-xs text-muted-foreground">
-                        Select a group for <span className="font-semibold text-foreground">{template.name}</span>.
+                        Select a group for <span className="font-semibold text-foreground">{getTemplateDisplayName(template)}</span>.
                     </DialogDescription>
                 </DialogHeader>
 
