@@ -68,6 +68,12 @@ const handler = async (data) => {
             if (!existing || existing.userId !== userId) {
                 return { error: "Template not found or unauthorized", data: null };
             }
+            let mergedMetadata = metadata;
+            if (existing.metadata) {
+                const existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : existing.metadata;
+                mergedMetadata = { ...existingMeta, ...(metadata || {}) };
+            }
+
             const updated = await db.messageTemplate.update({
                 where: { id },
                 data: {
@@ -78,7 +84,7 @@ const handler = async (data) => {
                     body: body || "",
                     footer: footer || null,
                     buttons: buttons || [],
-                    metadata: metadata || null,
+                    metadata: mergedMetadata || null,
                     status: status || "DRAFT",
                     templateName: templateName || name,
                     phoneNumberId: phoneNumberId || existing.phoneNumberId

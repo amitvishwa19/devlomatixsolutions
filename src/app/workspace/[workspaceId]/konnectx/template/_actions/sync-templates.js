@@ -119,6 +119,20 @@ const handler = async (data) => {
                     const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
                     const headerComp = metaT.components?.find(c => c.type === 'HEADER');
 
+                    const existing = await db.messageTemplate.findFirst({
+                        where: {
+                            userId,
+                            name: metaT.name,
+                            language: metaT.language,
+                            phoneNumberId: cloudCredentials.phoneNumberId
+                        }
+                    });
+
+                    let existingMeta = {};
+                    if (existing?.metadata) {
+                        existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : existing.metadata;
+                    }
+
                     const templateData = {
                         userId,
                         templateId: metaT.id,
@@ -133,6 +147,7 @@ const handler = async (data) => {
                         footer: footerComp?.text || null,
                         buttons: buttonComp?.buttons || [],
                         metadata: {
+                            ...existingMeta,
                             headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
                             mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
                                 ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
@@ -144,16 +159,6 @@ const handler = async (data) => {
                     };
 
                     console.log(`[Template Sync Action] VERIFIED NEW LOGIC RUNNING for ${metaT.name}`);
-                    // Manual Upsert to avoid Prisma Client caching issues with compound unique names
-                    const existing = await db.messageTemplate.findFirst({
-                        where: {
-                            userId,
-                            name: metaT.name,
-                            language: metaT.language,
-                            phoneNumberId: cloudCredentials.phoneNumberId
-                        }
-                    });
-
                     let synced;
                     if (existing) {
                         synced = await db.messageTemplate.update({

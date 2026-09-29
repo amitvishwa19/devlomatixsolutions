@@ -131,24 +131,6 @@ const handler = async (data) => {
                         templateMetadata.cards = cardsData;
                     }
 
-                    const templateData = {
-                        userId,
-                        templateId: metaT.id,
-                        name: metaT.name,
-                        templateName: metaT.name,
-                        category: metaT.category,
-                        language: metaT.language,
-                        status: metaT.status,
-                        type: templateType,
-                        body: bodyComp?.text || "",
-                        footer: footerComp?.text || null,
-                        buttons: buttonComp?.buttons || [],
-                        metadata: templateMetadata,
-                        isDefault: true,
-                        platform: 'WHATSAPP_CLOUD',
-                        phoneNumberId: String(cloudCredentials.phoneNumberId || cloudCredentials.phone_number_id || "")
-                    };
-
                     const existing = await db.messageTemplate.findFirst({
                         where: {
                             userId,
@@ -161,6 +143,36 @@ const handler = async (data) => {
                             phoneNumberId: currentPhoneId
                         }
                     });
+
+                    let mergedMetadata = templateMetadata;
+                    if (existing) {
+                        let existingMeta = {};
+                        if (existing.metadata) {
+                            existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : existing.metadata;
+                        }
+                        mergedMetadata = {
+                            ...existingMeta,
+                            ...templateMetadata
+                        };
+                    }
+
+                    const templateData = {
+                        userId,
+                        templateId: metaT.id,
+                        name: metaT.name,
+                        templateName: metaT.name,
+                        category: metaT.category,
+                        language: metaT.language,
+                        status: metaT.status,
+                        type: templateType,
+                        body: bodyComp?.text || "",
+                        footer: footerComp?.text || null,
+                        buttons: buttonComp?.buttons || [],
+                        metadata: mergedMetadata,
+                        isDefault: true,
+                        platform: 'WHATSAPP_CLOUD',
+                        phoneNumberId: String(cloudCredentials.phoneNumberId || cloudCredentials.phone_number_id || "")
+                    };
 
                     if (existing) {
                         await db.messageTemplate.update({ where: { id: existing.id }, data: templateData });
