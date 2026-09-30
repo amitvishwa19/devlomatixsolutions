@@ -36,23 +36,23 @@ const handler = async (data) => {
             });
 
             // Also update any templates that have this groupId in metadata so groupName stays in sync
-            const templatesWithGroup = await db.messageTemplate.findMany({
-                where: {
-                    metadata: {
-                        path: ['groupId'],
-                        equals: id
-                    }
-                }
+            const allTemplates = await db.messageTemplate.findMany({
+                select: { id: true, metadata: true }
             }).catch(() => []);
 
-            for (const t of templatesWithGroup) {
-                let meta = typeof t.metadata === 'string' ? JSON.parse(t.metadata) : (t.metadata || {});
-                meta.groupName = name;
-                meta.groupColor = color || '#3b82f6';
-                await db.messageTemplate.update({
-                    where: { id: t.id },
-                    data: { metadata: meta }
-                }).catch(() => null);
+            for (const t of allTemplates) {
+                let meta = t.metadata;
+                if (typeof meta === 'string') {
+                    try { meta = JSON.parse(meta); } catch (e) { meta = null; }
+                }
+                if (meta && meta.groupId === id) {
+                    meta.groupName = name;
+                    meta.groupColor = color || '#3b82f6';
+                    await db.messageTemplate.update({
+                        where: { id: t.id },
+                        data: { metadata: meta }
+                    }).catch(() => null);
+                }
             }
 
             return { data: { group: updated } };

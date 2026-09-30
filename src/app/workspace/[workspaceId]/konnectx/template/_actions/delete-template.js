@@ -20,7 +20,7 @@ const handler = async (data) => {
 
         const template = await db.messageTemplate.findUnique({
             where: { id },
-            select: { id: true, userId: true, templateId: true, name: true, language: true, platform: true }
+            select: { id: true, userId: true, templateId: true, name: true, templateName: true, language: true, platform: true }
         });
 
         if (!template || template.userId !== userId) {
@@ -57,7 +57,8 @@ const handler = async (data) => {
                     }
 
                     if (cloudCreds?.accessToken && cloudCreds?.wabaId) {
-                        const deleteUrl = `https://graph.facebook.com/v17.0/${cloudCreds.wabaId}/message_templates?name=${encodeURIComponent(template.name)}&access_token=${cloudCreds.accessToken}`;
+                        const metaApiName = template.templateName || template.name;
+                        const deleteUrl = `https://graph.facebook.com/v17.0/${cloudCreds.wabaId}/message_templates?name=${encodeURIComponent(metaApiName)}&access_token=${cloudCreds.accessToken}`;
                         const metaRes = await fetch(deleteUrl, { method: 'DELETE' });
                         const metaResult = await metaRes.json();
 

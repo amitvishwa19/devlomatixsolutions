@@ -34,7 +34,14 @@ const handler = async (data) => {
         });
 
         for (const t of templates) {
-            let meta = typeof t.metadata === 'string' ? JSON.parse(t.metadata) : (t.metadata || {});
+            let meta = {};
+            if (t.metadata) {
+                try {
+                    meta = typeof t.metadata === 'string' ? JSON.parse(t.metadata) : { ...t.metadata };
+                } catch (e) {
+                    meta = {};
+                }
+            }
             if (group) {
                 meta.groupId = group.id;
                 meta.groupName = group.name;

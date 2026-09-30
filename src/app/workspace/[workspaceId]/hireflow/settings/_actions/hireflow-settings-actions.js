@@ -258,29 +258,6 @@ export async function syncHireflowTemplatesAction(workspaceId, credentialId) {
                 const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
                 const headerComp = metaT.components?.find(c => c.type === 'HEADER');
 
-                const templateData = {
-                    userId,
-                    templateId: metaT.id,
-                    name: metaT.name,
-                    templateName: metaT.name,
-                    category: metaT.category || 'UTILITY',
-                    language: metaT.language || 'en_US',
-                    status: metaT.status,
-                    type: headerComp?.format || 'TEXT',
-                    body: bodyComp?.text || "",
-                    footer: footerComp?.text || null,
-                    buttons: buttonComp?.buttons || [],
-                    metadata: {
-                        headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
-                        mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
-                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
-                            : null
-                    },
-                    isDefault: true,
-                    platform: 'WHATSAPP_CLOUD',
-                    phoneNumberId: currentPhoneId
-                };
-
                 const existing = await db.messageTemplate.findFirst({
                     where: {
                         OR: [
@@ -292,6 +269,50 @@ export async function syncHireflowTemplatesAction(workspaceId, credentialId) {
                         phoneNumberId: currentPhoneId
                     }
                 });
+
+                let existingMeta = {};
+                if (existing?.metadata) {
+                    try {
+                        existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : (existing.metadata || {});
+                    } catch (e) {
+                        existingMeta = {};
+                    }
+                }
+
+                const templateMetadata = {
+                    headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
+                    mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
+                        ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
+                        : null
+                };
+
+                const templateData = {
+                    userId,
+                    templateId: metaT.id,
+                    name: existing?.name || metaT.name,
+                    templateName: metaT.name,
+                    category: metaT.category || 'UTILITY',
+                    language: metaT.language || 'en_US',
+                    status: metaT.status,
+                    type: headerComp?.format || 'TEXT',
+                    body: bodyComp?.text || "",
+                    footer: footerComp?.text || null,
+                    buttons: buttonComp?.buttons || [],
+                    metadata: {
+                        ...templateMetadata,
+                        ...existingMeta,
+                        ...(templateMetadata.headerText !== undefined && { headerText: templateMetadata.headerText }),
+                        ...(templateMetadata.mediaUrl !== undefined && { mediaUrl: templateMetadata.mediaUrl }),
+                        ...(existingMeta.groupId ? {
+                            groupId: existingMeta.groupId,
+                            groupName: existingMeta.groupName,
+                            groupColor: existingMeta.groupColor || '#3b82f6'
+                        } : {})
+                    },
+                    isDefault: true,
+                    platform: 'WHATSAPP_CLOUD',
+                    phoneNumberId: currentPhoneId
+                };
 
                 if (existing) {
                     await db.messageTemplate.update({

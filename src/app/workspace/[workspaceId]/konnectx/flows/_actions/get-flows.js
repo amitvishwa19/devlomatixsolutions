@@ -13,23 +13,17 @@ const handler = async (data) => {
     const { workspaceId } = data;
 
     try {
-        const session = await ensureWorkspaceAccess(workspaceId);
-        const userId = session.user.userId || session.user.id;
-
-        console.log("🔍 Checking DB models in action...");
-        const models = Object.keys(db).filter(k => !k.startsWith('_'));
-        console.log("Available models:", models);
-
-        if (!db.whatsAppFlow) {
-            throw new Error(`whatsAppFlow model not found in DB object. Available: ${models.join(', ')}`);
-        }
+        await ensureWorkspaceAccess(workspaceId);
 
         const flows = await db.whatsAppFlow.findMany({
-            where: { workspaceId, userId },
-            orderBy: { updatedAt: 'desc' }
+            where: { workspaceId },
+            orderBy: [
+                { createdAt: 'desc' },
+                { updatedAt: 'desc' }
+            ]
         });
 
-        return { success: true, flows };
+        return { success: true, flows: JSON.parse(JSON.stringify(flows)) };
     } catch (error) {
         console.error("❌ GetFlows Error:", error);
         return { error: error.message || "Failed to fetch flows" };

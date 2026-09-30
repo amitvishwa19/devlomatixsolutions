@@ -79,7 +79,8 @@ const handler = async (data) => {
             totalMetaTemplates += metaTemplates.length;
             console.log(`[Template Sync Action] Fetched ${metaTemplates.length} templates for ${credential.profile}`);
 
-            // 1. Build a set of Meta template keys (name_language) for comparison
+            // 1. Build lookup sets of Meta template IDs and keys (name_language) for robust comparison
+            const metaTemplateIds = new Set(metaTemplates.map(t => String(t.id)).filter(Boolean));
             const metaTemplateKeys = new Set(
                 metaTemplates.map(t => `${t.name.toLowerCase()}_${t.language}`)
             );
@@ -89,16 +90,33 @@ const handler = async (data) => {
             const localTemplates = await db.messageTemplate.findMany({
                 where: {
                     userId,
-                    phoneNumberId: currentPhoneId,
+                    ...(currentPhoneId ? { phoneNumberId: currentPhoneId } : {}),
                     isDefault: true,
                     platform: 'WHATSAPP_CLOUD'
                 }
             });
 
-            // 3. Identify and delete templates no longer on Meta Cloud
+            // 3. Identify and delete ONLY templates that were genuinely deleted on Meta Cloud
             const templatesToDelete = localTemplates.filter(t => {
-                const key = `${t.name.toLowerCase()}_${t.language}`;
-                return !metaTemplateKeys.has(key);
+                // Never delete local drafts that haven't been linked to a Meta ID
+                if (t.status === 'DRAFT' && !t.templateId) return false;
+
+                // Match by templateId
+                if (t.templateId && metaTemplateIds.has(String(t.templateId))) return false;
+
+                const lang = t.language || 'en_US';
+
+                // Match by templateName
+                if (t.templateName && metaTemplateKeys.has(`${t.templateName.toLowerCase()}_${lang}`)) return false;
+
+                // Match by name
+                if (t.name && metaTemplateKeys.has(`${t.name.toLowerCase()}_${lang}`)) return false;
+
+                // Match by snake_cased display name
+                const sanitized = t.name ? t.name.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_') : '';
+                if (sanitized && metaTemplateKeys.has(`${sanitized}_${lang}`)) return false;
+
+                return true;
             });
 
             if (templatesToDelete.length > 0) {
@@ -112,27 +130,87 @@ const handler = async (data) => {
                 });
             }
 
-            // 3. Upsert into Database
+            // 4. Upsert into Database
             for (const metaT of metaTemplates) {
                 try {
                     const bodyComp = metaT.components?.find(c => c.type === 'BODY');
                     const footerComp = metaT.components?.find(c => c.type === 'FOOTER');
                     const buttonComp = metaT.components?.find(c => c.type === 'BUTTONS');
                     const headerComp = metaT.components?.find(c => c.type === 'HEADER');
+                    const carouselComp = metaT.components?.find(c => c.type === 'CAROUSEL');
+
+                    let templateType = headerComp?.format || 'TEXT';
+                    let templateMetadata = {
+                        headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
+                        mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
+                            ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
+                            : null
+                    };
+
+                    if (carouselComp && carouselComp.cards) {
+                        templateType = 'CAROUSEL';
+                        const cardsData = carouselComp.cards.map(card => {
+                            const cHeader = card.components?.find(c => c.type === 'HEADER');
+                            const cBody = card.components?.find(c => c.type === 'BODY');
+                            const cButtons = card.components?.find(c => c.type === 'BUTTONS');
+                            
+                            return {
+                                mediaUrl: cHeader?.example?.header_handle?.[0] || cHeader?.example?.header_url?.[0] || '',
+                                body: cBody?.text || '',
+                                buttons: cButtons?.buttons?.map(b => b.text) || []
+                            };
+                        });
+                        templateMetadata.cards = cardsData;
+                    }
+
+                    const identifierConditions = [];
+                    if (metaT.id) identifierConditions.push({ templateId: String(metaT.id) });
+                    identifierConditions.push({ templateName: metaT.name });
+                    identifierConditions.push({ name: metaT.name });
+                    identifierConditions.push({ name: getTemplateDisplayName(metaT.name) });
+
+                    const phoneFilter = currentPhoneId ? [
+                        { phoneNumberId: currentPhoneId },
+                        { phoneNumberId: null },
+                        { phoneNumberId: "" }
+                    ] : [];
 
                     const existing = await db.messageTemplate.findFirst({
                         where: {
                             userId,
-                            name: metaT.name,
                             language: metaT.language,
-                            phoneNumberId: cloudCredentials.phoneNumberId
+                            OR: identifierConditions,
+                            ...(phoneFilter.length > 0 ? {
+                                AND: [{ OR: phoneFilter }]
+                            } : {})
                         }
                     });
 
                     let existingMeta = {};
                     if (existing?.metadata) {
-                        existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : existing.metadata;
+                        try {
+                            existingMeta = typeof existing.metadata === 'string'
+                                ? JSON.parse(existing.metadata)
+                                : (existing.metadata || {});
+                        } catch (e) {
+                            existingMeta = {};
+                        }
                     }
+
+                    // Carefully merge metadata to preserve groupId, groupName, groupColor and custom properties
+                    const mergedMetadata = {
+                        ...templateMetadata,
+                        ...existingMeta,
+                        ...(templateMetadata.headerText !== undefined && { headerText: templateMetadata.headerText }),
+                        ...(templateMetadata.mediaUrl !== undefined && { mediaUrl: templateMetadata.mediaUrl }),
+                        ...(templateMetadata.cards !== undefined && { cards: templateMetadata.cards }),
+                        // Explicitly preserve group assignments
+                        ...(existingMeta.groupId ? {
+                            groupId: existingMeta.groupId,
+                            groupName: existingMeta.groupName,
+                            groupColor: existingMeta.groupColor || '#3b82f6'
+                        } : {})
+                    };
 
                     const displayName = (existing?.name && existing.name !== metaT.name)
                         ? existing.name
@@ -140,30 +218,23 @@ const handler = async (data) => {
 
                     const templateData = {
                         userId,
-                        templateId: metaT.id,
-                        workspaceId,
+                        templateId: String(metaT.id),
                         name: displayName,
                         templateName: metaT.name,
-                        category: metaT.category,
+                        category: metaT.category || 'UTILITY',
                         language: metaT.language,
                         status: metaT.status,
-                        type: headerComp?.format || 'TEXT',
+                        approved: metaT.status === 'APPROVED',
+                        type: templateType,
                         body: bodyComp?.text || "",
                         footer: footerComp?.text || null,
                         buttons: buttonComp?.buttons || [],
-                        metadata: {
-                            ...existingMeta,
-                            headerText: headerComp?.format === 'TEXT' ? (headerComp.text || headerComp.example?.header_text?.[0]) : null,
-                            mediaUrl: ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComp?.format)
-                                ? (headerComp.example?.header_handle?.[0] || headerComp.example?.header_url?.[0] || null)
-                                : null
-                        },
+                        metadata: mergedMetadata,
                         isDefault: true,
                         platform: 'WHATSAPP_CLOUD',
-                        phoneNumberId: cloudCredentials.phoneNumberId
+                        phoneNumberId: currentPhoneId || existing?.phoneNumberId || null
                     };
 
-                    console.log(`[Template Sync Action] VERIFIED NEW LOGIC RUNNING for ${metaT.name}`);
                     let synced;
                     if (existing) {
                         synced = await db.messageTemplate.update({

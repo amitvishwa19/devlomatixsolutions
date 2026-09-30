@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { getDecryptedCredentials } from "../../settings/_actions/get-decrypted-credentials";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
 import { generateFlowDSL } from "../_lib/flow-utils";
@@ -19,6 +19,7 @@ const handler = async (data) => {
     const { workspaceId, id: localFlowId } = data;
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = session.user.userId || session.user.id;
         
         // 1. Get Local Flow
         if (!localFlowId) throw new Error("Flow ID is required");
@@ -31,13 +32,9 @@ const handler = async (data) => {
         if (!flow.flowId) throw new Error("Flow has not been pushed to Meta yet. Please click 'Push' first.");
 
         // 2. Get Credentials
-        const credsRes = await getDecryptedCredentials({ workspaceId });
-        if (credsRes.error || !credsRes.data) {
-            throw new Error(credsRes.error || "WhatsApp credentials not found");
-        }
-        const credentials = credsRes.data;
-        if (!credentials?.accessToken) {
-            throw new Error("Meta access token is missing or expired. Please check your account in Settings.");
+        const { credentials } = await resolveWhatsAppCredentials({ workspaceId, userId });
+        if (!credentials?.accessToken || !credentials?.wabaId) {
+            throw new Error("WhatsApp Cloud credentials (Access Token or WABA ID) not configured");
         }
 
         const metaId = flow.flowId;

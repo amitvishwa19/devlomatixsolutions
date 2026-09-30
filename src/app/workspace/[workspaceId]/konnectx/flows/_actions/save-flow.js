@@ -13,6 +13,7 @@ const SaveFlowSchema = z.object({
     categories: z.array(z.string()).optional(),
     endpointUrl: z.string().nullable().optional(),
     screens: z.any().optional(),
+    definition: z.any().optional(),
     metaValidationErrors: z.any().optional(),
 });
 

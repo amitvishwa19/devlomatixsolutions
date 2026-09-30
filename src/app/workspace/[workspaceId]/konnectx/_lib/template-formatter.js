@@ -26,16 +26,7 @@ export function getTemplateDisplayName(template) {
     }
 
     // Convert snake_case or kebab-case to Title Case (e.g. "welcome_message_v2" -> "Welcome Message V2")
-    if (clean.includes('_') || clean.includes('-')) {
-        return clean
-            .split(/[_-]+/)
-            .filter(Boolean)
-            .map(word => {
-                if (/^[A-Z0-9]+$/.test(word) && word.length <= 4) return word;
-                return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-            })
-            .join(' ');
-    }
+
 
     // If it's a single lowercase word (e.g. "welcome" or "support")
     if (/^[a-z0-9]+$/.test(clean)) {

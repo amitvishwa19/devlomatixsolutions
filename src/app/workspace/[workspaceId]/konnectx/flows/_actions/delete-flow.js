@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createSafeAction } from "@/utils/CreateSafeAction";
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { getDecryptedCredentials } from "../../settings/_actions/get-decrypted-credentials";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 
 const DeleteFlowSchema = z.object({
@@ -28,9 +28,9 @@ const handler = async (data) => {
         // Delete from Meta if it has a flowId
         if (flow.flowId) {
             try {
-                const credsRes = await getDecryptedCredentials({ workspaceId });
-                if (credsRes.success && credsRes.data) {
-                    await cloudApi.deleteFlowMeta(credsRes.data, flow.flowId);
+                const { credentials } = await resolveWhatsAppCredentials({ workspaceId, userId });
+                if (credentials?.accessToken && credentials?.wabaId) {
+                    await cloudApi.deleteFlowMeta(credentials, flow.flowId);
                 }
             } catch (metaErr) {
                 console.warn("[DeleteFlow] Meta delete failed (non-fatal):", metaErr);

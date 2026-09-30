@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
-import { getDecryptedCredentials } from "../../settings/_actions/get-decrypted-credentials";
+import { resolveWhatsAppCredentials } from "@/lib/whatsapp-credentials";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { revalidatePath } from "next/cache";
 import { generateFlowDSL } from "../_lib/flow-utils";
@@ -36,11 +36,10 @@ const handler = async (data) => {
 
         if (!flow) throw new Error("Flow not found");
 
-        const credsRes = await getDecryptedCredentials({ workspaceId });
-        if (credsRes.error || !credsRes.data) {
-            throw new Error(credsRes.error || "WhatsApp credentials not found or invalid");
+        const { credentials } = await resolveWhatsAppCredentials({ workspaceId, userId });
+        if (!credentials?.accessToken || !credentials?.wabaId) {
+            throw new Error("WhatsApp Cloud credentials (Access Token or WABA ID) not configured");
         }
-        const credentials = credsRes.data;
 
         let metaId = flow.flowId;
 

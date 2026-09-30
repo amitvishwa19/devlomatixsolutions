@@ -13,7 +13,8 @@ const handler = async (data) => {
     const { workspaceId } = data;
 
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const currentUserId = session?.user?.userId || session?.user?.id;
 
         // Fetch categories designated for templates
         const groups = await db.category.findMany({
@@ -24,14 +25,31 @@ const handler = async (data) => {
             orderBy: { name: 'asc' }
         });
 
+        // Get workspace members & owner
+        const workspace = await db.server.findUnique({
+            where: { id: workspaceId },
+            include: { members: true }
+        }).catch(() => null);
+
+        const workspaceUserIds = [
+            ...new Set([
+                currentUserId,
+                workspace?.userId,
+                ...((workspace?.members || []).map(m => m.userId))
+            ].filter(Boolean))
+        ];
+
+        const whereClause = {
+            OR: [
+                ...(workspaceUserIds.length > 0 ? [{ userId: { in: workspaceUserIds } }] : []),
+                ...(currentUserId ? [{ sharedWith: { some: { sharedWithUserId: currentUserId } } }] : []),
+                { isDefault: true }
+            ]
+        };
+
         // Also calculate template counts for each group
         const templates = await db.messageTemplate.findMany({
-            where: {
-                OR: [
-                    { isDefault: true },
-                    { user: { members: { some: { serverId: workspaceId } } } }
-                ]
-            },
+            where: whereClause,
             select: {
                 id: true,
                 metadata: true

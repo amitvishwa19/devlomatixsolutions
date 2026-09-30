@@ -64,7 +64,7 @@ export default function TemplatePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('list');
-    const [sortBy, setSortBy] = useState('ASCENDING');
+    const [sortBy, setSortBy] = useState('DESCENDING');
 
     // Builder & Dialog State
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -674,41 +674,26 @@ export default function TemplatePage() {
             if (!isHelloA && isHelloB) return -1;
 
             if (sortBy === 'NAME_ASC') {
-                return (a.name || '').localeCompare(b.name || '');
+                return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
             }
             if (sortBy === 'NAME_DESC') {
-                return (b.name || '').localeCompare(a.name || '');
+                return (b.name || '').localeCompare(a.name || '', undefined, { numeric: true, sensitivity: 'base' });
             }
             if (sortBy === 'STATUS') {
                 return (a.status || '').localeCompare(b.status || '');
             }
-            if (sortBy === 'DESCENDING' || sortBy === 'NEWEST') {
-                const timeA = Math.max(
-                    new Date(a.updatedAt || 0).getTime(),
-                    new Date(a.createdAt || 0).getTime()
-                );
-                const timeB = Math.max(
-                    new Date(b.updatedAt || 0).getTime(),
-                    new Date(b.createdAt || 0).getTime()
-                );
-                if (timeB !== timeA) return timeB - timeA;
-                return String(b.id || '').localeCompare(String(a.id || ''));
+            if (sortBy === 'ASCENDING' || sortBy === 'OLDEST') {
+                const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+                const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+                if (timeA !== timeB) return timeA - timeB;
+                return String(a.id || '').localeCompare(String(b.id || ''));
             }
 
-            // Default: 'ASCENDING' (Oldest created first -> newest at the bottom)
-            const timeA = Math.min(
-                new Date(a.createdAt || a.updatedAt || 0).getTime(),
-                new Date(a.updatedAt || a.createdAt || 0).getTime()
-            );
-            const timeB = Math.min(
-                new Date(b.createdAt || b.updatedAt || 0).getTime(),
-                new Date(b.updatedAt || b.createdAt || 0).getTime()
-            );
-
-            if (timeA !== timeB) {
-                return timeA - timeB;
-            }
-            return String(a.id || '').localeCompare(String(b.id || ''));
+            // Default ('DESCENDING' / 'NEWEST'): Descending from field createdAt (newest at top)
+            const timeA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+            const timeB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+            if (timeB !== timeA) return timeB - timeA;
+            return String(b.id || '').localeCompare(String(a.id || ''));
         });
 
     const totalAllCount = templates.length;
@@ -830,12 +815,12 @@ export default function TemplatePage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <Select value={sortBy} onValueChange={setSortBy}>
-                            <SelectTrigger className="h-10 text-xs w-[140px] bg-background/50 border-border">
+                            <SelectTrigger className="h-10 text-xs w-[170px] bg-background/50 border-border">
                                 <SelectValue placeholder="Sort by" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="ASCENDING">Ascending (Oldest First)</SelectItem>
                                 <SelectItem value="DESCENDING">Descending (Newest First)</SelectItem>
+                                <SelectItem value="ASCENDING">Ascending (Oldest First)</SelectItem>
                                 <SelectItem value="NAME_ASC">Name (A-Z)</SelectItem>
                                 <SelectItem value="NAME_DESC">Name (Z-A)</SelectItem>
                                 <SelectItem value="STATUS">Status</SelectItem>

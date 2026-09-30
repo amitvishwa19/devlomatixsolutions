@@ -26,24 +26,24 @@ const handler = async (data) => {
         }
 
         // Remove group reference from all templates that belonged to this group
-        const templatesWithGroup = await db.messageTemplate.findMany({
-            where: {
-                metadata: {
-                    path: ['groupId'],
-                    equals: id
-                }
-            }
+        const allTemplates = await db.messageTemplate.findMany({
+            select: { id: true, metadata: true }
         }).catch(() => []);
 
-        for (const t of templatesWithGroup) {
-            let meta = typeof t.metadata === 'string' ? JSON.parse(t.metadata) : (t.metadata || {});
-            delete meta.groupId;
-            delete meta.groupName;
-            delete meta.groupColor;
-            await db.messageTemplate.update({
-                where: { id: t.id },
-                data: { metadata: meta }
-            }).catch(() => null);
+        for (const t of allTemplates) {
+            let meta = t.metadata;
+            if (typeof meta === 'string') {
+                try { meta = JSON.parse(meta); } catch (e) { meta = null; }
+            }
+            if (meta && meta.groupId === id) {
+                delete meta.groupId;
+                delete meta.groupName;
+                delete meta.groupColor;
+                await db.messageTemplate.update({
+                    where: { id: t.id },
+                    data: { metadata: meta }
+                }).catch(() => null);
+            }
         }
 
         // Delete the category row

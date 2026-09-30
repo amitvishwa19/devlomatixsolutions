@@ -1,15 +1,15 @@
 'use client';
 
 import React from 'react';
-import { 
-    Edit2, 
-    Trash2, 
-    MoreVertical, 
-    MessageSquare, 
-    Send, 
-    Copy, 
-    Sparkles, 
-    RefreshCw, 
+import {
+    Edit2,
+    Trash2,
+    MoreVertical,
+    MessageSquare,
+    Send,
+    Copy,
+    Sparkles,
+    RefreshCw,
     Loader2,
     Eye,
     Share2,
@@ -19,23 +19,23 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import TemplatePreview from './TemplatePreview';
 import { getTemplateDisplayName } from '../../_lib/template-formatter';
 
-export const TemplatePreviewCard = ({ 
-    template, 
-    onEdit, 
-    onClone, 
-    onDelete, 
-    onTest, 
+export const TemplatePreviewCard = ({
+    template,
+    onEdit,
+    onClone,
+    onDelete,
+    onTest,
     onPreview,
-    onSubmit, 
+    onSubmit,
     onCheckStatus,
     onShare,
     onAssignGroup,
@@ -182,7 +182,7 @@ export const TemplatePreviewCard = ({
                                 {template.platform === 'WHATSAPP_CLOUD' && (
                                     <>
                                         {(!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') ? (
-                                             <DropdownMenuItem
+                                            <DropdownMenuItem
                                                 className="text-xs flex items-center gap-2 cursor-pointer py-2 text-primary"
                                                 onClick={() => onSubmit(template.id)}
                                                 disabled={isSubmittingId === template.id}
@@ -226,14 +226,14 @@ export const TemplatePreviewCard = ({
     );
 };
 
-export const TemplateListRow = ({ 
-    template, 
-    onEdit, 
-    onClone, 
-    onDelete, 
-    onTest, 
+export const TemplateListRow = ({
+    template,
+    onEdit,
+    onClone,
+    onDelete,
+    onTest,
     onPreview,
-    onSubmit, 
+    onSubmit,
     onCheckStatus,
     onShare,
     onAssignGroup,
@@ -248,13 +248,14 @@ export const TemplateListRow = ({
     return (
         <div className="group relative flex items-center gap-4 p-3 bg-card/50 hover:bg-card border border-border/50 hover:border-primary/30 rounded-xl transition-all duration-200">
             {/* Info Section */}
+
             <div className="flex-1 min-w-0 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-lg bg-muted/30 flex items-center justify-center shrink-0 border border-border/10">
                     <MessageSquare className="w-5 h-5 text-primary/40" />
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-sm font-bold text-foreground truncate" title={displayName}>{displayName}</span>
+                        <span className="text-xs font-bold text-foreground truncate" title={displayName}>{displayName}</span>
                         {groupName && (
                             <Badge
                                 variant="outline"
@@ -320,10 +321,10 @@ export const TemplateListRow = ({
 
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10" 
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10"
                             onClick={() => onPreview(template)}
                         >
                             <Eye className="w-3.5 h-3.5" />
@@ -348,10 +349,10 @@ export const TemplateListRow = ({
                 {template.platform === 'WHATSAPP_CLOUD' && (!template.status || template.status === 'DRAFT' || template.status === 'REJECTED') && (
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10" 
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="w-8 h-8 rounded-full text-primary hover:text-primary hover:bg-primary/10"
                                 onClick={() => onSubmit(template.id)}
                                 disabled={isSubmittingId === template.id}
                             >

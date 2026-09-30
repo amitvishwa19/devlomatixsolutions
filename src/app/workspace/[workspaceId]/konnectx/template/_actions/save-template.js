@@ -71,10 +71,23 @@ const handler = async (data) => {
             if (!existing || existing.userId !== userId) {
                 return { error: "Template not found or unauthorized", data: null };
             }
-            let mergedMetadata = metadata;
+            let mergedMetadata = metadata || {};
             if (existing.metadata) {
-                const existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : existing.metadata;
-                mergedMetadata = { ...existingMeta, ...(metadata || {}) };
+                let existingMeta = {};
+                try {
+                    existingMeta = typeof existing.metadata === 'string' ? JSON.parse(existing.metadata) : (existing.metadata || {});
+                } catch (e) {
+                    existingMeta = {};
+                }
+                mergedMetadata = {
+                    ...existingMeta,
+                    ...(metadata || {}),
+                    ...(existingMeta.groupId && !metadata?.groupId ? {
+                        groupId: existingMeta.groupId,
+                        groupName: existingMeta.groupName,
+                        groupColor: existingMeta.groupColor || '#3b82f6'
+                    } : {})
+                };
             }
 
             const updated = await db.messageTemplate.update({
