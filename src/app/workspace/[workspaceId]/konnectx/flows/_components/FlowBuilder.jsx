@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Layout as LayoutIcon,
     Plus,
@@ -21,6 +21,29 @@ import {
     Code,
     X,
     Search,
+    Play,
+    Copy,
+    Download,
+    Upload,
+    ChevronUp,
+    ChevronDown,
+    Smartphone,
+    Eye,
+    Sliders,
+    Layers,
+    AlertCircle,
+    CheckCircle2,
+    Sparkles,
+    RefreshCw,
+    Share2,
+    FileCode,
+    ArrowLeft,
+    CheckCheck,
+    HelpCircle,
+    Info,
+    ChevronRight,
+    ShieldCheck,
+    Lock
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,845 +54,1844 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from 'sonner';
-import { generateFlowDSL } from "../_lib/flow-utils";
 
-const COMPONENT_TYPES = [
-    { id: 'TextHeading', label: 'Heading', icon: Type, default: { text: 'New Heading' } },
-    { id: 'TextBody', label: 'Body Text', icon: Type, default: { text: 'Body text content' } },
-    { id: 'TextCaption', label: 'Caption', icon: Type, default: { text: 'Small caption text' } },
-    { id: 'TextInput', label: 'Text Input', icon: ArrowRight, default: { label: 'Text Input', name: 'input_one', required: true, placeholder: 'Enter text...' } },
-    { id: 'Select', label: 'Dropdown', icon: List, default: { label: 'Select Option', name: 'select_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
-    { id: 'RadioButtons', label: 'Radio Buttons', icon: CircleDot, default: { label: 'Choose One', name: 'radio_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
-    { id: 'CheckboxGroup', label: 'Checkboxes', icon: CheckSquare, default: { label: 'Choose Multiple', name: 'check_one', options: [{ label: 'Option 1', value: 'opt_one' }] } },
-    { id: 'DatePicker', label: 'Date Picker', icon: Calendar, default: { label: 'Select Date', name: 'date_one', required: true } },
-    { id: 'TimePicker', label: 'Time Picker', icon: Clock, default: { label: 'Select Time', name: 'time_one', required: true } },
-    { id: 'FileInput', label: 'File Upload', icon: FileIcon, default: { label: 'Upload File', name: 'file_one', required: false, accept: '*/*', multiple: false } },
-    { id: 'LocationPicker', label: 'Location', icon: MapPin, default: { label: 'Pick Location', name: 'location_one', required: true } },
-    { id: 'ConsentCheckbox', label: 'Consent', icon: Check, default: { label: 'I agree to the terms', name: 'consent_one', required: true } },
-    { id: 'APIAction', label: 'API Action', icon: Database, default: { label: 'Submit Data', name: 'api_one', dataSourceUrl: '', requestBody: '{}', responseKey: 'result' } },
-    { id: 'DataGrid', label: 'Data Table', icon: Code, default: { label: 'Data', name: 'grid_one', columns: [{ key: 'col_one', label: 'Column 1', type: 'text' }] } },
-];
+import {
+    generateFlowDSL,
+    parseFlowDSL,
+    validateFlowScreens,
+    sanitizeIdentifier,
+    sanitizeScreenId,
+    FLOW_VERSION
+} from "../_lib/flow-utils";
 
-const COMPONENT_CATEGORIES = [
+// Component Palette Definitions
+const COMPONENT_PALETTE = [
     {
-        name: 'Typography',
-        types: ['TextHeading', 'TextBody', 'TextCaption']
+        id: 'TextHeading',
+        label: 'Heading',
+        category: 'Typography',
+        icon: Type,
+        description: 'Large prominent title text (20px)',
+        default: { text: 'Welcome to our Service' }
     },
     {
-        name: 'Input Fields',
-        types: ['TextInput', 'Select', 'RadioButtons', 'CheckboxGroup', 'ConsentCheckbox']
+        id: 'TextSubheading',
+        label: 'Subheading',
+        category: 'Typography',
+        icon: Type,
+        description: 'Medium subtitle text (16px)',
+        default: { text: 'Please fill out the form below' }
     },
     {
-        name: 'Pickers & Media',
-        types: ['DatePicker', 'TimePicker', 'FileInput', 'LocationPicker']
+        id: 'TextBody',
+        label: 'Body Text',
+        category: 'Typography',
+        icon: Type,
+        description: 'Standard paragraph text content (14px)',
+        default: { text: 'We need a few details to get started with your request.' }
     },
     {
-        name: 'Logic & Data',
-        types: ['APIAction', 'DataGrid']
+        id: 'TextCaption',
+        label: 'Caption',
+        category: 'Typography',
+        icon: Type,
+        description: 'Small helper or disclaimer text (12px)',
+        default: { text: 'Your information is protected under our privacy policy.' }
+    },
+    {
+        id: 'TextInput',
+        label: 'Text Input',
+        category: 'Input Fields',
+        icon: ArrowRight,
+        description: 'Single-line text, email, phone or number',
+        default: {
+            label: 'Full Name',
+            name: 'full_name',
+            required: true,
+            placeholder: 'e.g. Alex Johnson',
+            helperText: '',
+            inputType: 'text'
+        }
+    },
+    {
+        id: 'TextArea',
+        label: 'Text Area',
+        category: 'Input Fields',
+        icon: FileIcon,
+        description: 'Multi-line expanded text box',
+        default: {
+            label: 'Additional Notes',
+            name: 'notes',
+            required: false,
+            placeholder: 'Type your message or special requirements...',
+            helperText: ''
+        }
+    },
+    {
+        id: 'Select',
+        label: 'Dropdown Select',
+        category: 'Choices & Selection',
+        icon: List,
+        description: 'Single-select choice sheet',
+        default: {
+            label: 'Select Service',
+            name: 'selected_service',
+            required: true,
+            options: [
+                { label: 'Consultation', value: 'consultation', description: '30-min strategy session' },
+                { label: 'Standard Support', value: 'support', description: 'Technical assistance' },
+                { label: 'Custom Quote', value: 'quote', description: 'Tailored enterprise pricing' }
+            ]
+        }
+    },
+    {
+        id: 'RadioButtons',
+        label: 'Radio Buttons',
+        category: 'Choices & Selection',
+        icon: CircleDot,
+        description: 'Single choice from visible radio list',
+        default: {
+            label: 'Preferred Contact Method',
+            name: 'contact_pref',
+            required: true,
+            options: [
+                { label: 'WhatsApp Chat', value: 'whatsapp' },
+                { label: 'Phone Call', value: 'phone' },
+                { label: 'Email', value: 'email' }
+            ]
+        }
+    },
+    {
+        id: 'CheckboxGroup',
+        label: 'Checkbox Group',
+        category: 'Choices & Selection',
+        icon: CheckSquare,
+        description: 'Multi-select options list',
+        default: {
+            label: 'Interested Topics',
+            name: 'topics',
+            required: false,
+            options: [
+                { label: 'Product Updates', value: 'updates' },
+                { label: 'Special Offers & Discounts', value: 'offers' },
+                { label: 'Community Webinars', value: 'webinars' }
+            ]
+        }
+    },
+    {
+        id: 'DatePicker',
+        label: 'Date Picker',
+        category: 'Pickers & Controls',
+        icon: Calendar,
+        description: 'Calendar date selection field',
+        default: {
+            label: 'Preferred Date',
+            name: 'booking_date',
+            required: true
+        }
+    },
+    {
+        id: 'ConsentCheckbox',
+        label: 'Opt-in / Consent',
+        category: 'Pickers & Controls',
+        icon: Check,
+        description: 'Mandatory agreement checkbox',
+        default: {
+            label: 'I agree to the Terms of Service & Privacy Policy',
+            name: 'terms_agreed',
+            required: true
+        }
     }
 ];
 
-const ACTION_TYPES = [
-    { id: 'navigate', label: 'Navigate to Screen' },
-    { id: 'complete', label: 'Complete Flow' },
-    { id: 'data_exchange', label: 'Data Exchange (API)' },
-    { id: 'open_url', label: 'Open URL' },
-    { id: 'close', label: 'Close Flow' },
+const SCREEN_TEMPLATES = [
+    {
+        id: 'blank',
+        label: 'Blank Screen',
+        create: (idx) => ({
+            id: `SCREEN_${idx}`,
+            title: `Screen ${idx}`,
+            children: [
+                { id: `comp_head_${Date.now()}`, type: 'TextHeading', text: `Screen ${idx}` }
+            ],
+            footerAction: { type: 'navigate', label: 'Next' }
+        })
+    },
+    {
+        id: 'lead_capture',
+        label: 'Lead Capture Form',
+        create: (idx) => ({
+            id: `LEAD_FORM_${idx}`,
+            title: 'Contact Details',
+            children: [
+                { id: `comp_1_${Date.now()}`, type: 'TextHeading', text: 'Get Started' },
+                { id: `comp_2_${Date.now()}`, type: 'TextBody', text: 'Please enter your information to proceed.' },
+                { id: `comp_3_${Date.now()}`, type: 'TextInput', name: 'name', label: 'Full Name', required: true, placeholder: 'Alex Johnson' },
+                { id: `comp_4_${Date.now()}`, type: 'TextInput', name: 'email', label: 'Email Address', inputType: 'email', required: true, placeholder: 'alex@example.com' },
+                { id: `comp_5_${Date.now()}`, type: 'TextInput', name: 'phone', label: 'Phone Number', inputType: 'phone', required: false, placeholder: '+1 234 567 890' }
+            ],
+            footerAction: { type: 'navigate', label: 'Continue' }
+        })
+    },
+    {
+        id: 'feedback',
+        label: 'Feedback & Rating',
+        create: (idx) => ({
+            id: `FEEDBACK_${idx}`,
+            title: 'Your Feedback',
+            children: [
+                { id: `comp_1_${Date.now()}`, type: 'TextHeading', text: 'How was your experience?' },
+                {
+                    id: `comp_2_${Date.now()}`,
+                    type: 'RadioButtons',
+                    name: 'satisfaction',
+                    label: 'Overall Satisfaction',
+                    required: true,
+                    options: [
+                        { label: '⭐️⭐️⭐️⭐️⭐️ Excellent', value: '5' },
+                        { label: '⭐️⭐️⭐️⭐️ Good', value: '4' },
+                        { label: '⭐️⭐️⭐️ Average', value: '3' },
+                        { label: '⭐️⭐️ Needs Improvement', value: '2' }
+                    ]
+                },
+                { id: `comp_3_${Date.now()}`, type: 'TextArea', name: 'comments', label: 'What could we do better?', required: false, placeholder: 'Share your thoughts...' }
+            ],
+            footerAction: { type: 'complete', label: 'Submit Feedback' }
+        })
+    },
+    {
+        id: 'confirmation',
+        label: 'Success / Confirmation',
+        create: (idx) => ({
+            id: `SUCCESS_${idx}`,
+            title: 'Thank You!',
+            terminal: true,
+            children: [
+                { id: `comp_1_${Date.now()}`, type: 'TextHeading', text: 'All Set!' },
+                { id: `comp_2_${Date.now()}`, type: 'TextBody', text: 'Thank you for your response. Our team will contact you shortly.' },
+                { id: `comp_3_${Date.now()}`, type: 'TextCaption', text: 'You can close this window now.' }
+            ],
+            footerAction: { type: 'complete', label: 'Finish' }
+        })
+    }
 ];
 
-const generateNewCompId = (screenId, index, type) => {
-    return `comp_${type.toLowerCase()}_${index + 1}`;
-};
+export default function FlowBuilder({ initialScreens = [], onSave, endpointUrl = '' }) {
+    // 1. Initialize screens
+    const [screens, setScreens] = useState(() => {
+        if (initialScreens && initialScreens.length > 0) {
+            return initialScreens;
+        }
+        return [
+            {
+                id: 'WELCOME',
+                title: 'Welcome',
+                terminal: false,
+                children: [
+                    { id: 'head_1', type: 'TextHeading', text: 'Welcome to Our Service' },
+                    { id: 'body_1', type: 'TextBody', text: 'Please fill out a few details to get started.' },
+                    { id: 'input_name', type: 'TextInput', name: 'full_name', label: 'Full Name', required: true, placeholder: 'Alex Johnson' }
+                ],
+                footerAction: { type: 'navigate', label: 'Next Screen', screen: 'DETAILS' }
+            },
+            {
+                id: 'DETAILS',
+                title: 'Service Options',
+                terminal: true,
+                children: [
+                    { id: 'head_2', type: 'TextHeading', text: 'Select Your Service' },
+                    {
+                        id: 'select_service',
+                        type: 'Select',
+                        name: 'service_type',
+                        label: 'Preferred Plan',
+                        required: true,
+                        options: [
+                            { label: 'Standard Plan', value: 'standard', description: 'Essential features' },
+                            { label: 'Pro Plan', value: 'pro', description: 'Advanced tools & support' },
+                            { label: 'Enterprise', value: 'enterprise', description: 'Custom integrations' }
+                        ]
+                    },
+                    { id: 'opt_terms', type: 'ConsentCheckbox', name: 'agreed_to_terms', label: 'I agree to the terms and privacy policy', required: true }
+                ],
+                footerAction: { type: 'complete', label: 'Submit Request' }
+            }
+        ];
+    });
 
-const getComponentDisplayLabel = (c) => {
-    if (!c) return 'Field';
-    // If the label is explicitly set and not the default dummy 'Label'
-    if (c.label && c.label !== 'Label' && c.label !== 'Text Input') {
-        return c.label;
-    }
-    // If c.name has been set (e.g. name, email, location, whatsapp_number)
-    if (c.name && c.name !== 'input_1' && !c.name.match(/^field_\d+$/)) {
-        return c.name
-            .replace(/_/g, ' ')
-            .replace(/([a-z])([A-Z])/g, '$1 $2')
-            .replace(/\b\w/g, l => l.toUpperCase());
-    }
-    if (c.label && c.label !== 'Label') {
-        return c.label;
-    }
-    return c.text || c.label || 'Text Input';
-};
-
-const DIGIT_WORDS = ['ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN', 'ELEVEN', 'TWELVE'];
-
-const FlowBuilder = ({ initialScreens = [], onSave, endpointUrl = '' }) => {
-    const [screens, setScreens] = useState(initialScreens.length > 0 ? initialScreens : [
-        { id: 'SCREEN_ONE', title: 'Welcome', children: [], footerAction: { type: 'navigate', label: 'Next', screen: 'SCREEN_TWO' } }
-    ]);
-    const [activeScreenId, setActiveScreenId] = useState(screens[0]?.id);
+    const [activeScreenId, setActiveScreenId] = useState(screens[0]?.id || 'WELCOME');
     const [selectedComponentId, setSelectedComponentId] = useState(null);
-    const [viewMode, setViewMode] = useState('design');
-    const [activeSidebarTab, setActiveSidebarTab] = useState('library');
-    const [librarySearch, setLibrarySearch] = useState('');
+    const [builderMode, setBuilderMode] = useState('design'); // 'design' | 'simulator' | 'code'
+    const [activeSidebarTab, setActiveSidebarTab] = useState('palette'); // 'palette' | 'inspector' | 'routing'
+    const [searchPalette, setSearchPalette] = useState('');
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+    const [importJsonText, setImportJsonText] = useState('');
+    const [validationReport, setValidationReport] = useState({ valid: true, errors: [], warnings: [] });
 
-    const activeScreen = screens.find(s => s.id === activeScreenId);
-    const selectedComponent = activeScreen?.children.find(c => c.id === selectedComponentId);
+    // Simulator State
+    const [simScreenId, setSimScreenId] = useState(screens[0]?.id || 'WELCOME');
+    const [simFormData, setSimFormData] = useState({});
+    const [simErrors, setSimErrors] = useState({});
+    const [simSubmittedPayload, setSimSubmittedPayload] = useState(null);
+    const [isSimSubmittedOpen, setIsSimSubmittedOpen] = useState(false);
+
+    const activeScreen = screens.find(s => s.id === activeScreenId) || screens[0];
+    const selectedComponent = activeScreen?.children?.find(c => c.id === selectedComponentId);
+
+    // Re-validate screens whenever they change
+    useEffect(() => {
+        const report = validateFlowScreens(screens);
+        setValidationReport(report);
+    }, [screens]);
+
+    // Reset simulator when switching to simulator mode
+    useEffect(() => {
+        if (builderMode === 'simulator') {
+            setSimScreenId(screens[0]?.id || 'WELCOME');
+            setSimFormData({});
+            setSimErrors({});
+            setSimSubmittedPayload(null);
+        }
+    }, [builderMode, screens]);
+
+    // --- Screen Operations ---
 
     const handleSelectScreen = (id) => {
         setActiveScreenId(id);
         setSelectedComponentId(null);
     };
 
-    const addScreen = () => {
+    const handleAddScreen = (templateType = 'blank') => {
         const idx = screens.length + 1;
-        const word = DIGIT_WORDS[idx] || `S_${idx}`;
-        const nextWord = DIGIT_WORDS[idx + 1] || `S_${idx + 1}`;
-        const newId = `SCREEN_${word}`;
-        const nextId = `SCREEN_${nextWord}`;
-        setScreens([...screens, {
-            id: newId,
-            title: `New Screen ${idx}`,
-            children: [],
-            footerAction: { type: 'navigate', label: 'Next', screen: nextId }
-        }]);
-        setActiveScreenId(newId);
+        const template = SCREEN_TEMPLATES.find(t => t.id === templateType) || SCREEN_TEMPLATES[0];
+        const newScreen = template.create(idx);
+        
+        // Ensure unique ID
+        let candidateId = newScreen.id;
+        let counter = idx;
+        while (screens.some(s => s.id === candidateId)) {
+            counter++;
+            candidateId = `SCREEN_${counter}`;
+        }
+        newScreen.id = candidateId;
+
+        setScreens([...screens, newScreen]);
+        setActiveScreenId(newScreen.id);
         setSelectedComponentId(null);
+        toast.success(`Added screen: ${newScreen.title}`);
     };
 
-    const removeScreen = (id) => {
-        if (screens.length <= 1) { toast.error('Need at least one screen'); return; }
+    const handleDuplicateScreen = (screenToDup) => {
+        const newId = sanitizeScreenId(`${screenToDup.id}_COPY`, screens.length + 1);
+        const duplicated = {
+            ...JSON.parse(JSON.stringify(screenToDup)),
+            id: newId,
+            title: `${screenToDup.title} (Copy)`
+        };
+        setScreens([...screens, duplicated]);
+        setActiveScreenId(newId);
+        toast.success(`Duplicated screen as ${newId}`);
+    };
+
+    const handleRemoveScreen = (id) => {
+        if (screens.length <= 1) {
+            toast.error('Flow must contain at least one screen');
+            return;
+        }
         const filtered = screens.filter(s => s.id !== id);
         setScreens(filtered);
         if (activeScreenId === id) {
             setActiveScreenId(filtered[0]?.id);
             setSelectedComponentId(null);
         }
+        toast.success('Screen removed');
     };
 
-    const addComponent = (type) => {
+    const handleMoveScreen = (index, direction) => {
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= screens.length) return;
+        const newScreens = [...screens];
+        const temp = newScreens[index];
+        newScreens[index] = newScreens[targetIndex];
+        newScreens[targetIndex] = temp;
+        setScreens(newScreens);
+    };
+
+    // --- Component Operations ---
+
+    const handleAddComponent = (type) => {
         if (!activeScreenId) return;
-        const compInfo = COMPONENT_TYPES.find(c => c.id === type);
-        const compCount = activeScreen?.children?.length || 0;
-        const newComp = {
-            id: generateNewCompId(activeScreenId, compCount, type),
+        const compDef = COMPONENT_PALETTE.find(c => c.id === type);
+        if (!compDef) return;
+
+        const count = activeScreen?.children?.length || 0;
+        const newCompId = `comp_${type.toLowerCase()}_${Date.now()}`;
+        const newComponent = {
+            id: newCompId,
             type,
-            ...JSON.parse(JSON.stringify(compInfo.default))
+            ...JSON.parse(JSON.stringify(compDef.default))
         };
-        setScreens(screens.map(s => s.id === activeScreenId ? { ...s, children: [...s.children, newComp] } : s));
-        setSelectedComponentId(newComp.id);
+
+        // Auto-assign smart system name if input
+        if (newComponent.name && activeScreen.children.some(c => c.name === newComponent.name)) {
+            newComponent.name = `${newComponent.name}_${count + 1}`;
+        }
+
+        setScreens(screens.map(s => {
+            if (s.id === activeScreenId) {
+                return { ...s, children: [...s.children, newComponent] };
+            }
+            return s;
+        }));
+
+        setSelectedComponentId(newCompId);
         setActiveSidebarTab('inspector');
+        toast.success(`Added ${compDef.label}`);
     };
 
-    const updateComponent = (compId, updates) => {
+    const handleUpdateComponent = (compId, updates) => {
         setScreens(screens.map(s => {
             if (s.id === activeScreenId) {
-                return { ...s, children: s.children.map(c => c.id === compId ? { ...c, ...updates } : c) };
+                return {
+                    ...s,
+                    children: s.children.map(c => c.id === compId ? { ...c, ...updates } : c)
+                };
             }
             return s;
         }));
     };
 
-    const deleteComponent = (compId) => {
+    const handleDeleteComponent = (compId) => {
         setScreens(screens.map(s => {
             if (s.id === activeScreenId) {
-                return { ...s, children: s.children.filter(c => c.id !== compId) };
+                return {
+                    ...s,
+                    children: s.children.filter(c => c.id !== compId)
+                };
             }
             return s;
         }));
-        if (selectedComponentId === compId) setSelectedComponentId(null);
-    };
-
-    const updateFooterAction = (updates) => {
-        setScreens(screens.map(s => s.id === activeScreenId ? { ...s, footerAction: { ...s.footerAction, ...updates } } : s));
-    };
-
-    const updateScreenTitle = (title) => {
-        setScreens(screens.map(s => s.id === activeScreenId ? { ...s, title } : s));
-    };
-
-    const generateFlowJson = () => {
-        const flow = generateFlowDSL(screens, { endpointUrl });
-        return JSON.stringify(flow, null, 4);
-    };
-
-    const renderComponentPreview = (c) => {
-        const displayLabel = getComponentDisplayLabel(c);
-
-        switch (c.type) {
-            case 'TextHeading':
-                return <p className="text-base font-bold pointer-events-none">{c.text || displayLabel || 'Heading'}</p>;
-            case 'TextBody':
-                return <p className="text-sm text-muted-foreground pointer-events-none">{c.text || displayLabel || 'Body text content'}</p>;
-            case 'TextCaption':
-                return <p className="text-xs text-muted-foreground/60 italic pointer-events-none">{c.text || displayLabel || 'Small caption text'}</p>;
-            case 'TextInput': {
-                const placeholder = c.placeholder || (c.name && c.name !== 'input_1' && !c.name.startsWith('field_') ? c.name : `Enter ${displayLabel.toLowerCase()}...`);
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-border/70 rounded-lg bg-card/40 flex items-center px-3 text-xs text-muted-foreground/70 italic">
-                            {placeholder}
-                        </div>
-                    </div>
-                );
-            }
-            case 'Select':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-border/70 rounded-lg bg-card/40 flex items-center justify-between px-3 text-xs text-muted-foreground/70">
-                            <span>{c.placeholder || `${c.options?.length || 0} option(s)`}</span>
-                            <List className="w-3.5 h-3.5 opacity-60" />
-                        </div>
-                    </div>
-                );
-            case 'RadioButtons':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <Label className="text-xs font-semibold text-primary">
-                            {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                        </Label>
-                        <div className="space-y-1 pl-1">
-                            {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <CircleDot className="w-3.5 h-3.5 text-primary/70" />
-                                    <span>{opt.label || opt.value || `Option ${i + 1}`}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            case 'CheckboxGroup':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <Label className="text-xs font-semibold text-primary">
-                            {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                        </Label>
-                        <div className="space-y-1 pl-1">
-                            {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                                    <CheckSquare className="w-3.5 h-3.5 text-primary/70" />
-                                    <span>{opt.label || opt.value || `Option ${i + 1}`}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            case 'DatePicker':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-border/70 rounded-lg bg-card/40 flex items-center px-3 text-xs text-muted-foreground/70 italic gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-primary/70" />
-                            <span>Select date...</span>
-                        </div>
-                    </div>
-                );
-            case 'FileInput':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-dashed border-border/80 rounded-lg bg-muted/20 flex items-center justify-center px-3 text-xs text-muted-foreground/70 gap-2">
-                            <FileIcon className="w-3.5 h-3.5 text-primary/70" />
-                            <span>Upload file ({c.accept || '*/*'})</span>
-                        </div>
-                    </div>
-                );
-            case 'LocationPicker':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-dashed border-border/80 rounded-lg bg-muted/20 flex items-center justify-center px-3 text-xs text-muted-foreground/70 gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-primary/70" />
-                            <span>Pick location on map</span>
-                        </div>
-                    </div>
-                );
-            case 'TimePicker':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold text-primary">
-                                {displayLabel} {c.required && <span className="text-destructive font-bold">*</span>}
-                            </Label>
-                            {c.name && <span className="text-[9px] font-mono text-muted-foreground/50">({c.name})</span>}
-                        </div>
-                        <div className="h-9 border border-border/70 rounded-lg bg-card/40 flex items-center px-3 text-xs text-muted-foreground/70 italic gap-2">
-                            <Clock className="w-3.5 h-3.5 text-primary/70" />
-                            <span>Select time...</span>
-                        </div>
-                    </div>
-                );
-            case 'ConsentCheckbox':
-                return (
-                    <div className="flex items-start gap-2.5 pointer-events-none">
-                        <div className="w-4 h-4 rounded border-2 border-primary/60 mt-0.5 shrink-0 flex items-center justify-center bg-primary/10">
-                            <Check className="w-3 h-3 text-primary" />
-                        </div>
-                        <span className="text-xs text-muted-foreground leading-tight">{displayLabel || 'I agree to the terms'}</span>
-                    </div>
-                );
-            case 'APIAction':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <Label className="text-xs font-semibold text-blue-500">{displayLabel || 'API Action'}</Label>
-                        <div className="h-9 border border-dashed border-blue-500/30 rounded-lg bg-blue-500/5 flex items-center px-3 text-xs text-muted-foreground italic gap-2">
-                            <Database className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="truncate">{c.dataSourceUrl || 'No endpoint set'}</span>
-                        </div>
-                    </div>
-                );
-            case 'DataGrid':
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <Label className="text-xs font-semibold text-primary">{displayLabel || 'Data Table'}</Label>
-                        <div className="border border-dashed border-border/80 rounded-lg bg-card/40 p-2">
-                            <div className="flex gap-2 text-[10px] font-mono text-muted-foreground border-b pb-1 mb-1">
-                                {c.columns?.map((col, i) => (
-                                    <span key={i} className="flex-1 truncate">{col.label}</span>
-                                ))}
-                            </div>
-                            <div className="text-[10px] text-muted-foreground italic text-center py-1.5">Data rows</div>
-                        </div>
-                    </div>
-                );
-            default:
-                return (
-                    <div className="space-y-1.5 pointer-events-none">
-                        <Label className="text-xs font-semibold text-primary">{displayLabel || c.name || 'Component'} {c.required && <span className="text-destructive font-bold">*</span>}</Label>
-                        <div className="h-9 border border-dashed rounded-lg bg-card/40 flex items-center px-3 text-xs text-muted-foreground italic">
-                            {c.placeholder || c.name || 'Value'}
-                        </div>
-                    </div>
-                );
+        if (selectedComponentId === compId) {
+            setSelectedComponentId(null);
         }
     };
 
-    const renderComponentInspector = () => {
-        if (!selectedComponent) return null;
-        const c = selectedComponent;
-        const isInput = ['TextInput', 'Select', 'RadioButtons', 'CheckboxGroup', 'DatePicker', 'TimePicker', 'FileInput', 'LocationPicker', 'ConsentCheckbox'].includes(c.type);
-        const hasOptions = ['Select', 'RadioButtons', 'CheckboxGroup'].includes(c.type);
-        const activeDisplayLabel = getComponentDisplayLabel(c);
+    const handleMoveComponent = (compId, direction) => {
+        if (!activeScreen) return;
+        const children = [...activeScreen.children];
+        const idx = children.findIndex(c => c.id === compId);
+        if (idx === -1) return;
+        const targetIdx = idx + direction;
+        if (targetIdx < 0 || targetIdx >= children.length) return;
 
-        return (
-            <Card className="border-primary/20 shadow-sm">
-                <CardContent className="p-4 space-y-4">
-                    <div className="flex items-center justify-between border-b pb-2 mb-2">
-                        <Badge variant="outline" className="text-[9px] uppercase tracking-tighter bg-primary/5">{c.type}</Badge>
-                        <span className="text-[9px] font-mono opacity-40">{c.id}</span>
-                    </div>
+        const temp = children[idx];
+        children[idx] = children[targetIdx];
+        children[targetIdx] = temp;
 
-                    {c.type.startsWith('Text') ? (
-                        <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold">Text Content</Label>
-                            <Textarea
-                                value={c.text || ''}
-                                onChange={(e) => updateComponent(c.id, { text: e.target.value })}
-                                className="min-h-[60px] text-xs"
-                                placeholder="Enter text content..."
-                            />
-                        </div>
-                    ) : (
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-[11px] font-semibold">Field Label (Visible Title)</Label>
-                                <span className="text-[9px] text-primary/70 font-mono">Shown to user</span>
-                            </div>
-                            <Input
-                                value={c.label && c.label !== 'Label' ? c.label : activeDisplayLabel}
-                                onChange={(e) => updateComponent(c.id, { label: e.target.value })}
-                                className="h-8 text-xs font-medium"
-                                placeholder="e.g. Full Name, Email, Location..."
-                            />
-                        </div>
-                    )}
-
-                    {isInput && (
-                        <>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px] font-semibold">System Name (Key in Response)</Label>
-                                <Input
-                                    value={c.name || ''}
-                                    onChange={(e) => {
-                                        const newName = e.target.value;
-                                        const isGenericLabel = !c.label || c.label === 'Label' || c.label === 'Text Input' || c.label === activeDisplayLabel;
-                                        const updates = { name: newName };
-                                        if (isGenericLabel && newName) {
-                                            updates.label = newName
-                                                .replace(/_/g, ' ')
-                                                .replace(/([a-z])([A-Z])/g, '$1 $2')
-                                                .replace(/\b\w/g, l => l.toUpperCase());
-                                        }
-                                        updateComponent(c.id, updates);
-                                    }}
-                                    className="h-8 text-xs font-mono"
-                                    placeholder="e.g. full_name"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 pt-1">
-                                <input
-                                    type="checkbox"
-                                    id="req-toggle"
-                                    checked={c.required ?? true}
-                                    onChange={(e) => updateComponent(c.id, { required: e.target.checked })}
-                                    className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5"
-                                />
-                                <Label htmlFor="req-toggle" className="text-[11px] font-medium cursor-pointer">Required field</Label>
-                            </div>
-                        </>
-                    )}
-
-                    {c.type === 'TextInput' && (
-                        <div className="space-y-1.5">
-                            <Label className="text-[11px] font-semibold">Placeholder Text</Label>
-                            <Input
-                                value={c.placeholder || ''}
-                                onChange={(e) => updateComponent(c.id, { placeholder: e.target.value })}
-                                className="h-8 text-xs"
-                                placeholder="e.g. Enter your name..."
-                            />
-                        </div>
-                    )}
-
-                    {c.type === 'FileInput' && (
-                        <>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px]">Accept (MIME type)</Label>
-                                <Input
-                                    value={c.accept || '*/*'}
-                                    onChange={(e) => updateComponent(c.id, { accept: e.target.value })}
-                                    className="h-8 text-xs font-mono"
-                                />
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    id="multi-toggle"
-                                    checked={c.multiple || false}
-                                    onChange={(e) => updateComponent(c.id, { multiple: e.target.checked })}
-                                    className="rounded border-gray-300 text-primary focus:ring-primary h-3.5 w-3.5"
-                                />
-                                <Label htmlFor="multi-toggle" className="text-[11px] font-medium cursor-pointer">Allow Multiple Files</Label>
-                            </div>
-                        </>
-                    )}
-
-                    {c.type === 'APIAction' && (
-                        <>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px]">Endpoint URL</Label>
-                                <Input
-                                    value={c.dataSourceUrl || ''}
-                                    onChange={(e) => updateComponent(c.id, { dataSourceUrl: e.target.value })}
-                                    className="h-8 text-xs font-mono"
-                                    placeholder="https://..."
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px]">Request Body (JSON)</Label>
-                                <Textarea
-                                    value={c.requestBody || '{}'}
-                                    onChange={(e) => updateComponent(c.id, { requestBody: e.target.value })}
-                                    className="min-h-[60px] text-xs font-mono"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[11px]">Response Key</Label>
-                                <Input
-                                    value={c.responseKey || ''}
-                                    onChange={(e) => updateComponent(c.id, { responseKey: e.target.value })}
-                                    className="h-8 text-xs font-mono"
-                                />
-                            </div>
-                        </>
-                    )}
-
-                    {c.type === 'DataGrid' && (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-[11px] font-bold">Columns</Label>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary"
-                                    onClick={() => {
-                                        const cols = [...(c.columns || []), { key: `col${(c.columns?.length || 0) + 1}`, label: `Column ${(c.columns?.length || 0) + 1}`, type: 'text' }];
-                                        updateComponent(c.id, { columns: cols });
-                                    }}>
-                                    <Plus className="w-3.5 h-3.5" />
-                                </Button>
-                            </div>
-                            {c.columns?.map((col, idx) => (
-                                <div key={idx} className="flex items-center gap-2">
-                                    <Input value={col.key} onChange={(e) => { const cols = [...c.columns]; cols[idx].key = e.target.value; updateComponent(c.id, { columns: cols }); }}
-                                        className="h-7 text-[10px] font-mono w-20" placeholder="Key" />
-                                    <Input value={col.label} onChange={(e) => { const cols = [...c.columns]; cols[idx].label = e.target.value; updateComponent(c.id, { columns: cols }); }}
-                                        className="h-7 text-[10px] flex-1" placeholder="Label" />
-                                    <Select value={col.type || 'text'} onValueChange={(val) => { const cols = [...c.columns]; cols[idx].type = val; updateComponent(c.id, { columns: cols }); }}>
-                                        <SelectTrigger className="h-7 w-20 text-[10px]"><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="text">text</SelectItem>
-                                            <SelectItem value="number">number</SelectItem>
-                                            <SelectItem value="date">date</SelectItem>
-                                            <SelectItem value="currency">currency</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                                        onClick={() => { const cols = c.columns.filter((_, i) => i !== idx); updateComponent(c.id, { columns: cols }); }}>
-                                        <X className="w-3 h-3" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {hasOptions && (
-                        <div className="space-y-3 pt-4 border-t">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-[11px] font-bold">Choices</Label>
-                                <Button variant="ghost" size="icon" className="h-6 w-6 text-primary"
-                                    onClick={() => {
-                                        const newOpts = [...(c.options || []), { label: `Option ${(c.options?.length || 0) + 1}`, value: `opt${(c.options?.length || 0) + 1}` }];
-                                        updateComponent(c.id, { options: newOpts });
-                                    }}>
-                                    <Plus className="w-3.5 h-3.5" />
-                                </Button>
-                            </div>
-                            {c.options?.map((opt, idx) => (
-                                <div key={idx} className="flex items-center gap-2">
-                                    <Input value={opt.label} onChange={(e) => { const newOpts = [...c.options]; newOpts[idx].label = e.target.value; updateComponent(c.id, { options: newOpts }); }}
-                                        className="flex-1 h-7 text-[10px]" placeholder="Label" />
-                                    <Input value={opt.value} onChange={(e) => { const newOpts = [...c.options]; newOpts[idx].value = e.target.value; updateComponent(c.id, { options: newOpts }); }}
-                                        className="w-20 h-7 text-[10px] font-mono" placeholder="Value" />
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive"
-                                        onClick={() => { const newOpts = c.options.filter((_, i) => i !== idx); updateComponent(c.id, { options: newOpts }); }}>
-                                        <X className="w-3 h-3" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Component-level action */}
-                    <div className="space-y-3 pt-4 border-t">
-                        <Label className="text-[11px] font-bold">On Click Action</Label>
-                        <Select value={c.action?.type || 'none'} onValueChange={(val) => updateComponent(c.id, { action: (val && val !== 'none') ? { type: val, ...(val === 'open_url' ? { url: '' } : {}) } : null })}>
-                            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="none">None</SelectItem>
-                                {ACTION_TYPES.map(a => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        {c.action?.type === 'navigate' && (
-                            <Select value={c.action.screen || ''} onValueChange={(val) => updateComponent(c.id, { action: { ...c.action, screen: val } })}>
-                                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Target screen" /></SelectTrigger>
-                                <SelectContent>
-                                    {screens.filter(s => s.id !== activeScreenId).map(s => (
-                                        <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        )}
-                        {c.action?.type === 'open_url' && (
-                            <Input value={c.action.url || ''} onChange={(e) => updateComponent(c.id, { action: { ...c.action, url: e.target.value } })}
-                                className="h-8 text-xs font-mono" placeholder="https://..." />
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
-        );
+        setScreens(screens.map(s => s.id === activeScreenId ? { ...s, children } : s));
     };
 
+    const handleDuplicateComponent = (comp) => {
+        const duplicated = {
+            ...JSON.parse(JSON.stringify(comp)),
+            id: `comp_${comp.type.toLowerCase()}_${Date.now()}`,
+            name: comp.name ? `${comp.name}_copy` : undefined
+        };
+
+        setScreens(screens.map(s => {
+            if (s.id === activeScreenId) {
+                return { ...s, children: [...s.children, duplicated] };
+            }
+            return s;
+        }));
+        setSelectedComponentId(duplicated.id);
+        toast.success('Component duplicated');
+    };
+
+    // --- Screen Settings Updates ---
+
+    const handleUpdateActiveScreen = (updates) => {
+        setScreens(screens.map(s => {
+            if (s.id === activeScreenId) {
+                return { ...s, ...updates };
+            }
+            return s;
+        }));
+    };
+
+    const handleUpdateFooterAction = (updates) => {
+        setScreens(screens.map(s => {
+            if (s.id === activeScreenId) {
+                return {
+                    ...s,
+                    footerAction: { ...s.footerAction, ...updates }
+                };
+            }
+            return s;
+        }));
+    };
+
+    // --- JSON Serialization & Export ---
+
+    const flowJsonString = useMemo(() => {
+        try {
+            const dsl = generateFlowDSL(screens, { endpointUrl });
+            return JSON.stringify(dsl, null, 2);
+        } catch (e) {
+            return "// Error generating Flow JSON";
+        }
+    }, [screens, endpointUrl]);
+
+    const handleSave = () => {
+        if (!validationReport.valid) {
+            toast.error(`Please resolve validation errors before saving: ${validationReport.errors[0]}`);
+            return;
+        }
+        onSave(screens, flowJsonString);
+    };
+
+    const handleCopyJson = () => {
+        navigator.clipboard.writeText(flowJsonString);
+        toast.success("Flow JSON copied to clipboard");
+    };
+
+    const handleDownloadJson = () => {
+        const blob = new Blob([flowJsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `flow_${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Downloaded flow.json");
+    };
+
+    const handleImportJson = () => {
+        try {
+            const parsed = JSON.parse(importJsonText);
+            const importedScreens = parseFlowDSL(parsed);
+            if (!importedScreens || importedScreens.length === 0) {
+                toast.error("Invalid WhatsApp Flow JSON structure");
+                return;
+            }
+            setScreens(importedScreens);
+            setActiveScreenId(importedScreens[0]?.id);
+            setSelectedComponentId(null);
+            setIsImportModalOpen(false);
+            setImportJsonText('');
+            toast.success(`Successfully imported ${importedScreens.length} screens from JSON`);
+        } catch (err) {
+            toast.error(`JSON Parse Error: ${err.message}`);
+        }
+    };
+
+    // --- Simulator Navigation & Submission ---
+
+    const handleSimulatorAction = (currentScreen) => {
+        const newErrors = {};
+        (currentScreen.children || []).forEach(c => {
+            if (c.required) {
+                const val = simFormData[c.name];
+                if (val === undefined || val === null || (typeof val === 'string' && !val.trim()) || (Array.isArray(val) && val.length === 0)) {
+                    newErrors[c.name] = `${c.label || 'This field'} is required`;
+                }
+            }
+        });
+
+        if (Object.keys(newErrors).length > 0) {
+            setSimErrors(newErrors);
+            toast.error("Please fill in required fields");
+            return;
+        }
+
+        setSimErrors({});
+
+        const isTerminal = currentScreen.terminal || currentScreen.footerAction?.type === 'complete';
+
+        if (isTerminal) {
+            setSimSubmittedPayload({
+                flow_token: "mock_flow_token_" + Date.now(),
+                screen_id: currentScreen.id,
+                response: simFormData,
+                submitted_at: new Date().toISOString()
+            });
+            setIsSimSubmittedOpen(true);
+        } else {
+            const targetScreenId = currentScreen.footerAction?.screen;
+            const nextScreen = screens.find(s => s.id === targetScreenId) || screens[screens.indexOf(currentScreen) + 1] || screens[0];
+            setSimScreenId(nextScreen.id);
+        }
+    };
+
+    // --- Filtered Palette Categories ---
+    const filteredCategories = useMemo(() => {
+        const query = searchPalette.toLowerCase().trim();
+        const cats = ['Typography', 'Input Fields', 'Choices & Selection', 'Pickers & Controls'];
+
+        return cats.map(cat => ({
+            name: cat,
+            items: COMPONENT_PALETTE.filter(c => c.category === cat && (
+                !query || c.label.toLowerCase().includes(query) || c.description.toLowerCase().includes(query)
+            ))
+        })).filter(c => c.items.length > 0);
+    }, [searchPalette]);
+
     return (
-        <div className="flex flex-col h-full bg-background border rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b bg-muted/20">
-                <div className="flex items-center gap-4">
-                    <Tabs value={viewMode} onValueChange={setViewMode} className="w-[200px]">
-                        <TabsList className="grid grid-cols-2 h-9">
-                            <TabsTrigger value="design" className="text-xs">Design</TabsTrigger>
-                            <TabsTrigger value="code" className="text-xs">JSON</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button size="sm" onClick={() => onSave(screens, generateFlowJson())}>
-                        <Save className="w-4 h-4 mr-2" />
-                        Save Flow
-                    </Button>
-                </div>
-            </div>
-
-            <div className="flex flex-1 overflow-hidden">
-                {/* Screen Sidebar */}
-                <div className="w-64 border-r bg-muted/10 flex flex-col">
-                    <div className="p-4 border-b flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Screens</span>
-                        <Button variant="ghost" size="icon" onClick={addScreen} className="h-6 w-6"><Plus className="w-4 h-4" /></Button>
-                    </div>
-                    <ScrollArea className="flex-1">
-                        <div className="p-2 space-y-1">
-                            {screens.map(s => (
-                                <div key={s.id} className="group flex items-center gap-1">
-                                    <button
-                                        onClick={() => handleSelectScreen(s.id)}
-                                        className={`flex-1 text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-between ${activeScreenId === s.id ? 'bg-primary text-primary-foreground' : 'hover:bg-primary/5'}`}
-                                    >
-                                        <span className="truncate">{s.title}</span>
-                                        <Badge variant="outline" className={`text-[10px] ${activeScreenId === s.id ? 'border-primary-foreground/30 text-primary-foreground' : 'opacity-60'}`}>{s.id}</Badge>
-                                    </button>
-                                    <button onClick={() => removeScreen(s.id)} className="p-1.5 rounded-md opacity-0 group-hover:opacity-100 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all">
-                                        <X className="w-3 h-3" />
-                                    </button>
-                                </div>
-                            ))}
+        <TooltipProvider>
+            <div className="flex flex-col h-full bg-background border border-border/60 rounded-2xl shadow-sm overflow-hidden animate-in fade-in duration-300">
+                
+                {/* 1. STUDIO TOP CONTROL BAR */}
+                <div className="flex flex-col sm:flex-row items-center justify-between px-5 py-2.5 bg-card border-b border-border/60 gap-3">
+                    
+                    {/* Left Info & Status */}
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                            <Layers className="w-4 h-4" />
                         </div>
-                    </ScrollArea>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-foreground">Visual Flow Builder</span>
+                                <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 bg-primary/5 text-primary border-primary/20">
+                                    DSL v{FLOW_VERSION}
+                                </Badge>
+                                <Badge variant="secondary" className="text-[10px] font-semibold py-0 h-4">
+                                    {screens.length} {screens.length === 1 ? 'Screen' : 'Screens'}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Center View Tabs Switcher */}
+                    <div className="flex items-center bg-muted/40 p-0.5 rounded-xl border border-border/50">
+                        <Button
+                            variant={builderMode === 'design' ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setBuilderMode('design')}
+                            className={`h-7 px-3 text-xs font-semibold gap-1.5 rounded-lg ${builderMode === 'design' ? 'shadow-sm' : ''}`}
+                        >
+                            <LayoutIcon className="w-3.5 h-3.5" />
+                            Canvas
+                        </Button>
+                        <Button
+                            variant={builderMode === 'simulator' ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setBuilderMode('simulator')}
+                            className={`h-7 px-3 text-xs font-semibold gap-1.5 rounded-lg ${builderMode === 'simulator' ? 'shadow-sm' : ''}`}
+                        >
+                            <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
+                            Simulator
+                        </Button>
+                        <Button
+                            variant={builderMode === 'code' ? "default" : "ghost"}
+                            size="sm"
+                            onClick={() => setBuilderMode('code')}
+                            className={`h-7 px-3 text-xs font-semibold gap-1.5 rounded-lg ${builderMode === 'code' ? 'shadow-sm' : ''}`}
+                        >
+                            <FileCode className="w-3.5 h-3.5" />
+                            Flow JSON
+                        </Button>
+                    </div>
+
+                    {/* Right Action Tools */}
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        {validationReport.valid ? (
+                            <Badge variant="outline" className="hidden lg:flex text-[10px] gap-1 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 py-1">
+                                <CheckCircle2 className="w-3 h-3" /> Meta Valid
+                            </Badge>
+                        ) : (
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Badge variant="outline" className="text-[10px] gap-1 text-destructive bg-destructive/10 border-destructive/20 py-1 cursor-pointer">
+                                        <AlertCircle className="w-3 h-3" /> {validationReport.errors.length} Issue(s)
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-xs text-xs space-y-1">
+                                    {validationReport.errors.map((err, i) => (
+                                        <div key={i}>• {err}</div>
+                                    ))}
+                                </TooltipContent>
+                            </Tooltip>
+                        )}
+
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsImportModalOpen(true)}
+                            className="h-8 text-xs font-semibold gap-1.5 rounded-lg border-border/70"
+                        >
+                            <Upload className="w-3.5 h-3.5" />
+                            Import JSON
+                        </Button>
+
+                        <Button
+                            size="sm"
+                            onClick={handleSave}
+                            className="h-8 text-xs font-bold gap-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                        >
+                            <Save className="w-3.5 h-3.5" />
+                            Save Flow
+                        </Button>
+                    </div>
                 </div>
 
-                {/* Main Editor */}
+                {/* 2. MAIN WORKSPACE CONTAINER */}
                 <div className="flex-1 flex overflow-hidden">
-                    {viewMode === 'design' ? (
+                    
+                    {builderMode === 'design' && (
                         <>
-                            <div className="flex-1 bg-muted/5 p-8 flex flex-col items-center overflow-y-auto"
-                                onClick={() => setSelectedComponentId(null)}>
-                                <div className="w-[360px] min-h-[600px] bg-card border-4 border-muted rounded-[40px] shadow-2xl relative overflow-hidden flex flex-col"
-                                    onClick={(e) => e.stopPropagation()}>
-                                    <div className="h-14 bg-muted/50 flex items-center justify-center border-b">
-                                        <div className="w-16 h-1 bg-muted-foreground/20 rounded-full" />
-                                    </div>
-                                    <div className="flex-1 p-6 space-y-6">
-                                        <input
-                                            value={activeScreen?.title || ''}
-                                            onChange={(e) => updateScreenTitle(e.target.value)}
-                                            className="w-full text-lg font-bold bg-transparent border-none outline-none focus:border-b focus:border-primary pb-1"
-                                            placeholder="Screen Title"
-                                        />
-                                        <div className="space-y-4">
-                                            {activeScreen?.children.map((c) => (
-                                                <div key={c.id}
-                                                    onClick={(e) => { e.stopPropagation(); setSelectedComponentId(c.id); setActiveSidebarTab('inspector'); }}
-                                                    className={`relative group p-3 border-2 transition-all cursor-pointer rounded-xl ${selectedComponentId === c.id ? 'border-primary bg-primary/5 shadow-sm' : 'border-transparent hover:border-primary/20 hover:bg-primary/5'}`}>
-                                                    {selectedComponentId === c.id && (
-                                                        <Badge className="absolute -left-2 -top-2 text-[8px] h-4 px-1 animate-pulse">EDITING</Badge>
-                                                    )}
-                                                    {renderComponentPreview(c)}
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); deleteComponent(c.id); }}
-                                                        className="absolute -right-2 -top-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 flex items-center justify-center shadow-lg transition-all z-10">
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
+                            {/* --- LEFT SIDEBAR: SCREENS TREE & OUTLINE --- */}
+                            <div className="w-64 border-r border-border/60 bg-card/40 flex flex-col shrink-0">
+                                <div className="p-3 border-b border-border/60 flex items-center justify-between">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                        <Layers className="w-3.5 h-3.5 text-primary" />
+                                        Screens ({screens.length})
+                                    </span>
+                                    
+                                    <Select onValueChange={handleAddScreen}>
+                                        <SelectTrigger className="h-7 w-20 text-[10px] bg-card border-border font-bold">
+                                            <Plus className="w-3 h-3 mr-1" /> Add
+                                        </SelectTrigger>
+                                        <SelectContent align="end">
+                                            {SCREEN_TEMPLATES.map(t => (
+                                                <SelectItem key={t.id} value={t.id} className="text-xs">
+                                                    {t.label}
+                                                </SelectItem>
                                             ))}
-                                            {activeScreen?.children.length === 0 && (
-                                                <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed rounded-3xl gap-3 text-center px-4">
-                                                    <LayoutIcon className="w-8 h-8 text-muted-foreground/30" />
-                                                    <p className="text-xs text-muted-foreground font-medium">Add components from the library.</p>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <ScrollArea className="flex-1 p-2">
+                                    <div className="space-y-1.5">
+                                        {screens.map((s, index) => {
+                                            const isActive = activeScreenId === s.id;
+                                            const isTerminal = s.terminal || s.footerAction?.type === 'complete';
+                                            const compCount = s.children?.length || 0;
+
+                                            return (
+                                                <div
+                                                    key={s.id}
+                                                    onClick={() => handleSelectScreen(s.id)}
+                                                    className={`group relative p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
+                                                        isActive
+                                                            ? 'bg-primary/10 border-primary text-foreground shadow-sm'
+                                                            : 'bg-card/70 hover:bg-card border-border/50 text-muted-foreground hover:text-foreground'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between gap-1">
+                                                        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                                                isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                                            }`}>
+                                                                {index + 1}
+                                                            </div>
+                                                            <span className="text-xs font-bold truncate">
+                                                                {s.title || `Screen ${index + 1}`}
+                                                            </span>
+                                                        </div>
+
+                                                        {isTerminal && (
+                                                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shrink-0 font-semibold">
+                                                                Terminal
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground">
+                                                        <span className="truncate max-w-[120px]">{s.id}</span>
+                                                        <span>{compCount} {compCount === 1 ? 'item' : 'items'}</span>
+                                                    </div>
+
+                                                    {/* Quick Hover Controls */}
+                                                    <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-0.5 bg-card/90 backdrop-blur-sm border rounded-lg p-0.5 shadow-sm">
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleMoveScreen(index, -1); }}
+                                                            disabled={index === 0}
+                                                            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                                            title="Move Up"
+                                                        >
+                                                            <ChevronUp className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleMoveScreen(index, 1); }}
+                                                            disabled={index === screens.length - 1}
+                                                            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                                            title="Move Down"
+                                                        >
+                                                            <ChevronDown className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleDuplicateScreen(s); }}
+                                                            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                                                            title="Duplicate Screen"
+                                                        >
+                                                            <Copy className="w-3 h-3" />
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleRemoveScreen(s.id); }}
+                                                            className="p-1 hover:bg-destructive/20 rounded text-destructive"
+                                                            title="Delete Screen"
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </ScrollArea>
+                            </div>
+
+                            {/* --- CENTER CANVAS: AUTHENTIC META PHONE FRAME --- */}
+                            <div
+                                className="flex-1 bg-muted/15 flex flex-col items-center justify-start p-6 overflow-y-auto"
+                                onClick={() => setSelectedComponentId(null)}
+                            >
+                                {/* Phone Mockup Shell */}
+                                <div
+                                    className="w-[360px] sm:w-[380px] min-h-[640px] bg-card border-[6px] border-border/80 rounded-[44px] shadow-2xl relative overflow-hidden flex flex-col my-auto transition-all"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Mobile Notch & Status Bar */}
+                                    <div className="bg-[#0b141a] text-white/80 px-6 pt-3 pb-2 flex items-center justify-between text-[11px] font-mono select-none">
+                                        <span>9:41</span>
+                                        <div className="w-20 h-4 bg-black/60 rounded-full mx-auto" />
+                                        <div className="flex items-center gap-1.5">
+                                            <span>5G</span>
+                                            <div className="w-4 h-2.5 border border-white/60 rounded-sm p-0.5">
+                                                <div className="h-full bg-white rounded-2xs" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* WhatsApp Flow Header Bar */}
+                                    <div className="bg-[#008069] dark:bg-[#1f2c34] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <button className="text-white hover:opacity-80 transition-opacity">
+                                                <X className="w-5 h-5" />
+                                            </button>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-1.5">
+                                                    <h3 className="text-sm font-bold truncate leading-tight">WhatsApp Flow</h3>
+                                                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+                                                </div>
+                                                <p className="text-[10px] text-white/75 truncate flex items-center gap-1">
+                                                    <Lock className="w-2.5 h-2.5" /> End-to-end encrypted
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Badge variant="outline" className="text-[9px] text-white/90 border-white/30 py-0 h-4 font-mono">
+                                            {activeScreen?.id}
+                                        </Badge>
+                                    </div>
+
+                                    {/* Screen Content Canvas */}
+                                    <div className="flex-1 p-5 space-y-4 bg-background overflow-y-auto">
+                                        
+                                        {/* Screen Header / Title editable */}
+                                        <div className="space-y-1">
+                                            <input
+                                                value={activeScreen?.title || ''}
+                                                onChange={(e) => handleUpdateActiveScreen({ title: e.target.value })}
+                                                placeholder="Enter screen title..."
+                                                className="w-full text-base font-extrabold text-foreground bg-transparent border-none outline-none focus:border-b-2 focus:border-primary pb-0.5"
+                                            />
+                                        </div>
+
+                                        {/* Component Elements */}
+                                        <div className="space-y-3">
+                                            {activeScreen?.children?.map((c, cIdx) => {
+                                                const isSelected = selectedComponentId === c.id;
+
+                                                return (
+                                                    <div
+                                                        key={c.id}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedComponentId(c.id);
+                                                            setActiveSidebarTab('inspector');
+                                                        }}
+                                                        className={`relative group p-3 rounded-xl border-2 transition-all cursor-pointer ${
+                                                            isSelected
+                                                                ? 'border-primary bg-primary/5 shadow-md ring-2 ring-primary/20'
+                                                                : 'border-transparent hover:border-primary/40 hover:bg-muted/30'
+                                                        }`}
+                                                    >
+                                                        {/* Floating Component Type Pill */}
+                                                        {isSelected && (
+                                                            <Badge className="absolute -left-2 -top-2.5 text-[9px] h-4 px-1.5 font-bold uppercase tracking-wider bg-primary text-primary-foreground shadow-sm">
+                                                                {c.type}
+                                                            </Badge>
+                                                        )}
+
+                                                        {/* Preview Node */}
+                                                        {renderComponentLivePreview(c)}
+
+                                                        {/* Quick Hover Tool Actions */}
+                                                        <div className="absolute right-2 top-2 hidden group-hover:flex items-center gap-1 bg-card/95 border border-border shadow-md rounded-lg p-0.5 z-10">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleMoveComponent(c.id, -1); }}
+                                                                disabled={cIdx === 0}
+                                                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                                                title="Move Up"
+                                                            >
+                                                                <ChevronUp className="w-3 h-3" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleMoveComponent(c.id, 1); }}
+                                                                disabled={cIdx === (activeScreen.children?.length || 0) - 1}
+                                                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground disabled:opacity-30"
+                                                                title="Move Down"
+                                                            >
+                                                                <ChevronDown className="w-3 h-3" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDuplicateComponent(c); }}
+                                                                className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-foreground"
+                                                                title="Duplicate"
+                                                            >
+                                                                <Copy className="w-3 h-3" />
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteComponent(c.id); }}
+                                                                className="p-1 hover:bg-destructive/20 rounded text-destructive"
+                                                                title="Delete Field"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {(!activeScreen?.children || activeScreen.children.length === 0) && (
+                                                <div className="py-16 flex flex-col items-center justify-center border-2 border-dashed border-border/80 rounded-2xl gap-3 text-center px-4">
+                                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                        <Plus className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">No components yet</p>
+                                                        <p className="text-[11px] text-muted-foreground mt-0.5">Click components in the right palette to add.</p>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <div className="p-6 border-t bg-card space-y-2">
-                                        <div className="flex items-center gap-2">
-                                            <Label className="text-[10px] font-bold text-muted-foreground uppercase">Footer Action</Label>
-                                            <Select value={activeScreen?.footerAction?.type || 'navigate'}
-                                                onValueChange={(val) => updateFooterAction({ type: val, label: val === 'complete' ? 'Finish' : 'Next' })}>
-                                                <SelectTrigger className="h-7 text-[10px] flex-1"><SelectValue /></SelectTrigger>
-                                                <SelectContent>
-                                                    {ACTION_TYPES.map(a => <SelectItem key={a.id} value={a.id}>{a.label}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                value={activeScreen?.footerAction?.label || 'Next'}
-                                                onChange={(e) => updateFooterAction({ label: e.target.value })}
-                                                className="h-8 text-xs font-medium flex-1"
-                                                placeholder="Button label"
-                                            />
-                                            {activeScreen?.footerAction?.type === 'navigate' && (
-                                                <Select value={activeScreen.footerAction.screen || ''}
-                                                    onValueChange={(val) => updateFooterAction({ screen: val })}>
-                                                    <SelectTrigger className="h-8 text-[10px] w-32"><SelectValue placeholder="To..." /></SelectTrigger>
-                                                    <SelectContent>
-                                                        {screens.filter(s => s.id !== activeScreenId).map(s => (
-                                                            <SelectItem key={s.id} value={s.id}>{s.title}</SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
+
+                                    {/* Authentic Phone Footer CTA Bar */}
+                                    <div className="p-4 bg-card border-t border-border/60 space-y-2">
+                                        <Button
+                                            className="w-full h-11 text-xs font-bold rounded-xl bg-[#00a884] hover:bg-[#008f6f] text-white shadow-md gap-2"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setActiveSidebarTab('routing');
+                                            }}
+                                        >
+                                            <span>{activeScreen?.footerAction?.label || (activeScreen?.terminal ? 'Finish' : 'Continue')}</span>
+                                            {activeScreen?.terminal ? (
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            ) : (
+                                                <ArrowRight className="w-4 h-4" />
                                             )}
-                                            {activeScreen?.footerAction?.type === 'data_exchange' && (
-                                                <>
-                                                    <Select value={activeScreen.footerAction.method || 'POST'}
-                                                        onValueChange={(val) => updateFooterAction({ method: val })}>
-                                                        <SelectTrigger className="h-8 text-[10px] w-20"><SelectValue /></SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="POST">POST</SelectItem>
-                                                            <SelectItem value="GET">GET</SelectItem>
-                                                            <SelectItem value="PUT">PUT</SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <Input value={activeScreen.footerAction.response_key || ''}
-                                                        onChange={(e) => updateFooterAction({ response_key: e.target.value })}
-                                                        className="h-8 text-[10px] font-mono w-24" placeholder="Resp key" />
-                                                </>
-                                            )}
-                                            {activeScreen?.footerAction?.type === 'open_url' && (
-                                                <Input value={activeScreen.footerAction.url || ''}
-                                                    onChange={(e) => updateFooterAction({ url: e.target.value })}
-                                                    className="h-8 text-[10px] font-mono flex-1" placeholder="https://..." />
-                                            )}
+                                        </Button>
+
+                                        <div className="flex items-center justify-between text-[10px] text-muted-foreground px-1">
+                                            <span>Action: <b>{activeScreen?.footerAction?.type || 'navigate'}</b></span>
+                                            <span>Destination: <b>{activeScreen?.terminal ? 'Submit Flow' : (activeScreen?.footerAction?.screen || 'Next Screen')}</b></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="w-80 border-l bg-card flex flex-col overflow-hidden">
+                            {/* --- RIGHT SIDEBAR: PALETTE, INSPECTOR & ROUTING --- */}
+                            <div className="w-80 border-l border-border/60 bg-card flex flex-col shrink-0">
                                 <Tabs value={activeSidebarTab} onValueChange={setActiveSidebarTab} className="flex-1 flex flex-col">
-                                    <TabsList className="w-full rounded-none h-10 border-b bg-muted/20">
-                                        <TabsTrigger value="library" className="flex-1 text-xs font-bold">Library</TabsTrigger>
+                                    <TabsList className="w-full rounded-none h-11 border-b border-border/60 bg-muted/20 p-1">
+                                        <TabsTrigger value="palette" className="flex-1 text-xs font-bold">Palette</TabsTrigger>
                                         <TabsTrigger value="inspector" className="flex-1 text-xs font-bold">Properties</TabsTrigger>
+                                        <TabsTrigger value="routing" className="flex-1 text-xs font-bold">Routing</TabsTrigger>
                                     </TabsList>
-                                    <div className="flex-1 overflow-y-auto bg-card pointer-events-auto">
-                                        <TabsContent value="library" className="m-0 p-3 space-y-3">
-                                            {/* Compact Search Bar */}
-                                            <div className="relative">
-                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
-                                                <Input
-                                                    placeholder="Search components..."
-                                                    value={librarySearch}
-                                                    onChange={(e) => setLibrarySearch(e.target.value)}
-                                                    className="h-7 text-xs pl-8 pr-7 bg-muted/30 border-border/60 rounded-md focus-visible:ring-primary/20"
-                                                />
-                                                {librarySearch && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setLibrarySearch('')}
-                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                                    >
-                                                        <X className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                            </div>
 
-                                            {/* Filtered / Categorized Components Grid */}
-                                            {librarySearch.trim() ? (
-                                                <div className="grid grid-cols-2 gap-1.5 pb-6">
-                                                    {COMPONENT_TYPES.filter(t => t.label.toLowerCase().includes(librarySearch.toLowerCase())).map(type => (
-                                                        <button
-                                                            key={type.id}
-                                                            onClick={() => addComponent(type.id)}
-                                                            className="flex items-center gap-2 px-2 py-1.5 border border-border/60 hover:border-primary/50 hover:bg-primary/5 rounded-lg bg-card/70 text-left transition-all group shadow-none"
-                                                            title={`Add ${type.label}`}
-                                                        >
-                                                            <div className="w-6 h-6 rounded-md bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                                                                <type.icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                            </div>
-                                                            <span className="text-[11px] font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                                                                {type.label}
-                                                            </span>
-                                                        </button>
-                                                    ))}
-                                                    {COMPONENT_TYPES.filter(t => t.label.toLowerCase().includes(librarySearch.toLowerCase())).length === 0 && (
-                                                        <div className="col-span-2 py-8 text-center text-xs text-muted-foreground">
-                                                            No components found
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3 pb-6">
-                                                    {COMPONENT_CATEGORIES.map(cat => {
-                                                        const categoryComponents = COMPONENT_TYPES.filter(t => cat.types.includes(t.id));
-                                                        return (
-                                                            <div key={cat.name} className="space-y-1.5">
-                                                                <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-0.5">
-                                                                    {cat.name}
-                                                                </div>
-                                                                <div className="grid grid-cols-2 gap-1.5">
-                                                                    {categoryComponents.map(type => (
-                                                                        <button
-                                                                            key={type.id}
-                                                                            onClick={() => addComponent(type.id)}
-                                                                            className="flex items-center gap-2 px-2 py-1.5 border border-border/60 hover:border-primary/50 hover:bg-primary/5 rounded-lg bg-card/70 text-left transition-all group shadow-none"
-                                                                            title={`Add ${type.label}`}
-                                                                        >
-                                                                            <div className="w-6 h-6 rounded-md bg-muted/60 flex items-center justify-center shrink-0 group-hover:bg-primary/10 transition-colors">
-                                                                                <type.icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                                            </div>
-                                                                            <span className="text-[11px] font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                                                                                {type.label}
-                                                                            </span>
-                                                                        </button>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
+                                    {/* PALETTE TAB */}
+                                    <TabsContent value="palette" className="m-0 flex-1 overflow-y-auto p-3 space-y-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/60" />
+                                            <Input
+                                                placeholder="Search components..."
+                                                value={searchPalette}
+                                                onChange={(e) => setSearchPalette(e.target.value)}
+                                                className="h-8 text-xs pl-8 pr-7 bg-muted/30 border-border/60 rounded-xl"
+                                            />
+                                            {searchPalette && (
+                                                <button
+                                                    onClick={() => setSearchPalette('')}
+                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                >
+                                                    <X className="w-3.5 h-3.5" />
+                                                </button>
                                             )}
-                                        </TabsContent>
-                                        <TabsContent value="inspector" className="m-0 p-6">
-                                            <div className="space-y-6 pb-10">
-                                                <div className="space-y-4">
-                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Screen Settings</h4>
-                                                    <div className="space-y-2">
-                                                        <Label className="text-xs">Screen ID</Label>
-                                                        <Input value={activeScreen?.id || ''}
-                                                            onChange={(e) => setScreens(screens.map(s => s.id === activeScreenId ? { ...s, id: e.target.value } : s))}
-                                                            className="h-8 text-xs font-mono" />
+                                        </div>
+
+                                        <div className="space-y-4 pb-12">
+                                            {filteredCategories.map(cat => (
+                                                <div key={cat.name} className="space-y-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 px-1">
+                                                        {cat.name}
+                                                    </span>
+                                                    <div className="grid grid-cols-1 gap-1.5">
+                                                        {cat.items.map(item => (
+                                                            <button
+                                                                key={item.id}
+                                                                onClick={() => handleAddComponent(item.id)}
+                                                                className="flex items-center gap-3 p-2.5 rounded-xl border border-border/60 hover:border-primary/50 bg-card/60 hover:bg-primary/5 transition-all text-left group shadow-none"
+                                                            >
+                                                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-105 transition-transform shrink-0">
+                                                                    <item.icon className="w-4 h-4" />
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                                                                        {item.label}
+                                                                    </p>
+                                                                    <p className="text-[10px] text-muted-foreground truncate">
+                                                                        {item.description}
+                                                                    </p>
+                                                                </div>
+                                                                <Plus className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                                                            </button>
+                                                        ))}
                                                     </div>
                                                 </div>
-                                                <div className="space-y-4">
-                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Component Properties</h4>
-                                                    {!selectedComponent ? (
-                                                        <div className="py-10 text-center space-y-3">
-                                                            <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center mx-auto opacity-40">
-                                                                <Settings className="w-5 h-5" />
-                                                            </div>
-                                                            <p className="text-xs text-muted-foreground italic px-4">Select a component on the canvas to edit its properties.</p>
-                                                        </div>
-                                                    ) : renderComponentInspector()}
+                                            ))}
+                                        </div>
+                                    </TabsContent>
+
+                                    {/* INSPECTOR TAB */}
+                                    <TabsContent value="inspector" className="m-0 flex-1 overflow-y-auto p-4">
+                                        {!selectedComponent ? (
+                                            <div className="py-16 text-center space-y-3">
+                                                <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground/50">
+                                                    <Sliders className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-foreground">No field selected</p>
+                                                    <p className="text-[11px] text-muted-foreground max-w-[200px] mx-auto mt-1">
+                                                        Click any element inside the mobile preview to edit its properties.
+                                                    </p>
                                                 </div>
                                             </div>
-                                        </TabsContent>
-                                    </div>
+                                        ) : (
+                                            <div className="space-y-5 pb-12">
+                                                <div className="flex items-center justify-between border-b pb-2.5">
+                                                    <div>
+                                                        <Badge variant="outline" className="text-[10px] font-bold uppercase bg-primary/10 text-primary border-primary/20">
+                                                            {selectedComponent.type}
+                                                        </Badge>
+                                                        <p className="text-[10px] font-mono text-muted-foreground mt-0.5">{selectedComponent.id}</p>
+                                                    </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDeleteComponent(selectedComponent.id)}
+                                                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </Button>
+                                                </div>
+
+                                                {/* Text Content for typography */}
+                                                {selectedComponent.type.startsWith('Text') && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-semibold">Text Content</Label>
+                                                        <Textarea
+                                                            value={selectedComponent.text || ''}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { text: e.target.value })}
+                                                            placeholder="Enter displayed text..."
+                                                            className="text-xs min-h-[80px]"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* Label for inputs */}
+                                                {!selectedComponent.type.startsWith('Text') && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-semibold">Visible Label</Label>
+                                                        <Input
+                                                            value={selectedComponent.label || ''}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { label: e.target.value })}
+                                                            placeholder="Field title shown to user..."
+                                                            className="h-8 text-xs font-semibold"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* System Field Name (Payload key) */}
+                                                {selectedComponent.name !== undefined && (
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs font-semibold">System Name (Payload Key)</Label>
+                                                            <span className="text-[10px] text-muted-foreground font-mono">Unique Key</span>
+                                                        </div>
+                                                        <Input
+                                                            value={selectedComponent.name || ''}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { name: sanitizeIdentifier(e.target.value, 'field', false) })}
+                                                            placeholder="e.g. user_email"
+                                                            className="h-8 text-xs font-mono"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* Placeholder & Helper Text */}
+                                                {selectedComponent.placeholder !== undefined && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-semibold">Placeholder Text</Label>
+                                                        <Input
+                                                            value={selectedComponent.placeholder || ''}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { placeholder: e.target.value })}
+                                                            placeholder="e.g. Type your name..."
+                                                            className="h-8 text-xs"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {selectedComponent.helperText !== undefined && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-semibold">Helper / Subtext</Label>
+                                                        <Input
+                                                            value={selectedComponent.helperText || ''}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { helperText: e.target.value })}
+                                                            placeholder="e.g. Must be a valid email"
+                                                            className="h-8 text-xs"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                {/* Input Type for TextInput */}
+                                                {selectedComponent.type === 'TextInput' && (
+                                                    <div className="space-y-1.5">
+                                                        <Label className="text-xs font-semibold">Input Type</Label>
+                                                        <Select
+                                                            value={selectedComponent.inputType || 'text'}
+                                                            onValueChange={(val) => handleUpdateComponent(selectedComponent.id, { inputType: val })}
+                                                        >
+                                                            <SelectTrigger className="h-8 text-xs">
+                                                                <SelectValue />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="text">Single-line Text</SelectItem>
+                                                                <SelectItem value="email">Email Address</SelectItem>
+                                                                <SelectItem value="number">Number</SelectItem>
+                                                                <SelectItem value="phone">Phone Number</SelectItem>
+                                                                <SelectItem value="password">Password</SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                {/* Options Editor for Select / Radio / Checkboxes */}
+                                                {['Select', 'RadioButtons', 'CheckboxGroup'].includes(selectedComponent.type) && (
+                                                    <div className="space-y-2.5 pt-2 border-t">
+                                                        <div className="flex items-center justify-between">
+                                                            <Label className="text-xs font-bold">Choices & Options</Label>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="h-6 text-[10px] font-semibold gap-1"
+                                                                onClick={() => {
+                                                                    const current = selectedComponent.options || [];
+                                                                    const count = current.length + 1;
+                                                                    const newOpt = { label: `Option ${count}`, value: `opt_${count}`, description: '' };
+                                                                    handleUpdateComponent(selectedComponent.id, { options: [...current, newOpt] });
+                                                                }}
+                                                            >
+                                                                <Plus className="w-3 h-3" /> Add Choice
+                                                            </Button>
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            {(selectedComponent.options || []).map((opt, optIdx) => (
+                                                                <div key={optIdx} className="p-2 border rounded-xl bg-card space-y-1.5">
+                                                                    <div className="flex items-center gap-1.5">
+                                                                        <Input
+                                                                            value={opt.label || ''}
+                                                                            onChange={(e) => {
+                                                                                const opts = [...selectedComponent.options];
+                                                                                opts[optIdx].label = e.target.value;
+                                                                                handleUpdateComponent(selectedComponent.id, { options: opts });
+                                                                            }}
+                                                                            placeholder="Choice Title"
+                                                                            className="h-7 text-xs flex-1 font-semibold"
+                                                                        />
+                                                                        <Input
+                                                                            value={opt.value || ''}
+                                                                            onChange={(e) => {
+                                                                                const opts = [...selectedComponent.options];
+                                                                                opts[optIdx].value = sanitizeIdentifier(e.target.value, 'opt', false);
+                                                                                handleUpdateComponent(selectedComponent.id, { options: opts });
+                                                                            }}
+                                                                            placeholder="Value/ID"
+                                                                            className="h-7 text-[10px] font-mono w-20"
+                                                                        />
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            className="h-7 w-7 text-destructive"
+                                                                            onClick={() => {
+                                                                                const opts = selectedComponent.options.filter((_, i) => i !== optIdx);
+                                                                                handleUpdateComponent(selectedComponent.id, { options: opts });
+                                                                            }}
+                                                                        >
+                                                                            <X className="w-3 h-3" />
+                                                                        </Button>
+                                                                    </div>
+                                                                    <Input
+                                                                        value={opt.description || ''}
+                                                                        onChange={(e) => {
+                                                                            const opts = [...selectedComponent.options];
+                                                                            opts[optIdx].description = e.target.value;
+                                                                            handleUpdateComponent(selectedComponent.id, { options: opts });
+                                                                        }}
+                                                                        placeholder="Subtext / Description (optional)"
+                                                                        className="h-6 text-[10px] text-muted-foreground"
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Required Field Checkbox */}
+                                                {selectedComponent.required !== undefined && (
+                                                    <div className="flex items-center gap-2 pt-2 border-t">
+                                                        <input
+                                                            type="checkbox"
+                                                            id="req-checkbox"
+                                                            checked={Boolean(selectedComponent.required)}
+                                                            onChange={(e) => handleUpdateComponent(selectedComponent.id, { required: e.target.checked })}
+                                                            className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                                                        />
+                                                        <Label htmlFor="req-checkbox" className="text-xs font-semibold cursor-pointer">
+                                                            Required Field (Mandatory in WhatsApp)
+                                                        </Label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </TabsContent>
+
+                                    {/* ROUTING & SCREEN SETTINGS TAB */}
+                                    <TabsContent value="routing" className="m-0 flex-1 overflow-y-auto p-4 space-y-5">
+                                        <div className="space-y-4">
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Screen Properties</h4>
+                                            
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-semibold">Screen ID</Label>
+                                                <Input
+                                                    value={activeScreen?.id || ''}
+                                                    onChange={(e) => handleUpdateActiveScreen({ id: sanitizeScreenId(e.target.value) })}
+                                                    className="h-8 text-xs font-mono font-bold"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-semibold">Screen Title</Label>
+                                                <Input
+                                                    value={activeScreen?.title || ''}
+                                                    onChange={(e) => handleUpdateActiveScreen({ title: e.target.value })}
+                                                    className="h-8 text-xs"
+                                                />
+                                            </div>
+
+                                            <div className="flex items-center gap-2 pt-1">
+                                                <input
+                                                    type="checkbox"
+                                                    id="terminal-checkbox"
+                                                    checked={Boolean(activeScreen?.terminal)}
+                                                    onChange={(e) => handleUpdateActiveScreen({ terminal: e.target.checked })}
+                                                    className="rounded border-border text-primary focus:ring-primary h-4 w-4"
+                                                />
+                                                <Label htmlFor="terminal-checkbox" className="text-xs font-semibold cursor-pointer">
+                                                    Terminal Screen (Completes & Submits Flow)
+                                                </Label>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-4 pt-4 border-t">
+                                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Footer CTA Action</h4>
+
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-semibold">Button Label</Label>
+                                                <Input
+                                                    value={activeScreen?.footerAction?.label || ''}
+                                                    onChange={(e) => handleUpdateFooterAction({ label: e.target.value })}
+                                                    placeholder="Continue / Submit"
+                                                    className="h-8 text-xs font-bold"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-1.5">
+                                                <Label className="text-xs font-semibold">Action Type</Label>
+                                                <Select
+                                                    value={activeScreen?.terminal ? 'complete' : (activeScreen?.footerAction?.type || 'navigate')}
+                                                    onValueChange={(val) => {
+                                                        if (val === 'complete') {
+                                                            handleUpdateActiveScreen({ terminal: true });
+                                                            handleUpdateFooterAction({ type: 'complete' });
+                                                        } else {
+                                                            handleUpdateActiveScreen({ terminal: false });
+                                                            handleUpdateFooterAction({ type: val });
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger className="h-8 text-xs">
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="navigate">Navigate to Screen</SelectItem>
+                                                        <SelectItem value="complete">Complete & Submit Flow</SelectItem>
+                                                        <SelectItem value="data_exchange">Dynamic Data Exchange (API)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+
+                                            {activeScreen?.footerAction?.type === 'navigate' && !activeScreen?.terminal && (
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-semibold">Target Destination Screen</Label>
+                                                    <Select
+                                                        value={activeScreen?.footerAction?.screen || ''}
+                                                        onValueChange={(val) => handleUpdateFooterAction({ screen: val })}
+                                                    >
+                                                        <SelectTrigger className="h-8 text-xs">
+                                                            <SelectValue placeholder="Select target screen..." />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {screens.filter(s => s.id !== activeScreenId).map(s => (
+                                                                <SelectItem key={s.id} value={s.id}>
+                                                                    {s.title} ({s.id})
+                                                                </SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </TabsContent>
                                 </Tabs>
                             </div>
                         </>
-                    ) : (
-                        <div className="flex-1 bg-[#1e1e1e] p-6 font-mono text-sm overflow-auto">
-                            <pre className="text-blue-300 text-[11px] whitespace-pre-wrap break-all">
-                                {generateFlowJson()}
-                            </pre>
+                    )}
+
+                    {/* --- 3. INTERACTIVE SIMULATOR MODE --- */}
+                    {builderMode === 'simulator' && (
+                        <div className="flex-1 bg-muted/20 flex flex-col lg:flex-row items-center justify-center p-8 gap-8 overflow-y-auto">
+                            {/* Live Interactive Mobile Frame */}
+                            {(() => {
+                                const currentSimScreen = screens.find(s => s.id === simScreenId) || screens[0];
+                                const isTerminal = currentSimScreen.terminal || currentSimScreen.footerAction?.type === 'complete';
+
+                                return (
+                                    <div className="w-[360px] sm:w-[380px] min-h-[640px] bg-card border-[6px] border-border/80 rounded-[44px] shadow-2xl relative overflow-hidden flex flex-col">
+                                        
+                                        {/* Status Bar */}
+                                        <div className="bg-[#0b141a] text-white/80 px-6 pt-3 pb-2 flex items-center justify-between text-[11px] font-mono select-none">
+                                            <span>9:41</span>
+                                            <div className="w-20 h-4 bg-black/60 rounded-full mx-auto" />
+                                            <div className="flex items-center gap-1.5">
+                                                <span>5G</span>
+                                                <div className="w-4 h-2.5 border border-white/60 rounded-sm p-0.5">
+                                                    <div className="h-full bg-white rounded-2xs" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* WhatsApp Header */}
+                                        <div className="bg-[#008069] dark:bg-[#1f2c34] text-white px-4 py-3 flex items-center justify-between shadow-sm">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <button
+                                                    onClick={() => {
+                                                        const curIdx = screens.findIndex(s => s.id === simScreenId);
+                                                        if (curIdx > 0) setSimScreenId(screens[curIdx - 1].id);
+                                                    }}
+                                                    disabled={screens.findIndex(s => s.id === simScreenId) === 0}
+                                                    className="text-white hover:opacity-80 transition-opacity disabled:opacity-30"
+                                                >
+                                                    <ArrowLeft className="w-5 h-5" />
+                                                </button>
+                                                <div className="min-w-0">
+                                                    <h3 className="text-sm font-bold truncate leading-tight">Live Flow Test</h3>
+                                                    <p className="text-[10px] text-white/75 truncate">{currentSimScreen.title}</p>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSimScreenId(screens[0]?.id);
+                                                    setSimFormData({});
+                                                    setSimErrors({});
+                                                }}
+                                                className="h-6 text-[10px] text-white hover:bg-white/10"
+                                            >
+                                                <RefreshCw className="w-3 h-3 mr-1" /> Reset
+                                            </Button>
+                                        </div>
+
+                                        {/* Simulator Interactive Body */}
+                                        <div className="flex-1 p-5 space-y-4 bg-background overflow-y-auto">
+                                            <h2 className="text-base font-extrabold text-foreground">{currentSimScreen.title}</h2>
+
+                                            <div className="space-y-4">
+                                                {currentSimScreen.children?.map(c => (
+                                                    <div key={c.id}>
+                                                        {renderSimulatorInteractiveField(c, simFormData, setSimFormData, simErrors)}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Interactive Submit Button */}
+                                        <div className="p-4 bg-card border-t border-border/60">
+                                            <Button
+                                                className="w-full h-11 text-xs font-bold rounded-xl bg-[#00a884] hover:bg-[#008f6f] text-white shadow-md gap-2"
+                                                onClick={() => handleSimulatorAction(currentSimScreen)}
+                                            >
+                                                <span>{currentSimScreen.footerAction?.label || (isTerminal ? 'Submit Form' : 'Continue')}</span>
+                                                {isTerminal ? <CheckCircle2 className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            {/* Simulator Real-Time Live State Output */}
+                            <div className="w-full lg:w-96 space-y-4">
+                                <Card className="border-border/60 shadow-md">
+                                    <CardContent className="p-4 space-y-3">
+                                        <div className="flex items-center justify-between border-b pb-2">
+                                            <span className="text-xs font-bold flex items-center gap-1.5 text-foreground">
+                                                <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
+                                                Live Captured Payload
+                                            </span>
+                                            <Badge variant="outline" className="text-[10px] font-mono">
+                                                {Object.keys(simFormData).length} fields
+                                            </Badge>
+                                        </div>
+                                        <pre className="p-3 bg-muted/40 rounded-xl text-[11px] font-mono overflow-auto max-h-[300px] text-foreground/90">
+                                            {JSON.stringify(simFormData, null, 2)}
+                                        </pre>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- 4. FLOW JSON DSL CODE TAB --- */}
+                    {builderMode === 'code' && (
+                        <div className="flex-1 flex flex-col bg-[#1e1e1e] overflow-hidden">
+                            <div className="p-3 bg-[#252526] border-b border-[#333333] flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Badge className="bg-blue-600 text-white font-mono text-[10px]">flow.json</Badge>
+                                    <span className="text-xs text-muted-foreground">Standard WhatsApp Meta Flows v{FLOW_VERSION} Schema</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleCopyJson}
+                                        className="h-7 text-xs text-gray-300 hover:text-white hover:bg-white/10"
+                                    >
+                                        <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy JSON
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={handleDownloadJson}
+                                        className="h-7 text-xs text-gray-300 hover:text-white hover:bg-white/10"
+                                    >
+                                        <Download className="w-3.5 h-3.5 mr-1.5" /> Download
+                                    </Button>
+                                </div>
+                            </div>
+                            <ScrollArea className="flex-1 p-6">
+                                <pre className="text-blue-300 font-mono text-xs leading-relaxed">
+                                    {flowJsonString}
+                                </pre>
+                            </ScrollArea>
                         </div>
                     )}
                 </div>
-            </div>
-        </div>
-    );
-};
 
-export default FlowBuilder;
+                {/* --- IMPORT JSON MODAL --- */}
+                <Dialog open={isImportModalOpen} onOpenChange={setIsImportModalOpen}>
+                    <DialogContent className="sm:max-w-[560px] rounded-2xl">
+                        <DialogHeader>
+                            <DialogTitle className="text-base font-bold flex items-center gap-2">
+                                <Upload className="w-4 h-4 text-primary" />
+                                Import WhatsApp Flow JSON
+                            </DialogTitle>
+                            <DialogDescription className="text-xs">
+                                Paste any valid Meta WhatsApp `flow.json` DSL structure to import screens and fields directly.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="py-2">
+                            <Textarea
+                                value={importJsonText}
+                                onChange={(e) => setImportJsonText(e.target.value)}
+                                placeholder='{\n  "version": "7.3",\n  "screens": [\n    ...\n  ]\n}'
+                                className="min-h-[260px] font-mono text-xs"
+                            />
+                        </div>
+                        <DialogFooter className="gap-2 sm:gap-0">
+                            <Button variant="ghost" size="sm" onClick={() => setIsImportModalOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button size="sm" onClick={handleImportJson} className="font-semibold gap-1.5">
+                                <Check className="w-4 h-4" /> Import Screens
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* --- SIMULATOR SUBMISSION MODAL --- */}
+                <Dialog open={isSimSubmittedOpen} onOpenChange={setIsSimSubmittedOpen}>
+                    <DialogContent className="sm:max-w-[480px] rounded-2xl text-center">
+                        <div className="py-4 space-y-3">
+                            <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center mx-auto">
+                                <CheckCircle2 className="w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-foreground">Flow Simulation Completed!</h3>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Here is the exact response payload that WhatsApp will return to your backend webhook.
+                                </p>
+                            </div>
+                            <pre className="p-3 bg-muted/50 rounded-xl text-left font-mono text-[11px] overflow-auto max-h-[220px]">
+                                {JSON.stringify(simSubmittedPayload, null, 2)}
+                            </pre>
+                        </div>
+                        <DialogFooter className="sm:justify-center">
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    setIsSimSubmittedOpen(false);
+                                    setSimScreenId(screens[0]?.id);
+                                    setSimFormData({});
+                                }}
+                                className="rounded-xl px-6"
+                            >
+                                Test Again
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+            </div>
+        </TooltipProvider>
+    );
+}
+
+// --- Live Static Preview in Canvas ---
+function renderComponentLivePreview(c) {
+    switch (c.type) {
+        case 'TextHeading':
+            return <h2 className="text-base font-extrabold text-foreground leading-snug">{c.text || 'Heading'}</h2>;
+        case 'TextSubheading':
+            return <h3 className="text-sm font-bold text-foreground/90 leading-snug">{c.text || 'Subheading'}</h3>;
+        case 'TextBody':
+            return <p className="text-xs text-muted-foreground leading-relaxed">{c.text || 'Body text content'}</p>;
+        case 'TextCaption':
+            return <p className="text-[11px] text-muted-foreground/75 italic leading-tight">{c.text || 'Caption text'}</p>;
+        case 'TextInput':
+            return (
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-foreground">
+                            {c.label || 'Text Field'} {c.required && <span className="text-destructive">*</span>}
+                        </Label>
+                        {c.name && <span className="text-[9px] font-mono text-muted-foreground/60">{c.name}</span>}
+                    </div>
+                    <div className="h-9 border border-border/80 rounded-xl bg-card px-3 flex items-center text-xs text-muted-foreground/60">
+                        {c.placeholder || 'Type here...'}
+                    </div>
+                    {c.helperText && <p className="text-[10px] text-muted-foreground">{c.helperText}</p>}
+                </div>
+            );
+        case 'TextArea':
+            return (
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-foreground">
+                            {c.label || 'Text Area'} {c.required && <span className="text-destructive">*</span>}
+                        </Label>
+                        {c.name && <span className="text-[9px] font-mono text-muted-foreground/60">{c.name}</span>}
+                    </div>
+                    <div className="h-16 border border-border/80 rounded-xl bg-card p-2 text-xs text-muted-foreground/60">
+                        {c.placeholder || 'Type multiple lines...'}
+                    </div>
+                </div>
+            );
+        case 'Select':
+            return (
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold text-foreground">
+                            {c.label || 'Dropdown Choice'} {c.required && <span className="text-destructive">*</span>}
+                        </Label>
+                    </div>
+                    <div className="h-9 border border-border/80 rounded-xl bg-card px-3 flex items-center justify-between text-xs text-foreground/80">
+                        <span>{c.options?.[0]?.label || 'Select option...'}</span>
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                </div>
+            );
+        case 'RadioButtons':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label || 'Choose One'} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <div className="space-y-1.5 pt-0.5">
+                        {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
+                            <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg border border-border/60 bg-card/60 text-xs">
+                                <div className="w-4 h-4 rounded-full border-2 border-primary/60 flex items-center justify-center">
+                                    {i === 0 && <div className="w-2 h-2 rounded-full bg-primary" />}
+                                </div>
+                                <span className="font-medium text-foreground">{opt.label || `Choice ${i + 1}`}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        case 'CheckboxGroup':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label || 'Choose Multiple'} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <div className="space-y-1.5 pt-0.5">
+                        {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
+                            <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg border border-border/60 bg-card/60 text-xs">
+                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${i === 0 ? 'bg-primary border-primary text-primary-foreground' : 'border-border'}`}>
+                                    {i === 0 && <Check className="w-3 h-3" />}
+                                </div>
+                                <span className="font-medium text-foreground">{opt.label || `Choice ${i + 1}`}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        case 'DatePicker':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label || 'Select Date'} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <div className="h-9 border border-border/80 rounded-xl bg-card px-3 flex items-center justify-between text-xs text-muted-foreground/70">
+                        <span>Select date...</span>
+                        <Calendar className="w-4 h-4 text-primary" />
+                    </div>
+                </div>
+            );
+        case 'ConsentCheckbox':
+            return (
+                <div className="flex items-start gap-2.5 pt-1">
+                    <div className="w-4 h-4 rounded border-2 border-primary mt-0.5 flex items-center justify-center bg-primary/10 shrink-0">
+                        <Check className="w-3 h-3 text-primary" />
+                    </div>
+                    <span className="text-xs text-foreground/90 leading-tight font-medium">
+                        {c.label || 'I agree to the terms and privacy policy'}
+                    </span>
+                </div>
+            );
+        default:
+            return <div className="text-xs text-muted-foreground">{c.label || c.type}</div>;
+    }
+}
+
+// --- Interactive Simulator Form Fields ---
+function renderSimulatorInteractiveField(c, formData, setFormData, errors) {
+    const value = formData[c.name];
+    const error = errors[c.name];
+
+    switch (c.type) {
+        case 'TextHeading':
+            return <h2 className="text-base font-extrabold text-foreground leading-snug">{c.text}</h2>;
+        case 'TextSubheading':
+            return <h3 className="text-sm font-bold text-foreground/90 leading-snug">{c.text}</h3>;
+        case 'TextBody':
+            return <p className="text-xs text-muted-foreground leading-relaxed">{c.text}</p>;
+        case 'TextCaption':
+            return <p className="text-[11px] text-muted-foreground/75 italic leading-tight">{c.text}</p>;
+        
+        case 'TextInput':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <Input
+                        type={c.inputType === 'password' ? 'password' : c.inputType === 'email' ? 'email' : 'text'}
+                        value={value || ''}
+                        onChange={(e) => setFormData({ ...formData, [c.name]: e.target.value })}
+                        placeholder={c.placeholder || 'Type here...'}
+                        className={`h-9 rounded-xl text-xs ${error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        case 'TextArea':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <Textarea
+                        value={value || ''}
+                        onChange={(e) => setFormData({ ...formData, [c.name]: e.target.value })}
+                        placeholder={c.placeholder || 'Type your message...'}
+                        className={`min-h-[70px] rounded-xl text-xs ${error ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        case 'Select':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <Select
+                        value={value || ''}
+                        onValueChange={(val) => setFormData({ ...formData, [c.name]: val })}
+                    >
+                        <SelectTrigger className={`h-9 rounded-xl text-xs ${error ? 'border-destructive' : ''}`}>
+                            <SelectValue placeholder="Select an option..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {(c.options || []).map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                    <div>
+                                        <div className="font-semibold">{opt.label}</div>
+                                        {opt.description && <div className="text-[10px] text-muted-foreground">{opt.description}</div>}
+                                    </div>
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        case 'RadioButtons':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <div className="space-y-1.5 pt-0.5">
+                        {(c.options || []).map(opt => {
+                            const isSelected = value === opt.value;
+                            return (
+                                <div
+                                    key={opt.value}
+                                    onClick={() => setFormData({ ...formData, [c.name]: opt.value })}
+                                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer text-xs ${
+                                        isSelected ? 'border-primary bg-primary/10 font-bold' : 'border-border/60 hover:bg-muted/40'
+                                    }`}
+                                >
+                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                                        isSelected ? 'border-primary bg-primary text-white' : 'border-muted-foreground/50'
+                                    }`}>
+                                        {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    </div>
+                                    <span className="text-foreground">{opt.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        case 'CheckboxGroup': {
+            const currentSelected = Array.isArray(value) ? value : [];
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <div className="space-y-1.5 pt-0.5">
+                        {(c.options || []).map(opt => {
+                            const isChecked = currentSelected.includes(opt.value);
+                            return (
+                                <div
+                                    key={opt.value}
+                                    onClick={() => {
+                                        const next = isChecked
+                                            ? currentSelected.filter(v => v !== opt.value)
+                                            : [...currentSelected, opt.value];
+                                        setFormData({ ...formData, [c.name]: next });
+                                    }}
+                                    className={`flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer text-xs ${
+                                        isChecked ? 'border-primary bg-primary/10 font-bold' : 'border-border/60 hover:bg-muted/40'
+                                    }`}
+                                >
+                                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${
+                                        isChecked ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/50'
+                                    }`}>
+                                        {isChecked && <Check className="w-3 h-3" />}
+                                    </div>
+                                    <span className="text-foreground">{opt.label}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+        }
+
+        case 'DatePicker':
+            return (
+                <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-foreground">
+                        {c.label} {c.required && <span className="text-destructive">*</span>}
+                    </Label>
+                    <Input
+                        type="date"
+                        value={value || ''}
+                        onChange={(e) => setFormData({ ...formData, [c.name]: e.target.value })}
+                        className={`h-9 rounded-xl text-xs ${error ? 'border-destructive' : ''}`}
+                    />
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        case 'ConsentCheckbox':
+            return (
+                <div className="space-y-1 pt-1">
+                    <div
+                        onClick={() => setFormData({ ...formData, [c.name]: !value })}
+                        className="flex items-start gap-2.5 cursor-pointer select-none"
+                    >
+                        <div className={`w-4 h-4 rounded border-2 mt-0.5 flex items-center justify-center shrink-0 ${
+                            value ? 'bg-primary border-primary text-primary-foreground' : 'border-muted-foreground/50'
+                        }`}>
+                            {value && <Check className="w-3 h-3" />}
+                        </div>
+                        <span className="text-xs text-foreground/90 leading-tight font-medium">
+                            {c.label} {c.required && <span className="text-destructive">*</span>}
+                        </span>
+                    </div>
+                    {error && <p className="text-[10px] text-destructive font-semibold">{error}</p>}
+                </div>
+            );
+
+        default:
+            return null;
+    }
+}
