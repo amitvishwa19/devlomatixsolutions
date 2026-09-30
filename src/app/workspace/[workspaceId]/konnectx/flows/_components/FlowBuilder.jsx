@@ -1,5 +1,6 @@
 'use client';
 
+// WhatsApp Interactive Flow Builder Component
 import React, { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
@@ -113,6 +114,12 @@ export default function FlowBuilder({
     const [isSimResultOpen, setIsSimResultOpen] = useState(false);
     const [simResultPayload, setSimResultPayload] = useState(null);
 
+    // Drag & Drop State
+    const [draggedScreenIdx, setDraggedScreenIdx] = useState(null);
+    const [dragOverScreenIdx, setDragOverScreenIdx] = useState(null);
+    const [draggedCompIdx, setDraggedCompIdx] = useState(null);
+    const [dragOverCompIdx, setDragOverCompIdx] = useState(null);
+
     const activeScreen = screens.find(s => s.id === activeScreenId) || screens[0];
     const activeScreenIndex = screens.findIndex(s => s.id === activeScreenId);
 
@@ -135,6 +142,37 @@ export default function FlowBuilder({
 
     const handleSelectScreen = (id) => {
         setActiveScreenId(id);
+    };
+
+    const handleDropScreen = (targetIdx) => {
+        if (draggedScreenIdx === null || draggedScreenIdx === targetIdx) {
+            setDraggedScreenIdx(null);
+            setDragOverScreenIdx(null);
+            return;
+        }
+        const copy = [...screens];
+        const [draggedItem] = copy.splice(draggedScreenIdx, 1);
+        copy.splice(targetIdx, 0, draggedItem);
+        setScreens(copy);
+        setDraggedScreenIdx(null);
+        setDragOverScreenIdx(null);
+        toast.success(`Screen moved to position ${targetIdx + 1}`);
+    };
+
+    const handleDropComponent = (targetIdx) => {
+        if (draggedCompIdx === null || draggedCompIdx === targetIdx) {
+            setDraggedCompIdx(null);
+            setDragOverCompIdx(null);
+            return;
+        }
+        if (!activeScreen) return;
+        const children = [...activeScreen.children];
+        const [draggedItem] = children.splice(draggedCompIdx, 1);
+        children.splice(targetIdx, 0, draggedItem);
+        setScreens(screens.map(s => s.id === activeScreenId ? { ...s, children } : s));
+        setDraggedCompIdx(null);
+        setDragOverCompIdx(null);
+        toast.success('Field reordered');
     };
 
     const handleAddNewScreen = () => {
@@ -493,18 +531,45 @@ export default function FlowBuilder({
                             <div className="space-y-1.5">
                                 {screens.map((screen, idx) => {
                                     const isSelected = activeScreenId === screen.id;
+                                    const isDragging = draggedScreenIdx === idx;
+                                    const isDragOver = dragOverScreenIdx === idx && draggedScreenIdx !== idx;
 
                                     return (
                                         <div
                                             key={screen.id}
+                                            draggable
+                                            onDragStart={(e) => {
+                                                setDraggedScreenIdx(idx);
+                                                e.dataTransfer.effectAllowed = 'move';
+                                            }}
+                                            onDragOver={(e) => {
+                                                e.preventDefault();
+                                                if (dragOverScreenIdx !== idx) setDragOverScreenIdx(idx);
+                                            }}
+                                            onDragLeave={() => {
+                                                if (dragOverScreenIdx === idx) setDragOverScreenIdx(null);
+                                            }}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                handleDropScreen(idx);
+                                            }}
+                                            onDragEnd={() => {
+                                                setDraggedScreenIdx(null);
+                                                setDragOverScreenIdx(null);
+                                            }}
                                             onClick={() => handleSelectScreen(screen.id)}
-                                            className={`group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer select-none ${isSelected
-                                                ? 'bg-[#e8f0fe] dark:bg-[#1a365d] border-[#1a73e8] text-[#1967d2] dark:text-[#90cdf4] font-bold shadow-xs'
-                                                : 'bg-card hover:bg-muted/40 border-border/60 text-foreground'
-                                                }`}
+                                            className={`group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing select-none ${
+                                                isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : ''
+                                            } ${
+                                                isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/10' : ''
+                                            } ${
+                                                isSelected && !isDragging
+                                                    ? 'bg-[#e8f0fe] dark:bg-[#1a365d] border-[#1a73e8] text-[#1967d2] dark:text-[#90cdf4] font-bold shadow-xs'
+                                                    : !isDragging ? 'bg-card hover:bg-muted/40 border-border/60 text-foreground' : ''
+                                            }`}
                                         >
                                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                                                <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 group-hover:text-foreground" />
                                                 <span className="text-xs truncate">
                                                     {screen.title || `Screen ${idx + 1}`}
                                                 </span>
@@ -589,15 +654,44 @@ export default function FlowBuilder({
                                 {(activeScreen?.children || []).map((comp, cIdx) => {
                                     const isExpanded = expandedCompIds[comp.id] ?? false;
                                     const titlePreview = comp.label || comp.text || comp.name || comp.type;
+                                    const isDragging = draggedCompIdx === cIdx;
+                                    const isDragOver = dragOverCompIdx === cIdx && draggedCompIdx !== cIdx;
 
                                     return (
-                                        <div key={comp.id} className="border border-border/80 rounded-lg bg-card overflow-hidden shadow-2xs">
+                                        <div
+                                            key={comp.id}
+                                            draggable
+                                            onDragStart={(e) => {
+                                                setDraggedCompIdx(cIdx);
+                                                e.dataTransfer.effectAllowed = 'move';
+                                            }}
+                                            onDragOver={(e) => {
+                                                e.preventDefault();
+                                                if (dragOverCompIdx !== cIdx) setDragOverCompIdx(cIdx);
+                                            }}
+                                            onDragLeave={() => {
+                                                if (dragOverCompIdx === cIdx) setDragOverCompIdx(null);
+                                            }}
+                                            onDrop={(e) => {
+                                                e.preventDefault();
+                                                handleDropComponent(cIdx);
+                                            }}
+                                            onDragEnd={() => {
+                                                setDraggedCompIdx(null);
+                                                setDragOverCompIdx(null);
+                                            }}
+                                            className={`border rounded-lg bg-card overflow-hidden shadow-2xs transition-all ${
+                                                isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : 'border-border/80'
+                                            } ${
+                                                isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/5' : ''
+                                            }`}
+                                        >
                                             <div
                                                 onClick={() => toggleComponentExpand(comp.id)}
                                                 className="flex items-center justify-between px-3.5 py-3 cursor-pointer select-none hover:bg-muted/20 gap-2"
                                             >
-                                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                    <GripVertical className="w-4 h-4 text-muted-foreground/50 shrink-0" />
+                                                <div className="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing">
+                                                    <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 hover:text-foreground" />
                                                     <span className="text-xs font-bold text-foreground truncate">
                                                         {getComponentCategoryLabel(comp.type)}
                                                     </span>
@@ -639,7 +733,10 @@ export default function FlowBuilder({
                                             </div>
 
                                             {isExpanded && (
-                                                <div className="p-4 pt-2 border-t border-border/50 space-y-3 bg-muted/5">
+                                                <div
+                                                    onDragStart={(e) => e.stopPropagation()}
+                                                    className="p-4 pt-2 border-t border-border/50 space-y-3 bg-muted/5"
+                                                >
                                                     {renderComponentFieldEditor(comp, handleUpdateComponent)}
                                                 </div>
                                             )}

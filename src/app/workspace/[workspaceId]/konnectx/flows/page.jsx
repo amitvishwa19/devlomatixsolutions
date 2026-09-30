@@ -17,7 +17,6 @@ import {
     AlertCircle,
     CheckCircle2,
     Clock,
-    Layout,
     ArrowLeft,
     Eye,
     Globe,
