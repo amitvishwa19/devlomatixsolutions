@@ -148,11 +148,14 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
     const onSelectTemplate = (template) => {
         if (!template) return;
         const details = extractTemplateDetails(template);
+        const displayName = getTemplateDisplayName(template);
 
         const newConfig = {
             ...config,
             templateId: template.id,
-            templateName: template.name,
+            templateName: template.templateName || template.name,
+            displayName: displayName,
+            label: displayName,
             languageCode: template.language || 'en_US',
             text: details.bodyText || config.text || '',
             header: details.headerText,
@@ -166,11 +169,6 @@ export const PropertyPanel = ({ selectedNode, updateNodeData, deleteNode, closeP
             templateData: template,
             configured: true
         };
-
-        const displayName = getTemplateDisplayName(template);
-        if (!config.label || config.label === 'Send Message' || config.label === 'Official Template' || config.label.startsWith('Template:') || config.label === template.name || config.label === displayName) {
-            newConfig.label = displayName;
-        }
 
         setConfig(newConfig);
         updateNodeData(selectedNode.id, newConfig);

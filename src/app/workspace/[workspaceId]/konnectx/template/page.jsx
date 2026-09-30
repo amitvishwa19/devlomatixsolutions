@@ -68,7 +68,7 @@ export default function TemplatePage() {
     const [isDeletingId, setIsDeletingId] = useState(null);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [selectedPreviewTemplate, setSelectedPreviewTemplate] = useState(null);
-    
+
     // Group Management Dialogs
     const [isManageGroupsOpen, setIsManageGroupsOpen] = useState(false);
     const [isAssignGroupOpen, setIsAssignGroupOpen] = useState(false);
@@ -324,6 +324,22 @@ export default function TemplatePage() {
             toast.error("Name and Body are required");
             return;
         }
+
+        if (formData.buttons && Array.isArray(formData.buttons)) {
+            for (const btn of formData.buttons) {
+                if (btn && btn.type === 'FLOW') {
+                    if (!btn.flow_id || !btn.flow_id.trim()) {
+                        toast.error("Flow ID is required for Complete Flow buttons");
+                        return;
+                    }
+                    if (!btn.navigate_screen || !btn.navigate_screen.trim()) {
+                        toast.error("Navigate Screen is required for Complete Flow buttons. Please select or enter a screen name.");
+                        return;
+                    }
+                }
+            }
+        }
+
         setIsSaving(true);
 
         executeSaveTemplate({
@@ -620,19 +636,25 @@ export default function TemplatePage() {
         executeCheckStatus({ workspaceId, templateId });
     };
 
-    // Filtered templates calculation (Search + Group Segment)
-    const filteredTemplates = templates.filter((t) => {
-        const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (t.body || '').toLowerCase().includes(searchTerm.toLowerCase());
+    // Filtered templates calculation (Search + Group Segment + Descending Sort)
+    const filteredTemplates = templates
+        .filter((t) => {
+            const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (t.body || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (!matchesSearch) return false;
+            if (!matchesSearch) return false;
 
-        if (selectedGroupFilter === 'ALL') return true;
-        if (selectedGroupFilter === 'UNGROUPED') {
-            return !t.metadata?.groupId;
-        }
-        return t.metadata?.groupId === selectedGroupFilter;
-    });
+            if (selectedGroupFilter === 'ALL') return true;
+            if (selectedGroupFilter === 'UNGROUPED') {
+                return !t.metadata?.groupId;
+            }
+            return t.metadata?.groupId === selectedGroupFilter;
+        })
+        .sort((a, b) => {
+            const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
+            const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
+            return dateB - dateA;
+        });
 
     const totalAllCount = templates.length;
     const totalUngroupedCount = templates.filter(t => !t.metadata?.groupId).length;
@@ -758,7 +780,7 @@ export default function TemplatePage() {
                 </div>
 
                 {/* Content Area */}
-                <ScrollArea className="flex-1 h-full">
+                <div className="flex-1 h-full">
                     <div className="space-y-4 pr-4">
                         {isLoading ? (
                             <div className="flex-1 flex flex-col items-center justify-center h-64 opacity-50"><Loader2 className="w-10 h-10 animate-spin text-primary mb-4" /><p className="text-sm font-medium">Loading templates...</p></div>
@@ -819,7 +841,7 @@ export default function TemplatePage() {
                             </div>
                         )}
                     </div>
-                </ScrollArea>
+                </div>
 
                 {/* Modals & Builder */}
                 <TemplateBuilder

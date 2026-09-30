@@ -299,23 +299,103 @@ const handler = async (data) => {
 
         // BUTTONS
         if (template.buttons && Array.isArray(template.buttons) && templateType !== 'carousel') {
-            const validButtons = template.buttons
-                .map(btn => {
-                    const b = typeof btn === 'string' ? { type: 'QUICK_REPLY', text: btn } : btn;
-                    const type = (b.type || 'QUICK_REPLY').toUpperCase();
-                    const text = (b.text || '').trim();
-                    const btnObj = { type, text };
-                    if (type === 'URL' && b.url) btnObj.url = b.url;
-                    if (type === 'PHONE_NUMBER' && b.phone_number) btnObj.phone_number = b.phone_number;
-                    if (type === 'FLOW') {
-                        btnObj.flow_id = b.flow_id || '';
-                        btnObj.flow_cta = b.flow_cta || '';
-                        btnObj.flow_action = b.flow_action || 'data_exchange';
-                        btnObj.flow_action_payload = b.flow_action_payload || {};
+            const workspaceFlows = await db.whatsAppFlow.findMany({
+                where: { workspaceId }
+            });
+
+            const validButtons = [];
+            const apiVersion = cloudCreds.version || 'v21.0';
+
+            for (const btn of template.buttons) {
+                const b = typeof btn === 'string' ? { type: 'QUICK_REPLY', text: btn } : btn;
+                if (!b) continue;
+                const type = (b.type || 'QUICK_REPLY').toUpperCase();
+                const text = (b.text || '').trim();
+                if (!text) continue;
+
+                const btnObj = { type, text: text.slice(0, 20) };
+                if (type === 'URL' && b.url) btnObj.url = b.url;
+                if (type === 'PHONE_NUMBER' && b.phone_number) btnObj.phone_number = b.phone_number;
+                
+                if (type === 'FLOW') {
+                    const flowId = String(b.flow_id || '').trim();
+                    if (!flowId) {
+                        throw new Error(`Flow ID is required for Complete Flow button "${text}". Please select a flow or enter a Flow ID.`);
                     }
-                    return text.length > 0 ? btnObj : null;
-                })
-                .filter(Boolean);
+                    btnObj.flow_id = flowId;
+                    const flowAction = (b.flow_action || 'navigate').toLowerCase();
+                    btnObj.flow_action = flowAction;
+
+                    if (flowAction === 'navigate') {
+                        let availableScreens = [];
+
+                        // 1. Query Meta Graph API for the active Flow JSON asset of this flow to get exact screen IDs live on Meta
+                        try {
+                            const assetUrl = `https://graph.facebook.com/${apiVersion}/${flowId}/assets?asset_type=FLOW_JSON`;
+                            const assetRes = await fetch(assetUrl, {
+                                headers: { 'Authorization': `Bearer ${cloudCreds.accessToken}` }
+                            });
+                            const assetData = await assetRes.json();
+                            if (assetRes.ok && assetData?.data?.length > 0) {
+                                const downloadUrl = assetData.data[0]?.download_url || assetData.data[0]?.url;
+                                if (downloadUrl) {
+                                    const jsonRes = await fetch(downloadUrl);
+                                    if (jsonRes.ok) {
+                                        const flowJson = await jsonRes.json();
+                                        if (Array.isArray(flowJson?.screens) && flowJson.screens.length > 0) {
+                                            availableScreens = flowJson.screens.map(s => (typeof s === 'string' ? s : s?.id || s?.name || '').trim()).filter(Boolean);
+                                            console.log(`[SubmitTemplate] Meta Flow ${flowId} published screens:`, availableScreens);
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (metaErr) {
+                            console.warn(`[SubmitTemplate] Could not fetch Flow assets from Meta for ${flowId}:`, metaErr.message);
+                        }
+
+                        // 2. Fallback to workspace DB definition / screens if Meta assets couldn't be fetched
+                        if (availableScreens.length === 0) {
+                            const matched = workspaceFlows.find(f => f.flowId === flowId || f.id === b.selected_flow_id);
+                            if (matched) {
+                                if (matched.definition) {
+                                    const def = typeof matched.definition === 'string' ? (() => { try { return JSON.parse(matched.definition); } catch (e) { return null; } })() : matched.definition;
+                                    if (Array.isArray(def?.screens) && def.screens.length > 0) {
+                                        availableScreens = def.screens.map(s => (typeof s === 'string' ? s : s?.id || s?.name || '').trim()).filter(Boolean);
+                                    }
+                                }
+                                if (availableScreens.length === 0 && matched.screens) {
+                                    let rawScreens = matched.screens;
+                                    if (typeof rawScreens === 'string') {
+                                        try { rawScreens = JSON.parse(rawScreens); } catch (e) {}
+                                    }
+                                    if (Array.isArray(rawScreens) && rawScreens.length > 0) {
+                                        availableScreens = rawScreens.map(s => (typeof s === 'string' ? s : s?.id || s?.sanitizedId || s?.name || '').trim()).filter(Boolean);
+                                    }
+                                }
+                            }
+                        }
+
+                        let targetScreen = String(b.navigate_screen || b.first_screen_id || '').trim();
+
+                        if (availableScreens.length > 0) {
+                            if (targetScreen) {
+                                // Match exact or case-insensitive
+                                const exact = availableScreens.find(s => s === targetScreen);
+                                const caseInsensitive = availableScreens.find(s => s.toLowerCase() === targetScreen.toLowerCase());
+                                targetScreen = exact || caseInsensitive || availableScreens[0];
+                            } else {
+                                targetScreen = availableScreens[0];
+                            }
+                        } else if (!targetScreen) {
+                            targetScreen = 'WELCOME';
+                        }
+
+                        btnObj.navigate_screen = targetScreen;
+                        console.log(`[SubmitTemplate] FLOW button "${text}" configured with flow_id=${flowId}, navigate_screen=${targetScreen}`);
+                    }
+                }
+                validButtons.push(btnObj);
+            }
 
             if (validButtons.length > 0) {
                 components.push({
@@ -340,8 +420,9 @@ const handler = async (data) => {
         console.log("[SubmitTemplate] Meta Payload:", JSON.stringify(metaPayload, null, 2));
 
         // 4. Submit to Meta
+        const apiVersion = cloudCreds.version || 'v21.0';
         const response = await fetch(
-            `https://graph.facebook.com/v17.0/${cloudCreds.wabaId}/message_templates`,
+            `https://graph.facebook.com/${apiVersion}/${cloudCreds.wabaId}/message_templates`,
             {
                 method: "POST",
                 headers: {

@@ -108,7 +108,7 @@ export const TriggerNode = memo(({ id, data, selected }) => {
                 id={id}
                 isMultiBranch={isMultiKeyword}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || nodeTitle}</div>
+                <div className="text-xs font-semibold text-white truncate">{data.label || nodeTitle}</div>
                 {isWelcome ? (
                     <div className="text-[10px] text-muted-foreground italic truncate">
                         Triggered on first contact
@@ -200,13 +200,13 @@ TriggerNode.displayName = 'TriggerNode';
 
 export const MessageNode = memo(({ id, data, selected }) => {
     const isImage = data.subType === 'imageMessage';
-    const isTemplate = data.subType === 'templateMessage';
+    const isTemplate = data.subType === 'templateMessage' || data.type === 'template' || data.type === 'templateMessage' || !!data.templateName || !!data.templateId;
 
     const displayLabel = isTemplate
-        ? getTemplateDisplayName(data.label || data.templateName || (data.templateData?.name) || 'Official Template')
+        ? getTemplateDisplayName(data.displayName || data.label || data.templateName || data.templateData?.name || 'Official Template')
         : (data.label || 'Send Message');
 
-    const detailText = data.text || data.imageUrl || (data.templateName ? getTemplateDisplayName(data.templateName) : 'Click to configure...');
+    const detailText = data.text || data.imageUrl || (isTemplate ? (data.body || data.headerText || 'Official WhatsApp Template') : 'Click to configure...');
 
     return (
         <>
@@ -215,11 +215,11 @@ export const MessageNode = memo(({ id, data, selected }) => {
                 selected={selected}
                 title={isImage ? 'Image' : isTemplate ? 'Template' : 'Message'}
                 icon={isImage ? Image : isTemplate ? FileText : MessageSquare}
-                configured={!!(data.text || data.imageUrl || data.templateName)}
+                configured={!!(data.text || data.imageUrl || data.templateName || data.templateId)}
                 data={data}
                 id={id}
             >
-                <div className={cn("text-sm font-semibold text-white leading-snug", isTemplate ? "break-words whitespace-normal" : "truncate")}>
+                <div className={cn("text-xs font-semibold text-white leading-snug", isTemplate ? "break-words whitespace-normal" : "truncate")}>
                     {displayLabel}
                 </div>
                 <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 break-all overflow-hidden leading-snug">
@@ -275,7 +275,7 @@ export const LogicNode = memo(({ id, data, selected }) => {
                 id={id}
                 isMultiBranch={isCondition && conditions.length > 1}
             >
-                <div className="text-sm font-semibold text-white truncate">
+                <div className="text-xs font-semibold text-white truncate">
                     {data.label || (isDelay ? 'Delay' : isWaitForInput ? 'Wait for Input' : isSetVariable ? 'Set Variable' : 'Condition Branch')}
                 </div>
 
@@ -367,7 +367,7 @@ export const ActionNode = memo(({ id, data, selected }) => {
                 data={data}
                 id={id}
             >
-                <div className="text-sm font-semibold text-white truncate">{data.label || 'Action'}</div>
+                <div className="text-xs font-semibold text-white truncate">{data.label || 'Action'}</div>
                 <div className="p-2 rounded bg-white/5 border border-white/5 text-[10px] text-muted-foreground line-clamp-2 leading-snug break-all overflow-hidden">
                     {isHttp ? (
                         <span>{data.method || 'GET'} <span className="font-mono text-primary">{data.url || 'https://...'}</span></span>

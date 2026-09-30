@@ -63,6 +63,9 @@ const handler = async (data) => {
             phoneNumberId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
         }
 
+        const cleanDisplayName = (name || '').trim();
+        const cleanApiName = (templateName || name).toLowerCase().trim().replace(/[^a-z0-9_]/g, '_');
+
         if (id) {
             const existing = await db.messageTemplate.findUnique({ where: { id } });
             if (!existing || existing.userId !== userId) {
@@ -77,7 +80,7 @@ const handler = async (data) => {
             const updated = await db.messageTemplate.update({
                 where: { id },
                 data: {
-                    name,
+                    name: cleanDisplayName,
                     category: category || "UTILITY",
                     language: language || "en_US",
                     type: type || "TEXT",
@@ -86,7 +89,7 @@ const handler = async (data) => {
                     buttons: buttons || [],
                     metadata: mergedMetadata || null,
                     status: status || "DRAFT",
-                    templateName: templateName || name,
+                    templateName: existing.templateName || cleanApiName,
                     phoneNumberId: phoneNumberId || existing.phoneNumberId
                 }
             });
@@ -94,15 +97,23 @@ const handler = async (data) => {
             return { data: { template: updated } };
         } else {
             const existingName = await db.messageTemplate.findFirst({ 
-                where: { name, language, phoneNumberId: phoneNumberId || null } 
+                where: { 
+                    userId,
+                    OR: [
+                        { name: cleanDisplayName },
+                        { templateName: cleanApiName }
+                    ],
+                    language: language || "en_US", 
+                    phoneNumberId: phoneNumberId || null 
+                } 
             });
             if (existingName) {
-                return { error: "A template with this name and language already exists for this phone number.", data: null };
+                return { error: "A template with this name/API name and language already exists for this phone number.", data: null };
             }
             const template = await db.messageTemplate.create({
                 data: {
                     userId,
-                    name,
+                    name: cleanDisplayName,
                     category: category || "UTILITY",
                     language: language || "en_US",
                     type: type || "TEXT",
@@ -111,7 +122,7 @@ const handler = async (data) => {
                     buttons: buttons || [],
                     metadata: metadata || null,
                     status: "DRAFT",
-                    templateName: templateName || name,
+                    templateName: cleanApiName,
                     phoneNumberId
                 }
             });

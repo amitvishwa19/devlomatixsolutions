@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Plus,
     X,
@@ -20,6 +20,7 @@ import {
 import { toast } from 'sonner';
 import { useAction } from '@/hooks/use-action';
 import { getTemplateAiSuggestion } from '../_actions/get-template-ai-suggestion';
+import { getFlows } from '../../flows/_actions/get-flows';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +41,46 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useModal } from '@/hooks/useModal';
 import TemplatePreview from './TemplatePreview';
+
+function extractFlowScreens(flow) {
+    if (!flow) return [{ id: "WELCOME", title: "Welcome Screen" }];
+    let list = [];
+
+    // 1. Definition screens (exact uploaded Meta JSON)
+    if (flow.definition) {
+        const def = typeof flow.definition === 'string' ? (() => { try { return JSON.parse(flow.definition); } catch (e) { return null; } })() : flow.definition;
+        if (Array.isArray(def?.screens) && def.screens.length > 0) {
+            list = def.screens.map((s, idx) => {
+                if (typeof s === 'string') return { id: s.trim(), title: s.trim() };
+                const sid = String(s.id || s.name || `SCREEN_${idx + 1}`).trim();
+                return { id: sid, title: s.title || sid };
+            }).filter(Boolean);
+            if (list.length > 0) return list;
+        }
+    }
+
+    // 2. Local builder screens
+    let rawScreens = [];
+    if (Array.isArray(flow.screens)) {
+        rawScreens = flow.screens;
+    } else if (typeof flow.screens === 'string') {
+        try { rawScreens = JSON.parse(flow.screens); } catch (e) {}
+    }
+
+    if (Array.isArray(rawScreens) && rawScreens.length > 0) {
+        list = rawScreens.map((s, idx) => {
+            if (typeof s === 'string') return { id: s.trim(), title: s.trim() };
+            const rawId = String(s.id || s.sanitizedId || s.name || `SCREEN_${idx + 1}`).trim();
+            return { id: rawId, title: s.title || rawId || `Screen ${idx + 1}` };
+        }).filter(Boolean);
+    }
+
+    if (list.length === 0) {
+        list = [{ id: "WELCOME", title: "Welcome Screen" }];
+    }
+
+    return list;
+}
 
 export default function TemplateBuilder({
     isOpen,
@@ -79,6 +120,59 @@ export default function TemplateBuilder({
         },
         onError: (err) => toast.error(err || "AI Assistance failed")
     });
+
+    const [flows, setFlows] = useState([]);
+    const [isLoadingFlows, setIsLoadingFlows] = useState(false);
+
+    const { execute: executeGetFlows } = useAction(getFlows, {
+        onSuccess: (data) => {
+            const fetchedFlows = data.flows || [];
+            setFlows(fetchedFlows);
+            setIsLoadingFlows(false);
+
+            // Auto-heal existing FLOW buttons that might be missing or have mismatched navigate_screen
+            setFormData(prev => {
+                if (!prev.buttons || !Array.isArray(prev.buttons)) return prev;
+                let hasChanges = false;
+                const updatedButtons = prev.buttons.map(b => {
+                    if (b && b.type === 'FLOW') {
+                        const match = fetchedFlows.find(f => (f.flowId && f.flowId === b.flow_id) || (f.id && f.id === b.selected_flow_id));
+                        if (match) {
+                            const screens = extractFlowScreens(match);
+                            const matchedScreen = screens.find(s => s.id === b.navigate_screen) || 
+                                                  screens.find(s => s.id.toLowerCase() === (b.navigate_screen || '').toLowerCase());
+                            const correctScreen = matchedScreen ? matchedScreen.id : (screens[0]?.id || 'WELCOME');
+                            
+                            if (b.navigate_screen !== correctScreen || !b.selected_flow_id || b.flow_cta) {
+                                hasChanges = true;
+                                const updated = { 
+                                    ...b, 
+                                    selected_flow_id: match.id, 
+                                    flow_id: match.flowId || b.flow_id, 
+                                    navigate_screen: correctScreen, 
+                                    flow_action: 'navigate' 
+                                };
+                                delete updated.flow_cta;
+                                return updated;
+                            }
+                        }
+                    }
+                    return b;
+                });
+                return hasChanges ? { ...prev, buttons: updatedButtons } : prev;
+            });
+        },
+        onError: () => {
+            setIsLoadingFlows(false);
+        }
+    });
+
+    useEffect(() => {
+        if (isOpen && workspaceId) {
+            setIsLoadingFlows(true);
+            executeGetFlows({ workspaceId });
+        }
+    }, [isOpen, workspaceId]);
 
     const buttonTypes = [
         { value: 'QUICK_REPLY', label: 'Custom', icon: MessageSquare },
@@ -179,7 +273,7 @@ export default function TemplateBuilder({
                                             onChange={(e) => {
                                                 const value = e.target.value;
                                                 const updates = { name: value };
-                                                if (!editingId) {
+                                                if (!editingId && !formData._customApiName) {
                                                     updates.templateName = value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
                                                 }
                                                 setFormData({ ...formData, ...updates });
@@ -195,7 +289,7 @@ export default function TemplateBuilder({
                                                 value={formData.templateName || ''}
                                                 onChange={(e) => {
                                                     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-                                                    setFormData({ ...formData, templateName: value });
+                                                    setFormData({ ...formData, templateName: value, _customApiName: true });
                                                 }}
                                                 className="bg-background border-border font-mono text-xs" />
                                         </div>
@@ -766,22 +860,209 @@ export default function TemplateBuilder({
                                                                 className="h-8 text-xs font-mono"
                                                             />
                                                         )}
-                                                        {b.type === 'FLOW' && (
-                                                            <>
-                                                                <Input
-                                                                    placeholder="Flow ID"
-                                                                    value={b.flow_id || ''}
-                                                                    onChange={(e) => handleButtonChange(idx, 'flow_id', e.target.value)}
-                                                                    className="h-8 text-xs font-mono"
-                                                                />
-                                                                <Input
-                                                                    placeholder="Flow CTA (e.g. Book Now)"
-                                                                    value={b.flow_cta || ''}
-                                                                    onChange={(e) => handleButtonChange(idx, 'flow_cta', e.target.value)}
-                                                                    className="h-8 text-xs"
-                                                                />
-                                                            </>
-                                                        )}
+                                                        {b.type === 'FLOW' && (() => {
+                                                            const matchingFlow = flows.find(f => (f.flowId && f.flowId === b.flow_id) || (f.id && f.id === b.selected_flow_id));
+                                                            const isCustom = b.selected_flow_id === '__custom__' || (!matchingFlow && !!b.flow_id);
+                                                            const selectValue = isCustom ? '__custom__' : (matchingFlow?.id || '');
+                                                            const availableScreens = matchingFlow ? extractFlowScreens(matchingFlow) : [];
+                                                            const hasScreenOptions = availableScreens.length > 0;
+
+                                                            return (
+                                                                <div className="space-y-2.5 pt-2 border-t border-border/50">
+                                                                    {/* Flow Selection Dropdown */}
+                                                                    <div className="space-y-1">
+                                                                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                                                                            <span className="flex items-center gap-1.5">
+                                                                                <Workflow className="w-3 h-3 text-primary" />
+                                                                                Select Flow <span className="text-destructive">*</span>
+                                                                            </span>
+                                                                            {isLoadingFlows && (
+                                                                                <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                                                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                                                                    Loading flows...
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+
+                                                                        <Select
+                                                                            value={selectValue}
+                                                                            onValueChange={(val) => {
+                                                                                const newButtons = [...formData.buttons];
+                                                                                const btn = typeof newButtons[idx] === 'object' ? { ...newButtons[idx] } : { type: 'FLOW', text: '' };
+                                                                                if (val === '__custom__') {
+                                                                                    btn.selected_flow_id = '__custom__';
+                                                                                } else {
+                                                                                    const selected = flows.find(f => f.id === val);
+                                                                                    if (selected) {
+                                                                                        btn.selected_flow_id = selected.id;
+                                                                                        btn.flow_id = selected.flowId || '';
+                                                                                        if (!btn.text) btn.text = selected.name.slice(0, 20);
+                                                                                        const screens = extractFlowScreens(selected);
+                                                                                        btn.navigate_screen = screens[0]?.id || 'WELCOME';
+                                                                                        btn.flow_action = 'navigate';
+                                                                                    }
+                                                                                }
+                                                                                delete btn.flow_cta;
+                                                                                newButtons[idx] = btn;
+                                                                                setFormData({ ...formData, buttons: newButtons });
+                                                                            }}
+                                                                        >
+                                                                            <SelectTrigger className="h-8 text-xs bg-muted/20 border-border">
+                                                                                <SelectValue placeholder={flows.length === 0 ? (isLoadingFlows ? "Loading flows..." : "No flows found (Enter ID)") : "Choose a Flow..."} />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {flows.map((flow) => (
+                                                                                    <SelectItem key={flow.id} value={flow.id} className="text-xs">
+                                                                                        <div className="flex items-center justify-between gap-3 w-full">
+                                                                                            <span className="font-medium truncate max-w-[200px]">{flow.name}</span>
+                                                                                            <div className="flex items-center gap-1.5 shrink-0">
+                                                                                                {flow.flowId ? (
+                                                                                                    <span className="text-[10px] font-mono text-muted-foreground bg-muted/40 px-1 py-0.5 rounded">
+                                                                                                        ID: {flow.flowId.slice(0, 8)}...
+                                                                                                    </span>
+                                                                                                ) : (
+                                                                                                    <span className="text-[9px] text-amber-500 bg-amber-500/10 px-1 py-0.5 rounded font-medium">
+                                                                                                        Draft (No ID)
+                                                                                                    </span>
+                                                                                                )}
+                                                                                                <span className={`text-[9px] px-1 py-0.5 rounded uppercase font-semibold ${
+                                                                                                    flow.status === 'PUBLISHED' 
+                                                                                                        ? 'bg-emerald-500/10 text-emerald-500' 
+                                                                                                        : 'bg-zinc-500/10 text-zinc-400'
+                                                                                                }`}>
+                                                                                                    {flow.status || 'DRAFT'}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                                <SelectItem value="__custom__" className="text-xs text-primary font-medium border-t border-border mt-1">
+                                                                                    ✏️ Enter Flow ID manually...
+                                                                                </SelectItem>
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </div>
+
+                                                                    {/* If selected flow has no Meta flowId yet */}
+                                                                    {matchingFlow && !matchingFlow.flowId && !isCustom && (
+                                                                        <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1.5 leading-tight">
+                                                                            <span className="shrink-0 text-xs">⚠️</span>
+                                                                            <span>
+                                                                                <strong>{matchingFlow.name}</strong> is a local draft and hasn't been pushed to Meta yet. Push or publish it in the <em>Flows</em> tab to get a Meta Flow ID, or enter one manually.
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {/* Linked Flow ID display or manual input */}
+                                                                    {(isCustom || (matchingFlow && !matchingFlow.flowId)) ? (
+                                                                        <div className="space-y-1">
+                                                                            <label className="text-[11px] text-muted-foreground font-medium">
+                                                                                Meta Flow ID <span className="text-destructive">*</span>
+                                                                            </label>
+                                                                            <Input
+                                                                                placeholder="e.g. 103948572839481"
+                                                                                value={b.flow_id || ''}
+                                                                                onChange={(e) => handleButtonChange(idx, 'flow_id', e.target.value)}
+                                                                                className="h-8 text-xs font-mono"
+                                                                            />
+                                                                        </div>
+                                                                    ) : matchingFlow?.flowId ? (
+                                                                        <div className="flex items-center justify-between p-2 rounded bg-muted/30 border border-border text-[11px]">
+                                                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                                                                                <span className="text-muted-foreground">Linked Flow ID:</span>
+                                                                                <code className="font-mono text-foreground font-medium truncate">{matchingFlow.flowId}</code>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleButtonChange(idx, 'selected_flow_id', '__custom__')}
+                                                                                className="text-[10px] text-primary hover:underline shrink-0 ml-2"
+                                                                            >
+                                                                                Edit ID
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : null}
+
+                                                                    {/* Navigate Screen (Initial Screen) - Required by Meta */}
+                                                                    <div className="space-y-1">
+                                                                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium">
+                                                                            <span>
+                                                                                Navigate Screen (First Screen) <span className="text-destructive">*</span>
+                                                                            </span>
+                                                                            <span className="text-[10px] text-muted-foreground italic">
+                                                                                Initial screen on tap
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {hasScreenOptions && !b.is_custom_screen ? (
+                                                                            <div className="space-y-1">
+                                                                                <Select
+                                                                                    value={b.navigate_screen || availableScreens[0]?.id || ''}
+                                                                                    onValueChange={(val) => {
+                                                                                        if (val === '__custom_screen__') {
+                                                                                            const newButtons = [...formData.buttons];
+                                                                                            newButtons[idx] = { ...newButtons[idx], is_custom_screen: true, navigate_screen: '' };
+                                                                                            setFormData({ ...formData, buttons: newButtons });
+                                                                                        } else {
+                                                                                            handleButtonChange(idx, 'navigate_screen', val);
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    <SelectTrigger className="h-8 text-xs bg-muted/20 border-border font-mono">
+                                                                                        <SelectValue placeholder="Choose initial screen..." />
+                                                                                    </SelectTrigger>
+                                                                                    <SelectContent>
+                                                                                        {availableScreens.map(screen => (
+                                                                                            <SelectItem key={screen.id} value={screen.id} className="text-xs">
+                                                                                                <div className="flex items-center justify-between gap-3 w-full">
+                                                                                                    <span className="font-medium">{screen.title}</span>
+                                                                                                    <code className="text-[10px] font-mono text-primary bg-primary/10 px-1 py-0.5 rounded">
+                                                                                                        {screen.id}
+                                                                                                    </code>
+                                                                                                </div>
+                                                                                            </SelectItem>
+                                                                                        ))}
+                                                                                        <SelectItem value="__custom_screen__" className="text-xs text-primary font-medium border-t border-border mt-1">
+                                                                                            ✏️ Enter screen name manually...
+                                                                                        </SelectItem>
+                                                                                    </SelectContent>
+                                                                                </Select>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div className="space-y-1">
+                                                                                <div className="flex items-center gap-1.5">
+                                                                                    <Input
+                                                                                        placeholder="e.g. WELCOME, APPOINTMENT_FORM, START"
+                                                                                        value={b.navigate_screen || ''}
+                                                                                        onChange={(e) => handleButtonChange(idx, 'navigate_screen', e.target.value)}
+                                                                                        className="h-8 text-xs font-mono flex-1"
+                                                                                        required
+                                                                                    />
+                                                                                    {hasScreenOptions && (
+                                                                                        <Button
+                                                                                            type="button"
+                                                                                            variant="outline"
+                                                                                            size="sm"
+                                                                                            onClick={() => {
+                                                                                                const newButtons = [...formData.buttons];
+                                                                                                newButtons[idx] = { ...newButtons[idx], is_custom_screen: false, navigate_screen: availableScreens[0]?.id || 'WELCOME' };
+                                                                                                setFormData({ ...formData, buttons: newButtons });
+                                                                                            }}
+                                                                                            className="h-8 px-2 text-[10px] shrink-0"
+                                                                                        >
+                                                                                            Pick Screen
+                                                                                        </Button>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                        <p className="text-[10px] text-muted-foreground leading-tight">
+                                                                            Must match the exact <code className="text-primary font-mono font-semibold">id</code> of the starting screen in your Flow JSON.
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </div>
                                             );
