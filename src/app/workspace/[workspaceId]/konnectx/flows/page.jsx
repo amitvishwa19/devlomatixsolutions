@@ -419,10 +419,15 @@ export default function FlowsPage() {
                 </div>
 
                 {/* Builder Canvas Area */}
-                <div className="flex-1 overflow-hidden p-4">
+                <div className="flex-1 overflow-hidden p-3">
                     <FlowBuilder
                         initialScreens={selectedFlow?.screens || []}
                         onSave={handleSaveFromBuilder}
+                        onCancel={() => {
+                            setView('list');
+                            fetchFlows();
+                        }}
+                        flowName={selectedFlow?.name || 'Your form'}
                         endpointUrl={selectedFlow?.endpointUrl || ''}
                     />
                 </div>
