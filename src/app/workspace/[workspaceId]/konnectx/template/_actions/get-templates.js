@@ -94,8 +94,9 @@ const handler = async (data) => {
                 }
             },
             orderBy: [
-                { createdAt: 'desc' },
-                { updatedAt: 'desc' }
+                { createdAt: 'asc' },
+                { updatedAt: 'asc' },
+                { id: 'asc' }
             ]
         });
 

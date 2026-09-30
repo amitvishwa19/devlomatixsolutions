@@ -18,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from 'next-auth/react';
@@ -57,6 +64,7 @@ export default function TemplatePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState('list');
+    const [sortBy, setSortBy] = useState('ASCENDING');
 
     // Builder & Dialog State
     const [isBuilderOpen, setIsBuilderOpen] = useState(false);
@@ -636,10 +644,11 @@ export default function TemplatePage() {
         executeCheckStatus({ workspaceId, templateId });
     };
 
-    // Filtered templates calculation (Search + Group Segment + Descending Sort)
-    const filteredTemplates = templates
+    // Filtered templates calculation (Search + Group Segment + Robust Descending Sort)
+    const filteredTemplates = [...templates]
         .filter((t) => {
-            const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            const matchesSearch = (t.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (t.templateName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (t.body || '').toLowerCase().includes(searchTerm.toLowerCase());
 
             if (!matchesSearch) return false;
@@ -651,9 +660,55 @@ export default function TemplatePage() {
             return t.metadata?.groupId === selectedGroupFilter;
         })
         .sort((a, b) => {
-            const dateA = new Date(a.createdAt || a.updatedAt || 0).getTime();
-            const dateB = new Date(b.createdAt || b.updatedAt || 0).getTime();
-            return dateB - dateA;
+            const isHello = (t) => {
+                const n = (t?.name || '').toLowerCase().replace(/[\s_-]+/g, '');
+                const tn = (t?.templateName || '').toLowerCase().replace(/[\s_-]+/g, '');
+                return n === 'helloworld' || tn === 'helloworld';
+            };
+
+            const isHelloA = isHello(a);
+            const isHelloB = isHello(b);
+
+            // "hello_world" sample template should always be the very last
+            if (isHelloA && !isHelloB) return 1;
+            if (!isHelloA && isHelloB) return -1;
+
+            if (sortBy === 'NAME_ASC') {
+                return (a.name || '').localeCompare(b.name || '');
+            }
+            if (sortBy === 'NAME_DESC') {
+                return (b.name || '').localeCompare(a.name || '');
+            }
+            if (sortBy === 'STATUS') {
+                return (a.status || '').localeCompare(b.status || '');
+            }
+            if (sortBy === 'DESCENDING' || sortBy === 'NEWEST') {
+                const timeA = Math.max(
+                    new Date(a.updatedAt || 0).getTime(),
+                    new Date(a.createdAt || 0).getTime()
+                );
+                const timeB = Math.max(
+                    new Date(b.updatedAt || 0).getTime(),
+                    new Date(b.createdAt || 0).getTime()
+                );
+                if (timeB !== timeA) return timeB - timeA;
+                return String(b.id || '').localeCompare(String(a.id || ''));
+            }
+
+            // Default: 'ASCENDING' (Oldest created first -> newest at the bottom)
+            const timeA = Math.min(
+                new Date(a.createdAt || a.updatedAt || 0).getTime(),
+                new Date(a.updatedAt || a.createdAt || 0).getTime()
+            );
+            const timeB = Math.min(
+                new Date(b.createdAt || b.updatedAt || 0).getTime(),
+                new Date(b.updatedAt || b.createdAt || 0).getTime()
+            );
+
+            if (timeA !== timeB) {
+                return timeA - timeB;
+            }
+            return String(a.id || '').localeCompare(String(b.id || ''));
         });
 
     const totalAllCount = templates.length;
@@ -773,9 +828,23 @@ export default function TemplatePage() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10">
-                        <Button variant={viewMode === 'grid' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
-                        <Button variant={viewMode === 'list' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
+                    <div className="flex items-center gap-2">
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="h-10 text-xs w-[140px] bg-background/50 border-border">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ASCENDING">Ascending (Oldest First)</SelectItem>
+                                <SelectItem value="DESCENDING">Descending (Newest First)</SelectItem>
+                                <SelectItem value="NAME_ASC">Name (A-Z)</SelectItem>
+                                <SelectItem value="NAME_DESC">Name (Z-A)</SelectItem>
+                                <SelectItem value="STATUS">Status</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <div className="flex gap-1 bg-muted/30 p-1 rounded-lg border border-border/50 h-10">
+                            <Button variant={viewMode === 'grid' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('grid')}><LayoutGrid className="w-4 h-4" /></Button>
+                            <Button variant={viewMode === 'list' ? "secondary" : "ghost"} size="icon" className="w-8 h-8" onClick={() => setViewMode('list')}><List className="w-4 h-4" /></Button>
+                        </div>
                     </div>
                 </div>
 
