@@ -247,35 +247,40 @@ export default function FlowBuilder({
             case 'Image':
                 newComp = { id: compId, type: 'Image', src: 'https://via.placeholder.com/600x300.png', altText: 'Banner Image' };
                 break;
-            case 'TextInput':
+            case 'TextInput': {
+                const defaultLabel = extraProps.label || 'Short text';
                 newComp = {
                     id: compId,
                     type: 'TextInput',
-                    name: `field_${count + 1}`,
-                    label: extraProps.label || 'Text Input',
+                    name: sanitizeIdentifier(defaultLabel, `field_${count + 1}`, false),
+                    label: defaultLabel,
                     placeholder: extraProps.placeholder || 'Enter text...',
                     inputType: extraProps.inputType || 'text',
                     required: true,
                     helperText: ''
                 };
                 break;
-            case 'TextArea':
+            }
+            case 'TextArea': {
+                const defaultLabel = extraProps.label || 'Multi-line Text';
                 newComp = {
                     id: compId,
                     type: 'TextArea',
-                    name: `notes_${count + 1}`,
-                    label: 'Multi-line Text',
+                    name: sanitizeIdentifier(defaultLabel, `notes_${count + 1}`, false),
+                    label: defaultLabel,
                     placeholder: 'Type your message...',
                     required: false,
                     helperText: ''
                 };
                 break;
-            case 'Select':
+            }
+            case 'Select': {
+                const defaultLabel = extraProps.label || 'Choose Option';
                 newComp = {
                     id: compId,
                     type: 'Select',
-                    name: `select_${count + 1}`,
-                    label: 'Choose Option',
+                    name: sanitizeIdentifier(defaultLabel, `select_${count + 1}`, false),
+                    label: defaultLabel,
                     required: true,
                     options: [
                         { label: 'Option 1', value: 'opt_1', description: '' },
@@ -283,12 +288,14 @@ export default function FlowBuilder({
                     ]
                 };
                 break;
-            case 'RadioButtons':
+            }
+            case 'RadioButtons': {
+                const defaultLabel = extraProps.label || 'Select One';
                 newComp = {
                     id: compId,
                     type: 'RadioButtons',
-                    name: `radio_${count + 1}`,
-                    label: 'Select One',
+                    name: sanitizeIdentifier(defaultLabel, `radio_${count + 1}`, false),
+                    label: defaultLabel,
                     required: true,
                     options: [
                         { label: 'Option A', value: 'opt_a' },
@@ -296,12 +303,14 @@ export default function FlowBuilder({
                     ]
                 };
                 break;
-            case 'CheckboxGroup':
+            }
+            case 'CheckboxGroup': {
+                const defaultLabel = extraProps.label || 'Select Multiple';
                 newComp = {
                     id: compId,
                     type: 'CheckboxGroup',
-                    name: `checkbox_${count + 1}`,
-                    label: 'Select Multiple',
+                    name: sanitizeIdentifier(defaultLabel, `checkbox_${count + 1}`, false),
+                    label: defaultLabel,
                     required: false,
                     options: [
                         { label: 'Feature 1', value: 'f1' },
@@ -309,24 +318,29 @@ export default function FlowBuilder({
                     ]
                 };
                 break;
-            case 'DatePicker':
+            }
+            case 'DatePicker': {
+                const defaultLabel = extraProps.label || 'Select Date';
                 newComp = {
                     id: compId,
                     type: 'DatePicker',
-                    name: `date_${count + 1}`,
-                    label: 'Select Date',
+                    name: sanitizeIdentifier(defaultLabel, `date_${count + 1}`, false),
+                    label: defaultLabel,
                     required: true
                 };
                 break;
-            case 'ConsentCheckbox':
+            }
+            case 'ConsentCheckbox': {
+                const defaultLabel = extraProps.label || 'I agree to the terms and privacy policy';
                 newComp = {
                     id: compId,
                     type: 'ConsentCheckbox',
-                    name: `terms_${count + 1}`,
-                    label: 'I agree to the terms and privacy policy',
+                    name: sanitizeIdentifier('terms_consent', `terms_${count + 1}`, false),
+                    label: defaultLabel,
                     required: true
                 };
                 break;
+            }
             default:
                 newComp = { id: compId, type: 'TextBody', text: 'New content' };
         }
@@ -521,14 +535,14 @@ export default function FlowBuilder({
 
             {/* 2. THREE-COLUMN META FLOW WORKSPACE */}
             {activeTabMode === 'builder' && (
-                <div className="flex-1 grid grid-cols-12 overflow-hidden">
+                <div className="flex-1 grid grid-cols-12 overflow-hidden min-h-0 h-full">
 
                     {/* --- COLUMN 1: SCREENS (~20% width = 3 cols) --- */}
-                    <div className="col-span-12 md:col-span-3 lg:col-span-3 border-r border-border/70 bg-card/30 flex flex-col p-4 overflow-hidden">
-                        <h3 className="text-sm font-bold text-foreground mb-3 px-1">Screens</h3>
+                    <div className="col-span-12 md:col-span-3 lg:col-span-3 min-w-0 min-h-0 h-full border-r border-border/70 bg-card/30 flex flex-col p-4 overflow-hidden">
+                        <h3 className="text-sm font-bold text-foreground mb-3 px-1 shrink-0">Screens</h3>
 
-                        <ScrollArea className="flex-1 pr-1">
-                            <div className="space-y-1.5">
+                        <ScrollArea className="flex-1 min-h-0 h-[40vh] pr-1">
+                            <div className="space-y-1.5 w-full min-w-0">
                                 {screens.map((screen, idx) => {
                                     const isSelected = activeScreenId === screen.id;
                                     const isDragging = draggedScreenIdx === idx;
@@ -558,25 +572,22 @@ export default function FlowBuilder({
                                                 setDragOverScreenIdx(null);
                                             }}
                                             onClick={() => handleSelectScreen(screen.id)}
-                                            className={`group flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing select-none ${
-                                                isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : ''
-                                            } ${
-                                                isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/10' : ''
-                                            } ${
-                                                isSelected && !isDragging
+                                            className={`group flex items-start justify-between p-2.5 rounded-lg border transition-all cursor-grab active:cursor-grabbing select-none w-full min-w-0 ${isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : ''
+                                                } ${isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/10' : ''
+                                                } ${isSelected && !isDragging
                                                     ? 'bg-[#e8f0fe] dark:bg-[#1a365d] border-[#1a73e8] text-[#1967d2] dark:text-[#90cdf4] font-bold shadow-xs'
                                                     : !isDragging ? 'bg-card hover:bg-muted/40 border-border/60 text-foreground' : ''
-                                            }`}
+                                                }`}
                                         >
-                                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 group-hover:text-foreground" />
-                                                <span className="text-xs truncate">
+                                            <div className="flex items-start gap-2 min-w-0 flex-1">
+                                                <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 group-hover:text-foreground mt-0.5" />
+                                                <span className="text-xs break-words whitespace-normal leading-snug min-w-0 flex-1">
                                                     {screen.title || `Screen ${idx + 1}`}
                                                 </span>
                                             </div>
 
                                             {/* Hover Actions */}
-                                            <div className="hidden group-hover:flex items-center gap-0.5">
+                                            <div className="hidden group-hover:flex items-center gap-0.5 shrink-0 ml-1 mt-0.5">
                                                 <button
                                                     onClick={(e) => handleMoveScreen(idx, -1, e)}
                                                     disabled={idx === 0}
@@ -619,32 +630,38 @@ export default function FlowBuilder({
                     </div>
 
                     {/* --- COLUMN 2: EDIT CONTENT (~45% width = 5 cols) --- */}
-                    <div className="col-span-12 md:col-span-5 lg:col-span-5 border-r border-border/70 bg-background flex flex-col p-5 overflow-hidden">
-                        <h3 className="text-sm font-bold text-foreground mb-3">Edit content</h3>
+                    <div className="col-span-12 md:col-span-5 lg:col-span-5 min-w-0 min-h-0 h-full border-r border-border/70 bg-background flex flex-col p-5 overflow-hidden">
+                        <h3 className="text-sm font-bold text-foreground mb-3 shrink-0">Edit content</h3>
 
-                        <ScrollArea className="flex-1 pr-2">
-                            <div className="space-y-3 pb-8">
+                        <ScrollArea className="flex-1 min-h-0 h-full pr-2 w-full">
+                            <div className="space-y-3 pb-8 w-full min-w-0">
 
                                 {/* 1. Screen Title Accordion Card */}
-                                <div className="border border-border/80 rounded-lg bg-card overflow-hidden shadow-2xs">
+                                <div className="border border-border/80 rounded-lg bg-card overflow-hidden shadow-2xs w-full min-w-0">
                                     <div
                                         onClick={() => setExpandedSections(prev => ({ ...prev, screen_title: !prev.screen_title }))}
-                                        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none bg-card hover:bg-muted/20"
+                                        className="flex items-start justify-between px-4 py-3 cursor-pointer select-none bg-card hover:bg-muted/20 gap-2"
                                     >
-                                        <span className="text-xs font-bold text-foreground">Screen title</span>
+                                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                                            <span className="text-xs font-bold text-foreground shrink-0 mt-0.5">Screen title</span>
+                                            <span className="text-xs text-muted-foreground font-normal min-w-0 flex-1 break-words whitespace-normal leading-snug">
+                                                · {activeScreen?.title || 'Untitled Screen'}
+                                            </span>
+                                        </div>
                                         {expandedSections.screen_title ? (
-                                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                                         ) : (
-                                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                                         )}
                                     </div>
                                     {expandedSections.screen_title && (
-                                        <div className="p-4 pt-1 border-t border-border/50">
+                                        <div className="p-4 pt-1 border-t border-border/50 w-full min-w-0 space-y-1.5">
+                                            <Label className="text-xs font-semibold">Title text</Label>
                                             <Input
                                                 value={activeScreen?.title || ''}
                                                 onChange={(e) => handleUpdateScreenTitle(e.target.value)}
-                                                placeholder="Your form"
-                                                className="h-10 text-xs rounded-lg font-medium border-border"
+                                                placeholder="Your form title..."
+                                                className="h-9 text-xs rounded-lg font-medium border-border w-full"
                                             />
                                         </div>
                                     )}
@@ -680,27 +697,25 @@ export default function FlowBuilder({
                                                 setDraggedCompIdx(null);
                                                 setDragOverCompIdx(null);
                                             }}
-                                            className={`border rounded-lg bg-card overflow-hidden shadow-2xs transition-all ${
-                                                isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : 'border-border/80'
-                                            } ${
-                                                isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/5' : ''
-                                            }`}
+                                            className={`border rounded-lg bg-card overflow-hidden shadow-2xs transition-all w-full min-w-0 ${isDragging ? 'opacity-30 scale-[0.98] border-dashed border-primary' : 'border-border/80'
+                                                } ${isDragOver ? 'border-t-2 border-t-[#1a73e8] bg-primary/5' : ''
+                                                }`}
                                         >
                                             <div
                                                 onClick={() => toggleComponentExpand(comp.id)}
-                                                className="flex items-center justify-between px-3.5 py-3 cursor-pointer select-none hover:bg-muted/20 gap-2"
+                                                className="flex items-start justify-between px-3.5 py-3 cursor-pointer select-none hover:bg-muted/20 gap-2 min-w-0 w-full"
                                             >
-                                                <div className="flex items-center gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing">
-                                                    <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 hover:text-foreground" />
-                                                    <span className="text-xs font-bold text-foreground truncate">
+                                                <div className="flex items-start gap-2 min-w-0 flex-1 cursor-grab active:cursor-grabbing">
+                                                    <GripVertical className="w-4 h-4 text-muted-foreground/60 shrink-0 hover:text-foreground mt-0.5" />
+                                                    <span className="text-xs font-bold text-foreground shrink-0 mt-0.5">
                                                         {getComponentCategoryLabel(comp.type)}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground truncate font-normal">
+                                                    <span className="text-xs text-muted-foreground font-normal min-w-0 flex-1 break-words whitespace-normal leading-snug">
                                                         · {titlePreview}
                                                     </span>
                                                 </div>
 
-                                                <div className="flex items-center gap-1 shrink-0">
+                                                <div className="flex items-center gap-1 shrink-0 ml-1 mt-0.5">
                                                     <button
                                                         onClick={(e) => handleMoveComponent(cIdx, -1, e)}
                                                         disabled={cIdx === 0}
@@ -725,9 +740,9 @@ export default function FlowBuilder({
                                                         <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                     {isExpanded ? (
-                                                        <ChevronUp className="w-4 h-4 text-muted-foreground ml-1" />
+                                                        <ChevronUp className="w-4 h-4 text-muted-foreground ml-1 shrink-0" />
                                                     ) : (
-                                                        <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />
+                                                        <ChevronDown className="w-4 h-4 text-muted-foreground ml-1 shrink-0" />
                                                     )}
                                                 </div>
                                             </div>
@@ -735,7 +750,7 @@ export default function FlowBuilder({
                                             {isExpanded && (
                                                 <div
                                                     onDragStart={(e) => e.stopPropagation()}
-                                                    className="p-4 pt-2 border-t border-border/50 space-y-3 bg-muted/5"
+                                                    className="p-4 pt-2 border-t border-border/50 space-y-3 bg-muted/5 w-full min-w-0"
                                                 >
                                                     {renderComponentFieldEditor(comp, handleUpdateComponent)}
                                                 </div>
@@ -745,35 +760,36 @@ export default function FlowBuilder({
                                 })}
 
                                 {/* 3. Button Action Accordion Card */}
-                                <div className="border border-border/80 rounded-lg bg-card overflow-hidden shadow-2xs">
+                                <div className="border border-border/80 rounded-lg bg-card overflow-hidden shadow-2xs w-full min-w-0">
                                     <div
                                         onClick={() => setExpandedSections(prev => ({ ...prev, button_action: !prev.button_action }))}
-                                        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none hover:bg-muted/20"
+                                        className="flex items-start justify-between px-4 py-3 cursor-pointer select-none hover:bg-muted/20 gap-2 min-w-0 w-full"
                                     >
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-foreground">Button</span>
-                                            <span className="text-xs text-muted-foreground">
+                                        <div className="flex items-start gap-2 min-w-0 flex-1">
+                                            <span className="text-xs font-bold text-foreground shrink-0 mt-0.5">Button</span>
+                                            <span className="text-xs text-muted-foreground font-normal min-w-0 flex-1 break-words whitespace-normal leading-snug">
                                                 · {activeScreen?.footerAction?.label || 'Continue'}
                                             </span>
                                         </div>
                                         {expandedSections.button_action ? (
-                                            <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                                         ) : (
-                                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                                         )}
                                     </div>
                                     {expandedSections.button_action && (
-                                        <div className="p-4 pt-2 border-t border-border/50 space-y-3">
-                                            <div className="space-y-1.5">
+                                        <div className="p-4 pt-2 border-t border-border/50 space-y-3 w-full min-w-0">
+                                            <div className="space-y-1.5 w-full min-w-0">
                                                 <Label className="text-xs font-semibold">Button Text</Label>
                                                 <Input
                                                     value={activeScreen?.footerAction?.label || 'Continue'}
                                                     onChange={(e) => handleUpdateFooterAction({ label: e.target.value })}
-                                                    className="h-9 text-xs"
+                                                    className="h-9 text-xs w-full"
+                                                    placeholder="Button label..."
                                                 />
                                             </div>
 
-                                            <div className="space-y-1.5">
+                                            <div className="space-y-1.5 w-full min-w-0">
                                                 <Label className="text-xs font-semibold">Action</Label>
                                                 <Select
                                                     value={activeScreen?.terminal ? 'complete' : (activeScreen?.footerAction?.type || 'navigate')}
@@ -785,7 +801,7 @@ export default function FlowBuilder({
                                                         }
                                                     }}
                                                 >
-                                                    <SelectTrigger className="h-9 text-xs">
+                                                    <SelectTrigger className="h-9 text-xs w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -796,13 +812,13 @@ export default function FlowBuilder({
                                             </div>
 
                                             {activeScreen?.footerAction?.type === 'navigate' && !activeScreen?.terminal && (
-                                                <div className="space-y-1.5">
+                                                <div className="space-y-1.5 w-full min-w-0">
                                                     <Label className="text-xs font-semibold">Destination Screen</Label>
                                                     <Select
                                                         value={activeScreen?.footerAction?.screen || ''}
                                                         onValueChange={(val) => handleUpdateFooterAction({ screen: val })}
                                                     >
-                                                        <SelectTrigger className="h-9 text-xs">
+                                                        <SelectTrigger className="h-9 text-xs w-full">
                                                             <SelectValue placeholder="Select target screen..." />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -927,8 +943,8 @@ export default function FlowBuilder({
                     </div>
 
                     {/* --- COLUMN 3: PREVIEW (~35% width = 4 cols) --- */}
-                    <div className="col-span-12 md:col-span-4 lg:col-span-4 bg-muted/10 flex flex-col p-5 overflow-hidden">
-                        <div className="flex items-center justify-between mb-3 px-1">
+                    <div className="col-span-12 md:col-span-4 lg:col-span-4 min-w-0 min-h-0 h-full bg-muted/10 flex flex-col p-5 overflow-hidden">
+                        <div className="flex items-center justify-between mb-3 px-1 shrink-0">
                             <h3 className="text-sm font-bold text-foreground">Preview</h3>
 
                             <DropdownMenu>
@@ -969,25 +985,27 @@ export default function FlowBuilder({
                                 </div>
 
                                 {/* Flow Body Live Rendering */}
-                                <div className="flex-1 p-4 space-y-4 overflow-y-auto bg-background/50">
-                                    {(!activeScreen?.children || activeScreen.children.length === 0) ? (
-                                        <p className="text-xs text-muted-foreground leading-relaxed">
-                                            Select 'Add content' to start building your form. To add new screens, select 'Add new' in the 'Screens' panel.
-                                        </p>
-                                    ) : (
-                                        activeScreen.children.map((c) => (
-                                            <div
-                                                key={c.id}
-                                                onClick={() => {
-                                                    setExpandedCompIds(prev => ({ ...prev, [c.id]: true }));
-                                                }}
-                                                className="cursor-pointer hover:ring-1 hover:ring-primary/40 rounded-lg p-1 transition-all"
-                                            >
-                                                {renderPreviewComponent(c)}
-                                            </div>
-                                        ))
-                                    )}
-                                </div>
+                                <ScrollArea className="flex-1 min-h-0 bg-background/50">
+                                    <div className="p-4 space-y-4">
+                                        {(!activeScreen?.children || activeScreen.children.length === 0) ? (
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Select 'Add content' to start building your form. To add new screens, select 'Add new' in the 'Screens' panel.
+                                            </p>
+                                        ) : (
+                                            activeScreen.children.map((c) => (
+                                                <div
+                                                    key={c.id}
+                                                    onClick={() => {
+                                                        setExpandedCompIds(prev => ({ ...prev, [c.id]: true }));
+                                                    }}
+                                                    className="cursor-pointer hover:ring-1 hover:ring-primary/40 rounded-lg p-1 transition-all"
+                                                >
+                                                    {renderPreviewComponent(c)}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </ScrollArea>
 
                                 {/* CTA Button & Managed Note */}
                                 <div className="p-4 pt-2.5 border-t border-border/40 bg-card space-y-2 mt-auto shrink-0">
@@ -1011,49 +1029,51 @@ export default function FlowBuilder({
 
             {/* --- SIMULATOR TEST MODE --- */}
             {activeTabMode === 'simulator' && (
-                <div className="flex-1 bg-muted/20 flex flex-col items-center justify-center p-6 overflow-y-auto">
+                <div className="flex-1 bg-muted/20 flex flex-col items-center justify-center p-6 min-h-0 overflow-hidden">
                     {(() => {
                         const simScreen = screens.find(s => s.id === simScreenId) || screens[0];
                         const isTerminal = simScreen.terminal || simScreen.footerAction?.type === 'complete';
 
                         return (
-                            <div className="w-full max-w-[360px] bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col">
-                                <div className="h-2 bg-[#008069] w-full" />
-                                <div className="px-4 py-3 border-b flex items-center justify-between bg-card">
+                            <div className="w-full max-w-[360px] max-h-full bg-card border border-border rounded-2xl shadow-xl overflow-hidden flex flex-col min-h-0">
+                                <div className="h-2 bg-[#008069] w-full shrink-0" />
+                                <div className="px-4 py-3 border-b flex items-center justify-between bg-card shrink-0">
                                     <button
                                         onClick={() => {
                                             const idx = screens.findIndex(s => s.id === simScreenId);
                                             if (idx > 0) setSimScreenId(screens[idx - 1].id);
                                         }}
                                         disabled={screens.findIndex(s => s.id === simScreenId) === 0}
-                                        className="text-xs text-muted-foreground disabled:opacity-30"
+                                        className="text-xs text-muted-foreground disabled:opacity-30 hover:text-foreground"
                                     >
                                         Back
                                     </button>
-                                    <span className="text-xs font-bold text-foreground">{simScreen.title}</span>
+                                    <span className="text-xs font-bold text-foreground truncate max-w-[200px]">{simScreen.title}</span>
                                     <button
                                         onClick={() => {
                                             setSimScreenId(screens[0]?.id);
                                             setSimFormData({});
                                             setSimErrors({});
                                         }}
-                                        className="text-[10px] text-muted-foreground"
+                                        className="text-[10px] text-muted-foreground hover:text-foreground"
                                     >
                                         Reset
                                     </button>
                                 </div>
 
-                                <div className="p-5 space-y-4 max-h-[460px] overflow-y-auto">
-                                    {simScreen.children?.map(c => (
-                                        <div key={c.id}>
-                                            {renderInteractiveField(c, simFormData, setSimFormData, simErrors)}
-                                        </div>
-                                    ))}
-                                </div>
+                                <ScrollArea className="flex-1 min-h-0 max-h-[500px]">
+                                    <div className="p-5 space-y-4">
+                                        {simScreen.children?.map(c => (
+                                            <div key={c.id}>
+                                                {renderInteractiveField(c, simFormData, setSimFormData, simErrors)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
 
-                                <div className="p-4 border-t bg-card">
+                                <div className="p-4 border-t bg-card shrink-0">
                                     <Button
-                                        className="w-full h-10 rounded-full bg-[#1da851] hover:bg-[#189647] text-white font-bold text-xs"
+                                        className="w-full h-10 rounded-full bg-[#1da851] hover:bg-[#189647] text-white font-bold text-xs shadow-sm cursor-pointer"
                                         onClick={() => handleSimulatorContinue(simScreen)}
                                     >
                                         {simScreen.footerAction?.label || (isTerminal ? 'Submit Form' : 'Continue')}
@@ -1166,9 +1186,11 @@ export default function FlowBuilder({
                         </div>
                         <h3 className="text-base font-bold">Flow Completed!</h3>
                         <p className="text-xs text-muted-foreground">Response payload received from user submission:</p>
-                        <pre className="p-3 bg-muted/60 rounded-lg text-left text-[11px] font-mono max-h-[200px] overflow-auto">
-                            {JSON.stringify(simResultPayload, null, 2)}
-                        </pre>
+                        <ScrollArea className="max-h-[220px] rounded-lg border bg-muted/60 text-left p-3">
+                            <pre className="text-[11px] font-mono whitespace-pre-wrap break-all">
+                                {JSON.stringify(simResultPayload, null, 2)}
+                            </pre>
+                        </ScrollArea>
                     </div>
                     <DialogFooter className="sm:justify-center">
                         <Button size="sm" onClick={() => setIsSimResultOpen(false)}>Close</Button>
@@ -1201,14 +1223,15 @@ function getComponentCategoryLabel(type) {
 
 // --- Component Property Editor in Column 2 ---
 function renderComponentFieldEditor(comp, onUpdate) {
-    if (comp.type.startsWith('Text')) {
+    if (['TextHeading', 'TextSubheading', 'TextBody', 'TextCaption'].includes(comp.type)) {
         return (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 w-full min-w-0">
                 <Label className="text-xs font-semibold">Text content</Label>
                 <Textarea
+                    rows={5}
                     value={comp.text || ''}
                     onChange={(e) => onUpdate(comp.id, { text: e.target.value })}
-                    className="min-h-[70px] text-xs font-normal"
+                    className="text-xs font-normal w-full resize-y break-words whitespace-pre-wrap leading-relaxed border-border/80"
                     placeholder="Enter text..."
                 />
             </div>
@@ -1217,22 +1240,22 @@ function renderComponentFieldEditor(comp, onUpdate) {
 
     if (comp.type === 'Image') {
         return (
-            <div className="space-y-2">
-                <div className="space-y-1">
+            <div className="space-y-2 w-full min-w-0">
+                <div className="space-y-1 w-full min-w-0">
                     <Label className="text-xs font-semibold">Image URL</Label>
                     <Input
                         value={comp.src || ''}
                         onChange={(e) => onUpdate(comp.id, { src: e.target.value })}
-                        className="h-8 text-xs font-mono"
+                        className="h-8 text-xs font-mono w-full"
                         placeholder="https://..."
                     />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 w-full min-w-0">
                     <Label className="text-xs font-semibold">Alt Text</Label>
                     <Input
                         value={comp.altText || ''}
                         onChange={(e) => onUpdate(comp.id, { altText: e.target.value })}
-                        className="h-8 text-xs"
+                        className="h-8 text-xs w-full"
                         placeholder="Image description"
                     />
                 </div>
@@ -1241,41 +1264,70 @@ function renderComponentFieldEditor(comp, onUpdate) {
     }
 
     return (
-        <div className="space-y-3">
-            <div className="space-y-1">
+        <div className="space-y-3 w-full min-w-0">
+            <div className="space-y-1 w-full min-w-0">
                 <Label className="text-xs font-semibold">Label</Label>
                 <Input
                     value={comp.label || ''}
-                    onChange={(e) => onUpdate(comp.id, { label: e.target.value })}
-                    className="h-8 text-xs font-medium"
-                    placeholder="Field title"
+                    onChange={(e) => {
+                        const newLabel = e.target.value;
+                        const derivedName = sanitizeIdentifier(newLabel, 'field', false);
+                        onUpdate(comp.id, {
+                            label: newLabel,
+                            name: derivedName
+                        });
+                    }}
+                    className="h-9 text-xs font-medium w-full"
+                    placeholder="Field label..."
                 />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1 w-full min-w-0">
                 <Label className="text-xs font-semibold">System Name (Payload Key)</Label>
                 <Input
                     value={comp.name || ''}
                     onChange={(e) => onUpdate(comp.id, { name: sanitizeIdentifier(e.target.value, 'field', false) })}
-                    className="h-8 text-xs font-mono"
+                    className="h-8 text-xs font-mono w-full"
                     placeholder="e.g. user_name"
                 />
             </div>
 
+            {comp.type === 'TextInput' && (
+                <div className="space-y-1 w-full min-w-0">
+                    <Label className="text-xs font-semibold">Input Type</Label>
+                    <Select
+                        value={comp.inputType || 'text'}
+                        onValueChange={(val) => onUpdate(comp.id, { inputType: val })}
+                    >
+                        <SelectTrigger className="h-8 text-xs w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="text">Short text</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="phone">Phone number</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="password">Password</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
             {comp.placeholder !== undefined && (
-                <div className="space-y-1">
+                <div className="space-y-1 w-full min-w-0">
                     <Label className="text-xs font-semibold">Placeholder Text</Label>
                     <Input
                         value={comp.placeholder || ''}
                         onChange={(e) => onUpdate(comp.id, { placeholder: e.target.value })}
-                        className="h-8 text-xs"
+                        className="h-8 text-xs w-full"
+                        placeholder="Placeholder text..."
                     />
                 </div>
             )}
 
             {/* Options manager for choices */}
             {['Select', 'RadioButtons', 'CheckboxGroup'].includes(comp.type) && (
-                <div className="space-y-2 pt-1 border-t">
+                <div className="space-y-2 pt-1 border-t w-full min-w-0">
                     <div className="flex items-center justify-between">
                         <Label className="text-xs font-bold">Options</Label>
                         <Button
@@ -1294,48 +1346,55 @@ function renderComponentFieldEditor(comp, onUpdate) {
                         </Button>
                     </div>
 
-                    <div className="space-y-2">
-                        {(comp.options || []).map((opt, i) => (
-                            <div key={i} className="flex items-center gap-1.5 p-1.5 bg-card border rounded-lg">
-                                <Input
-                                    value={opt.label || ''}
-                                    onChange={(e) => {
-                                        const opts = [...comp.options];
-                                        opts[i].label = e.target.value;
-                                        onUpdate(comp.id, { options: opts });
-                                    }}
-                                    className="h-7 text-xs flex-1"
-                                    placeholder="Option Title"
-                                />
-                                <Input
-                                    value={opt.value || ''}
-                                    onChange={(e) => {
-                                        const opts = [...comp.options];
-                                        opts[i].value = sanitizeIdentifier(e.target.value, 'opt', false);
-                                        onUpdate(comp.id, { options: opts });
-                                    }}
-                                    className="h-7 text-[10px] font-mono w-20"
-                                    placeholder="Value"
-                                />
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive"
-                                    onClick={() => {
-                                        const opts = comp.options.filter((_, idx) => idx !== i);
-                                        onUpdate(comp.id, { options: opts });
-                                    }}
-                                >
-                                    <Trash2 className="w-3 h-3" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
+                    <ScrollArea className="max-h-64 w-full pr-1">
+                        <div className="space-y-2 w-full min-w-0 pr-1">
+                            {(comp.options || []).map((opt, i) => (
+                                <div key={i} className="flex items-center gap-1.5 p-1.5 bg-card border rounded-lg w-full min-w-0">
+                                    <Input
+                                        value={opt.label || ''}
+                                        onChange={(e) => {
+                                            const newOptLabel = e.target.value;
+                                            const opts = [...comp.options];
+                                            opts[i] = {
+                                                ...opts[i],
+                                                label: newOptLabel,
+                                                value: sanitizeIdentifier(newOptLabel, `opt_${i + 1}`, false)
+                                            };
+                                            onUpdate(comp.id, { options: opts });
+                                        }}
+                                        className="h-8 text-xs flex-1 min-w-0"
+                                        placeholder="Option Title"
+                                    />
+                                    <Input
+                                        value={opt.value || ''}
+                                        onChange={(e) => {
+                                            const opts = [...comp.options];
+                                            opts[i].value = sanitizeIdentifier(e.target.value, 'opt', false);
+                                            onUpdate(comp.id, { options: opts });
+                                        }}
+                                        className="h-8 text-[10px] font-mono w-24 shrink-0"
+                                        placeholder="Value"
+                                    />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-destructive shrink-0"
+                                        onClick={() => {
+                                            const opts = comp.options.filter((_, idx) => idx !== i);
+                                            onUpdate(comp.id, { options: opts });
+                                        }}
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
                 </div>
             )}
 
             {comp.required !== undefined && (
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex items-center gap-2 pt-1 w-full min-w-0">
                     <input
                         type="checkbox"
                         id={`req_${comp.id}`}
@@ -1356,64 +1415,64 @@ function renderComponentFieldEditor(comp, onUpdate) {
 function renderPreviewComponent(c) {
     switch (c.type) {
         case 'TextHeading':
-            return <h3 className="text-sm font-bold text-foreground">{c.text || 'Heading'}</h3>;
+            return <h3 className="text-sm font-bold text-foreground break-words whitespace-pre-wrap leading-snug">{c.text || 'Heading'}</h3>;
         case 'TextSubheading':
-            return <h4 className="text-xs font-semibold text-foreground">{c.text || 'Subheading'}</h4>;
+            return <h4 className="text-xs font-semibold text-foreground break-words whitespace-pre-wrap leading-snug">{c.text || 'Subheading'}</h4>;
         case 'TextBody':
-            return <p className="text-xs text-muted-foreground leading-relaxed">{c.text || 'Body text content'}</p>;
+            return <p className="text-xs text-muted-foreground leading-relaxed break-words whitespace-pre-wrap">{c.text || 'Body text content'}</p>;
         case 'TextCaption':
-            return <p className="text-[11px] text-muted-foreground italic">{c.text || 'Caption'}</p>;
+            return <p className="text-[11px] text-muted-foreground italic break-words whitespace-pre-wrap">{c.text || 'Caption'}</p>;
         case 'Image':
             return (
-                <div className="rounded-lg overflow-hidden border border-border/40">
+                <div className="rounded-lg overflow-hidden border border-border/40 w-full">
                     <img src={c.src || 'https://via.placeholder.com/600x300.png'} alt={c.altText || 'Image'} className="w-full h-28 object-cover" />
                 </div>
             );
         case 'TextInput':
             return (
-                <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Text Field'} {c.required && <span className="text-destructive">*</span>}</span>
+                <div className="space-y-1 w-full min-w-0">
+                    <div className="flex items-start justify-between text-xs font-semibold text-foreground gap-1">
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Text Field'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
-                    <div className="h-9 border border-border/80 rounded-lg bg-card px-3 flex items-center text-xs text-muted-foreground/60">
+                    <div className="h-9 border border-border/80 rounded-lg bg-card px-3 flex items-center text-xs text-muted-foreground/60 overflow-hidden truncate">
                         {c.placeholder || 'Type here...'}
                     </div>
                 </div>
             );
         case 'TextArea':
             return (
-                <div className="space-y-1">
+                <div className="space-y-1 w-full min-w-0">
                     <div className="text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Paragraph'} {c.required && <span className="text-destructive">*</span>}</span>
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Paragraph'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
-                    <div className="h-16 border border-border/80 rounded-lg bg-card p-2 text-xs text-muted-foreground/60">
+                    <div className="h-16 border border-border/80 rounded-lg bg-card p-2 text-xs text-muted-foreground/60 overflow-hidden break-words whitespace-pre-wrap">
                         {c.placeholder || 'Type message...'}
                     </div>
                 </div>
             );
         case 'Select':
             return (
-                <div className="space-y-1">
+                <div className="space-y-1 w-full min-w-0">
                     <div className="text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Select'} {c.required && <span className="text-destructive">*</span>}</span>
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Select'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
                     <div className="h-9 border border-border/80 rounded-lg bg-card px-3 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{c.options?.[0]?.label || 'Select option...'}</span>
-                        <ChevronDown className="w-4 h-4" />
+                        <span className="truncate">{c.options?.[0]?.label || 'Select option...'}</span>
+                        <ChevronDown className="w-4 h-4 shrink-0" />
                     </div>
                 </div>
             );
         case 'RadioButtons':
             return (
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full min-w-0">
                     <div className="text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Choose one'} {c.required && <span className="text-destructive">*</span>}</span>
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Choose one'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 w-full min-w-0">
                         {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
-                            <div key={i} className="flex items-center gap-2 p-1.5 text-xs text-foreground">
-                                <div className={`w-3.5 h-3.5 rounded-full border ${i === 0 ? 'border-[#1da851] bg-[#1da851]' : 'border-muted-foreground/60'}`} />
-                                <span>{opt.label}</span>
+                            <div key={i} className="flex items-start gap-2 p-1.5 text-xs text-foreground">
+                                <div className={`w-3.5 h-3.5 rounded-full border shrink-0 mt-0.5 ${i === 0 ? 'border-[#1da851] bg-[#1da851]' : 'border-muted-foreground/60'}`} />
+                                <span className="break-words whitespace-normal leading-snug">{opt.label}</span>
                             </div>
                         ))}
                     </div>
@@ -1421,17 +1480,17 @@ function renderPreviewComponent(c) {
             );
         case 'CheckboxGroup':
             return (
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 w-full min-w-0">
                     <div className="text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Choose multiple'} {c.required && <span className="text-destructive">*</span>}</span>
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Choose multiple'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 w-full min-w-0">
                         {(c.options || [{ label: 'Option 1' }]).map((opt, i) => (
-                            <div key={i} className="flex items-center gap-2 p-1.5 text-xs text-foreground">
-                                <div className={`w-3.5 h-3.5 rounded border ${i === 0 ? 'border-[#1da851] bg-[#1da851] text-white' : 'border-muted-foreground/60'} flex items-center justify-center`}>
+                            <div key={i} className="flex items-start gap-2 p-1.5 text-xs text-foreground">
+                                <div className={`w-3.5 h-3.5 rounded border shrink-0 mt-0.5 ${i === 0 ? 'border-[#1da851] bg-[#1da851] text-white' : 'border-muted-foreground/60'} flex items-center justify-center`}>
                                     {i === 0 && <Check className="w-2.5 h-2.5" />}
                                 </div>
-                                <span>{opt.label}</span>
+                                <span className="break-words whitespace-normal leading-snug">{opt.label}</span>
                             </div>
                         ))}
                     </div>
@@ -1439,27 +1498,27 @@ function renderPreviewComponent(c) {
             );
         case 'DatePicker':
             return (
-                <div className="space-y-1">
+                <div className="space-y-1 w-full min-w-0">
                     <div className="text-xs font-semibold text-foreground">
-                        <span>{c.label || 'Date'} {c.required && <span className="text-destructive">*</span>}</span>
+                        <span className="break-words whitespace-normal leading-snug">{c.label || 'Date'} {c.required && <span className="text-destructive">*</span>}</span>
                     </div>
                     <div className="h-9 border border-border/80 rounded-lg bg-card px-3 flex items-center justify-between text-xs text-muted-foreground">
                         <span>Select date...</span>
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
                     </div>
                 </div>
             );
         case 'ConsentCheckbox':
             return (
-                <div className="flex items-start gap-2 pt-1 text-xs">
+                <div className="flex items-start gap-2 pt-1 text-xs w-full min-w-0">
                     <div className="w-3.5 h-3.5 rounded border border-[#1da851] bg-[#1da851] text-white flex items-center justify-center shrink-0 mt-0.5">
                         <Check className="w-2.5 h-2.5" />
                     </div>
-                    <span className="text-foreground/90 font-medium">{c.label}</span>
+                    <span className="text-foreground/90 font-medium break-words whitespace-normal leading-snug">{c.label}</span>
                 </div>
             );
         default:
-            return <div className="text-xs">{c.label || c.type}</div>;
+            return <div className="text-xs break-words">{c.label || c.type}</div>;
     }
 }
 
@@ -1469,14 +1528,14 @@ function renderInteractiveField(c, formData, setFormData, errors) {
     const err = errors[c.name];
 
     switch (c.type) {
-        case 'TextHeading': return <h3 className="text-sm font-bold text-foreground">{c.text}</h3>;
-        case 'TextSubheading': return <h4 className="text-xs font-semibold text-foreground">{c.text}</h4>;
-        case 'TextBody': return <p className="text-xs text-muted-foreground">{c.text}</p>;
-        case 'TextCaption': return <p className="text-[11px] text-muted-foreground italic">{c.text}</p>;
+        case 'TextHeading': return <h3 className="text-sm font-bold text-foreground break-words whitespace-pre-wrap">{c.text}</h3>;
+        case 'TextSubheading': return <h4 className="text-xs font-semibold text-foreground break-words whitespace-pre-wrap">{c.text}</h4>;
+        case 'TextBody': return <p className="text-xs text-muted-foreground break-words whitespace-pre-wrap leading-relaxed">{c.text}</p>;
+        case 'TextCaption': return <p className="text-[11px] text-muted-foreground italic break-words whitespace-pre-wrap">{c.text}</p>;
         case 'TextInput':
             return (
-                <div className="space-y-1">
-                    <Label className="text-xs font-semibold">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
+                <div className="space-y-1 w-full min-w-0">
+                    <Label className="text-xs font-semibold break-words whitespace-normal leading-snug">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
                     <Input
                         type={c.inputType || 'text'}
                         value={val || ''}
@@ -1489,21 +1548,21 @@ function renderInteractiveField(c, formData, setFormData, errors) {
             );
         case 'TextArea':
             return (
-                <div className="space-y-1">
-                    <Label className="text-xs font-semibold">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
+                <div className="space-y-1 w-full min-w-0">
+                    <Label className="text-xs font-semibold break-words whitespace-normal leading-snug">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
                     <Textarea
                         value={val || ''}
                         onChange={(e) => setFormData({ ...formData, [c.name]: e.target.value })}
                         placeholder={c.placeholder || 'Type message...'}
-                        className={`min-h-[70px] text-xs rounded-lg ${err ? 'border-destructive' : ''}`}
+                        className={`min-h-[70px] text-xs rounded-lg break-words whitespace-pre-wrap ${err ? 'border-destructive' : ''}`}
                     />
                     {err && <p className="text-[10px] text-destructive font-semibold">{err}</p>}
                 </div>
             );
         case 'Select':
             return (
-                <div className="space-y-1">
-                    <Label className="text-xs font-semibold">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
+                <div className="space-y-1 w-full min-w-0">
+                    <Label className="text-xs font-semibold break-words whitespace-normal leading-snug">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
                     <Select value={val || ''} onValueChange={(v) => setFormData({ ...formData, [c.name]: v })}>
                         <SelectTrigger className={`h-9 text-xs rounded-lg ${err ? 'border-destructive' : ''}`}>
                             <SelectValue placeholder="Select option..." />
@@ -1521,17 +1580,17 @@ function renderInteractiveField(c, formData, setFormData, errors) {
             );
         case 'RadioButtons':
             return (
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
-                    <div className="space-y-1">
+                <div className="space-y-1.5 w-full min-w-0">
+                    <Label className="text-xs font-semibold break-words whitespace-normal leading-snug">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
+                    <div className="space-y-1 w-full min-w-0">
                         {(c.options || []).map(opt => (
                             <div
                                 key={opt.value}
                                 onClick={() => setFormData({ ...formData, [c.name]: opt.value })}
-                                className="flex items-center gap-2 p-1.5 text-xs rounded-lg hover:bg-muted/40 cursor-pointer"
+                                className="flex items-start gap-2 p-1.5 text-xs rounded-lg hover:bg-muted/40 cursor-pointer"
                             >
-                                <div className={`w-3.5 h-3.5 rounded-full border ${val === opt.value ? 'border-[#1da851] bg-[#1da851]' : 'border-muted-foreground/60'}`} />
-                                <span>{opt.label}</span>
+                                <div className={`w-3.5 h-3.5 rounded-full border shrink-0 mt-0.5 ${val === opt.value ? 'border-[#1da851] bg-[#1da851]' : 'border-muted-foreground/60'}`} />
+                                <span className="break-words whitespace-normal leading-snug">{opt.label}</span>
                             </div>
                         ))}
                     </div>
@@ -1541,9 +1600,9 @@ function renderInteractiveField(c, formData, setFormData, errors) {
         case 'CheckboxGroup': {
             const currentSelected = Array.isArray(val) ? val : [];
             return (
-                <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
-                    <div className="space-y-1">
+                <div className="space-y-1.5 w-full min-w-0">
+                    <Label className="text-xs font-semibold break-words whitespace-normal leading-snug">{c.label} {c.required && <span className="text-destructive">*</span>}</Label>
+                    <div className="space-y-1 w-full min-w-0">
                         {(c.options || []).map(opt => {
                             const isChecked = currentSelected.includes(opt.value);
                             return (
@@ -1555,12 +1614,12 @@ function renderInteractiveField(c, formData, setFormData, errors) {
                                             : [...currentSelected, opt.value];
                                         setFormData({ ...formData, [c.name]: next });
                                     }}
-                                    className="flex items-center gap-2 p-1.5 text-xs rounded-lg hover:bg-muted/40 cursor-pointer"
+                                    className="flex items-start gap-2 p-1.5 text-xs rounded-lg hover:bg-muted/40 cursor-pointer"
                                 >
-                                    <div className={`w-3.5 h-3.5 rounded border ${isChecked ? 'border-[#1da851] bg-[#1da851] text-white' : 'border-muted-foreground/60'} flex items-center justify-center`}>
+                                    <div className={`w-3.5 h-3.5 rounded border shrink-0 mt-0.5 ${isChecked ? 'border-[#1da851] bg-[#1da851] text-white' : 'border-muted-foreground/60'} flex items-center justify-center`}>
                                         {isChecked && <Check className="w-2.5 h-2.5" />}
                                     </div>
-                                    <span>{opt.label}</span>
+                                    <span className="break-words whitespace-normal leading-snug">{opt.label}</span>
                                 </div>
                             );
                         })}
