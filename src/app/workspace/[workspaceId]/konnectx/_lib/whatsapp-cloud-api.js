@@ -368,7 +368,7 @@ async function fetchFlowsMeta(credentials) {
     const version = credentials.version || DEFAULT_VERSION;
     if (!wabaId) return response(false, null, 'Missing wabaId');
 
-    const url = `${BASE_URL}/${version}/${wabaId}/flows?fields=id,name,status,categories,validation_errors,last_updated`;
+    const url = `${BASE_URL}/${version}/${wabaId}/flows?limit=100&fields=id,name,status,categories,validation_errors,last_updated`;
 
     try {
         const res = await fetch(url, {
@@ -440,14 +440,26 @@ async function updateFlowAssetMeta(credentials, flowId, flowJson) {
         const data = await res.json();
         if (!res.ok) {
             console.error('[WA_FLOW_ASSET_ERROR]', data.error);
-            const errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to upload flow asset';
             const validationErrors = data.error?.error_data?.validation_errors || [];
+            let errorMsg = data.error?.error_user_msg || data.error?.message || 'Failed to upload flow asset';
+            if (validationErrors.length > 0) {
+                const details = validationErrors.map(v => {
+                    const msg = v.message || v.error || '';
+                    const path = v.error_path || v.path || '';
+                    return path ? `${msg} (at ${path})` : msg;
+                }).filter(Boolean).join('; ');
+                if (details) errorMsg = `Validation Error: ${details}`;
+            }
             return response(false, data, errorMsg, validationErrors);
         }
 
         if (data.validation_errors && data.validation_errors.length > 0) {
             console.warn('[WA_FLOW_ASSET_VALIDATION_ERRORS]', data.validation_errors);
-            const errorMsg = data.validation_errors.map(v => v.error || v.message || JSON.stringify(v)).join('; ');
+            const errorMsg = data.validation_errors.map(v => {
+                const msg = v.message || v.error || '';
+                const path = v.error_path || v.path || '';
+                return path ? `${msg} (at ${path})` : msg;
+            }).filter(Boolean).join('; ');
             return response(false, data, `Validation Error: ${errorMsg}`, data.validation_errors);
         }
 

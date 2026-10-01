@@ -75,12 +75,8 @@ export default function FlowBuilder({
     endpointUrl = '',
     flowName = 'Your form'
 }) {
-    // 1. Screens state
-    const [screens, setScreens] = useState(() => {
-        if (initialScreens && initialScreens.length > 0) {
-            return initialScreens;
-        }
-        return [
+    const normalizeScreens = (raw) => {
+        const defaultScreens = [
             {
                 id: 'WELCOME',
                 title: 'Your form',
@@ -95,9 +91,34 @@ export default function FlowBuilder({
                 footerAction: { type: 'navigate', label: 'Continue', screen: '' }
             }
         ];
-    });
+
+        if (!raw) return defaultScreens;
+
+        const parsed = parseFlowDSL(raw);
+        if (parsed && parsed.length > 0) {
+            return parsed;
+        }
+
+        if (Array.isArray(raw) && raw.length > 0) {
+            return raw;
+        }
+
+        return defaultScreens;
+    };
+
+    // 1. Screens state
+    const [screens, setScreens] = useState(() => normalizeScreens(initialScreens));
 
     const [activeScreenId, setActiveScreenId] = useState(screens[0]?.id || 'WELCOME');
+
+    useEffect(() => {
+        if (initialScreens && (Array.isArray(initialScreens) ? initialScreens.length > 0 : Boolean(initialScreens))) {
+            const normalized = normalizeScreens(initialScreens);
+            setScreens(normalized);
+            setActiveScreenId(prev => normalized.some(s => s.id === prev) ? prev : (normalized[0]?.id || 'WELCOME'));
+        }
+    }, [initialScreens]);
+
     const [expandedSections, setExpandedSections] = useState({
         screen_title: true,
         button_action: true
@@ -1087,8 +1108,8 @@ export default function FlowBuilder({
 
             {/* --- JSON CODE TAB --- */}
             {activeTabMode === 'json' && (
-                <div className="flex-1 flex flex-col bg-[#1e1e1e] text-gray-200 overflow-hidden">
-                    <div className="p-3 bg-[#2d2d2d] border-b border-[#404040] flex items-center justify-between px-6">
+                <div className="flex-1 flex flex-col bg-[#1e1e1e] text-gray-200 overflow-hidden min-h-0 h-full">
+                    <div className="p-3 bg-[#2d2d2d] border-b border-[#404040] flex items-center justify-between px-6 shrink-0">
                         <span className="text-xs font-mono text-gray-300">flow.json (Meta Flows Schema v{FLOW_VERSION})</span>
                         <div className="flex items-center gap-2">
                             <Button
@@ -1120,11 +1141,11 @@ export default function FlowBuilder({
                             </Button>
                         </div>
                     </div>
-                    <ScrollArea className="flex-1 p-6">
-                        <pre className="text-xs font-mono text-blue-300 leading-relaxed">
+                    <div className="flex-1 overflow-auto p-6 min-h-0">
+                        <pre className="text-xs font-mono text-blue-300 leading-relaxed font-normal selection:bg-blue-600/40">
                             {flowJsonString}
                         </pre>
-                    </ScrollArea>
+                    </div>
                 </div>
             )}
 

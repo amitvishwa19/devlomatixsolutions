@@ -47,9 +47,69 @@ const handler = async (data) => {
         if (!metaId) {
             const normalizedName = sanitizeFlowName(flow.name);
             const categories = flow.categories?.length > 0 ? flow.categories : ["OTHER"];
-            const createRes = await cloudApi.createFlowMeta(credentials, normalizedName, categories, flow.endpointUrl || null);
-            if (!createRes.success) throw new Error(`Meta Create Error: ${createRes.error}`);
-            metaId = createRes.data.id;
+            const cleanSearch = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const targetClean = cleanSearch(flow.name);
+
+            // First check if an existing Meta flow already matches
+            try {
+                const metaListRes = await cloudApi.fetchFlowsMeta(credentials);
+                if (metaListRes.success && Array.isArray(metaListRes.data)) {
+                    const existingMetaFlow = metaListRes.data.find(f => {
+                        const fClean = cleanSearch(f.name);
+                        return fClean === targetClean || f.name === normalizedName;
+                    });
+                    if (existingMetaFlow?.id) {
+                        console.log(`[PushFlow] Reusing matching Meta flow: "${existingMetaFlow.name}" (ID: ${existingMetaFlow.id})`);
+                        metaId = String(existingMetaFlow.id);
+                        await db.whatsAppFlow.update({
+                            where: { id: localFlowId },
+                            data: { flowId: metaId }
+                        }).catch(() => {});
+                    }
+                }
+            } catch (err) {
+                console.warn("[PushFlow] Pre-creation flow check warning:", err);
+            }
+
+            if (!metaId) {
+                let createRes = await cloudApi.createFlowMeta(credentials, normalizedName, categories, flow.endpointUrl || null);
+                
+                if (!createRes.success) {
+                    const errorStr = String(createRes.error || '').toLowerCase();
+                    const isDuplicateNameError = 
+                        errorStr.includes('unique within one whatsapp business account') ||
+                        errorStr.includes('flow name should be unique') ||
+                        errorStr.includes('already exists');
+
+                    if (isDuplicateNameError) {
+                        console.warn(`[PushFlow] Flow name collision on Meta for "${normalizedName}". Attempting auto-retry with unique name...`);
+                        const uniqueSuffix = Math.floor(1000 + Math.random() * 9000);
+                        const fallbackMetaName = `${normalizedName.slice(0, 118)}_${uniqueSuffix}`;
+                        const retryCreate = await cloudApi.createFlowMeta(credentials, fallbackMetaName, categories, flow.endpointUrl || null);
+                        
+                        if (retryCreate.success && retryCreate.data?.id) {
+                            metaId = String(retryCreate.data.id);
+                            await db.whatsAppFlow.update({
+                                where: { id: localFlowId },
+                                data: { 
+                                    flowId: metaId,
+                                    name: `${flow.name} ${uniqueSuffix}`
+                                }
+                            }).catch(() => {});
+                        } else {
+                            throw new Error(`Meta Create Error: ${createRes.error}`);
+                        }
+                    } else {
+                        throw new Error(`Meta Create Error: ${createRes.error}`);
+                    }
+                } else if (createRes.data?.id) {
+                    metaId = String(createRes.data.id);
+                    await db.whatsAppFlow.update({
+                        where: { id: localFlowId },
+                        data: { flowId: metaId }
+                    }).catch(() => {});
+                }
+            }
         } else {
             // Update flow metadata on Meta (name, categories, endpoint_uri)
             const updateRes = await cloudApi.updateFlowMeta(credentials, metaId, {
