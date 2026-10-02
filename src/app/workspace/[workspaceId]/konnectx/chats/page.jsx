@@ -118,7 +118,11 @@ function renderMessagePreview(lastMessage) {
             if (type === 'contacts') return `👤 Contact: ${parsed.text || "Shared Contact"}`;
             if (type === 'poll') return `📊 Poll: ${parsed.text || "New Poll"}`;
             if (type === 'order') return `🛒 Order: ${text || "Catalog Order"}`;
-            if (type === 'interactive' || type === 'product' || type === 'catalog_message') {
+            if (type === 'interactive' || type === 'nfm_reply' || type === 'product' || type === 'catalog_message') {
+                if (typeof text === 'string' && (text.startsWith('[Flow:') || text.startsWith('Flow Response:'))) {
+                    const flowName = text.includes('[Flow:') ? text.split('[Flow:')[1]?.split(']')[0]?.trim() : text.replace('Flow Response:', '').trim();
+                    return `📝 Form Response: ${flowName || 'Submitted'}`;
+                }
                 if (text && !text.includes('[Interactive Message]')) return text;
                 return "🛍️ Catalog / Interactive Message";
             }
@@ -1962,23 +1966,37 @@ export default function WhatsAppChatsPage() {
                                             </div>
                                         ) : (
                                             selectedChat.messages.map((msg, i) => {
-                                                const isTemplate = msg.metadata?.type === 'template' ||
-                                                    msg.metadata?.type === 'TEMPLATE' ||
-                                                    Boolean(msg.metadata?.templateName) ||
-                                                    Boolean(msg.metadata?.originalPayload?.template?.name) ||
+                                                let msgMeta = msg.metadata || {};
+                                                if (typeof msgMeta === 'string') {
+                                                    try { msgMeta = JSON.parse(msgMeta); } catch (_) { msgMeta = {}; }
+                                                }
+
+                                                const isTemplate = msgMeta.type === 'template' ||
+                                                    msgMeta.type === 'TEMPLATE' ||
+                                                    Boolean(msgMeta.templateName) ||
+                                                    Boolean(msgMeta.originalPayload?.template?.name) ||
                                                     (typeof msg.text === 'string' && msg.text.startsWith('[Template:'));
-                                                const type = msg.metadata?.type?.toLowerCase() || (isTemplate ? 'template' : 'text');
-                                                const isInteractiveOrProduct = type === 'interactive' || type === 'order' || type === 'product' || type === 'catalog_message' ||
-                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Product:') || msg.text.startsWith('[Catalog]') || msg.text.startsWith('🛒 Order')));
-                                                const isMedia = !isTemplate && (isInteractiveOrProduct || ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'order', 'unsupported'].includes(type));
-                                                const templateName = msg.metadata?.templateName ||
-                                                    msg.metadata?.originalPayload?.template?.name ||
+                                                const isFlowResponse = Boolean(msgMeta.flow_data) ||
+                                                    Boolean(msgMeta.flow_name) ||
+                                                    Boolean(msgMeta.raw?.flow_data) ||
+                                                    msgMeta.interactiveType === 'nfm_reply' ||
+                                                    msgMeta.interactive?.type === 'nfm_reply' ||
+                                                    msgMeta.raw?.interactive?.type === 'nfm_reply' ||
+                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Flow:') || msg.text.startsWith('Flow Response:')));
+
+                                                const type = (msgMeta.type || msg.type || msg.mediaType || msgMeta.interactiveType || '').toLowerCase();
+
+                                                const isInteractiveOrProduct = isFlowResponse || type === 'interactive' || type === 'nfm_reply' || type === 'order' || type === 'product' || type === 'catalog_message' ||
+                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Product:') || msg.text.startsWith('[Catalog]') || msg.text.startsWith('🛒 Order') || msg.text.startsWith('[Flow:') || msg.text.startsWith('Flow Response:')));
+                                                const isMedia = !isTemplate && (isInteractiveOrProduct || ['image', 'video', 'audio', 'document', 'sticker', 'voice', 'location', 'contacts', 'poll', 'poll_creation', 'interactive', 'nfm_reply', 'order', 'unsupported'].includes(type));
+                                                const templateName = msgMeta.templateName ||
+                                                    msgMeta.originalPayload?.template?.name ||
                                                     (typeof msg.text === 'string' && msg.text.startsWith('[Template:')
                                                         ? msg.text.split('[Template:')[1]?.split(']')[0]?.trim()
                                                         : null);
                                                 const templateDef = (isTemplate && templateName)
                                                     ? (templates.find(t => t.templateName?.toLowerCase() === templateName.toLowerCase() || t.name?.toLowerCase() === templateName.toLowerCase())
-                                                        || msg.metadata?.templateDefinition
+                                                        || msgMeta.templateDefinition
                                                         || null)
                                                     : null;
 
@@ -1999,10 +2017,7 @@ export default function WhatsAppChatsPage() {
                                                                     />
                                                                 </div>
                                                             ) : isMedia ? (
-                                                                <div className={`relative px-1 py-1 rounded-2xl shadow-sm text-sm transition-all duration-200 ${msg.fromMe
-                                                                    ? 'bg-primary/5 border border-primary/20 rounded-tr-none'
-                                                                    : 'bg-card border border-border/50 rounded-tl-none'
-                                                                    }`}>
+                                                                <div className={`relative ${isFlowResponse ? 'w-full' : 'px-1 py-1 rounded-2xl shadow-sm text-sm transition-all duration-200 ' + (msg.fromMe ? 'bg-primary/5 border border-primary/20 rounded-tr-none' : 'bg-card border border-border/50 rounded-tl-none')}`}>
                                                                     <MediaBubble msg={msg} workspaceId={workspaceId} />
                                                                 </div>
                                                             ) : (
