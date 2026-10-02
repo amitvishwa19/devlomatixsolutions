@@ -28,7 +28,11 @@ async function metaPost(credentials, endpoint, payload) {
     try {
         const payloadWithCleanTo = { ...payload };
         if (payloadWithCleanTo.to && typeof payloadWithCleanTo.to === 'string') {
-            payloadWithCleanTo.to = payloadWithCleanTo.to.replace(/\+/g, '');
+            let clean = payloadWithCleanTo.to.replace(/[^\d]/g, '');
+            if (clean.length === 10) {
+                clean = `91${clean}`;
+            }
+            payloadWithCleanTo.to = clean;
         }
 
         const fullPayload = {

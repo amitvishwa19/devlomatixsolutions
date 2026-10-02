@@ -37,7 +37,10 @@ const handler = async (data) => {
             throw new Error("No active Cloud API credential found with Access Token and Phone Number ID");
         }
 
-        const phoneNum = phone.replace(/[^\d+]/g, '');
+        let phoneNum = phone.replace(/[^\d]/g, '');
+        if (phoneNum.length === 10) {
+            phoneNum = `91${phoneNum}`;
+        }
         let result;
 
         if (type === 'template' && template) {

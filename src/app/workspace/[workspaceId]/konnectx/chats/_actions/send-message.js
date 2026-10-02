@@ -36,7 +36,10 @@ const handler = async (data) => {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        const cleanTo = to.replace(/[^\d+]/g, '');
+        let cleanTo = to.replace(/[^\d]/g, '');
+        if (cleanTo.length === 10) {
+            cleanTo = `91${cleanTo}`;
+        }
 
         // 1. Fetch Cloud API Credentials (prioritize user's switched default)
         let credential = await db.credentials.findFirst({
