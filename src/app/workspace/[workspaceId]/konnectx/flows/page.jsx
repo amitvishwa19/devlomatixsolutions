@@ -420,6 +420,7 @@ export default function FlowsPage() {
                 {/* Builder Canvas Area */}
                 <div className="flex-1 overflow-hidden p-3">
                     <FlowBuilder
+                        key={selectedFlow?.id || 'new'}
                         initialScreens={selectedFlow?.screens || []}
                         onSave={handleSaveFromBuilder}
                         onCancel={() => {

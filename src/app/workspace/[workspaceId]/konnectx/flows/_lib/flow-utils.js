@@ -13,26 +13,18 @@ const DIGIT_WORDS = {
     '20': 'TWENTY'
 };
 
-export function sanitizeIdentifier(str, fallback = 'ITEM', isUpper = true) {
+export function sanitizeIdentifier(str, fallback = 'ITEM', isUpper = false) {
     if (!str || typeof str !== 'string') return fallback;
 
-    // Convert digits to English words so numbers are never in the ID
-    let clean = str.replace(/\d+/g, (match) => {
-        if (DIGIT_WORDS[match]) return `_${DIGIT_WORDS[match]}_`;
-        return '_' + match.split('').map(d => DIGIT_WORDS[d] || 'N').join('_') + '_';
-    });
-
-    // Only allow A-Z, a-z, and _
-    clean = clean.replace(/[^a-zA-Z_]/g, '_');
-    clean = clean.replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '');
+    // Only allow A-Z, a-z, 0-9, and _
+    let clean = str.trim().replace(/[^a-zA-Z0-9_]/g, '_').replace(/_{2,}/g, '_').replace(/^_+|_+$/g, '');
 
     if (!clean) clean = fallback;
-    return isUpper ? clean.toUpperCase() : clean.toLowerCase();
+    return isUpper ? clean.toUpperCase() : clean;
 }
 
 export function sanitizeScreenId(id, fallbackIndex = 1) {
-    const fallbackWord = DIGIT_WORDS[String(fallbackIndex)] || 'ONE';
-    return sanitizeIdentifier(id, `SCREEN_${fallbackWord}`, true);
+    return sanitizeIdentifier(id, `SCREEN_${fallbackIndex}`, true);
 }
 
 function getSafeDisplayLabel(c, fallback) {
@@ -82,47 +74,60 @@ export function buildComponentNode(c, compIndex = 0) {
                 text: String(c.text || c.label || 'Caption')
             }];
 
-        case 'Image':
-            return [{
+        case 'Image': {
+            const imgNode = {
                 type: 'Image',
-                src: c.src || c.url || 'https://via.placeholder.com/600x300.png',
-                ...(c.width ? { width: Number(c.width) } : {}),
-                ...(c.height ? { height: Number(c.height) } : {}),
-                ...(c.altText ? { 'alt-text': c.altText } : {})
-            }];
+                src: c.src || c.url || 'https://via.placeholder.com/600x300.png'
+            };
+            if (c.altText) imgNode['alt-text'] = String(c.altText);
+            if (c.scaleType) imgNode['scale-type'] = String(c.scaleType);
+            return [imgNode];
+        }
 
-        case 'TextInput':
-            return [{
+        case 'TextInput': {
+            const node = {
                 type: 'TextInput',
                 name: safeName,
                 label: getSafeDisplayLabel(c, 'Text Input'),
                 'input-type': c.inputType || 'text',
-                required: Boolean(c.required),
-                ...(c.placeholder ? { placeholder: c.placeholder } : {}),
-                ...(c.helperText ? { 'helper-text': c.helperText } : {}),
-                ...(c.minChars ? { 'min-chars': Number(c.minChars) } : {}),
-                ...(c.maxChars ? { 'max-chars': Number(c.maxChars) } : {})
-            }];
+                required: Boolean(c.required)
+            };
+            if (c.helperText) node['helper-text'] = String(c.helperText);
+            if (c.minChars !== undefined && c.minChars !== '' && !isNaN(c.minChars)) {
+                node['min-chars'] = Number(c.minChars);
+            }
+            if (c.maxChars !== undefined && c.maxChars !== '' && !isNaN(c.maxChars)) {
+                node['max-chars'] = Number(c.maxChars);
+            }
+            return [node];
+        }
 
-        case 'TextArea':
-            return [{
+        case 'TextArea': {
+            const node = {
                 type: 'TextArea',
                 name: safeName,
                 label: getSafeDisplayLabel(c, 'Text Area'),
-                required: Boolean(c.required),
-                ...(c.placeholder ? { placeholder: c.placeholder } : {}),
-                ...(c.helperText ? { 'helper-text': c.helperText } : {}),
-                ...(c.maxChars ? { 'max-chars': Number(c.maxChars) } : {})
-            }];
+                required: Boolean(c.required)
+            };
+            if (c.helperText) node['helper-text'] = String(c.helperText);
+            const maxLen = c.maxLength || c.maxChars;
+            if (maxLen !== undefined && maxLen !== '' && !isNaN(maxLen)) {
+                node['max-length'] = Number(maxLen);
+            }
+            return [node];
+        }
 
         case 'Select':
         case 'Dropdown': {
             const options = Array.isArray(c.options) && c.options.length > 0
-                ? c.options.map((o, idx) => ({
-                    id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
-                    title: String(o.label || o.title || `Option ${idx + 1}`),
-                    ...(o.description ? { description: o.description } : {})
-                }))
+                ? c.options.map((o, idx) => {
+                    const opt = {
+                        id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
+                        title: String(o.label || o.title || `Option ${idx + 1}`)
+                    };
+                    if (o.description) opt.description = String(o.description);
+                    return opt;
+                })
                 : [{ id: 'opt_one', title: 'Option 1' }];
 
             return [{
@@ -137,11 +142,14 @@ export function buildComponentNode(c, compIndex = 0) {
         case 'RadioButtons':
         case 'RadioButtonsGroup': {
             const options = Array.isArray(c.options) && c.options.length > 0
-                ? c.options.map((o, idx) => ({
-                    id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
-                    title: String(o.label || o.title || `Option ${idx + 1}`),
-                    ...(o.description ? { description: o.description } : {})
-                }))
+                ? c.options.map((o, idx) => {
+                    const opt = {
+                        id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
+                        title: String(o.label || o.title || `Option ${idx + 1}`)
+                    };
+                    if (o.description) opt.description = String(o.description);
+                    return opt;
+                })
                 : [{ id: 'opt_one', title: 'Option 1' }];
 
             return [{
@@ -155,33 +163,43 @@ export function buildComponentNode(c, compIndex = 0) {
 
         case 'CheckboxGroup': {
             const options = Array.isArray(c.options) && c.options.length > 0
-                ? c.options.map((o, idx) => ({
-                    id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
-                    title: String(o.label || o.title || `Option ${idx + 1}`),
-                    ...(o.description ? { description: o.description } : {})
-                }))
+                ? c.options.map((o, idx) => {
+                    const opt = {
+                        id: sanitizeIdentifier(o.value || o.id || `opt_${idx + 1}`, `opt_${idx + 1}`, false),
+                        title: String(o.label || o.title || `Option ${idx + 1}`)
+                    };
+                    if (o.description) opt.description = String(o.description);
+                    return opt;
+                })
                 : [{ id: 'opt_one', title: 'Option 1' }];
 
-            return [{
+            const node = {
                 type: 'CheckboxGroup',
                 name: safeName,
                 label: String(c.label || 'Choose Options'),
                 required: Boolean(c.required),
-                ...(c.minSelected ? { 'min-selected-items': Number(c.minSelected) } : {}),
-                ...(c.maxSelected ? { 'max-selected-items': Number(c.maxSelected) } : {}),
                 'data-source': options
-            }];
+            };
+            if (c.minSelected !== undefined && c.minSelected !== '' && !isNaN(c.minSelected)) {
+                node['min-selected-items'] = Number(c.minSelected);
+            }
+            if (c.maxSelected !== undefined && c.maxSelected !== '' && !isNaN(c.maxSelected)) {
+                node['max-selected-items'] = Number(c.maxSelected);
+            }
+            return [node];
         }
 
-        case 'DatePicker':
-            return [{
+        case 'DatePicker': {
+            const node = {
                 type: 'DatePicker',
                 name: safeName,
                 label: String(c.label || 'Select Date'),
-                required: Boolean(c.required),
-                ...(c.minDate ? { 'min-date': c.minDate } : {}),
-                ...(c.maxDate ? { 'max-date': c.maxDate } : {})
-            }];
+                required: Boolean(c.required)
+            };
+            if (c.minDate) node['min-date'] = String(c.minDate);
+            if (c.maxDate) node['max-date'] = String(c.maxDate);
+            return [node];
+        }
 
         case 'ConsentCheckbox':
         case 'OptIn':
@@ -201,10 +219,32 @@ export function buildComponentNode(c, compIndex = 0) {
 }
 
 function buildFooter(screen, index, sanitizedScreens, validScreenIds, endpointUrl, isTerminal) {
+    // 1. Gather all form field identifiers on the current screen
+    const currentScreenFormFields = (screen.children || [])
+        .filter(c => ['TextInput', 'TextArea', 'Select', 'Dropdown', 'RadioButtons', 'RadioButtonsGroup', 'CheckboxGroup', 'DatePicker', 'ConsentCheckbox', 'OptIn'].includes(c.type))
+        .map((c, cIdx) => sanitizeIdentifier(c.name || `field_${cIdx + 1}`, `field_${cIdx + 1}`, false));
+
+    const currentScreenDataKeys = Object.keys(screen.data || {});
+
     if (isTerminal) {
+        const payload = {};
+        for (const key of currentScreenDataKeys) {
+            payload[key] = `\${data.${key}}`;
+        }
+        for (const key of currentScreenFormFields) {
+            payload[key] = `\${form.${key}}`;
+        }
+        if (screen.footerAction?.payload && typeof screen.footerAction.payload === 'object') {
+            Object.assign(payload, screen.footerAction.payload);
+        }
+
         const lastAction = endpointUrl
-            ? { name: "data_exchange", payload: {} }
-            : { name: "complete", payload: {} };
+            ? { name: "data_exchange" }
+            : { name: "complete" };
+
+        if (Object.keys(payload).length > 0) {
+            lastAction.payload = payload;
+        }
 
         return {
             type: "Footer",
@@ -222,17 +262,52 @@ function buildFooter(screen, index, sanitizedScreens, validScreenIds, endpointUr
         targetScreenId = nextScreen ? nextScreen.sanitizedId : sanitizedScreens[0]?.sanitizedId;
     }
 
+    const targetScreenObj = sanitizedScreens.find(sc => sc.sanitizedId === targetScreenId) || sanitizedScreens[index + 1];
+    const expectedKeys = Object.keys(targetScreenObj?.data || {});
+
+    const payload = {};
+    if (expectedKeys.length > 0) {
+        for (const key of expectedKeys) {
+            const matchedFormField = currentScreenFormFields.find(f => f.toLowerCase() === key.toLowerCase());
+            if (matchedFormField) {
+                payload[key] = `\${form.${matchedFormField}}`;
+            } else {
+                const matchedDataField = currentScreenDataKeys.find(d => d.toLowerCase() === key.toLowerCase());
+                if (matchedDataField) {
+                    payload[key] = `\${data.${matchedDataField}}`;
+                } else if (screen.footerAction?.payload?.[key]) {
+                    payload[key] = screen.footerAction.payload[key];
+                } else {
+                    payload[key] = `\${form.${key}}`;
+                }
+            }
+        }
+    }
+
+    if (screen.footerAction?.payload && typeof screen.footerAction.payload === 'object') {
+        for (const [k, v] of Object.entries(screen.footerAction.payload)) {
+            if (!payload[k]) {
+                payload[k] = v;
+            }
+        }
+    }
+
+    const onClickAction = {
+        name: "navigate",
+        next: {
+            type: "screen",
+            name: targetScreenId
+        }
+    };
+
+    if (Object.keys(payload).length > 0) {
+        onClickAction.payload = payload;
+    }
+
     return {
         type: "Footer",
         label: screen.footerAction?.label || "Continue",
-        "on-click-action": {
-            name: "navigate",
-            next: {
-                type: "screen",
-                name: targetScreenId
-            },
-            payload: {}
-        }
+        "on-click-action": onClickAction
     };
 }
 
@@ -254,7 +329,6 @@ export function generateFlowDSL(screens, options = {}) {
                 id: "WELCOME",
                 title: "Welcome",
                 terminal: true,
-                data: {},
                 layout: {
                     type: "SingleColumnLayout",
                     children: [
@@ -263,8 +337,7 @@ export function generateFlowDSL(screens, options = {}) {
                             type: "Footer",
                             label: "Finish",
                             "on-click-action": {
-                                name: "complete",
-                                payload: {}
+                                name: "complete"
                             }
                         }
                     ]
@@ -273,7 +346,16 @@ export function generateFlowDSL(screens, options = {}) {
         };
     }
 
-    const sanitizedScreens = screens.map((s, index) => ({
+    // Ensure screens are normalized into UI components structure if Meta DSL is passed
+    let normalizedInput = screens;
+    if (screens.some(s => s && (s.layout || (Array.isArray(s.children) && s.children.some(c => c && c.type === 'Form'))))) {
+        const parsed = parseFlowDSL(screens);
+        if (parsed && parsed.length > 0) {
+            normalizedInput = parsed;
+        }
+    }
+
+    const sanitizedScreens = normalizedInput.map((s, index) => ({
         ...s,
         sanitizedId: sanitizeScreenId(s.id, index + 1)
     }));
@@ -314,16 +396,21 @@ export function generateFlowDSL(screens, options = {}) {
             routingModel[safeId] = (targetScreenId && targetScreenId !== safeId) ? [targetScreenId] : [];
         }
 
-        return {
+        const screenObj = {
             id: safeId,
             title: s.title || `Screen ${index + 1}`,
             terminal: isTerminal,
-            data: s.data || {},
             layout: {
                 type: "SingleColumnLayout",
                 children: rawChildren
             }
         };
+
+        if (s.data && typeof s.data === 'object' && Object.keys(s.data).length > 0) {
+            screenObj.data = s.data;
+        }
+
+        return screenObj;
     });
 
     // Ensure at least one terminal screen exists in the entire flow
@@ -338,8 +425,7 @@ export function generateFlowDSL(screens, options = {}) {
             type: "Footer",
             label: "Finish",
             "on-click-action": {
-                name: "complete",
-                payload: {}
+                name: "complete"
             }
         };
         if (footerIdx >= 0) {
@@ -361,17 +447,53 @@ export function generateFlowDSL(screens, options = {}) {
  * Parse Meta Flow JSON DSL into UI Screens structure
  */
 export function parseFlowDSL(dsl) {
-    if (!dsl || !dsl.screens || !Array.isArray(dsl.screens)) {
+    if (!dsl) return [];
+
+    let screens = null;
+    if (typeof dsl === 'string') {
+        try {
+            const parsed = JSON.parse(dsl);
+            screens = Array.isArray(parsed) ? parsed : (parsed.screens || [parsed]);
+        } catch {
+            return [];
+        }
+    } else if (Array.isArray(dsl)) {
+        screens = dsl;
+    } else if (typeof dsl === 'object') {
+        if (Array.isArray(dsl.screens)) {
+            screens = dsl.screens;
+        } else if (dsl.layout || dsl.children) {
+            screens = [dsl];
+        }
+    }
+
+    if (!screens || !Array.isArray(screens) || screens.length === 0) {
         return [];
     }
 
-    return dsl.screens.map((s, screenIdx) => {
-        const rawChildren = s.layout?.children || [];
-        const footerNode = rawChildren.find(c => c.type === 'Footer');
-        const contentChildren = rawChildren.filter(c => c.type !== 'Footer');
+    return screens.map((s, screenIdx) => {
+        let rawChildren = [];
+        if (Array.isArray(s.layout?.children)) {
+            rawChildren = s.layout.children.flatMap(c => {
+                if (c && c.type === 'Form' && Array.isArray(c.children)) {
+                    return c.children;
+                }
+                return c;
+            });
+        } else if (Array.isArray(s.children)) {
+            rawChildren = s.children.flatMap(c => {
+                if (c && c.type === 'Form' && Array.isArray(c.children)) {
+                    return c.children;
+                }
+                return c;
+            });
+        }
+
+        const footerNode = rawChildren.find(c => c && c.type === 'Footer');
+        const contentChildren = rawChildren.filter(c => c && c.type !== 'Footer');
 
         const children = contentChildren.map((c, compIdx) => {
-            const compId = `comp_${(c.type || 'item').toLowerCase()}_${screenIdx + 1}_${compIdx + 1}`;
+            const compId = c.id || `comp_${(c.type || 'item').toLowerCase()}_${screenIdx + 1}_${compIdx + 1}`;
 
             switch (c.type) {
                 case 'TextHeading':
@@ -381,8 +503,8 @@ export function parseFlowDSL(dsl) {
                     return {
                         id: compId,
                         type: c.type,
-                        text: c.text || '',
-                        label: c.text || ''
+                        text: c.text || c.label || '',
+                        label: c.label || c.text || ''
                     };
 
                 case 'TextInput':
@@ -391,12 +513,12 @@ export function parseFlowDSL(dsl) {
                         type: 'TextInput',
                         name: c.name || `input_${compIdx + 1}`,
                         label: c.label || 'Text Input',
-                        inputType: c['input-type'] || 'text',
+                        inputType: c['input-type'] || c.inputType || 'text',
                         placeholder: c.placeholder || '',
-                        helperText: c['helper-text'] || '',
+                        helperText: c['helper-text'] || c.helperText || '',
                         required: c.required ?? true,
-                        minChars: c['min-chars'],
-                        maxChars: c['max-chars']
+                        minChars: c['min-chars'] || c.minChars,
+                        maxChars: c['max-chars'] || c.maxChars
                     };
 
                 case 'TextArea':
@@ -406,9 +528,9 @@ export function parseFlowDSL(dsl) {
                         name: c.name || `textarea_${compIdx + 1}`,
                         label: c.label || 'Text Area',
                         placeholder: c.placeholder || '',
-                        helperText: c['helper-text'] || '',
+                        helperText: c['helper-text'] || c.helperText || '',
                         required: c.required ?? true,
-                        maxChars: c['max-chars']
+                        maxChars: c['max-chars'] || c['max-length'] || c.maxChars
                     };
 
                 case 'Dropdown':
@@ -421,7 +543,7 @@ export function parseFlowDSL(dsl) {
                         required: c.required ?? true,
                         options: Array.isArray(c['data-source'])
                             ? c['data-source'].map(o => ({ label: o.title || o.label || o.id, value: o.id || o.value, description: o.description || '' }))
-                            : [{ label: 'Option 1', value: 'opt_1' }]
+                            : (Array.isArray(c.options) ? c.options : [{ label: 'Option 1', value: 'opt_1' }])
                     };
 
                 case 'RadioButtonsGroup':
@@ -434,7 +556,7 @@ export function parseFlowDSL(dsl) {
                         required: c.required ?? true,
                         options: Array.isArray(c['data-source'])
                             ? c['data-source'].map(o => ({ label: o.title || o.label || o.id, value: o.id || o.value, description: o.description || '' }))
-                            : [{ label: 'Option 1', value: 'opt_1' }]
+                            : (Array.isArray(c.options) ? c.options : [{ label: 'Option 1', value: 'opt_1' }])
                     };
 
                 case 'CheckboxGroup':
@@ -444,11 +566,11 @@ export function parseFlowDSL(dsl) {
                         name: c.name || `check_${compIdx + 1}`,
                         label: c.label || 'Choose Multiple',
                         required: c.required ?? true,
-                        minSelected: c['min-selected-items'],
-                        maxSelected: c['max-selected-items'],
+                        minSelected: c['min-selected-items'] || c.minSelected,
+                        maxSelected: c['max-selected-items'] || c.maxSelected,
                         options: Array.isArray(c['data-source'])
                             ? c['data-source'].map(o => ({ label: o.title || o.label || o.id, value: o.id || o.value, description: o.description || '' }))
-                            : [{ label: 'Option 1', value: 'opt_1' }]
+                            : (Array.isArray(c.options) ? c.options : [{ label: 'Option 1', value: 'opt_1' }])
                     };
 
                 case 'DatePicker':
@@ -458,8 +580,8 @@ export function parseFlowDSL(dsl) {
                         name: c.name || `date_${compIdx + 1}`,
                         label: c.label || 'Select Date',
                         required: c.required ?? true,
-                        minDate: c['min-date'],
-                        maxDate: c['max-date']
+                        minDate: c['min-date'] || c.minDate,
+                        maxDate: c['max-date'] || c.maxDate
                     };
 
                 case 'OptIn':
@@ -468,7 +590,7 @@ export function parseFlowDSL(dsl) {
                         id: compId,
                         type: 'ConsentCheckbox',
                         name: c.name || `consent_${compIdx + 1}`,
-                        label: c.label || 'I agree to the terms',
+                        label: c.label || c.text || 'I agree to the terms',
                         required: c.required ?? true
                     };
 
@@ -477,7 +599,7 @@ export function parseFlowDSL(dsl) {
                         id: compId,
                         type: 'Image',
                         src: c.src || '',
-                        altText: c['alt-text'] || '',
+                        altText: c['alt-text'] || c.altText || '',
                         width: c.width,
                         height: c.height
                     };
@@ -492,18 +614,23 @@ export function parseFlowDSL(dsl) {
             }
         });
 
-        let footerAction = {
-            type: s.terminal ? 'complete' : 'navigate',
-            label: footerNode?.label || (s.terminal ? 'Finish' : 'Next'),
-            screen: footerNode?.['on-click-action']?.next?.name || ''
+        const isComplete = footerNode?.['on-click-action']?.name === 'complete' || s.terminal === true;
+        const targetScreen = footerNode?.['on-click-action']?.next?.name || s.footerAction?.screen || '';
+
+        const footerAction = {
+            type: isComplete ? 'complete' : (s.footerAction?.type || 'navigate'),
+            label: footerNode?.label || s.footerAction?.label || (isComplete ? 'Finish' : 'Continue'),
+            screen: targetScreen,
+            payload: footerNode?.['on-click-action']?.payload || s.footerAction?.payload || {}
         };
 
         return {
-            id: s.id,
+            id: s.id || `SCREEN_${screenIdx + 1}`,
             title: s.title || `Screen ${screenIdx + 1}`,
-            terminal: Boolean(s.terminal),
+            terminal: Boolean(isComplete),
             children,
-            footerAction
+            footerAction,
+            data: s.data || {}
         };
     });
 }
