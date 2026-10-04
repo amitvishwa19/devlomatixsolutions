@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { 
+    X,
     FileText, 
     Download, 
     Play, 
@@ -34,7 +35,8 @@ import {
     Clock,
     DollarSign,
     Eye,
-    Building
+    Building,
+    Maximize2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +45,8 @@ import {
     DialogContent, 
     DialogHeader, 
     DialogTitle, 
-    DialogDescription 
+    DialogDescription,
+    DialogFooter 
 } from "@/components/ui/dialog";
 
 const SCREEN_SECTION_MAP = {
@@ -57,56 +60,42 @@ const SCREEN_SECTION_MAP = {
     7: "Background"
 };
 
-const SECTION_DEFS = [
-    {
-        id: 'personal',
-        title: 'Personal Details',
-        icon: User,
-        match: (key, label) => /screen_0|full_name|name|email|mobile|phone|city|location|address/i.test(key + ' ' + label)
-    },
-    {
-        id: 'professional',
-        title: 'Professional Profile',
-        icon: Briefcase,
-        match: (key, label) => /screen_1|current_status|status|b2b|sales_experience|lead_gen|generation/i.test(key + ' ' + label)
-    },
-    {
-        id: 'skills',
-        title: 'Sales Skills',
-        icon: Award,
-        match: (key, label) => /screen_2|communication|interaction|follow_up|lead_followup|comfort/i.test(key + ' ' + label)
-    },
-    {
-        id: 'closing',
-        title: 'Sales Experience',
-        icon: CheckCircle2,
-        match: (key, label) => /screen_3|have_you_closed_sales|closed|converted|customers_you_converted|sales_type|experience_type/i.test(key + ' ' + label)
-    },
-    {
-        id: 'assessment',
-        title: 'Sales Assessment',
-        icon: CheckSquare,
-        match: (key, label) => /screen_4|what_would_you_do|not_replying|discount|find_leads|leads_1|assessment/i.test(key + ' ' + label)
-    },
-    {
-        id: 'preference',
-        title: 'Work Preference',
-        icon: Clock,
-        match: (key, label) => /screen_5|preferred_work|work_type|hours|hours_available|daily|join|when_can_you_start/i.test(key + ' ' + label)
-    },
-    {
-        id: 'compensation',
-        title: 'Compensation',
-        icon: DollarSign,
-        match: (key, label) => /screen_6|pay|pay_structure|salary|performance_pay|open_to_performance/i.test(key + ' ' + label)
-    },
-    {
-        id: 'background',
-        title: 'Background',
-        icon: Building,
-        match: (key, label) => /screen_7|company|previous_company|previous_role|sales_role|linkedin|resume/i.test(key + ' ' + label)
-    }
-];
+const SCREEN_POSITION_MAP = {
+    "screen_0_0": { label: "Full Name", section: "Personal Details" },
+    "screen_0_1": { label: "Email Address", section: "Personal Details" },
+    "screen_0_2": { label: "Mobile Number", section: "Personal Details" },
+    "screen_0_3": { label: "Location", section: "Personal Details" },
+
+    "screen_1_0": { label: "Current Status?", section: "Professional Profile" },
+    "screen_1_1": { label: "Sales Experience?", section: "Professional Profile" },
+    "screen_1_2": { label: "B2B Sales Experience?", section: "Professional Profile" },
+    "screen_1_3": { label: "Lead Generation Experience?", section: "Professional Profile" },
+
+    "screen_2_0": { label: "Communication Skills?", section: "Sales Skills" },
+    "screen_2_1": { label: "Client Interaction?", section: "Sales Skills" },
+    "screen_2_2": { label: "Lead Follow-Up Comfort?", section: "Sales Skills" },
+
+    "screen_3_0": { label: "Have You Closed Sales?", section: "Sales Experience" },
+    "screen_3_1": { label: "Customers You Converted?", section: "Sales Experience" },
+    "screen_3_2": { label: "Sales Experience Type?", section: "Sales Experience" },
+
+    "screen_4_0": { label: "What would you do?", section: "Sales Assessment" },
+    "screen_4_1": { label: "Customer Is Not Replying?", section: "Sales Assessment" },
+    "screen_4_2": { label: "Customer Wants A Discount?", section: "Sales Assessment" },
+    "screen_4_3": { label: "How Do You Find Leads?", section: "Sales Assessment" },
+
+    "screen_5_0": { label: "Preferred Work Type?", section: "Work Preference" },
+    "screen_5_1": { label: "Hours Available Daily?", section: "Work Preference" },
+    "screen_5_2": { label: "Availability To Join?", section: "Work Preference" },
+    "screen_5_3": { label: "Preferred Customer Interaction?", section: "Work Preference" },
+
+    "screen_6_0": { label: "Preferred Pay Structure?", section: "Compensation" },
+    "screen_6_1": { label: "Open To Performance Pay?", section: "Compensation" },
+
+    "screen_7_0": { label: "Previous Company Name", section: "Background" },
+    "screen_7_1": { label: "Previous Sales Role?", section: "Background" },
+    "screen_7_2": { label: "LinkedIn Profile?", section: "Background" }
+};
 
 const KNOWN_KEY_MAP = {
     // Screen 0 - Personal Details
@@ -165,101 +154,100 @@ const KNOWN_KEY_MAP = {
     open_to_performance_pay: { label: "Open To Performance Pay?", section: "Compensation" },
 
     // Screen 7 - Background
-    previous_company_nam: { label: "Previous Company Nam", section: "Background" },
+    previous_company_nam: { label: "Previous Company Name", section: "Background" },
     previous_company_name: { label: "Previous Company Name", section: "Background" },
     previous_sales_role: { label: "Previous Sales Role?", section: "Background" },
     linkedin_profile: { label: "LinkedIn Profile?", section: "Background" }
 };
 
 function getFieldSortOrder(key) {
-    const screenMatch = String(key).match(/screen_(\d+)/i);
-    const fieldMatch = String(key).match(/_(\d+)$/i);
+    const screenMatch = String(key).match(/screen[_\s-]*(\d+)/i);
+    const fieldMatch = String(key).match(/[_\s-]+(\d+)$/);
     const screenIdx = screenMatch ? parseInt(screenMatch[1], 10) : 999;
     const fieldIdx = fieldMatch ? parseInt(fieldMatch[1], 10) : 999;
     return screenIdx * 1000 + fieldIdx;
-}
-
-function getFieldMeta(rawKey) {
-    if (!rawKey) return { label: '', section: 'General Details' };
-    
-    // Core key normalized
-    const core = String(rawKey).replace(/^screen_\d+_/i, '').replace(/_\d+$/i, '');
-    const normalized = core.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
-
-    const screenMatch = String(rawKey).match(/screen_(\d+)/i);
-    let screenSection = null;
-    if (screenMatch) {
-        const sIdx = parseInt(screenMatch[1], 10);
-        if (SCREEN_SECTION_MAP[sIdx]) {
-            screenSection = SCREEN_SECTION_MAP[sIdx];
-        }
-    }
-
-    if (KNOWN_KEY_MAP[normalized]) {
-        return {
-            label: KNOWN_KEY_MAP[normalized].label,
-            section: screenSection || KNOWN_KEY_MAP[normalized].section
-        };
-    }
-
-    // Dynamic Label Cleanup
-    let cleaned = core.replace(/TextInput/gi, 'Additional Details');
-    cleaned = cleaned.replace(/CityLocation/gi, 'Location');
-    cleaned = cleaned.replace(/LeadsClients/gi, 'Leads / Clients');
-    cleaned = cleaned.replace(/([a-z])([A-Z])/g, '$1 $2');
-    cleaned = cleaned.replace(/_+/g, ' ').trim();
-
-    const words = cleaned.split(' ').map(w => {
-        if (/^(b2b|crm|it|ai|api|faq|hr)$/i.test(w)) return w.toUpperCase();
-        return w.charAt(0).toUpperCase() + w.slice(1);
-    }).join(' ');
-
-    const label = (/^(have|how|what|when|where|which|who|why|is|do|did|are|can|open|current)\b/i.test(words) && !words.endsWith('?'))
-        ? words + '?'
-        : words;
-
-    let section = screenSection || 'General Details';
-
-    return { label, section };
 }
 
 function cleanFlowValue(val) {
     if (val === null || val === undefined || val === '') return 'Na';
     if (Array.isArray(val)) {
         const mapped = val.map(cleanFlowValue).filter(v => v !== 'Na');
-        return mapped.length > 0 ? mapped : ['Na'];
+        return mapped.length > 0 ? mapped.join(', ') : 'Na';
     }
     if (typeof val === 'object') {
         return JSON.stringify(val);
     }
     let str = String(val).trim();
-    if (!str || str.toLowerCase() === 'na' || str.toLowerCase() === 'n/a' || str.toLowerCase() === 'none') {
+    if (!str || str.toLowerCase() === 'na' || str.toLowerCase() === 'n/a' || str.toLowerCase() === 'none' || str.toLowerCase() === 'null') {
         return 'Na';
     }
-    // Strip leading choice numbers like 0_, 1_, 2_
-    str = str.replace(/^\d+_/g, '');
-    // Replace underscores with space
+    // Strip leading choice numbers like 0_, 1_, 2_, 0-1_, etc.
+    str = str.replace(/^(\d+[_\s-]+)+/g, '');
+    // Replace dash/underscore between range numbers like 0_5 or 6-20 with dash 0–5, 6–20, 4–6
+    str = str.replace(/(\d+)[-_](\d+)/g, '$1–$2');
+    // Replace remaining underscores with space
     str = str.replace(/_+/g, ' ').trim();
+    // Normalize commas and plus signs
+    str = str.replace(/\s*,\s*/g, ', ');
+    str = str.replace(/\s*\+\s*/g, ' + ');
+
     // Format 10-digit Indian phone nicely as "97123 40450"
     if (/^\d{10}$/.test(str)) {
         return `${str.slice(0, 5)} ${str.slice(5)}`;
     }
-    // Format 12-digit Indian phone as "+91 97123 40450"
+    // Format 12-digit Indian phone as "97123 40450"
     if (/^91\d{10}$/.test(str)) {
-        return `+91 ${str.slice(2, 7)} ${str.slice(7)}`;
+        const local = str.slice(2);
+        return `${local.slice(0, 5)} ${local.slice(5)}`;
     }
     return str;
 }
 
-function groupFieldsBySection(flowData) {
+function sanitizeLabel(label) {
+    if (!label) return 'Detail';
+    let s = String(label).trim();
+    // Remove any occurrence of screen or screen_X or screen X
+    s = s.replace(/\bscreen[_\s-]*\d+[_\s-]*/gi, '');
+    // Remove any trailing numbers like _1, -1, 1, 0, etc.
+    s = s.replace(/[_\s-]*\d+$/i, '');
+    // Remove UI component keywords if any
+    s = s.replace(/\b(text_?input|dropdown|radio_?group|select|date_?picker|checkbox_?group)\b/gi, '');
+    // Clean up multiple spaces and underscores
+    s = s.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!s) return 'Detail';
+    return s;
+}
+
+function groupFieldsBySection(flowData, msgText) {
     let parsedData = flowData;
     if (typeof parsedData === 'string') {
         try { parsedData = JSON.parse(parsedData); } catch (_) {}
     }
+    if (!parsedData || typeof parsedData !== 'object' || Object.keys(parsedData).length === 0) {
+        if (typeof msgText === 'string') {
+            try {
+                parsedData = JSON.parse(msgText);
+            } catch (_) {
+                const lines = msgText.split('\n');
+                const extracted = {};
+                lines.forEach(line => {
+                    const colonIdx = line.indexOf(':');
+                    if (colonIdx > 0) {
+                        const k = line.slice(0, colonIdx).trim();
+                        const v = line.slice(colonIdx + 1).trim();
+                        if (k) extracted[k] = v;
+                    }
+                });
+                if (Object.keys(extracted).length > 0) {
+                    parsedData = extracted;
+                }
+            }
+        }
+    }
     if (!parsedData || typeof parsedData !== 'object') return [];
 
     const rawEntries = Object.entries(parsedData)
-        .filter(([k]) => k !== 'flow_token' && k !== 'error')
+        .filter(([k]) => !/^(flow_?token|error|token|version|action)$/i.test(k))
         .sort((a, b) => getFieldSortOrder(a[0]) - getFieldSortOrder(b[0]));
 
     const sectionsMap = new Map();
@@ -285,279 +273,335 @@ function groupFieldsBySection(flowData) {
     return Array.from(sectionsMap.values());
 }
 
+function getFieldMeta(rawKey) {
+    if (!rawKey) return { label: 'Detail', section: 'General Details' };
+    
+    const rawStr = String(rawKey).trim();
 
-const SECTION_ICONS = {
-    "Personal Details": User,
-    "Professional Profile": Briefcase,
-    "Sales Skills": Award,
-    "Sales Experience": CheckCircle2,
-    "Sales Assessment": CheckSquare,
-    "Work Preference": Clock,
-    "Compensation": DollarSign,
-    "Background": Building,
-    "General Details": Layers
-};
+    // 1. Extract Screen Number (handles: 'screen_0', 'screen 0', 'screen-0', 'screen0')
+    const screenMatch = rawStr.match(/screen[_\s-]*(\d+)/i);
+    let screenSection = null;
+    let sIdx = null;
+    if (screenMatch) {
+        sIdx = parseInt(screenMatch[1], 10);
+        if (SCREEN_SECTION_MAP[sIdx]) {
+            screenSection = SCREEN_SECTION_MAP[sIdx];
+        }
+    }
+
+    // 2. Extract Trailing Field Index (handles: '_0', ' 0', '-0', '0')
+    const fieldMatch = rawStr.match(/[_\s-]+(\d+)$/);
+    let fIdx = null;
+    if (fieldMatch) {
+        fIdx = parseInt(fieldMatch[1], 10);
+    }
+
+    // 3. Direct position match (e.g. screen 0 field 0 -> Full Name)
+    if (sIdx !== null && fIdx !== null) {
+        const posKey = `screen_${sIdx}_${fIdx}`;
+        if (SCREEN_POSITION_MAP[posKey]) {
+            return {
+                label: sanitizeLabel(SCREEN_POSITION_MAP[posKey].label),
+                section: screenSection || SCREEN_POSITION_MAP[posKey].section
+            };
+        }
+    }
+
+    // 4. Strip leading 'screen_X_' or 'screen X ' or 'screen-X-' or 'screenX_'
+    let core = rawStr.replace(/^screen[_\s-]*\d+[_\s-]*/i, '');
+
+    // 5. Strip trailing '_X' or ' X' or '-X' (e.g. trailing 0, 1, 2)
+    core = core.replace(/[_\s-]*\d+$/i, '');
+
+    // 6. Strip UI component names (TextInput, Dropdown, RadioGroup, etc.)
+    core = core.replace(/^(text_?input|dropdown|radio_?group|select|date_?picker|checkbox_?group)[_\s-]*/i, '');
+    core = core.replace(/[_\s-]*(text_?input|dropdown|radio_?group|select|date_?picker|checkbox_?group)$/i, '');
+
+    // 7. Normalize core key for KNOWN_KEY_MAP lookup
+    const normalized = core.toLowerCase()
+        .replace(/[^a-z0-9]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '');
+
+    if (KNOWN_KEY_MAP[normalized]) {
+        return {
+            label: sanitizeLabel(KNOWN_KEY_MAP[normalized].label),
+            section: screenSection || KNOWN_KEY_MAP[normalized].section
+        };
+    }
+
+    // 8. Keyword-based intelligent matching
+    if (/full_?name|your_?name/i.test(normalized)) return { label: "Full Name", section: screenSection || "Personal Details" };
+    if (/email/i.test(normalized)) return { label: "Email Address", section: screenSection || "Personal Details" };
+    if (/mobile|phone|contact_?number/i.test(normalized)) return { label: "Mobile Number", section: screenSection || "Personal Details" };
+    if (/city|location|address/i.test(normalized)) return { label: "Location", section: screenSection || "Personal Details" };
+    if (/current_?status|employment_?status/i.test(normalized)) return { label: "Current Status?", section: screenSection || "Professional Profile" };
+    if (/b2b/i.test(normalized)) return { label: "B2B Sales Experience?", section: screenSection || "Professional Profile" };
+    if (/lead_?gen/i.test(normalized)) return { label: "Lead Generation Experience?", section: screenSection || "Professional Profile" };
+    if (/sales_?exp/i.test(normalized)) return { label: "Sales Experience?", section: screenSection || "Professional Profile" };
+    if (/comm/i.test(normalized)) return { label: "Communication Skills?", section: screenSection || "Sales Skills" };
+    if (/client_?interact/i.test(normalized)) return { label: "Client Interaction?", section: screenSection || "Sales Skills" };
+    if (/follow_?up/i.test(normalized)) return { label: "Lead Follow-Up Comfort?", section: screenSection || "Sales Skills" };
+    if (/closed_?sales|close_?sales/i.test(normalized)) return { label: "Have You Closed Sales?", section: screenSection || "Sales Experience" };
+    if (/convert/i.test(normalized)) return { label: "Customers You Converted?", section: screenSection || "Sales Experience" };
+    if (/not_?reply/i.test(normalized)) return { label: "Customer Is Not Replying?", section: screenSection || "Sales Assessment" };
+    if (/discount/i.test(normalized)) return { label: "Customer Wants A Discount?", section: screenSection || "Sales Assessment" };
+    if (/what_?would_?you_?do/i.test(normalized)) return { label: "What would you do?", section: screenSection || "Sales Assessment" };
+    if (/hours/i.test(normalized)) return { label: "Hours Available Daily?", section: screenSection || "Work Preference" };
+    if (/join|start/i.test(normalized)) return { label: "Availability To Join?", section: screenSection || "Work Preference" };
+    if (/work_?type/i.test(normalized)) return { label: "Preferred Work Type?", section: screenSection || "Work Preference" };
+    if (/pay_?struct|salary/i.test(normalized)) return { label: "Preferred Pay Structure?", section: screenSection || "Compensation" };
+    if (/perf/i.test(normalized)) return { label: "Open To Performance Pay?", section: screenSection || "Compensation" };
+    if (/company/i.test(normalized)) return { label: "Previous Company Name", section: screenSection || "Background" };
+    if (/role/i.test(normalized)) return { label: "Previous Sales Role?", section: screenSection || "Background" };
+    if (/linkedin/i.test(normalized)) return { label: "LinkedIn Profile?", section: screenSection || "Background" };
+
+    // 9. Generic clean title formatting
+    let cleaned = sanitizeLabel(core);
+
+    const words = cleaned.split(' ').map(w => {
+        if (/^(b2b|crm|it|ai|api|faq|hr)$/i.test(w)) return w.toUpperCase();
+        return w.charAt(0).toUpperCase() + w.slice(1);
+    }).join(' ');
+
+    const label = (/^(have|how|what|when|where|which|who|why|is|do|did|are|can|open|current)\b/i.test(words) && !words.endsWith('?'))
+        ? words + '?'
+        : words;
+
+    return { label: sanitizeLabel(label), section: screenSection || 'General Details' };
+}
+
+function generateNotepadText(flowName, sections) {
+    const title = (flowName || "WhatsApp Form Response").toUpperCase();
+    const divider = "=".repeat(60);
+    const subDivider = "-".repeat(60);
+    
+    let text = `${divider}\n`;
+    text += `                 ${title}\n`;
+    text += `${divider}\n\n`;
+
+    sections.forEach((sec) => {
+        text += `[${sec.title.toUpperCase()}]\n`;
+        sec.fields.forEach((f) => {
+            const valStr = Array.isArray(f.cleanVal) ? f.cleanVal.join(', ') : f.cleanVal;
+            const labelStr = f.label.padEnd(32, ' ');
+            text += `${labelStr} : ${valStr}\n`;
+        });
+        text += `\n`;
+    });
+
+    const totalFields = sections.reduce((acc, s) => acc + s.fields.length, 0);
+    text += `${subDivider}\n`;
+    text += `Submitted on  : ${new Date().toLocaleString()}\n`;
+    text += `Total Answers : ${totalFields}\n`;
+    text += `${divider}\n`;
+
+    return text;
+}
 
 const FlowSubmissionCard = ({ flowName, flowData, metadata, originalPayload, msgText }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [showInline, setShowInline] = useState(false);
     const [copied, setCopied] = useState(false);
     const [showRaw, setShowRaw] = useState(false);
 
-    const sections = groupFieldsBySection(flowData);
+    const sections = groupFieldsBySection(flowData, msgText);
     const totalAnswers = sections.reduce((acc, s) => acc + s.fields.length, 0);
 
-    // Extract top 3 fields for chat bubble snippet preview
+    // Get applicant details
     const allFields = sections.flatMap(s => s.fields);
-    const topPreviewFields = allFields.slice(0, 3);
+    const nameField = allFields.find(f => /name/i.test(f.label) || /name/i.test(f.rawKey));
+    const phoneField = allFields.find(f => /mobile|phone/i.test(f.label) || /mobile|phone/i.test(f.rawKey));
+    const statusField = allFields.find(f => /status/i.test(f.label) || /status/i.test(f.rawKey));
+    const locationField = allFields.find(f => /location|city/i.test(f.label) || /location|city/i.test(f.rawKey));
 
-    const handleCopyAll = (e) => {
+    const applicantName = nameField?.cleanVal && nameField.cleanVal !== 'Na' ? nameField.cleanVal : null;
+    const applicantPhone = phoneField?.cleanVal && phoneField.cleanVal !== 'Na' ? phoneField.cleanVal : null;
+
+    const baseName = applicantName 
+        ? `Response_${applicantName.replace(/[^a-zA-Z0-9]/g, '_')}`
+        : (applicantPhone ? `Response_${applicantPhone.replace(/[^0-9]/g, '')}` : `Form_Response_${(flowName || 'submission').replace(/[^a-zA-Z0-9]/g, '_')}`);
+    
+    const fileName = `${baseName}.txt`;
+    const notepadContent = generateNotepadText(flowName, sections);
+
+    const handleDownload = (e) => {
         if (e) e.stopPropagation();
-        let text = "Your response\n\n";
-        sections.forEach(sec => {
-            text += `${sec.title}\n\n`;
-            sec.fields.forEach(f => {
-                const valStr = Array.isArray(f.cleanVal) ? f.cleanVal.join(', ') : f.cleanVal;
-                text += `${f.label}\n${valStr}\n\n`;
-            });
-        });
-        navigator.clipboard.writeText(text.trim());
+        const blob = new Blob([notepadContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
+    const handleCopy = (e) => {
+        if (e) e.stopPropagation();
+        navigator.clipboard.writeText(notepadContent);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const cleanTitle = (flowName || "Your response")
-        .replace(/[_-]/g, ' ')
-        .replace(/\b\w/g, l => l.toUpperCase());
-
-    const renderSectionCards = () => {
-        if (!sections || sections.length === 0) {
-            return (
-                <div className="p-4 text-center text-sm text-muted-foreground italic bg-muted/20 rounded-xl">
-                    {msgText || "Flow response received successfully."}
-                </div>
-            );
-        }
-
-        return sections.map((section, sIdx) => {
-            const IconComponent = SECTION_ICONS[section.title] || Layers;
-            return (
-                <div key={sIdx} className="space-y-3">
-                    {/* Section Title Banner */}
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300">
-                        <IconComponent className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-xs font-bold uppercase tracking-wider">
-                            {section.title}
-                        </span>
-                    </div>
-
-                    {/* Field Q&A List in Crisp Cards */}
-                    <div className="space-y-2.5 pl-1">
-                        {section.fields.map((field, fIdx) => {
-                            const isEmail = field.label.toLowerCase().includes('email') || (typeof field.val === 'string' && field.val.includes('@'));
-                            const isPhone = field.label.toLowerCase().includes('mobile') || field.label.toLowerCase().includes('phone');
-                            const isArray = Array.isArray(field.cleanVal);
-                            const isNa = String(field.cleanVal).toLowerCase() === 'na';
-                            const isYes = String(field.cleanVal).toLowerCase() === 'yes';
-                            const isNo = String(field.cleanVal).toLowerCase() === 'no';
-
-                            return (
-                                <div key={fIdx} className="bg-card dark:bg-zinc-900 rounded-xl p-3 border border-border/80 shadow-2xs space-y-1 transition-all hover:border-emerald-500/40">
-                                    {/* Question Label */}
-                                    <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 tracking-wide">
-                                        {field.label}
-                                    </p>
-                                    
-                                    {/* Answer Value */}
-                                    <div className="pt-0.5">
-                                        {isArray ? (
-                                            <div className="flex flex-wrap gap-1.5 pt-0.5">
-                                                {field.cleanVal.map((item, iIdx) => (
-                                                    <Badge key={iIdx} variant="secondary" className="text-xs font-bold px-2.5 py-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-                                                        {item}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        ) : isEmail ? (
-                                            <a href={`mailto:${field.val}`} className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 dark:text-blue-400 hover:underline break-all">
-                                                <Mail className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-                                                <span>{field.cleanVal}</span>
-                                            </a>
-                                        ) : isPhone ? (
-                                            <a href={`tel:${field.val}`} className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
-                                                <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                                                <span>{field.cleanVal}</span>
-                                            </a>
-                                        ) : isYes ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                                                Yes
-                                            </span>
-                                        ) : isNo ? (
-                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-bold bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700">
-                                                No
-                                            </span>
-                                        ) : isNa ? (
-                                            <span className="text-xs font-medium text-zinc-400 dark:text-zinc-500 italic">
-                                                Na
-                                            </span>
-                                        ) : (
-                                            <p className="text-sm font-bold text-zinc-900 dark:text-zinc-100 break-words leading-snug">
-                                                {field.cleanVal}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            );
-        });
-    };
-
     return (
         <>
-            {/* WhatsApp Native Chat Bubble Card */}
-            <div className="rounded-2xl overflow-hidden bg-card border border-border/80 shadow-md w-full max-w-[340px] sm:max-w-[360px] text-foreground">
-                {/* Header Banner */}
-                <div className="p-3.5 bg-gradient-to-r from-emerald-600/15 via-teal-600/10 to-transparent border-b border-border/50 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-                            <FileText className="w-4 h-4" />
-                        </div>
-                        <div className="min-w-0">
-                            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-black tracking-wider block leading-none mb-1">Your response</span>
-                            <h4 className="text-xs font-bold text-foreground truncate">{cleanTitle === "Flow" ? "Application Form" : cleanTitle}</h4>
-                        </div>
+            {/* Notepad Download Card */}
+            <div className="rounded-2xl overflow-hidden bg-card border border-border shadow-md w-full max-w-[340px] text-foreground transition-all hover:shadow-lg">
+                {/* File Header / Click Area */}
+                <div 
+                    onClick={handleDownload}
+                    className="p-3.5 flex items-center gap-3 cursor-pointer hover:bg-muted/40 transition-colors border-b border-border/60"
+                    title="Click to download Notepad text file"
+                >
+                    <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex flex-col items-center justify-center shrink-0 text-blue-600 dark:text-blue-400">
+                        <FileText className="w-5 h-5" />
+                        <span className="text-[8px] font-black uppercase tracking-tighter leading-none mt-0.5">TXT</span>
                     </div>
-                    <Badge variant="outline" className="text-[10px] px-2 py-0.5 border-emerald-500/30 text-emerald-600 bg-emerald-500/5 font-semibold shrink-0">
-                        <CheckCircle2 className="w-3 h-3 mr-1 inline" /> {totalAnswers} Answers
-                    </Badge>
-                </div>
 
-                {/* Summary Preview Box */}
-                <div className="p-3.5 space-y-3">
-                    {topPreviewFields.length > 0 && (
-                        <div className="bg-muted/30 dark:bg-zinc-900/40 rounded-xl p-2.5 border border-border/40 space-y-1.5 text-xs">
-                            {topPreviewFields.map((f, i) => (
-                                <div key={i} className="flex items-baseline justify-between gap-2">
-                                    <span className="text-muted-foreground font-medium truncate text-[11px]">{f.label}:</span>
-                                    <span className="font-bold text-foreground truncate text-[11px]">{f.cleanVal}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div className="flex-1 min-w-0">
+                        <h4 className="text-xs sm:text-sm font-bold truncate text-foreground flex items-center gap-1.5">
+                            <span className="truncate">{fileName}</span>
+                        </h4>
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <span>Notepad Text File</span>
+                            <span>•</span>
+                            <span>{totalAnswers} Answers</span>
+                        </p>
+                    </div>
 
-                    {/* Prominent WhatsApp "View response" Button */}
                     <Button
                         type="button"
-                        onClick={() => setIsModalOpen(true)}
-                        className="w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleDownload}
+                        className="h-8 w-8 rounded-full text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 shrink-0"
+                        title="Download .txt file"
                     >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View response</span>
+                        <Download className="w-4 h-4" />
                     </Button>
-
-                    {/* Secondary Toggles: Inline Preview & Copy */}
-                    <div className="flex items-center justify-between pt-0.5 text-[11px] text-muted-foreground">
-                        <button
-                            type="button"
-                            onClick={() => setShowInline(!showInline)}
-                            className="hover:text-foreground font-medium flex items-center gap-1 transition-colors"
-                        >
-                            {showInline ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                            {showInline ? "Hide inline" : "Show inline"}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleCopyAll}
-                            className="hover:text-emerald-600 font-medium flex items-center gap-1 transition-colors"
-                        >
-                            {copied ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                            {copied ? "Copied!" : "Copy"}
-                        </button>
-                    </div>
                 </div>
 
-                {/* Inline Expanded Questionnaire */}
-                {showInline && (
-                    <div className="p-3.5 border-t border-border/50 bg-zinc-50/50 dark:bg-zinc-950/50 space-y-4 max-h-80 overflow-y-auto">
-                        {renderSectionCards()}
-                    </div>
-                )}
+                {/* Card Quick Preview Summary */}
+                <div className="px-3.5 py-2.5 bg-muted/20 text-xs space-y-1">
+                    {applicantName && (
+                        <div className="flex justify-between items-center text-muted-foreground">
+                            <span>Applicant:</span>
+                            <span className="font-semibold text-foreground truncate max-w-[180px]">{applicantName}</span>
+                        </div>
+                    )}
+                    {applicantPhone && (
+                        <div className="flex justify-between items-center text-muted-foreground">
+                            <span>Phone:</span>
+                            <span className="font-medium text-foreground">{applicantPhone}</span>
+                        </div>
+                    )}
+                    {statusField && statusField.cleanVal !== 'Na' && (
+                        <div className="flex justify-between items-center text-muted-foreground">
+                            <span>Status:</span>
+                            <span className="font-medium text-foreground truncate max-w-[180px]">{statusField.cleanVal}</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Bottom Action Toolbar */}
+                <div className="p-2 bg-muted/30 border-t border-border/50 flex items-center justify-between gap-1.5">
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleDownload}
+                        className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
+                    >
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download .txt</span>
+                    </Button>
+
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsModalOpen(true)}
+                        className="h-8 px-2.5 text-xs font-semibold rounded-lg flex items-center gap-1"
+                        title="Preview text in modal"
+                    >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Preview</span>
+                    </Button>
+
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCopy}
+                        className="h-8 px-2.5 text-xs font-semibold rounded-lg flex items-center gap-1"
+                        title="Copy text"
+                    >
+                        {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                </div>
             </div>
 
-            {/* Full "View response" Dialog Modal */}
+            {/* Preview Modal: Notepad File Viewer */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="sm:max-w-[620px] max-h-[90vh] p-0 overflow-hidden flex flex-col rounded-2xl bg-card border border-border shadow-2xl">
+                <DialogContent className="p-0 overflow-hidden sm:max-w-[560px] max-h-[90vh] rounded-2xl border border-border shadow-2xl bg-card">
                     {/* Modal Header */}
-                    <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-4 sm:p-5 text-white flex items-center justify-between">
-                        <div className="flex items-center gap-3 min-w-0 pr-8">
-                            <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center shrink-0 text-white shadow-inner backdrop-blur-xs">
-                                <FileText className="w-6 h-6" />
+                    <DialogHeader className="px-4 py-3 bg-muted/40 border-b border-border flex flex-row items-center justify-between space-y-0 text-left">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0">
+                                <FileText className="w-4 h-4" />
                             </div>
                             <div className="min-w-0">
-                                <span className="text-[11px] text-emerald-100 uppercase font-black tracking-widest block leading-none mb-1">Your response</span>
-                                <h3 className="text-base sm:text-lg font-bold text-white truncate">{cleanTitle === "Flow" ? "Application Form" : cleanTitle}</h3>
+                                <DialogTitle className="text-sm font-bold truncate text-foreground">{fileName}</DialogTitle>
+                                <DialogDescription className="text-[10px] text-muted-foreground mt-0.5">Notepad Text Document Preview</DialogDescription>
                             </div>
                         </div>
-                        <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-white/20 text-white border-0 font-bold shrink-0 hidden sm:inline-flex">
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1 inline" /> {totalAnswers} Answers
-                        </Badge>
-                    </div>
 
-                    {/* Modal Body: All 8 Sections */}
-                    <div className="overflow-y-auto max-h-[calc(85vh-140px)] p-4 sm:p-6 space-y-6 bg-zinc-50/50 dark:bg-zinc-950/50">
-                        {renderSectionCards()}
+                        <div className="flex items-center gap-1.5 mr-6 sm:mr-6">
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleDownload}
+                                className="h-7 px-2.5 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md gap-1"
+                            >
+                                <Download className="w-3 h-3" />
+                                <span>Download</span>
+                            </Button>
+                        </div>
+                    </DialogHeader>
+
+                    {/* Notepad Body */}
+                    <div className="p-4 bg-zinc-950 text-zinc-100 font-mono text-xs overflow-y-auto max-h-[calc(85vh-120px)] whitespace-pre leading-relaxed select-text rounded-none border-b border-border/50">
+                        {notepadContent}
                     </div>
 
                     {/* Modal Footer */}
-                    <div className="p-3.5 sm:p-4 bg-muted/40 border-t border-border/60 flex items-center justify-between gap-2">
+                    <DialogFooter className="p-3 bg-muted/30 border-t border-border flex flex-row items-center justify-between sm:justify-between">
                         <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={handleCopyAll}
-                            className="h-8 px-3 text-xs gap-1.5 font-bold text-foreground hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-950 dark:hover:text-emerald-300"
+                            onClick={handleCopy}
+                            className="h-8 px-3 text-xs gap-1.5 font-medium"
                         >
-                            {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                            {copied ? "Copied Formatted Text!" : "Copy Response"}
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>{copied ? "Copied text!" : "Copy Notepad Text"}</span>
                         </Button>
 
-                        <div className="flex items-center gap-2">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setShowRaw(!showRaw)}
-                                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground font-semibold"
-                            >
-                                {showRaw ? "Hide JSON" : "Raw JSON"}
-                            </Button>
-                            <Button
-                                type="button"
-                                size="sm"
-                                onClick={() => setIsModalOpen(false)}
-                                className="h-8 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
-                            >
-                                Close
-                            </Button>
-                        </div>
-                    </div>
-
-                    {showRaw && (
-                        <div className="p-3 bg-muted/60 border-t border-border/60">
-                            <pre className="text-[10px] font-mono bg-background p-3 rounded-xl overflow-x-auto max-h-40 border border-border/60 text-foreground">
-                                {JSON.stringify(flowData || metadata, null, 2)}
-                            </pre>
-                        </div>
-                    )}
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => setIsModalOpen(false)}
+                            className="h-8 px-4 text-xs font-semibold bg-primary text-primary-foreground"
+                        >
+                            Close
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>
     );
 };
+
 
 const MediaBubble = ({ msg, workspaceId }) => {
     const [showRawPayload, setShowRawPayload] = useState(false);

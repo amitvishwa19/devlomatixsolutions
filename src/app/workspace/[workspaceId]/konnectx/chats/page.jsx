@@ -1982,7 +1982,7 @@ export default function WhatsAppChatsPage() {
                                                     msgMeta.interactiveType === 'nfm_reply' ||
                                                     msgMeta.interactive?.type === 'nfm_reply' ||
                                                     msgMeta.raw?.interactive?.type === 'nfm_reply' ||
-                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Flow:') || msg.text.startsWith('Flow Response:')));
+                                                    (typeof msg.text === 'string' && (msg.text.startsWith('[Flow:') || msg.text.startsWith('Flow Response:') || /screen[_\s-]*\d+/i.test(msg.text)));
 
                                                 const type = (msgMeta.type || msg.type || msg.mediaType || msgMeta.interactiveType || '').toLowerCase();
 
