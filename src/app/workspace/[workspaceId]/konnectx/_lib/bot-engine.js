@@ -80,7 +80,13 @@ export class WhatsAppBotEngine {
             const pendingSession = this.userSessions.get(sessionKey);
 
             const flows = await db.botFlow.findMany({
-                where: { userId, active: true },
+                where: {
+                    active: true,
+                    OR: [
+                        { userId },
+                        ...(workspaceId ? [{ workspaceId }] : [])
+                    ]
+                },
                 orderBy: { updatedAt: 'desc' }
             });
 
@@ -256,10 +262,22 @@ export class WhatsAppBotEngine {
                 if (outgoingEdge) {
                     const nextNode = nodes.find(n => n.id === outgoingEdge.target);
                     const isCurrentMessage = nodeKind === 'message' || nodeKind === 'messageNode';
-                    const isNextMessage = nextNode && (nextNode.type === 'message' || nextNode.type === 'messageNode');
+                    
+                    // If current node is a message/template, check if the next node requires waiting for user reply
+                    const isConversationalNext = nextNode && (
+                        nextNode.type === 'message' || 
+                        nextNode.type === 'messageNode' || 
+                        nextNode.type === 'triggerNode' || 
+                        nextNode.type === 'trigger' ||
+                        nextNode.type === 'start' ||
+                        nextNode.type === 'condition' ||
+                        nextNode.data?.subType === 'conditionNode' ||
+                        nextNode.data?.subType === 'condition' ||
+                        nextNode.data?.subType === 'waitForInput'
+                    );
 
-                    // If two message/template nodes are directly connected, pause and wait for customer response before triggering the next one
-                    if (isCurrentMessage && isNextMessage) {
+                    // If a message/template node is connected to a conversational step, pause and wait for customer response
+                    if (isCurrentMessage && isConversationalNext) {
                         const sessionKey = `${userId}_${context.from}`;
                         this.userSessions = this.userSessions || new Map();
                         this.userSessions.set(sessionKey, {
@@ -267,7 +285,7 @@ export class WhatsAppBotEngine {
                             variables: context.variables || {},
                             timestamp: Date.now()
                         });
-                        console.log(`[BotEngine] Message sent. Saved pending response session for ${context.from} -> Next Node: ${nextNode.id}`);
+                        console.log(`[BotEngine] Message sent. Saved pending response session for ${context.from} -> Next Node: ${nextNode.id} (${nextNode.type})`);
                         return; // Stop synchronous execution and wait for user's reply
                     }
 
@@ -305,10 +323,96 @@ export class WhatsAppBotEngine {
                 result = await cloudApi.sendMediaMessage(creds, from, 'image', node.data?.imageUrl, node.data?.caption || "");
                 break;
 
-            case 'templateMessage':
-                logText = `[Template: ${node.data?.templateName || ""}]`;
-                result = await cloudApi.sendTemplateMessage(creds, from, node.data?.templateName, node.data?.languageCode || 'en_US', []);
+            case 'templateMessage': {
+                const tplName = node.data?.templateName || node.data?.name || "";
+                logText = `[Template: ${tplName}]`;
+                
+                let tplRecord = null;
+                if (node.data?.templateId) {
+                    tplRecord = await db.messageTemplate.findUnique({ where: { id: node.data.templateId } }).catch(() => null);
+                }
+                if (!tplRecord && tplName) {
+                    tplRecord = await db.messageTemplate.findFirst({
+                        where: {
+                            OR: [
+                                { templateName: tplName },
+                                { name: tplName }
+                            ]
+                        }
+                    }).catch(() => null);
+                }
+
+                const langCode = node.data?.languageCode || node.data?.templateData?.language || tplRecord?.language || 'en_US';
+                const buttons = node.data?.templateData?.buttons || node.data?.buttons || tplRecord?.buttons || [];
+
+                const components = [];
+
+                // 1. Header Media Component if template requires media
+                const headerMedia = node.data?.headerMediaUrl || tplRecord?.metadata?.mediaUrl;
+                const headerType = node.data?.headerType || tplRecord?.header || 'TEXT';
+                if (headerMedia && headerType !== 'TEXT') {
+                    const hType = String(headerType).toLowerCase();
+                    components.push({
+                        type: 'header',
+                        parameters: [{
+                            type: hType === 'image' || hType === 'video' || hType === 'document' ? hType : 'image',
+                            [hType === 'image' || hType === 'video' || hType === 'document' ? hType : 'image']: {
+                                link: headerMedia
+                            }
+                        }]
+                    });
+                }
+
+                // 2. Body parameters if template has variables
+                const bodyText = node.data?.text || node.data?.body || tplRecord?.body || '';
+                const bodyMatches = bodyText.match(/\{\{(\d+)\}\}/g);
+                if (bodyMatches && bodyMatches.length > 0) {
+                    const distinctVars = Array.from(new Set(bodyMatches));
+                    const params = distinctVars.map((varTag) => {
+                        const varKey = varTag.replace(/[{}]/g, '').trim();
+                        const varVal = (context.variables && context.variables[varKey])
+                            ? context.variables[varKey]
+                            : (context.variables && context.variables[`v${varKey}`])
+                                ? context.variables[`v${varKey}`]
+                                : '-';
+                        return {
+                            type: 'text',
+                            text: String(varVal)
+                        };
+                    });
+                    if (params.length > 0) {
+                        components.push({
+                            type: 'body',
+                            parameters: params
+                        });
+                    }
+                }
+
+                // 3. Flow / Action Button Components
+                if (Array.isArray(buttons) && buttons.length > 0) {
+                    buttons.forEach((btn, idx) => {
+                        if (btn.type === 'FLOW' || btn.flow_id) {
+                            components.push({
+                                type: 'button',
+                                sub_type: 'flow',
+                                index: String(idx),
+                                parameters: [
+                                    {
+                                        type: 'action',
+                                        action: {
+                                            flow_token: `token_${Date.now()}`
+                                        }
+                                    }
+                                ]
+                            });
+                        }
+                    });
+                }
+
+                console.log(`[BotEngine] Sending template "${tplName}" (${langCode}) to ${from} with components:`, JSON.stringify(components));
+                result = await cloudApi.sendTemplateMessage(creds, from, tplName, langCode, components);
                 break;
+            }
 
             case 'aiAgent':
             case 'aiAssistant': {
@@ -423,7 +527,7 @@ export class WhatsAppBotEngine {
             if (!k) return false;
             if (matchMode === 'exact') return cleanUserMsg === k;
             if (matchMode === 'starts_with') return cleanUserMsg.startsWith(k);
-            return cleanUserMsg === k || cleanUserMsg.includes(k);
+            return cleanUserMsg === k || cleanUserMsg.includes(k) || k.includes(cleanUserMsg);
         };
 
         const matchedIdx = keywords.findIndex(k => isMatch(k));
@@ -436,7 +540,7 @@ export class WhatsAppBotEngine {
             // 1. Priority A: Match by Edge Label (Explicit Intent)
             const labelEdge = branches.find(e => {
                 const edgeLabel = clean(e.label || e.data?.label || e.data?.name || '');
-                return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw));
+                return edgeLabel === cleanKw || (cleanKw && edgeLabel.includes(cleanKw)) || (edgeLabel && cleanKw.includes(edgeLabel));
             });
             if (labelEdge) {
                 console.log(`[BotEngine] Found matching branch by label: "${labelEdge.label || labelEdge.data?.label}" -> ${labelEdge.target}`);
@@ -460,10 +564,10 @@ export class WhatsAppBotEngine {
                 return branches[matchedIdx].target;
             }
 
-            return branches[0]?.target;
+            return branches[0]?.target || null;
         }
 
-        return branches[0]?.target || null;
+        return null;
     }
 
     pickConditionTarget(node, context) {
