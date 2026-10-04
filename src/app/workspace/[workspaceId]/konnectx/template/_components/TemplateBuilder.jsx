@@ -203,12 +203,12 @@ export default function TemplateBuilder({
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent className="w-[620px] sm:max-w-[620px] p-2 flex flex-col gap-0 border-0 border-border bg-transparent">
-                <div className='flex flex-col h-full border bg-card rounded-md'>
+            <SheetContent className="w-full sm:max-w-[700px] p-2 flex flex-col gap-0 border-0 border-border bg-transparent overflow-hidden">
+                <div className='flex flex-col h-full border bg-card rounded-md overflow-hidden min-w-0 w-full'>
 
 
                     {/* Panel Header */}
-                    <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left">
+                    <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left shrink-0">
                         <SheetTitle className="text-lg font-semibold text-foreground">
                             {editingId ? 'Edit Template' : 'Create Template'}
                         </SheetTitle>
@@ -217,8 +217,8 @@ export default function TemplateBuilder({
                         </SheetDescription>
                     </SheetHeader>
 
-                    <ScrollArea className='h-[85%]'>
-                        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <ScrollArea className="flex-1 min-h-0 overflow-hidden">
+                        <div className="p-5 space-y-4 min-w-0 w-full">
 
 
                             {/* AI Assistant Section */}
@@ -442,61 +442,98 @@ export default function TemplateBuilder({
                             <hr className="border-border" />
 
                             {/* Media/Location Sections (extracted for brevity in this example but would be present fully) */}
+                            {/* Media/Location Sections */}
                             {['image', 'video', 'audio', 'document'].includes(normalizedType) && (
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <label className="text-sm font-semibold text-foreground capitalize">{normalizedType} URL</label>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold"
-                                            onClick={() => onOpen('mediaLibrary', {
-                                                workspaceId,
-                                                onSelect: (url) => setFormData({
-                                                    ...formData,
-                                                    metadata: { ...(formData.metadata || {}), mediaUrl: url }
-                                                })
-                                            })}
-                                        >
-                                            Choose from Hub
-                                        </Button>
+                                        <label className="text-sm font-semibold text-foreground capitalize">{normalizedType} Header URL</label>
+                                        <div className="flex items-center gap-1.5">
+                                            {formData.metadata?.mediaUrl && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 text-[10px] text-muted-foreground hover:text-destructive uppercase font-bold"
+                                                    onClick={() => setFormData({
+                                                        ...formData,
+                                                        metadata: { ...(formData.metadata || {}), mediaUrl: '' }
+                                                    })}
+                                                >
+                                                    Clear
+                                                </Button>
+                                            )}
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold flex items-center gap-1 px-2"
+                                                onClick={() => onOpen('mediaLibrary', {
+                                                    workspaceId,
+                                                    onSelect: (url) => setFormData({
+                                                        ...formData,
+                                                        metadata: { ...(formData.metadata || {}), mediaUrl: url }
+                                                    })
+                                                })}
+                                            >
+                                                <ImageIcon className="w-3 h-3" />
+                                                <span>Choose from Hub</span>
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="relative group/input">
-                                        <Input
-                                            placeholder="https://..."
+                                    <div className="flex gap-2 items-start">
+                                        {formData.metadata?.mediaUrl ? (
+                                            <div className="w-12 h-12 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative">
+                                                {normalizedType === 'image' ? (
+                                                    <img
+                                                        src={formData.metadata.mediaUrl}
+                                                        alt="Header Media"
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                                        <ImageIcon className="w-5 h-5" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <div
+                                                onClick={() => onOpen('mediaLibrary', {
+                                                    workspaceId,
+                                                    onSelect: (url) => setFormData({
+                                                        ...formData,
+                                                        metadata: { ...(formData.metadata || {}), mediaUrl: url }
+                                                    })
+                                                })}
+                                                className="w-12 h-12 rounded-md border border-dashed border-border/80 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
+                                                title="Choose from Media Hub"
+                                            >
+                                                <ImageIcon className="w-4 h-4" />
+                                                <span className="text-[8px] mt-0.5 font-medium">Hub</span>
+                                            </div>
+                                        )}
+                                        <Textarea
+                                            placeholder={`https://... (paste ${normalizedType} URL or choose from Hub)`}
                                             value={formData.metadata?.mediaUrl || ''}
                                             onChange={(e) => setFormData({
                                                 ...formData,
                                                 metadata: { ...(formData.metadata || {}), mediaUrl: e.target.value }
                                             })}
-                                            className="pr-10"
+                                            rows={2}
+                                            className="h-12 min-h-[48px] text-[11px] font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap flex-1 min-w-0"
                                         />
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all"
-                                            onClick={() => onOpen('mediaLibrary', {
-                                                workspaceId,
-                                                onSelect: (url) => setFormData({
-                                                    ...formData,
-                                                    metadata: { ...(formData.metadata || {}), mediaUrl: url }
-                                                })
-                                            })}
-                                        >
-                                            <ImageIcon className="w-4 h-4" />
-                                        </Button>
                                     </div>
                                 </div>
                             )}
 
                             {normalizedType === 'location' && (
-                                <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border">
+                                <div className="space-y-4 bg-muted/20 p-4 rounded-xl border border-border min-w-0 w-full overflow-hidden">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <Smartphone className="w-4 h-4" />
                                         <h4 className="text-xs font-bold uppercase tracking-wider">Location Metadata</h4>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div>
+                                        <div className="min-w-0">
                                             <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Latitude</label>
                                             <Input
                                                 placeholder="e.g. 28.6139"
@@ -505,10 +542,10 @@ export default function TemplateBuilder({
                                                     ...formData,
                                                     metadata: { ...(formData.metadata || {}), latitude: e.target.value }
                                                 })}
-                                                className="h-9 bg-background"
+                                                className="h-9 bg-background min-w-0 w-full"
                                             />
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Longitude</label>
                                             <Input
                                                 placeholder="e.g. 77.2090"
@@ -517,11 +554,11 @@ export default function TemplateBuilder({
                                                     ...formData,
                                                     metadata: { ...(formData.metadata || {}), longitude: e.target.value }
                                                 })}
-                                                className="h-9 bg-background"
+                                                className="h-9 bg-background min-w-0 w-full"
                                             />
                                         </div>
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Location Name</label>
                                         <Input
                                             placeholder="e.g. Devlomatix Solutions"
@@ -530,10 +567,10 @@ export default function TemplateBuilder({
                                                 ...formData,
                                                 metadata: { ...(formData.metadata || {}), locationName: e.target.value }
                                             })}
-                                            className="h-9 bg-background"
+                                            className="h-9 bg-background min-w-0 w-full"
                                         />
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Address</label>
                                         <Input
                                             placeholder="Full address..."
@@ -542,10 +579,10 @@ export default function TemplateBuilder({
                                                 ...formData,
                                                 metadata: { ...(formData.metadata || {}), address: e.target.value }
                                             })}
-                                            className="h-9 bg-background"
+                                            className="h-9 bg-background min-w-0 w-full"
                                         />
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block text-primary">Google Places ID (Optional)</label>
                                         <Input
                                             placeholder="ChIJa5S5..."
@@ -554,7 +591,7 @@ export default function TemplateBuilder({
                                                 ...formData,
                                                 metadata: { ...(formData.metadata || {}), googlePlaceId: e.target.value }
                                             })}
-                                            className="h-9 bg-background border-primary/20 focus-visible:ring-primary/30"
+                                            className="h-9 bg-background border-primary/20 focus-visible:ring-primary/30 min-w-0 w-full"
                                         />
                                     </div>
                                 </div>
@@ -562,29 +599,33 @@ export default function TemplateBuilder({
 
                             {/* Header Text Section */}
                             {(['text', 'interactive-button', 'interactive-group', 'carousel'].includes(normalizedType) || !normalizedType) && (
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 block">Header Text (Optional)</label>
-                                        <Input
-                                            placeholder="Add a bold title..."
-                                            value={formData.metadata?.headerText || ''}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                metadata: { ...(formData.metadata || {}), headerText: e.target.value }
-                                            })}
-                                            className="bg-background border-border font-bold" />
-                                    </div>
+                                <div className="space-y-1.5 min-w-0 w-full">
+                                    <label className="text-sm font-semibold text-foreground flex items-center justify-between">
+                                        <span>Header Text (Optional)</span>
+                                        <span className="text-xs text-muted-foreground font-normal">Max 60 chars</span>
+                                    </label>
+                                    <Textarea
+                                        rows={2}
+                                        placeholder="Add a bold title..."
+                                        value={formData.metadata?.headerText || ''}
+                                        maxLength={60}
+                                        onChange={(e) => setFormData({
+                                            ...formData,
+                                            metadata: { ...(formData.metadata || {}), headerText: e.target.value }
+                                        })}
+                                        className="bg-background border-border font-bold text-xs resize-none min-w-0 w-full break-all whitespace-pre-wrap leading-normal py-2"
+                                    />
                                 </div>
                             )}
 
                             {/* Interactive Group / List Section */}
                             {normalizedType === 'interactive-group' && (
-                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10 min-w-0 w-full overflow-hidden">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <List className="w-4 h-4" />
                                         <h4 className="text-xs font-bold uppercase tracking-wider">List Configuration</h4>
                                     </div>
-                                    <div>
+                                    <div className="min-w-0 w-full">
                                         <label className="text-[10px] font-bold text-muted-foreground uppercase mb-1 block">Menu Button Text</label>
                                         <Input
                                             placeholder="e.g. Select Option"
@@ -593,11 +634,11 @@ export default function TemplateBuilder({
                                                 ...formData,
                                                 metadata: { ...(formData.metadata || {}), listButton: e.target.value }
                                             })}
-                                            className="h-9 bg-background"
+                                            className="h-9 bg-background min-w-0 w-full"
                                         />
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 min-w-0 w-full">
                                         <div className="flex items-center justify-between">
                                             <label className="text-[10px] font-bold text-muted-foreground uppercase">Sections & Rows</label>
                                             <Button
@@ -615,8 +656,8 @@ export default function TemplateBuilder({
                                         </div>
 
                                         {(formData.metadata?.listSections || []).map((section, sIdx) => (
-                                            <div key={sIdx} className="space-y-2 p-3 bg-background rounded-lg border border-border">
-                                                <div className="flex items-center gap-2">
+                                            <div key={sIdx} className="space-y-2 p-3 bg-background rounded-lg border border-border min-w-0 w-full overflow-hidden">
+                                                <div className="flex items-center gap-2 min-w-0 w-full">
                                                     <Input
                                                         placeholder="Section Title"
                                                         value={section.title}
@@ -625,18 +666,18 @@ export default function TemplateBuilder({
                                                             sections[sIdx].title = e.target.value;
                                                             setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
                                                         }}
-                                                        className="h-8 text-xs font-bold"
+                                                        className="h-8 text-xs font-bold min-w-0 flex-1"
                                                     />
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0" onClick={() => {
                                                         const sections = formData.metadata.listSections.filter((_, i) => i !== sIdx);
                                                         setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
                                                     }}><Trash2 className="w-3 h-3" /></Button>
                                                 </div>
 
-                                                <div className="pl-4 space-y-2 border-l-2 border-primary/20">
+                                                <div className="pl-4 space-y-2 border-l-2 border-primary/20 min-w-0 w-full">
                                                     {section.rows.map((row, rIdx) => (
-                                                        <div key={rIdx} className="flex gap-2 items-start">
-                                                            <div className="flex-1 space-y-1">
+                                                        <div key={rIdx} className="flex gap-2 items-start min-w-0 w-full">
+                                                            <div className="flex-1 space-y-1 min-w-0">
                                                                 <Input
                                                                     placeholder="Row Title"
                                                                     value={row.title}
@@ -645,7 +686,7 @@ export default function TemplateBuilder({
                                                                         sections[sIdx].rows[rIdx].title = e.target.value;
                                                                         setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
                                                                     }}
-                                                                    className="h-8 text-xs"
+                                                                    className="h-8 text-xs min-w-0 w-full"
                                                                 />
                                                                 <Input
                                                                     placeholder="Description (Optional)"
@@ -655,10 +696,10 @@ export default function TemplateBuilder({
                                                                         sections[sIdx].rows[rIdx].description = e.target.value;
                                                                         setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
                                                                     }}
-                                                                    className="h-7 text-[10px]"
+                                                                    className="h-7 text-[10px] min-w-0 w-full"
                                                                 />
                                                             </div>
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={() => {
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0" onClick={() => {
                                                                 const sections = [...formData.metadata.listSections];
                                                                 sections[sIdx].rows = sections[sIdx].rows.filter((_, i) => i !== rIdx);
                                                                 setFormData({ ...formData, metadata: { ...formData.metadata, listSections: sections } });
@@ -686,58 +727,127 @@ export default function TemplateBuilder({
 
                             {/* Carousel Section */}
                             {normalizedType === 'carousel' && (
-                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10">
+                                <div className="space-y-4 bg-primary/5 p-4 rounded-xl border border-primary/10 min-w-0 w-full overflow-hidden">
                                     <div className="flex items-center gap-2 mb-2 text-primary">
                                         <Smartphone className="w-4 h-4" />
                                         <h4 className="text-xs font-bold uppercase tracking-wider">Carousel Cards</h4>
                                     </div>
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 min-w-0 w-full">
                                         {(formData.metadata?.cards || []).map((card, cIdx) => (
-                                            <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border">
+                                            <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border min-w-0 w-full overflow-hidden">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Card {cIdx + 1}</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
-                                                        const cards = formData.metadata.cards.filter((_, i) => i !== cIdx);
-                                                        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
-                                                    }}><Trash2 className="w-3 h-3" /></Button>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted/60 px-2 py-0.5 rounded">
+                                                            Card {cIdx + 1}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold flex items-center gap-1 px-2"
+                                                            onClick={() => onOpen('mediaLibrary', {
+                                                                workspaceId,
+                                                                onSelect: (url) => {
+                                                                    const cards = [...formData.metadata.cards];
+                                                                    cards[cIdx].mediaUrl = url;
+                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                }
+                                                            })}
+                                                        >
+                                                            <ImageIcon className="w-3 h-3" />
+                                                            <span>Choose Image</span>
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            onClick={() => {
+                                                                const cards = formData.metadata.cards.filter((_, i) => i !== cIdx);
+                                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                            }}
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </Button>
+                                                    </div>
                                                 </div>
-                                                <div className="relative group/input">
-                                                    <Input
-                                                        placeholder="Card image URL (https://...)"
-                                                        value={card.mediaUrl || ''}
+
+                                                {/* Image input with preview and wrap */}
+                                                <div className="space-y-1.5 min-w-0 w-full">
+                                                    <div className="flex items-center justify-between text-[11px]">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Card Image (JPEG / PNG)</label>
+                                                        {card.mediaUrl && (
+                                                            <button
+                                                                type="button"
+                                                                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors font-medium"
+                                                                onClick={() => {
+                                                                    const cards = [...formData.metadata.cards];
+                                                                    cards[cIdx].mediaUrl = '';
+                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                }}
+                                                            >
+                                                                Remove Image
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-2 items-start min-w-0 w-full">
+                                                        {card.mediaUrl ? (
+                                                            <div className="w-12 h-12 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative group/thumb">
+                                                                <img
+                                                                    src={card.mediaUrl}
+                                                                    alt={`Card ${cIdx + 1}`}
+                                                                    className="w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        e.currentTarget.style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        ) : (
+                                                            <div
+                                                                onClick={() => onOpen('mediaLibrary', {
+                                                                    workspaceId,
+                                                                    onSelect: (url) => {
+                                                                        const cards = [...formData.metadata.cards];
+                                                                        cards[cIdx].mediaUrl = url;
+                                                                        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                    }
+                                                                })}
+                                                                className="w-12 h-12 rounded-md border border-dashed border-border/80 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
+                                                                title="Choose image from Media Hub"
+                                                            >
+                                                                <ImageIcon className="w-4 h-4" />
+                                                                <span className="text-[8px] mt-0.5 font-medium">Hub</span>
+                                                            </div>
+                                                        )}
+                                                        <Textarea
+                                                            placeholder="Card image URL (https://...)"
+                                                            value={card.mediaUrl || ''}
+                                                            onChange={(e) => {
+                                                                const cards = [...formData.metadata.cards];
+                                                                cards[cIdx].mediaUrl = e.target.value;
+                                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                            }}
+                                                            rows={2}
+                                                            className="h-12 min-h-[48px] text-[11px] font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap flex-1 min-w-0"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="space-y-1 min-w-0 w-full">
+                                                    <label className="text-[10px] font-bold text-muted-foreground uppercase block">Card Body Text</label>
+                                                    <Textarea
+                                                        placeholder="Card body text..."
+                                                        value={card.body || ''}
                                                         onChange={(e) => {
                                                             const cards = [...formData.metadata.cards];
-                                                            cards[cIdx].mediaUrl = e.target.value;
+                                                            cards[cIdx].body = e.target.value;
                                                             setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                         }}
-                                                        className="h-8 text-xs pr-8"
+                                                        className="h-18 text-xs resize-none min-w-0 w-full break-words"
                                                     />
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                                                        onClick={() => onOpen('mediaLibrary', {
-                                                            workspaceId,
-                                                            onSelect: (url) => {
-                                                                const cards = [...formData.metadata.cards];
-                                                                cards[cIdx].mediaUrl = url;
-                                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
-                                                            }
-                                                        })}
-                                                    >
-                                                        <ImageIcon className="w-3 h-3" />
-                                                    </Button>
                                                 </div>
-                                                <Textarea
-                                                    placeholder="Card body text..."
-                                                    value={card.body}
-                                                    onChange={(e) => {
-                                                        const cards = [...formData.metadata.cards];
-                                                        cards[cIdx].body = e.target.value;
-                                                        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
-                                                    }}
-                                                    className="h-20 text-xs resize-none"
-                                                />
                                             </div>
                                         ))}
                                         <Button
@@ -757,32 +867,32 @@ export default function TemplateBuilder({
                             )}
 
                             {/* Body & Footer */}
-                            <div className="space-y-4">
+                            <div className="space-y-4 min-w-0 w-full">
                                 {normalizedType !== 'carousel' && (
-                                    <div>
+                                    <div className="min-w-0 w-full">
                                         <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
-                                            Message Body
+                                            <span>Message Body</span>
                                             <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
                                         </label>
                                         <Textarea
-                                            rows='8'
+                                            rows='6'
                                             value={formData.body || ''}
                                             onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                                            className="bg-background border-border resize-none" />
+                                            className="bg-background border-border resize-none min-w-0 w-full break-words" />
                                     </div>
                                 )}
 
-                                <div>
+                                <div className="min-w-0 w-full">
                                     <label className="text-sm font-semibold text-foreground mb-1.5 block">Footer (Optional)</label>
                                     <Input
                                         placeholder="Max 60 characters..."
                                         value={formData.footer || ''}
                                         onChange={(e) => setFormData({ ...formData, footer: e.target.value })}
-                                        className="bg-background border-border" />
+                                        className="bg-background border-border min-w-0 w-full" />
                                 </div>
 
                                 {/* Buttons Section */}
-                                <div className="space-y-3 pt-2">
+                                <div className="space-y-3 pt-2 min-w-0 w-full">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                                             Buttons
@@ -801,12 +911,12 @@ export default function TemplateBuilder({
                                         )}
                                     </div>
 
-                                    <div className="space-y-3">
+                                    <div className="space-y-3 min-w-0 w-full">
                                         {(formData.buttons || []).map((btn, idx) => {
                                             const b = typeof btn === 'object' ? btn : { type: 'QUICK_REPLY', text: btn || '' };
                                             const TypeIcon = buttonTypes.find(t => t.value === b.type)?.icon || MessageSquare;
                                             return (
-                                                <div key={idx} className="p-3 border rounded-lg bg-background space-y-2">
+                                                <div key={idx} className="p-3 border rounded-lg bg-background space-y-2 min-w-0 w-full overflow-hidden">
                                                     <div className="flex items-center gap-2">
                                                         <TypeIcon className="w-4 h-4 text-muted-foreground shrink-0" />
                                                         <Select
@@ -836,12 +946,12 @@ export default function TemplateBuilder({
                                                             <Trash2 className="w-3.5 h-3.5" />
                                                         </Button>
                                                     </div>
-                                                    <div className="grid grid-cols-1 gap-2">
+                                                    <div className="grid grid-cols-1 gap-2 min-w-0 w-full">
                                                         <Input
                                                             placeholder="Button Label (max 20 chars)"
                                                             value={b.text || ''}
                                                             onChange={(e) => handleButtonChange(idx, 'text', e.target.value)}
-                                                            className="h-8 text-xs"
+                                                            className="h-8 text-xs min-w-0 w-full"
                                                             maxLength={20}
                                                         />
                                                         {b.type === 'URL' && (
@@ -849,7 +959,7 @@ export default function TemplateBuilder({
                                                                 placeholder="Website URL (https://...)"
                                                                 value={b.url || ''}
                                                                 onChange={(e) => handleButtonChange(idx, 'url', e.target.value)}
-                                                                className="h-8 text-xs font-mono"
+                                                                className="h-8 text-xs font-mono min-w-0 w-full"
                                                             />
                                                         )}
                                                         {b.type === 'PHONE_NUMBER' && (
@@ -857,7 +967,7 @@ export default function TemplateBuilder({
                                                                 placeholder="Phone Number (+1234567890)"
                                                                 value={b.phone_number || ''}
                                                                 onChange={(e) => handleButtonChange(idx, 'phone_number', e.target.value)}
-                                                                className="h-8 text-xs font-mono"
+                                                                className="h-8 text-xs font-mono min-w-0 w-full"
                                                             />
                                                         )}
                                                         {b.type === 'FLOW' && (() => {

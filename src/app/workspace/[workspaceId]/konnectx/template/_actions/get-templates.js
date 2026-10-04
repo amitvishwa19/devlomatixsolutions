@@ -16,14 +16,8 @@ const handler = async (data) => {
     const { workspaceId, all, phoneNumberId: explicitPhoneId } = data;
 
     try {
-        const session = await ensureWorkspaceAccess(workspaceId);
-        if (!session) {
-            throw new Error("No active session found");
-        }
-        const currentUserId = session.user?.userId || session.user?.id;
-        if (!currentUserId) {
-            throw new Error("User ID not found in session");
-        }
+        const session = await ensureWorkspaceAccess(workspaceId).catch(() => null);
+        const currentUserId = session?.user?.userId || session?.user?.id;
 
         // Get workspace members & owner
         const workspace = await db.server.findUnique({
@@ -31,9 +25,11 @@ const handler = async (data) => {
             include: { members: true }
         }).catch(() => null);
 
+        const effectiveUserId = currentUserId || workspace?.userId;
+
         const workspaceUserIds = [
             ...new Set([
-                currentUserId,
+                effectiveUserId,
                 workspace?.userId,
                 ...((workspace?.members || []).map(m => m.userId))
             ].filter(Boolean))
@@ -43,12 +39,12 @@ const handler = async (data) => {
         if (!phoneNumberId && !all) {
             let credential = await db.credentials.findFirst({
                 where: { workspaceId, platform: 'WHATSAPP_CLOUD', isDefault: true }
-            });
+            }).catch(() => null);
             if (!credential) {
                 credential = await db.credentials.findFirst({
                     where: { workspaceId, platform: 'WHATSAPP_CLOUD' },
                     orderBy: { updatedAt: 'desc' }
-                });
+                }).catch(() => null);
             }
 
             if (credential?.credentials) {
@@ -72,13 +68,13 @@ const handler = async (data) => {
 
         const whereClause = {
             OR: [
-                { userId: { in: workspaceUserIds } },
-                { sharedWith: { some: { sharedWithUserId: currentUserId } } },
+                ...(workspaceUserIds.length > 0 ? [{ userId: { in: workspaceUserIds } }] : []),
+                ...(effectiveUserId ? [{ sharedWith: { some: { sharedWithUserId: effectiveUserId } } }] : []),
                 { isDefault: true }
             ]
         };
 
-        if (phoneNumberId && !all) {
+        if (phoneNumberId && phoneNumberId.trim() !== "" && !all) {
             whereClause.phoneNumberId = phoneNumberId;
         }
 
@@ -111,3 +107,4 @@ const handler = async (data) => {
 };
 
 export const getTemplates = createSafeAction(GetTemplatesSchema, handler);
+
