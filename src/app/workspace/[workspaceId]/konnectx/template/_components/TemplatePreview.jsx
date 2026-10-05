@@ -74,7 +74,7 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                                 {metadata.headerText}
                             </div>
                         )}
-                        {template.body && (
+                        {template.body && template.body.trim() !== '' && template.body.trim() !== 'Please view the options below:' && (
                             <div className="text-sm leading-[1.4] text-zinc-800 dark:text-[#e9edef] wrap-break-word whitespace-pre-wrap mb-2 break-words">
                                 {template.body}
                             </div>
@@ -109,13 +109,18 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                                         <div className="text-[12px] leading-[1.3] text-zinc-800 dark:text-[#e9edef] whitespace-pre-wrap break-words">
                                             {card.body || <span className="text-zinc-400 dark:text-zinc-500 italic">No content</span>}
                                         </div>
-                                        {(card.buttons || []).filter(Boolean).length > 0 && (
-                                            <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-white/10">
-                                                {card.buttons.filter(Boolean).map((b, bi) => (
-                                                    <div key={bi} className="text-[11px] font-semibold text-[#00a884] dark:text-[#53bdeb] text-center py-1 truncate">
-                                                        {typeof b === 'object' ? (b.text || 'Button') : b}
-                                                    </div>
-                                                ))}
+                                        {(card.buttons || []).filter(b => typeof b === 'object' ? b.text?.trim() : (b && String(b).trim())).length > 0 && (
+                                            <div className="mt-2 pt-1 border-t border-zinc-100 dark:border-white/10 flex flex-col divide-y divide-zinc-100 dark:divide-white/10">
+                                                {(card.buttons || []).filter(b => typeof b === 'object' ? b.text?.trim() : (b && String(b).trim())).map((b, bi) => {
+                                                    const btnObj = typeof b === 'object' ? b : { type: 'QUICK_REPLY', text: b };
+                                                    return (
+                                                        <div key={bi} className="text-[11px] font-semibold text-[#00a884] dark:text-[#53bdeb] text-center py-1 truncate flex items-center justify-center gap-1">
+                                                            {btnObj.type === 'URL' && <ExternalLink size={10} />}
+                                                            {btnObj.type === 'PHONE_NUMBER' && <Phone size={10} />}
+                                                            <span>{btnObj.text || 'Button'}</span>
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                     </div>

@@ -295,7 +295,8 @@ export default function TemplatePage() {
     // UI Handlers
     const handleOpenBuilder = (template = null) => {
         if (template) {
-            setFormData({ ...template, type: (template.type || 'text').toLowerCase() });
+            const cleanBody = template.body === 'Please view the options below:' ? '' : (template.body || '');
+            setFormData({ ...template, type: (template.type || 'text').toLowerCase(), body: cleanBody });
             setEditingId(template.id);
         } else {
             setFormData({

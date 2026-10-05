@@ -182,31 +182,35 @@ const TemplateMessage = ({ msg, templateDefinition }) => {
         return (
             <div className={`flex flex-col w-full max-w-[340px] ${isOutgoing ? 'items-end' : 'items-start'}`}>
                 {/* Carousel Header / Body / Footer Bubble */}
-                <div className="relative w-full max-w-[280px]">
-                    <div className="relative z-10 rounded-lg rounded-tl-none shadow-sm overflow-hidden">
-                        <div className={`${isOutgoing
-                            ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef]'
-                            : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef]'}`}>
-                            <div className="px-3 py-2 text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-                                {typeof renderedBody === 'string' ? renderedBody : renderedBody}
+                {((renderedBody && typeof renderedBody === 'string' && renderedBody.trim() !== '' && renderedBody.trim() !== 'Please view the options below:') || (effectiveDef?.footer || defMeta.footer || meta.footer)) && (
+                    <div className="relative w-full max-w-[280px]">
+                        <div className="relative z-10 rounded-lg rounded-tl-none shadow-sm overflow-hidden">
+                            <div className={`${isOutgoing
+                                ? 'bg-[#d9fdd3] dark:bg-[#005c4b] text-[#111b21] dark:text-[#e9edef]'
+                                : 'bg-white dark:bg-[#202c33] text-[#111b21] dark:text-[#e9edef]'}`}>
+                                {renderedBody && typeof renderedBody === 'string' && renderedBody.trim() !== '' && renderedBody.trim() !== 'Please view the options below:' && (
+                                    <div className="px-3 py-2 text-[14px] leading-relaxed whitespace-pre-wrap break-words">
+                                        {renderedBody}
+                                    </div>
+                                )}
+                                {(effectiveDef?.footer || defMeta.footer || meta.footer) && (
+                                    <div className="px-3 pb-2 -mt-1 text-[11.5px] text-[#667781] dark:text-[#8696a0] italic">
+                                        {effectiveDef?.footer || defMeta.footer || meta.footer}
+                                    </div>
+                                )}
                             </div>
-                            {(effectiveDef?.footer || defMeta.footer || meta.footer) && (
-                                <div className="px-3 pb-2 -mt-1 text-[11.5px] text-[#667781] dark:text-[#8696a0] italic">
-                                    {effectiveDef?.footer || defMeta.footer || meta.footer}
-                                </div>
+                        </div>
+                        {/* Source beak */}
+                        <div className={`absolute -left-[6px] top-0 w-2 h-2 ${isOutgoing
+                            ? '' : 'text-white dark:text-[#202c33]'}`}>
+                            {!isOutgoing && (
+                                <svg viewBox="0 0 8 13" width="8" height="13">
+                                    <path fill="currentColor" d="M1.533 3.568L8 12.193V1H2.812C1.042 1 .474 2.156 1.533 3.568z"></path>
+                                </svg>
                             )}
                         </div>
                     </div>
-                    {/* Source beak */}
-                    <div className={`absolute -left-[6px] top-0 w-2 h-2 ${isOutgoing
-                        ? '' : 'text-white dark:text-[#202c33]'}`}>
-                        {!isOutgoing && (
-                            <svg viewBox="0 0 8 13" width="8" height="13">
-                                <path fill="currentColor" d="M1.533 3.568L8 12.193V1H2.812C1.042 1 .474 2.156 1.533 3.568z"></path>
-                            </svg>
-                        )}
-                    </div>
-                </div>
+                )}
 
                 {/* Horizontal Cards */}
                 <div className="flex gap-3 overflow-x-auto pb-2 px-1 w-full hide-scrollbar snap-x snap-mandatory" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>

@@ -181,6 +181,41 @@ export default function TemplateBuilder({
         { value: 'FLOW', label: 'Complete Flow', icon: Workflow },
     ];
 
+    const handleCardButtonChange = (cardIndex, buttonIndex, field, value) => {
+        const cards = [...(formData.metadata?.cards || [])];
+        const card = { ...cards[cardIndex] };
+        const buttons = [...(card.buttons || [])];
+        const btn = typeof buttons[buttonIndex] === 'object' && buttons[buttonIndex] !== null
+            ? { ...buttons[buttonIndex] }
+            : { type: 'QUICK_REPLY', text: buttons[buttonIndex] || '' };
+        btn[field] = value;
+        buttons[buttonIndex] = btn;
+        card.buttons = buttons;
+        cards[cardIndex] = card;
+        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+    };
+
+    const addCardButton = (cardIndex) => {
+        const cards = [...(formData.metadata?.cards || [])];
+        const card = { ...cards[cardIndex] };
+        const buttons = [...(card.buttons || [])];
+        if (buttons.length < 2) {
+            buttons.push({ type: 'QUICK_REPLY', text: '' });
+            card.buttons = buttons;
+            cards[cardIndex] = card;
+            setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+        }
+    };
+
+    const removeCardButton = (cardIndex, buttonIndex) => {
+        const cards = [...(formData.metadata?.cards || [])];
+        const card = { ...cards[cardIndex] };
+        const buttons = (card.buttons || []).filter((_, i) => i !== buttonIndex);
+        card.buttons = buttons;
+        cards[cardIndex] = card;
+        setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+    };
+
     const handleButtonChange = (index, field, value) => {
         const newButtons = [...formData.buttons];
         const btn = typeof newButtons[index] === 'object' ? { ...newButtons[index] } : { type: 'QUICK_REPLY', text: newButtons[index] || '' };
@@ -428,7 +463,8 @@ export default function TemplateBuilder({
                                                 if (v === 'carousel' && (!newMetadata.cards || newMetadata.cards.length === 0)) {
                                                     newMetadata.cards = [{ body: '', buttons: [''] }];
                                                 }
-                                                setFormData({ ...formData, type: v, metadata: newMetadata });
+                                                const cleanedBody = formData.body === 'Please view the options below:' ? '' : (formData.body || '');
+                                                setFormData({ ...formData, type: v, body: cleanedBody, metadata: newMetadata });
                                             }}>
                                             <SelectTrigger className="bg-background border-border">
                                                 <SelectValue />
@@ -903,6 +939,94 @@ export default function TemplateBuilder({
                                                         className="h-18 text-xs resize-none min-w-0 w-full break-words text-wrap max-w-full"
                                                     />
                                                 </div>
+
+                                                {/* Card Buttons */}
+                                                <div className="space-y-2 pt-2 border-t border-border/50 min-w-0 w-full">
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5">
+                                                            Card Buttons
+                                                            <span className="text-[9px] text-muted-foreground/70 font-normal">(Max 2)</span>
+                                                        </label>
+                                                        {(card.buttons || []).length < 2 && (
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => addCardButton(cIdx)}
+                                                                className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 font-semibold px-2 border-primary/20 flex items-center gap-1"
+                                                            >
+                                                                <Plus className="w-3 h-3 shrink-0" /> Add Button
+                                                            </Button>
+                                                        )}
+                                                    </div>
+
+                                                    {(card.buttons || []).length === 0 ? (
+                                                        <div className="text-[11px] text-muted-foreground/60 italic py-1 text-center bg-muted/20 rounded border border-dashed border-border/40">
+                                                            No buttons added (Click &quot;+ Add Button&quot; to add quick reply or link)
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2 min-w-0 w-full">
+                                                            {(card.buttons || []).map((btn, bIdx) => {
+                                                                const b = typeof btn === 'object' && btn !== null ? btn : { type: 'QUICK_REPLY', text: btn || '' };
+                                                                const TypeIcon = b.type === 'URL' ? ExternalLink : b.type === 'PHONE_NUMBER' ? Phone : MessageSquare;
+                                                                return (
+                                                                    <div key={bIdx} className="p-2.5 border rounded-lg bg-muted/20 space-y-2 min-w-0 w-full overflow-hidden">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <TypeIcon className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                                                            <Select
+                                                                                value={b.type || 'QUICK_REPLY'}
+                                                                                onValueChange={(v) => handleCardButtonChange(cIdx, bIdx, 'type', v)}
+                                                                            >
+                                                                                <SelectTrigger className="h-6 text-[11px] w-[130px] bg-background border-border shrink-0">
+                                                                                    <SelectValue />
+                                                                                </SelectTrigger>
+                                                                                <SelectContent>
+                                                                                    <SelectItem value="QUICK_REPLY">Quick Reply</SelectItem>
+                                                                                    <SelectItem value="URL">Visit Website</SelectItem>
+                                                                                    <SelectItem value="PHONE_NUMBER">Call Phone</SelectItem>
+                                                                                </SelectContent>
+                                                                            </Select>
+                                                                            <Button
+                                                                                type="button"
+                                                                                variant="ghost"
+                                                                                size="icon"
+                                                                                className="h-6 w-6 ml-auto text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                                                                onClick={() => removeCardButton(cIdx, bIdx)}
+                                                                            >
+                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                            </Button>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-1 gap-1.5 min-w-0 w-full">
+                                                                            <Input
+                                                                                placeholder="Button Label (max 25 chars)"
+                                                                                value={b.text || ''}
+                                                                                onChange={(e) => handleCardButtonChange(cIdx, bIdx, 'text', e.target.value)}
+                                                                                className="h-7 text-xs min-w-0 w-full bg-background"
+                                                                                maxLength={25}
+                                                                            />
+                                                                            {b.type === 'URL' && (
+                                                                                <Input
+                                                                                    placeholder="Website URL (https://...)"
+                                                                                    value={b.url || ''}
+                                                                                    onChange={(e) => handleCardButtonChange(cIdx, bIdx, 'url', e.target.value)}
+                                                                                    className="h-7 text-xs font-mono min-w-0 w-full bg-background"
+                                                                                />
+                                                                            )}
+                                                                            {b.type === 'PHONE_NUMBER' && (
+                                                                                <Input
+                                                                                    placeholder="Phone Number (+1234567890)"
+                                                                                    value={b.phone_number || ''}
+                                                                                    onChange={(e) => handleCardButtonChange(cIdx, bIdx, 'phone_number', e.target.value)}
+                                                                                    className="h-7 text-xs font-mono min-w-0 w-full bg-background"
+                                                                                />
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                         <Button
@@ -911,7 +1035,7 @@ export default function TemplateBuilder({
                                             className="w-full h-8 text-[10px] border-dashed font-semibold"
                                             onClick={() => {
                                                 const cards = [...(formData.metadata?.cards || [])];
-                                                cards.push({ body: '', buttons: [''] });
+                                                cards.push({ body: '', buttons: [{ type: 'QUICK_REPLY', text: '' }] });
                                                 setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                             }}
                                         >
@@ -923,19 +1047,18 @@ export default function TemplateBuilder({
 
                             {/* Body & Footer */}
                             <div className="space-y-4 min-w-0 w-full">
-                                {normalizedType !== 'carousel' && (
-                                    <div className="min-w-0 w-full">
-                                        <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
-                                            <span>Message Body</span>
-                                            <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
-                                        </label>
-                                        <Textarea
-                                            rows='6'
-                                            value={formData.body || ''}
-                                            onChange={(e) => setFormData({ ...formData, body: e.target.value })}
-                                            className="bg-background border-border resize-none min-w-0 w-full break-words" />
-                                    </div>
-                                )}
+                                <div className="min-w-0 w-full">
+                                    <label className="text-sm font-semibold text-foreground mb-1.5 flex justify-between">
+                                        <span>Message Body {normalizedType === 'carousel' ? '(Optional)' : ''}</span>
+                                        <span className="text-xs text-muted-foreground font-normal">Use {"{{1}}"} for variables</span>
+                                    </label>
+                                    <Textarea
+                                        rows={normalizedType === 'carousel' ? '3' : '6'}
+                                        placeholder={normalizedType === 'carousel' ? 'Optional intro message above carousel cards...' : 'Enter message body...'}
+                                        value={formData.body === 'Please view the options below:' ? '' : (formData.body || '')}
+                                        onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+                                        className="bg-background border-border resize-none min-w-0 w-full break-words" />
+                                </div>
 
                                 <div className="min-w-0 w-full">
                                     <label className="text-sm font-semibold text-foreground mb-1.5 block">Footer (Optional)</label>
@@ -947,7 +1070,8 @@ export default function TemplateBuilder({
                                 </div>
 
                                 {/* Buttons Section */}
-                                <div className="space-y-3 pt-2 min-w-0 w-full">
+                                {normalizedType !== 'carousel' && (
+                                    <div className="space-y-3 pt-2 min-w-0 w-full">
                                     <div className="flex items-center justify-between">
                                         <label className="text-sm font-semibold text-foreground flex items-center gap-2">
                                             Buttons
@@ -1112,7 +1236,7 @@ export default function TemplateBuilder({
                                                                         <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-600 dark:text-amber-400 flex items-start gap-1.5 leading-tight">
                                                                             <span className="shrink-0 text-xs">⚠️</span>
                                                                             <span>
-                                                                                <strong>{matchingFlow.name}</strong> is a local draft and hasn't been pushed to Meta yet. Push or publish it in the <em>Flows</em> tab to get a Meta Flow ID, or enter one manually.
+                                                                                <strong>{matchingFlow.name}</strong> is a local draft and hasn&apos;t been pushed to Meta yet. Push or publish it in the <em>Flows</em> tab to get a Meta Flow ID, or enter one manually.
                                                                             </span>
                                                                         </div>
                                                                     )}
@@ -1231,13 +1355,14 @@ export default function TemplateBuilder({
                                                 </div>
                                             );
                                         })}
-                                        {(!formData.buttons || formData.buttons.length === 0) && (
-                                            <div className="text-[10px] text-muted-foreground italic bg-muted/20 p-3 rounded-lg border border-dashed border-border text-center">
-                                                No buttons added. Click "Add Button" to include interactive elements.
-                                            </div>
-                                        )}
+                                            {(!formData.buttons || formData.buttons.length === 0) && (
+                                                <div className="text-[10px] text-muted-foreground italic bg-muted/20 p-3 rounded-lg border border-dashed border-border text-center">
+                                                    No buttons added. Click &quot;Add Button&quot; to include interactive elements.
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Live Preview Integration */}

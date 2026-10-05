@@ -208,13 +208,10 @@ const handler = async (data) => {
             components.push(headerComp);
         }
 
-        // BODY (Top-level BODY is strictly required by Meta, even for Carousels)
+        // BODY
         let bodyText = (template.body || "").trim();
-        
-        // If it's a carousel and the body is empty (since the UI currently hides the body input for carousels),
-        // we must provide a fallback text, because Meta rejects empty BODY components and missing BODY components.
-        if (!bodyText && templateType === 'carousel') {
-            bodyText = "Please view the options below:";
+        if (bodyText === "Please view the options below:") {
+            bodyText = "";
         }
 
         if (bodyText) {
@@ -268,9 +265,25 @@ const handler = async (data) => {
                 // Card Buttons (Required by Meta, min 1)
                 const cButtons = [];
                 if (cardData.buttons && Array.isArray(cardData.buttons)) {
-                    cardData.buttons.forEach(bText => {
-                        const btnText = (bText || "").trim();
-                        if (btnText) cButtons.push({ type: "QUICK_REPLY", text: btnText });
+                    cardData.buttons.forEach(b => {
+                        if (typeof b === 'object' && b !== null) {
+                            const btnText = (b.text || "").trim();
+                            if (btnText) {
+                                if (b.type === 'URL' && b.url) {
+                                    const uComp = { type: "URL", text: btnText, url: b.url.trim() };
+                                    const urlExamples = getExampleSamples(b.url);
+                                    if (urlExamples) uComp.example = [urlExamples];
+                                    cButtons.push(uComp);
+                                } else if (b.type === 'PHONE_NUMBER' && b.phone_number) {
+                                    cButtons.push({ type: "PHONE_NUMBER", text: btnText, phone_number: b.phone_number.trim() });
+                                } else {
+                                    cButtons.push({ type: "QUICK_REPLY", text: btnText });
+                                }
+                            }
+                        } else if (typeof b === 'string') {
+                            const btnText = b.trim();
+                            if (btnText) cButtons.push({ type: "QUICK_REPLY", text: btnText });
+                        }
                     });
                 }
                 if (cButtons.length === 0) {
