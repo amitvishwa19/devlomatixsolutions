@@ -24,6 +24,7 @@ export const getSidebarNavItems = (workspaceId) => {
     const baseKnowbasePath = `${basePath}/knowbase`;
     const baseSocialhubPath = `${basePath}/socialhub`;
     const baseVaultPath = `${basePath}/vault`;
+    const baseCRMPath = `${basePath}/crm`;
 
     return [
         {
@@ -35,6 +36,19 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Contacts", icon: "users", url: `${basePath}/contact` },
             ],
             baseUrl: basePath,
+            permission: `navbar:Workspace:Home`
+        },
+        {
+            parent: { title: "CRM", icon: "rocket", url: baseCRMPath },
+            child: [
+                { title: "Dashboard", icon: "layout-dashboard", url: baseCRMPath },
+                { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
+                { title: "360° Contacts", icon: "users", url: `${baseCRMPath}/contacts` },
+                { title: "Companies", icon: "building", url: `${baseCRMPath}/accounts` },
+                { title: "Activities", icon: "activity", url: `${baseCRMPath}/activities` },
+                { title: "Settings", icon: "settings-2", url: `${baseCRMPath}/settings` },
+            ],
+            baseUrl: baseCRMPath,
             permission: `navbar:Workspace:Home`
         },
         {
