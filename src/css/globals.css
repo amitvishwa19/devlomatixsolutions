@@ -393,3 +393,17 @@ html {
     }
   }
 }
+
+/* Radix ScrollArea horizontal overflow containment */
+[data-radix-scroll-area-viewport] {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+[data-radix-scroll-area-viewport] > div {
+  display: block !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}

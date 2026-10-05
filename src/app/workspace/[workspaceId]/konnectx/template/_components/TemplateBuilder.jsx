@@ -64,7 +64,7 @@ function extractFlowScreens(flow) {
     if (Array.isArray(flow.screens)) {
         rawScreens = flow.screens;
     } else if (typeof flow.screens === 'string') {
-        try { rawScreens = JSON.parse(flow.screens); } catch (e) {}
+        try { rawScreens = JSON.parse(flow.screens); } catch (e) { }
     }
 
     if (Array.isArray(rawScreens) && rawScreens.length > 0) {
@@ -139,18 +139,18 @@ export default function TemplateBuilder({
                         const match = fetchedFlows.find(f => (f.flowId && f.flowId === b.flow_id) || (f.id && f.id === b.selected_flow_id));
                         if (match) {
                             const screens = extractFlowScreens(match);
-                            const matchedScreen = screens.find(s => s.id === b.navigate_screen) || 
-                                                  screens.find(s => s.id.toLowerCase() === (b.navigate_screen || '').toLowerCase());
+                            const matchedScreen = screens.find(s => s.id === b.navigate_screen) ||
+                                screens.find(s => s.id.toLowerCase() === (b.navigate_screen || '').toLowerCase());
                             const correctScreen = matchedScreen ? matchedScreen.id : (screens[0]?.id || 'WELCOME');
-                            
+
                             if (b.navigate_screen !== correctScreen || !b.selected_flow_id || b.flow_cta) {
                                 hasChanges = true;
-                                const updated = { 
-                                    ...b, 
-                                    selected_flow_id: match.id, 
-                                    flow_id: match.flowId || b.flow_id, 
-                                    navigate_screen: correctScreen, 
-                                    flow_action: 'navigate' 
+                                const updated = {
+                                    ...b,
+                                    selected_flow_id: match.id,
+                                    flow_id: match.flowId || b.flow_id,
+                                    navigate_screen: correctScreen,
+                                    flow_action: 'navigate'
                                 };
                                 delete updated.flow_cta;
                                 return updated;
@@ -203,10 +203,14 @@ export default function TemplateBuilder({
 
     return (
         <Sheet open={isOpen} onOpenChange={onClose}>
-            <SheetContent className="w-full sm:max-w-[700px] p-2 flex flex-col gap-0 border-0 border-border bg-transparent overflow-hidden">
-                <div className='flex flex-col h-full border bg-card rounded-md overflow-hidden min-w-0 w-full'>
-
-
+            <SheetContent
+                className="w-full sm:max-w-[700px] p-2 flex flex-col gap-0 border-0 border-border bg-transparent overflow-hidden"
+                style={{ maxWidth: '700px', width: '100%', overflowX: 'hidden' }}
+            >
+                <div
+                    className='flex flex-col h-full border bg-card rounded-md overflow-hidden min-w-0 w-full'
+                    style={{ maxWidth: '100%', width: '100%', minWidth: 0 }}
+                >
                     {/* Panel Header */}
                     <SheetHeader className="px-6 py-4 border-b border-border bg-muted/30 text-left shrink-0">
                         <SheetTitle className="text-lg font-semibold text-foreground">
@@ -217,8 +221,14 @@ export default function TemplateBuilder({
                         </SheetDescription>
                     </SheetHeader>
 
-                    <ScrollArea className="flex-1 min-h-0 overflow-hidden">
-                        <div className="p-5 space-y-4 min-w-0 w-full">
+                    <ScrollArea
+                        className="flex-1 min-h-0 overflow-hidden w-full max-w-full min-w-0"
+                        style={{ maxWidth: '100%', width: '100%', minWidth: 0, overflowX: 'hidden' }}
+                    >
+                        <div
+                            className="p-5 space-y-4 min-w-0 w-full max-w-full overflow-hidden"
+                            style={{ maxWidth: '100%', width: '100%', minWidth: 0, overflowX: 'hidden' }}
+                        >
 
 
                             {/* AI Assistant Section */}
@@ -444,29 +454,30 @@ export default function TemplateBuilder({
                             {/* Media/Location Sections (extracted for brevity in this example but would be present fully) */}
                             {/* Media/Location Sections */}
                             {['image', 'video', 'audio', 'document'].includes(normalizedType) && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <label className="text-sm font-semibold text-foreground capitalize">{normalizedType} Header URL</label>
-                                        <div className="flex items-center gap-1.5">
+                                <div className="space-y-2.5 min-w-0 w-full">
+                                    <div className="flex items-center justify-between gap-2 min-w-0 w-full">
+                                        <label className="text-sm font-semibold text-foreground capitalize shrink-0">{normalizedType} Header</label>
+                                        <div className="flex items-center gap-1.5 shrink-0">
                                             {formData.metadata?.mediaUrl && (
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-6 text-[10px] text-muted-foreground hover:text-destructive uppercase font-bold"
+                                                    className="h-6 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 uppercase font-bold shrink-0 flex items-center gap-1 px-2"
                                                     onClick={() => setFormData({
                                                         ...formData,
                                                         metadata: { ...(formData.metadata || {}), mediaUrl: '' }
                                                     })}
                                                 >
-                                                    Clear
+                                                    <X className="w-3 h-3 shrink-0" />
+                                                    <span>Remove</span>
                                                 </Button>
                                             )}
                                             <Button
                                                 type="button"
-                                                variant="ghost"
+                                                variant="outline"
                                                 size="sm"
-                                                className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold flex items-center gap-1 px-2"
+                                                className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-semibold flex items-center gap-1 px-2 border-primary/20 shrink-0"
                                                 onClick={() => onOpen('mediaLibrary', {
                                                     workspaceId,
                                                     onSelect: (url) => setFormData({
@@ -475,14 +486,14 @@ export default function TemplateBuilder({
                                                     })
                                                 })}
                                             >
-                                                <ImageIcon className="w-3 h-3" />
-                                                <span>Choose from Hub</span>
+                                                <ImageIcon className="w-3 h-3 shrink-0" />
+                                                <span className="shrink-0">{formData.metadata?.mediaUrl ? 'Change from Hub' : 'Choose from Hub'}</span>
                                             </Button>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2 items-start">
+                                    <div className="flex gap-2 items-start min-w-0 w-full">
                                         {formData.metadata?.mediaUrl ? (
-                                            <div className="w-12 h-12 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative">
+                                            <div className="w-14 h-14 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative flex items-center justify-center">
                                                 {normalizedType === 'image' ? (
                                                     <img
                                                         src={formData.metadata.mediaUrl}
@@ -497,7 +508,8 @@ export default function TemplateBuilder({
                                                 )}
                                             </div>
                                         ) : (
-                                            <div
+                                            <button
+                                                type="button"
                                                 onClick={() => onOpen('mediaLibrary', {
                                                     workspaceId,
                                                     onSelect: (url) => setFormData({
@@ -505,23 +517,25 @@ export default function TemplateBuilder({
                                                         metadata: { ...(formData.metadata || {}), mediaUrl: url }
                                                     })
                                                 })}
-                                                className="w-12 h-12 rounded-md border border-dashed border-border/80 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
+                                                className="w-14 h-14 rounded-md border border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
                                                 title="Choose from Media Hub"
                                             >
                                                 <ImageIcon className="w-4 h-4" />
-                                                <span className="text-[8px] mt-0.5 font-medium">Hub</span>
-                                            </div>
+                                                <span className="text-[9px] mt-0.5 font-medium">Hub</span>
+                                            </button>
                                         )}
-                                        <Textarea
-                                            placeholder={`https://... (paste ${normalizedType} URL or choose from Hub)`}
-                                            value={formData.metadata?.mediaUrl || ''}
-                                            onChange={(e) => setFormData({
-                                                ...formData,
-                                                metadata: { ...(formData.metadata || {}), mediaUrl: e.target.value }
-                                            })}
-                                            rows={2}
-                                            className="h-12 min-h-[48px] text-[11px] font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap flex-1 min-w-0"
-                                        />
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            <Textarea
+                                                placeholder={`https://... (paste ${normalizedType} URL or choose from Hub)`}
+                                                value={formData.metadata?.mediaUrl || ''}
+                                                onChange={(e) => setFormData({
+                                                    ...formData,
+                                                    metadata: { ...(formData.metadata || {}), mediaUrl: e.target.value }
+                                                })}
+                                                rows={2}
+                                                className="min-h-[56px] text-xs font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap w-full"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -734,19 +748,20 @@ export default function TemplateBuilder({
                                     </div>
                                     <div className="space-y-4 min-w-0 w-full">
                                         {(formData.metadata?.cards || []).map((card, cIdx) => (
-                                            <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border min-w-0 w-full overflow-hidden">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-[10px] font-bold text-muted-foreground uppercase bg-muted/60 px-2 py-0.5 rounded">
+                                            <div key={cIdx} className="space-y-3 p-3 bg-background rounded-lg border border-border min-w-0 w-full">
+                                                {/* Card Header Bar */}
+                                                <div className="flex items-center justify-between gap-2 min-w-0 w-full pb-2 border-b border-border/50">
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="text-[10px] font-bold text-foreground uppercase bg-muted/80 px-2 py-0.5 rounded border border-border/60 shrink-0">
                                                             Card {cIdx + 1}
                                                         </span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5">
+                                                    <div className="flex items-center gap-1.5 shrink-0">
                                                         <Button
                                                             type="button"
-                                                            variant="ghost"
+                                                            variant="outline"
                                                             size="sm"
-                                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-bold flex items-center gap-1 px-2"
+                                                            className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-semibold flex items-center gap-1 px-2 border-primary/20 shrink-0"
                                                             onClick={() => onOpen('mediaLibrary', {
                                                                 workspaceId,
                                                                 onSelect: (url) => {
@@ -756,45 +771,47 @@ export default function TemplateBuilder({
                                                                 }
                                                             })}
                                                         >
-                                                            <ImageIcon className="w-3 h-3" />
-                                                            <span>Choose Image</span>
+                                                            <ImageIcon className="w-3 h-3 shrink-0" />
+                                                            <span className="shrink-0">{card.mediaUrl ? 'Change Image' : 'Add Image'}</span>
                                                         </Button>
                                                         <Button
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                                            title="Delete card"
                                                             onClick={() => {
                                                                 const cards = formData.metadata.cards.filter((_, i) => i !== cIdx);
                                                                 setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                             }}
                                                         >
-                                                            <Trash2 className="w-3 h-3" />
+                                                            <Trash2 className="w-3.5 h-3.5 shrink-0" />
                                                         </Button>
                                                     </div>
                                                 </div>
 
-                                                {/* Image input with preview and wrap */}
+                                                {/* Image input with preview and explicit actions */}
                                                 <div className="space-y-1.5 min-w-0 w-full">
-                                                    <div className="flex items-center justify-between text-[11px]">
-                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase">Card Image (JPEG / PNG)</label>
+                                                    <div className="flex items-center justify-between text-[11px] min-w-0 w-full">
+                                                        <label className="text-[10px] font-bold text-muted-foreground uppercase shrink-0">Card Image (JPEG / PNG)</label>
                                                         {card.mediaUrl && (
                                                             <button
                                                                 type="button"
-                                                                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors font-medium"
+                                                                className="text-[10px] text-destructive hover:text-destructive/80 transition-colors font-semibold shrink-0 flex items-center gap-1 ml-auto"
                                                                 onClick={() => {
                                                                     const cards = [...formData.metadata.cards];
                                                                     cards[cIdx].mediaUrl = '';
                                                                     setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                                 }}
                                                             >
-                                                                Remove Image
+                                                                <X className="w-3 h-3 shrink-0" />
+                                                                <span>Remove Image</span>
                                                             </button>
                                                         )}
                                                     </div>
                                                     <div className="flex gap-2 items-start min-w-0 w-full">
                                                         {card.mediaUrl ? (
-                                                            <div className="w-12 h-12 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative group/thumb">
+                                                            <div className="w-14 h-14 rounded-md border border-border overflow-hidden bg-muted shrink-0 relative flex items-center justify-center">
                                                                 <img
                                                                     src={card.mediaUrl}
                                                                     alt={`Card ${cIdx + 1}`}
@@ -805,7 +822,8 @@ export default function TemplateBuilder({
                                                                 />
                                                             </div>
                                                         ) : (
-                                                            <div
+                                                            <button
+                                                                type="button"
                                                                 onClick={() => onOpen('mediaLibrary', {
                                                                     workspaceId,
                                                                     onSelect: (url) => {
@@ -814,24 +832,61 @@ export default function TemplateBuilder({
                                                                         setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                                     }
                                                                 })}
-                                                                className="w-12 h-12 rounded-md border border-dashed border-border/80 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
+                                                                className="w-14 h-14 rounded-md border border-dashed border-primary/30 hover:border-primary hover:bg-primary/5 flex flex-col items-center justify-center cursor-pointer transition-colors shrink-0 text-muted-foreground hover:text-primary"
                                                                 title="Choose image from Media Hub"
                                                             >
                                                                 <ImageIcon className="w-4 h-4" />
-                                                                <span className="text-[8px] mt-0.5 font-medium">Hub</span>
-                                                            </div>
+                                                                <span className="text-[9px] mt-0.5 font-medium">Add Image</span>
+                                                            </button>
                                                         )}
-                                                        <Textarea
-                                                            placeholder="Card image URL (https://...)"
-                                                            value={card.mediaUrl || ''}
-                                                            onChange={(e) => {
-                                                                const cards = [...formData.metadata.cards];
-                                                                cards[cIdx].mediaUrl = e.target.value;
-                                                                setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
-                                                            }}
-                                                            rows={2}
-                                                            className="h-12 min-h-[48px] text-[11px] font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap flex-1 min-w-0"
-                                                        />
+                                                        <div className="flex-1 min-w-0 space-y-1.5">
+                                                            <Textarea
+                                                                placeholder="Card image URL (https://...)"
+                                                                value={card.mediaUrl || ''}
+                                                                rows={2}
+                                                                onChange={(e) => {
+                                                                    const cards = [...formData.metadata.cards];
+                                                                    cards[cIdx].mediaUrl = e.target.value;
+                                                                    setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                }}
+                                                                className="min-h-[56px] text-xs font-mono leading-tight resize-none py-1.5 px-2 bg-background border-border break-all whitespace-pre-wrap w-full"
+                                                            />
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="h-6 text-[10px] text-primary hover:text-primary hover:bg-primary/10 uppercase font-semibold flex items-center gap-1 px-2 border-primary/20 shrink-0"
+                                                                    onClick={() => onOpen('mediaLibrary', {
+                                                                        workspaceId,
+                                                                        onSelect: (url) => {
+                                                                            const cards = [...formData.metadata.cards];
+                                                                            cards[cIdx].mediaUrl = url;
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                        }
+                                                                    })}
+                                                                >
+                                                                    <ImageIcon className="w-3 h-3 shrink-0" />
+                                                                    <span>{card.mediaUrl ? 'Change from Hub' : 'Choose from Hub'}</span>
+                                                                </Button>
+                                                                {card.mediaUrl && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-6 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 uppercase font-bold flex items-center gap-1 px-2 shrink-0"
+                                                                        onClick={() => {
+                                                                            const cards = [...formData.metadata.cards];
+                                                                            cards[cIdx].mediaUrl = '';
+                                                                            setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
+                                                                        }}
+                                                                    >
+                                                                        <X className="w-3 h-3 shrink-0" />
+                                                                        <span>Remove Image</span>
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -845,7 +900,7 @@ export default function TemplateBuilder({
                                                             cards[cIdx].body = e.target.value;
                                                             setFormData({ ...formData, metadata: { ...formData.metadata, cards } });
                                                         }}
-                                                        className="h-18 text-xs resize-none min-w-0 w-full break-words"
+                                                        className="h-18 text-xs resize-none min-w-0 w-full break-words text-wrap max-w-full"
                                                     />
                                                 </div>
                                             </div>
@@ -853,7 +908,7 @@ export default function TemplateBuilder({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full h-8 text-[10px] border-dashed"
+                                            className="w-full h-8 text-[10px] border-dashed font-semibold"
                                             onClick={() => {
                                                 const cards = [...(formData.metadata?.cards || [])];
                                                 cards.push({ body: '', buttons: [''] });
@@ -1035,11 +1090,10 @@ export default function TemplateBuilder({
                                                                                                         Draft (No ID)
                                                                                                     </span>
                                                                                                 )}
-                                                                                                <span className={`text-[9px] px-1 py-0.5 rounded uppercase font-semibold ${
-                                                                                                    flow.status === 'PUBLISHED' 
-                                                                                                        ? 'bg-emerald-500/10 text-emerald-500' 
-                                                                                                        : 'bg-zinc-500/10 text-zinc-400'
-                                                                                                }`}>
+                                                                                                <span className={`text-[9px] px-1 py-0.5 rounded uppercase font-semibold ${flow.status === 'PUBLISHED'
+                                                                                                    ? 'bg-emerald-500/10 text-emerald-500'
+                                                                                                    : 'bg-zinc-500/10 text-zinc-400'
+                                                                                                    }`}>
                                                                                                     {flow.status || 'DRAFT'}
                                                                                                 </span>
                                                                                             </div>
@@ -1187,7 +1241,10 @@ export default function TemplateBuilder({
                             </div>
 
                             {/* Live Preview Integration */}
-                            <div className="mt-4 pt-4 border-t border-border">
+                            <div
+                                className="mt-4 pt-4 border-t border-border w-full max-w-full min-w-0 overflow-hidden"
+                                style={{ maxWidth: '100%', width: '100%', minWidth: 0, overflow: 'hidden', contain: 'inline-size' }}
+                            >
                                 <TemplatePreview template={formData} />
                             </div>
                         </div>

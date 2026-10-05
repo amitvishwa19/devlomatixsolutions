@@ -27,6 +27,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function TemplatePreview({ template, showHeader = true, isModal = false, isOpen = false, onClose }) {
     if (!template) return null;
@@ -50,14 +51,12 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
     const metadata = getMetadata();
     const buttons = getButtons();
 
-    const MessageBubble = () => (
-        <motion.div
-            initial={isModal ? { opacity: 0, scale: 1, y: 10 } : false}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: "spring", damping: 20, stiffness: 200 }}
-            className="relative z-10 self-start max-w-[85%]"
-        >
-            <div className="relative bg-white dark:bg-[#202c33] rounded-xl rounded-tl-none shadow-[0_1px_2px_rgba(0,0,0,0.15)] border border-black/5 dark:border-white/10 overflow-hidden">
+    const MessageBubble = () => {
+        const bubbleContent = (
+            <div
+                className="relative bg-white dark:bg-[#202c33] rounded-xl rounded-tl-none shadow-[0_1px_2px_rgba(0,0,0,0.15)] border border-black/5 dark:border-white/10 overflow-hidden w-full max-w-full min-w-0"
+                style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}
+            >
                 {/* Tail */}
                 <div className="absolute -left-2 top-0 text-white dark:text-[#202c33]">
                     <svg viewBox="0 0 8 13" width="8" height="13">
@@ -66,38 +65,54 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                 </div>
 
                 {normalizedType === 'carousel' ? (
-                    <div className="p-2.5 pb-1.5">
+                    <div
+                        className="p-2.5 pb-1.5 w-full max-w-full min-w-0 overflow-hidden"
+                        style={{ width: '100%', maxWidth: '100%', minWidth: 0 }}
+                    >
                         {metadata.headerText && (
-                            <div className="text-[13.5px] font-bold text-zinc-900 dark:text-[#e9edef] mb-2 leading-tight">
+                            <div className="text-[13.5px] font-bold text-zinc-900 dark:text-[#e9edef] mb-2 leading-tight break-words">
                                 {metadata.headerText}
                             </div>
                         )}
                         {template.body && (
-                            <div className="text-sm leading-[1.4] text-zinc-800 dark:text-[#e9edef] wrap-break-word whitespace-pre-wrap mb-2">
+                            <div className="text-sm leading-[1.4] text-zinc-800 dark:text-[#e9edef] wrap-break-word whitespace-pre-wrap mb-2 break-words">
                                 {template.body}
                             </div>
                         )}
                         {/* Carousel Cards */}
-                        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory hide-scrollbar">
+                        <div
+                            className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 snap-x snap-mandatory min-w-0 max-w-full"
+                            style={{
+                                maxWidth: '100%',
+                                width: '100%',
+                                minWidth: 0,
+                                WebkitOverflowScrolling: 'touch',
+                                scrollbarWidth: 'thin'
+                            }}
+                        >
                             {(metadata.cards || []).map((card, idx) => (
-                                <div key={idx} className="min-w-[200px] rounded-xl overflow-hidden border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#111b21] shrink-0 snap-center">
+                                <div
+                                    key={idx}
+                                    className="w-[180px] min-w-[180px] max-w-[180px] rounded-xl overflow-hidden border border-zinc-200 dark:border-white/10 bg-white dark:bg-[#111b21] shrink-0 snap-center"
+                                    style={{ width: '180px', minWidth: '180px', maxWidth: '180px', flexShrink: 0 }}
+                                >
                                     {card.mediaUrl ? (
-                                        <div className="aspect-[4/3] overflow-hidden">
-                                            <img src={card.mediaUrl} className="w-[180px] h-[200px] object-cover" alt="" />
+                                        <div className="w-[180px] h-[140px] overflow-hidden bg-zinc-100 dark:bg-black/20">
+                                            <img src={card.mediaUrl} className="w-full h-full object-cover" alt="" />
                                         </div>
                                     ) : (
-                                        <div className="aspect-[4/3] bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
+                                        <div className="w-[180px] h-[140px] bg-zinc-50 dark:bg-white/5 flex items-center justify-center">
                                             <ImageIcon className="w-8 h-8 text-zinc-300 dark:text-zinc-600" />
                                         </div>
                                     )}
                                     <div className="p-2.5">
-                                        <div className="text-[12px] leading-[1.3] text-zinc-800 dark:text-[#e9edef] whitespace-pre-wrap">
+                                        <div className="text-[12px] leading-[1.3] text-zinc-800 dark:text-[#e9edef] whitespace-pre-wrap break-words">
                                             {card.body || <span className="text-zinc-400 dark:text-zinc-500 italic">No content</span>}
                                         </div>
                                         {(card.buttons || []).filter(Boolean).length > 0 && (
                                             <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-white/10">
                                                 {card.buttons.filter(Boolean).map((b, bi) => (
-                                                    <div key={bi} className="text-[11px] font-semibold text-[#00a884] dark:text-[#53bdeb] text-center py-1">
+                                                    <div key={bi} className="text-[11px] font-semibold text-[#00a884] dark:text-[#53bdeb] text-center py-1 truncate">
                                                         {typeof b === 'object' ? (b.text || 'Button') : b}
                                                     </div>
                                                 ))}
@@ -138,9 +153,9 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                                         </div>
                                     )}
                                     {normalizedType === 'image' && (
-                                        <div className="w-full bg-zinc-50 dark:bg-white/5 overflow-hidden">
+                                        <div className="w-full max-w-full min-w-0 bg-zinc-50 dark:bg-white/5 overflow-hidden">
                                             {metadata.mediaUrl ? (
-                                                <img src={metadata.mediaUrl} className="w-full h-[180px] object-cover" alt="preview" />
+                                                <img src={metadata.mediaUrl} className="w-full max-w-full h-[180px] object-cover" alt="preview" />
                                             ) : (
                                                 <div className="h-[180px] flex items-center justify-center">
                                                     <ImageIcon className="w-10 h-10 text-zinc-300 dark:text-zinc-600" />
@@ -214,12 +229,44 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                     </>
                 )}
             </div>
-        </motion.div>
-    );
+        );
+
+        if (isModal) {
+            return (
+                <motion.div
+                    initial={{ opacity: 0, scale: 1, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: "spring", damping: 20, stiffness: 200 }}
+                    className={`relative z-10 min-w-0 max-w-full overflow-hidden ${normalizedType === 'carousel' ? 'w-full' : 'max-w-[85%]'}`}
+                    style={{ maxWidth: normalizedType === 'carousel' ? '100%' : '85%', width: normalizedType === 'carousel' ? '100%' : 'auto', minWidth: 0 }}
+                >
+                    {bubbleContent}
+                </motion.div>
+            );
+        }
+
+        return (
+            <div
+                className={`relative z-10 min-w-0 max-w-full overflow-hidden ${normalizedType === 'carousel' ? 'w-full' : 'max-w-[85%]'}`}
+                style={{ maxWidth: normalizedType === 'carousel' ? '100%' : '85%', width: normalizedType === 'carousel' ? '100%' : 'auto', minWidth: 0 }}
+            >
+                {bubbleContent}
+            </div>
+        );
+    };
 
     if (!isModal) {
         return (
-            <div className="relative w-full rounded-2xl bg-[#efeae2] dark:bg-[#0b141a] border border-black/5 dark:border-white/10 overflow-hidden p-4 min-h-37.5">
+            <div
+                className="relative w-full max-w-full min-w-0 rounded-2xl bg-[#efeae2] dark:bg-[#0b141a] border border-black/5 dark:border-white/10 overflow-hidden p-4 min-h-[150px]"
+                style={{
+                    width: '100%',
+                    maxWidth: '100%',
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    contain: 'inline-size'
+                }}
+            >
                 <div className="absolute inset-0 z-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none grayscale brightness-50 dark:brightness-100"
                     style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }} />
                 <MessageBubble />
@@ -255,11 +302,13 @@ export default function TemplatePreview({ template, showHeader = true, isModal =
                         </div>
                     </div>
 
-                    <div className="flex-1 relative overflow-y-auto custom-scrollbar p-3 pt-4 flex flex-col gap-2">
-                        <div className="absolute inset-0 z-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none grayscale brightness-50 dark:brightness-100"
-                            style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }} />
-                        <MessageBubble />
-                    </div>
+                    <ScrollArea className="flex-1 relative h-full">
+                        <div className="p-3 pt-4 flex flex-col gap-2 relative">
+                            <div className="absolute inset-0 z-0 opacity-[0.06] dark:opacity-[0.03] pointer-events-none grayscale brightness-50 dark:brightness-100"
+                                style={{ backgroundImage: 'url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")', backgroundSize: '400px' }} />
+                            <MessageBubble />
+                        </div>
+                    </ScrollArea>
 
                     <div className="p-2.5 bg-[#f0f2f5] dark:bg-[#202c33] border-t border-black/5 dark:border-white/10 flex items-center gap-2 pb-6">
                         <div className="w-6 h-6 rounded-full flex items-center justify-center text-zinc-400 dark:text-zinc-500">
