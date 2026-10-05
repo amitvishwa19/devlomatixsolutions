@@ -42,6 +42,7 @@ export const getSidebarNavItems = (workspaceId) => {
             parent: { title: "DevX(CRM)", icon: "rocket", url: baseCRMPath },
             child: [
                 { title: "Dashboard", icon: "layout-dashboard", url: baseCRMPath },
+                { title: "Activity Center", icon: "phone-call", url: `${baseCRMPath}/dcr` },
                 { title: "AI Copilot", icon: "sparkles", url: `${baseCRMPath}/copilot` },
                 { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
                 { title: "360° Contacts", icon: "users", url: `${baseCRMPath}/contacts` },

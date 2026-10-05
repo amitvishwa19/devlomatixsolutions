@@ -43,7 +43,10 @@ export async function getRevenueForecastAction(workspaceId, filters = {}) {
 
         // Pipeline Stages
         const stages = await prisma.dealStage.findMany({
-            where: { workspaceId },
+            where: {
+                pipeline: { workspaceId },
+                ...(pipelineId && pipelineId !== 'ALL' ? { pipelineId } : {})
+            },
             orderBy: { order: 'asc' }
         });
 

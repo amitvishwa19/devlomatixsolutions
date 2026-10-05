@@ -16,7 +16,8 @@ import {
     MessageCircle,
     Zap,
     BarChart3,
-    CheckSquare
+    CheckSquare,
+    PhoneCall
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +30,7 @@ export default function CrmLayout({ children }) {
 
     const navItems = [
         { title: "Dashboard", href: baseCRMPath, icon: LayoutDashboard, exact: true },
+        { title: "Activity Center", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
         { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
         { title: "360° Contacts", href: `${baseCRMPath}/contacts`, icon: Users },
