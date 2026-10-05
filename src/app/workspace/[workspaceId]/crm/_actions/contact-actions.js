@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { triggerCrmWorkflowAction } from "./crm-automation-actions";
 
 /**
  * Get all Contacts for CRM with search, filters, and relationship stats
@@ -169,6 +170,17 @@ export async function createCrmContactAction(workspaceId, data) {
                 description: `Created new ${type.toLowerCase()} record for ${contact.name}.`
             }
         });
+
+        // FlowForge Bridge: Trigger Cross-Module Workflow Automation on New Lead
+        try {
+            await triggerCrmWorkflowAction(workspaceId, {
+                triggerEvent: 'LEAD_CREATED',
+                contact,
+                account: contact.account
+            });
+        } catch (wfErr) {
+            console.warn("[CRM_LEAD_WORKFLOW_WARN]", wfErr);
+        }
 
         return { success: true, data: contact };
     } catch (error) {

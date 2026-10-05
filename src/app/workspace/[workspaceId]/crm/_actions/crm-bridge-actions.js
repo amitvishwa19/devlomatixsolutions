@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { triggerCrmWorkflowAction } from "./crm-automation-actions";
 
 /**
  * Bridge: Convert Hireflow ATS Candidate into a CRM Lead / Contact & Deal
@@ -93,6 +94,18 @@ export async function convertCandidateToLeadAction(workspaceId, candidateId, dea
                         description: `Candidate "${candidate.name}" synchronized from Hireflow ATS into CRM Deal.`
                     }
                 });
+
+                // FlowForge Bridge: Trigger Automation on ATS Candidate Placed / Converted
+                try {
+                    await triggerCrmWorkflowAction(workspaceId, {
+                        triggerEvent: 'CANDIDATE_PLACED',
+                        deal,
+                        contact,
+                        customData: { candidateName: candidate.name }
+                    });
+                } catch (wfErr) {
+                    console.warn("[CRM_ATS_WORKFLOW_WARN]", wfErr);
+                }
             }
         }
 

@@ -33,6 +33,8 @@ import { toast } from "sonner";
 import { getDealByIdAction, updateDealAction, updateDealStageAction, deleteDealAction } from "../../_actions/deal-actions";
 import { createActivityAction } from "../../_actions/activity-actions";
 import { sendWhatsAppFromCrmAction } from "../../_actions/crm-bridge-actions";
+import AiDealCopilotCard from "../../_components/AiDealCopilotCard";
+import PayFlowDealBillingCard from "../../_components/PayFlowDealBillingCard";
 
 export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stages = [], onDealUpdated }) {
     const [deal, setDeal] = useState(null);
@@ -274,6 +276,26 @@ export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stage
                                     </Select>
                                 </div>
                             </div>
+
+                            {/* FlowGenix AI Sales Intelligence Card */}
+                            <AiDealCopilotCard
+                                workspaceId={workspaceId}
+                                dealId={deal.id}
+                                onUseWhatsAppDraft={(draft) => {
+                                    setWaMessage(draft);
+                                    setShowWhatsAppBox(true);
+                                }}
+                            />
+
+                            {/* 1-Click PayFlow Invoicing & Commercial Quotations Bridge */}
+                            <PayFlowDealBillingCard
+                                workspaceId={workspaceId}
+                                deal={deal}
+                                onUpdated={async () => {
+                                    const updated = await getDealByIdAction(workspaceId, deal.id);
+                                    if (updated.success) setDeal(updated.data);
+                                }}
+                            />
 
                             {/* Linked Contact & WhatsApp Bridge */}
                             <div className="space-y-2 pt-2">

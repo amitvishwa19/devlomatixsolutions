@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { triggerCrmWorkflowAction } from "./crm-automation-actions";
 
 /**
  * Get Deals with optional filters (pipeline, stage, owner, contact, account)
@@ -248,6 +249,29 @@ export async function updateDealStageAction(workspaceId, dealId, stageId) {
                     }
                 }
             });
+
+            // FlowForge Bridge: Trigger Cross-Module Workflow Automations
+            try {
+                if (targetStage.isWon) {
+                    await triggerCrmWorkflowAction(workspaceId, {
+                        triggerEvent: 'DEAL_WON',
+                        deal: updatedDeal,
+                        contact: updatedDeal.contact,
+                        account: updatedDeal.account,
+                        stage: targetStage
+                    });
+                } else {
+                    await triggerCrmWorkflowAction(workspaceId, {
+                        triggerEvent: 'DEAL_STAGE_CHANGED',
+                        deal: updatedDeal,
+                        contact: updatedDeal.contact,
+                        account: updatedDeal.account,
+                        stage: targetStage
+                    });
+                }
+            } catch (wfErr) {
+                console.warn("[CRM_WORKFLOW_TRIGGER_WARN]", wfErr);
+            }
         }
 
         return { success: true, data: updatedDeal };

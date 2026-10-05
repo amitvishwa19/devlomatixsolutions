@@ -13,7 +13,10 @@ import {
     Plus,
     Sparkles,
     Briefcase,
-    MessageCircle
+    MessageCircle,
+    Zap,
+    BarChart3,
+    CheckSquare
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -26,9 +29,13 @@ export default function CrmLayout({ children }) {
 
     const navItems = [
         { title: "Dashboard", href: baseCRMPath, icon: LayoutDashboard, exact: true },
+        { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
         { title: "360° Contacts", href: `${baseCRMPath}/contacts`, icon: Users },
         { title: "Companies", href: `${baseCRMPath}/accounts`, icon: Building2 },
+        { title: "Tasks", href: `${baseCRMPath}/tasks`, icon: CheckSquare },
+        { title: "Forecast & Leaderboard", href: `${baseCRMPath}/analytics`, icon: BarChart3 },
+        { title: "Automations", href: `${baseCRMPath}/automations`, icon: Zap },
         { title: "Activities", href: `${baseCRMPath}/activities`, icon: Activity },
         { title: "Settings", href: `${baseCRMPath}/settings`, icon: Settings2 },
     ];
@@ -60,7 +67,7 @@ export default function CrmLayout({ children }) {
                         </div>
 
                         <nav className="flex items-center gap-1 shrink-0">
-                            {navItems.map((item) => {
+                            {/* {navItems.map((item) => {
                                 const active = isActive(item);
                                 const Icon = item.icon;
                                 return (
@@ -77,7 +84,7 @@ export default function CrmLayout({ children }) {
                                         <span>{item.title}</span>
                                     </Link>
                                 );
-                            })}
+                            })} */}
                         </nav>
                     </div>
 

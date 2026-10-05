@@ -22,7 +22,8 @@ import {
     Loader2,
     RefreshCw,
     Sparkles,
-    CheckCircle2
+    CheckCircle2,
+    UploadCloud
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ import { toast } from "sonner";
 
 import CreateContactModal from './_components/CreateContactModal';
 import QuickWhatsAppModal from './_components/QuickWhatsAppModal';
+import BulkImportModal from '../_components/BulkImportModal';
 import { getCrmContactsAction, deleteCrmContactAction } from '../_actions/contact-actions';
 
 export default function ContactsDirectoryPage() {
@@ -50,6 +52,7 @@ export default function ContactsDirectoryPage() {
 
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
     const [waContact, setWaContact] = useState(null);
     const [isWaModalOpen, setIsWaModalOpen] = useState(false);
 
@@ -156,6 +159,15 @@ export default function ContactsDirectoryPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-1.5 text-xs font-semibold"
+                        onClick={() => setIsBulkImportOpen(true)}
+                    >
+                        <UploadCloud className="w-3.5 h-3.5 text-primary" />
+                        <span>Bulk Import & Sync</span>
+                    </Button>
                     <Button
                         variant="outline"
                         size="sm"
@@ -434,6 +446,14 @@ export default function ContactsDirectoryPage() {
                 contact={waContact}
                 workspaceId={workspaceId}
                 onMessageSent={() => loadContacts()}
+            />
+
+            {/* Bulk Lead Importer & WhatsApp Chat Sync Modal */}
+            <BulkImportModal
+                isOpen={isBulkImportOpen}
+                onClose={() => setIsBulkImportOpen(false)}
+                workspaceId={workspaceId}
+                onImportComplete={() => loadContacts(true)}
             />
         </div>
     );

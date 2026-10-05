@@ -39,12 +39,16 @@ export const getSidebarNavItems = (workspaceId) => {
             permission: `navbar:Workspace:Home`
         },
         {
-            parent: { title: "CRM", icon: "rocket", url: baseCRMPath },
+            parent: { title: "DevX(CRM)", icon: "rocket", url: baseCRMPath },
             child: [
                 { title: "Dashboard", icon: "layout-dashboard", url: baseCRMPath },
+                { title: "AI Copilot", icon: "sparkles", url: `${baseCRMPath}/copilot` },
                 { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
                 { title: "360° Contacts", icon: "users", url: `${baseCRMPath}/contacts` },
                 { title: "Companies", icon: "building", url: `${baseCRMPath}/accounts` },
+                { title: "Tasks", icon: "check-square", url: `${baseCRMPath}/tasks` },
+                { title: "Forecast & Leaderboard", icon: "trending-up", url: `${baseCRMPath}/analytics` },
+                { title: "Automations", icon: "zap", url: `${baseCRMPath}/automations` },
                 { title: "Activities", icon: "activity", url: `${baseCRMPath}/activities` },
                 { title: "Settings", icon: "settings-2", url: `${baseCRMPath}/settings` },
             ],

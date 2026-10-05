@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
     SlidersHorizontal,
@@ -215,7 +216,7 @@ export default function CrmSettingsPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 lg:p-8 space-y-8 max-w-6xl mx-auto">
+        <div className="flex flex-col min-h-screen bg-background p-4  mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -496,14 +497,22 @@ export default function CrmSettingsPage() {
                                 <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-500 shrink-0">
                                     <Sparkles className="w-5 h-5" />
                                 </div>
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <h4 className="font-bold text-xs text-foreground">FlowForge Automation Engine</h4>
-                                        <Badge className="bg-purple-500/10 text-purple-500 text-[9px]">Active</Badge>
+                                <div className="space-y-2 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="font-bold text-xs text-foreground">FlowForge Automation Engine</h4>
+                                            <Badge className="bg-purple-500/10 text-purple-500 text-[9px]">Active</Badge>
+                                        </div>
                                     </div>
                                     <p className="text-[11px] text-muted-foreground leading-relaxed">
                                         Trigger automated webhook flows and multi-step actions on deal stage transitions and new lead signups.
                                     </p>
+                                    <Link href={`/workspace/${workspaceId}/crm/automations`}>
+                                        <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 bg-background font-semibold hover:border-purple-500/50 hover:text-purple-500">
+                                            <Zap className="w-3 h-3 text-purple-500" />
+                                            <span>Manage Automations</span>
+                                        </Button>
+                                    </Link>
                                 </div>
                             </div>
                         </div>

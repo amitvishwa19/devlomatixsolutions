@@ -142,6 +142,10 @@ export async function POST(request) {
                     price: data.price,
                     currency: data.currency,
                     sku: data.sku,
+                    // Meta upserts on `retailer_id`. It has to stay stable
+                    // across edits or a SKU-less product is mirrored as a new
+                    // Meta product on every save.
+                    retailer_id: data.sku || data.id,
                     image_url: data.imageUrls?.[0],
                     availability: data.status === "out of stock" ? "out of stock" : "in stock"
                 }).catch((error) => ({ success: false, error: error.message }));
