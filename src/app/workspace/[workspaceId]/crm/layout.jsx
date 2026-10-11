@@ -16,10 +16,13 @@ import {
     MessageCircle,
     Zap,
     BarChart3,
-    CheckSquare,
-    PhoneCall
+    PhoneCall,
+    Video,
+    MessageSquare,
+    CheckSquare
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import { CrmSocketProvider } from '@/providers/CrmSocketProvider';
 
 export default function CrmLayout({ children }) {
     const pathname = usePathname();
@@ -30,6 +33,7 @@ export default function CrmLayout({ children }) {
 
     const navItems = [
         { title: "Dashboard", href: baseCRMPath, icon: LayoutDashboard, exact: true },
+        { title: "Chat & Calls", href: `${baseCRMPath}/chat`, icon: Video },
         { title: "Activity Center", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
         { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
@@ -48,7 +52,8 @@ export default function CrmLayout({ children }) {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background/95 w-full">
+        <CrmSocketProvider>
+            <div className="flex flex-col min-h-screen bg-background/95 w-full">
             {/* Top CRM Sub-Navigation Bar */}
             <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur-md px-4 sm:px-6 py-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -119,5 +124,6 @@ export default function CrmLayout({ children }) {
                 {children}
             </main>
         </div>
+        </CrmSocketProvider>
     );
 }

@@ -3,22 +3,31 @@ import { db } from "@/lib/db";
 import { runWorkflow } from "@/lib/workflow-engine";
 import parser from "cron-parser";
 import serverLogger from "@/utils/serverLogger";
+import { logCronRequest } from "@/lib/cron-logger";
 
 // Helper for v5.5.0 ESM compatibility
 const getCron = () => {
     const p = parser.default || parser;
-    // v5.5.0 uses p.parse, previous versions use p.parseExpression
     const parseFn = p.parse || p.parseExpression;
     return { parseExpression: parseFn.bind(p) };
 };
 const cronHelper = getCron();
 
 export async function GET(req) {
-    // Optional Security: Check Authorization Header if CRON_SECRET is defined
+    const startTime = Date.now();
     const secret = process.env.CRON_SECRET;
+
+    // Optional Security: Check Authorization Header if CRON_SECRET is defined
     if (secret) {
         const authHeader = req.headers.get("authorization");
         if (authHeader !== `Bearer ${secret}`) {
+            await logCronRequest(req, {
+                jobName: 'System Cron Dispatcher',
+                status: 'UNAUTHORIZED',
+                statusCode: 401,
+                errorMessage: 'Unauthorized cron secret mismatch',
+                durationMs: Date.now() - startTime
+            });
             return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
         }
     }
@@ -76,7 +85,6 @@ export async function GET(req) {
                         }
                     }
                 } else if (cron.targetType === "SYSTEM") {
-                    // Decoupled / Manual integration placeholder
                     console.log(`[CRON_SYSTEM_TRIGGER] Job: ${cron.name}, Target: ${cron.targetId}`);
 
                     // Log to system logs
@@ -112,10 +120,30 @@ export async function GET(req) {
             }
         }
 
-        return NextResponse.json({ success: true, processed: dueCrons.length, results: executionResults });
+        const resData = { success: true, processed: dueCrons.length, results: executionResults };
+
+        // Save incoming request log to CronLog table
+        await logCronRequest(req, {
+            jobName: 'System Cron Dispatcher',
+            status: 'SUCCESS',
+            statusCode: 200,
+            response: resData,
+            durationMs: Date.now() - startTime
+        });
+
+        return NextResponse.json(resData);
 
     } catch (error) {
         console.error("[WEBHOOK_CRON_ERROR]", error);
+
+        await logCronRequest(req, {
+            jobName: 'System Cron Dispatcher',
+            status: 'FAILED',
+            statusCode: 500,
+            errorMessage: error.message,
+            durationMs: Date.now() - startTime
+        });
+
         return NextResponse.json({ success: false, message: error.message }, { status: 500 });
     }
 }

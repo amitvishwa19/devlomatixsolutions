@@ -43,6 +43,7 @@ export const getSidebarNavItems = (workspaceId) => {
             child: [
                 { title: "Dashboard", icon: "layout-dashboard", url: baseCRMPath },
                 { title: "Activity Center", icon: "phone-call", url: `${baseCRMPath}/dcr` },
+                { title: "Chat & Calls", icon: "messages-square", url: `${baseCRMPath}/chat` },
                 { title: "AI Copilot", icon: "sparkles", url: `${baseCRMPath}/copilot` },
                 { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
                 { title: "360° Contacts", icon: "users", url: `${baseCRMPath}/contacts` },
