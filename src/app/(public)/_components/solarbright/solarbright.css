@@ -1,0 +1,82 @@
+/* Scoped styling for SolarBright 1-Page Website in Modal */
+
+.solar-bright-site {
+  --sb-primary: 190 90% 50%;
+  --sb-primary-foreground: 220 40% 6%;
+  --sb-amber: 38 92% 50%;
+  --sb-amber-foreground: 0 0% 100%;
+  --sb-card: 220 35% 9%;
+  --sb-card-foreground: 200 20% 92%;
+  --sb-border: 220 25% 16%;
+  --sb-muted: 220 25% 14%;
+  --sb-muted-foreground: 210 15% 55%;
+
+  --gradient-sun: linear-gradient(135deg, #38bdf8, #2dd4bf, #fbbf24);
+  --gradient-sun-amber: linear-gradient(135deg, #f59e0b, #fbbf24, #fef08a);
+  --gradient-hero: linear-gradient(180deg, hsl(220 40% 6% / 0.85), hsl(220 40% 6% / 0.98));
+  --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.08), hsl(0 0% 100% / 0.02));
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 50% / 0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, hsl(38 92% 50% / 0.06) 0%, transparent 50%);
+  --shadow-card: 0 1px 3px hsl(220 40% 4% / 0.3), 0 4px 16px hsl(220 40% 4% / 0.2);
+  --shadow-elevated: 0 4px 12px hsl(220 40% 4% / 0.4), 0 16px 48px hsl(220 40% 4% / 0.3);
+  --shadow-glow: 0 0 30px hsl(190 90% 50% / 0.2);
+  --shadow-glow-amber: 0 0 30px hsl(38 92% 50% / 0.25);
+
+  font-family: inherit;
+  scroll-behavior: smooth;
+}
+
+.solar-bright-site .text-gradient-sun {
+  background: linear-gradient(135deg, #38bdf8, #2dd4bf, #fbbf24);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.solar-bright-site .text-gradient-amber {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24, #fef08a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 800;
+}
+
+.solar-bright-site .glass {
+  background: hsl(220 35% 9% / 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(220 25% 18% / 0.6);
+}
+
+.solar-bright-site .glass-card {
+  background: hsl(220 35% 10% / 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(0 0% 100% / 0.08);
+}
+
+.solar-bright-site .mesh-bg {
+  background-image: var(--gradient-mesh);
+}
+
+.solar-bright-site .section-divider {
+  background: linear-gradient(90deg, transparent, hsl(190 90% 50% / 0.3), transparent);
+  height: 1px;
+}
+
+.solar-bright-site .shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    hsl(0 0% 100% / 0.06) 37%,
+    transparent 63%
+  );
+  background-size: 200% 100%;
+  animation: sb-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes sb-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
