@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { KonnectXModal } from '../_components/konnectx';
 import { CurexaModal } from '../_components/curexa';
 import { SolarBrightModal } from '../_components/solarbright';
@@ -24,10 +24,8 @@ import {
     Cpu,
     Database,
     Sparkles,
-    CheckCircle2,
     SlidersHorizontal,
-    TrendingUp,
-    ExternalLink
+    TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

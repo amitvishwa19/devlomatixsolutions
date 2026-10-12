@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, Rocket, ArrowRight, ShieldCheck, Sparkles, Building2, Send } from "lucide-react";
+import { X, CheckCircle2, Rocket, ShieldCheck, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const sectors = [
