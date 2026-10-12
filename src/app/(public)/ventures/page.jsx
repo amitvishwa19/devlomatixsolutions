@@ -3,22 +3,17 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { KonnectXModal } from '../_components/konnectx';
+import { CurexaModal } from '../_components/curexa';
 import { 
     HeartPulse, 
     MessageSquare, 
     Sun, 
-    Users, 
-    ExternalLink, 
     Mail, 
     ArrowRight,
     Zap,
     Briefcase,
     Gem,
-    Activity,
-    ShieldCheck,
-    Cpu,
     Globe,
-    BarChart3,
     Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -139,6 +134,7 @@ const colorVariants = {
 
 export default function VenturesPage() {
     const [isKonnectXOpen, setIsKonnectXOpen] = useState(false);
+    const [isCurexaOpen, setIsCurexaOpen] = useState(false);
 
     return (
         <TooltipProvider>
@@ -259,12 +255,14 @@ export default function VenturesPage() {
                                                             e.stopPropagation();
                                                             if (venture.name === "KonnectX") {
                                                                 setIsKonnectXOpen(true);
+                                                            } else if (venture.name === "Curexa") {
+                                                                setIsCurexaOpen(true);
                                                             } else {
                                                                 toast.info(`Initializing ${venture.name} demo...`);
                                                             }
                                                         }}
                                                         className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-105 cursor-pointer"
-                                                        title={venture.name === "KonnectX" ? "Preview Platform" : "Demo"}
+                                                        title={venture.name === "KonnectX" || venture.name === "Curexa" ? "Preview Platform" : "Demo"}
                                                     >
                                                         <Play className="w-3.5 h-3.5 fill-current" />
                                                     </button>
@@ -282,6 +280,14 @@ export default function VenturesPage() {
                                                 <Button 
                                                     onClick={() => setIsKonnectXOpen(true)}
                                                     className="w-full rounded-xl font-bold h-11 bg-primary text-white hover:bg-primary/90 transition-all duration-300 group/btn shadow-md shadow-primary/20 cursor-pointer"
+                                                >
+                                                    Explore Platform
+                                                    <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                                </Button>
+                                            ) : venture.name === "Curexa" ? (
+                                                <Button 
+                                                    onClick={() => setIsCurexaOpen(true)}
+                                                    className="w-full rounded-xl font-bold h-11 bg-emerald-600 hover:bg-emerald-700 text-white transition-all duration-300 group/btn shadow-md shadow-emerald-500/20 cursor-pointer"
                                                 >
                                                     Explore Platform
                                                     <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
@@ -351,6 +357,12 @@ export default function VenturesPage() {
                 <KonnectXModal 
                     isOpen={isKonnectXOpen} 
                     onClose={() => setIsKonnectXOpen(false)} 
+                />
+
+                {/* Curexa 1-Page Website Modal */}
+                <CurexaModal 
+                    isOpen={isCurexaOpen} 
+                    onClose={() => setIsCurexaOpen(false)} 
                 />
             </div>
         </TooltipProvider>
