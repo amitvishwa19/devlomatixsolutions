@@ -1,0 +1,122 @@
+/* Scoped styling for KonnectX 1-Page Website in Modal */
+
+.konnectx-site {
+  /* Default dark theme tokens */
+  --kx-primary: 190 90% 50%;
+  --kx-primary-foreground: 220 40% 6%;
+  --kx-background: 220 40% 6%;
+  --kx-foreground: 200 20% 92%;
+  --kx-card: 220 35% 9%;
+  --kx-card-foreground: 200 20% 92%;
+  --kx-border: 220 25% 16%;
+  --kx-muted: 220 25% 14%;
+  --kx-muted-foreground: 210 15% 55%;
+
+  --gradient-sun: linear-gradient(135deg, hsl(190 90% 45%), hsl(170 80% 40%));
+  --gradient-hero: linear-gradient(180deg, hsl(220 40% 6% / 0.85), hsl(220 40% 6% / 0.98));
+  --gradient-glass: linear-gradient(135deg, hsl(220 35% 12% / 0.7), hsl(220 35% 8% / 0.4));
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 40% / 0.08) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, hsl(170 80% 35% / 0.06) 0%, transparent 50%);
+  --shadow-card: 0 4px 20px hsl(220 40% 2% / 0.5), 0 1px 3px hsl(0 0% 100% / 0.05);
+  --shadow-elevated: 0 10px 30px hsl(220 40% 2% / 0.6), 0 1px 4px hsl(0 0% 100% / 0.08);
+  --shadow-glow: 0 0 35px hsl(190 90% 50% / 0.15);
+  --shadow-glow-lg: 0 0 60px hsl(190 90% 50% / 0.25), 0 0 120px hsl(190 90% 50% / 0.1);
+
+  color: hsl(var(--kx-foreground));
+  background-color: hsl(var(--kx-background));
+  font-family: inherit;
+  scroll-behavior: smooth;
+}
+
+/* Light theme support */
+.light .konnectx-site {
+  --kx-primary: 190 90% 40%;
+  --kx-primary-foreground: 0 0% 100%;
+  --kx-background: 210 20% 98%;
+  --kx-foreground: 220 30% 15%;
+  --kx-card: 0 0% 100%;
+  --kx-card-foreground: 220 30% 15%;
+  --kx-border: 220 15% 88%;
+  --kx-muted: 210 15% 94%;
+  --kx-muted-foreground: 215 15% 45%;
+
+  --gradient-sun: linear-gradient(135deg, hsl(190 90% 40%), hsl(170 80% 35%));
+  --gradient-hero: linear-gradient(180deg, hsl(210 20% 98% / 0.85), hsl(210 20% 98% / 0.98));
+  --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.7), hsl(0 0% 100% / 0.4));
+  --gradient-mesh: radial-gradient(ellipse at 20% 50%, hsl(190 90% 40% / 0.06) 0%, transparent 50%),
+                   radial-gradient(ellipse at 80% 20%, hsl(170 80% 35% / 0.04) 0%, transparent 50%);
+  --shadow-card: 0 1px 3px hsl(220 20% 80% / 0.3), 0 4px 16px hsl(220 20% 80% / 0.15);
+  --shadow-elevated: 0 4px 12px hsl(220 20% 80% / 0.3), 0 16px 48px hsl(220 20% 80% / 0.2);
+  --shadow-glow: 0 0 30px hsl(190 90% 40% / 0.1);
+  --shadow-glow-lg: 0 0 60px hsl(190 90% 40% / 0.15), 0 0 120px hsl(190 90% 40% / 0.05);
+}
+
+/* Scoped Utility Classes */
+.konnectx-site .text-gradient-sun {
+  background: var(--gradient-sun);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.konnectx-site .glass {
+  background: hsl(220 35% 9% / 0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid hsl(220 25% 18% / 0.6);
+}
+
+.light .konnectx-site .glass {
+  background: hsl(0 0% 100% / 0.85);
+  border: 1px solid hsl(220 15% 87% / 0.8);
+}
+
+.konnectx-site .glass-card {
+  background: hsl(220 35% 10% / 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(0 0% 100% / 0.07);
+}
+
+.light .konnectx-site .glass-card {
+  background: hsl(0 0% 100% / 0.75);
+  border: 1px solid hsl(220 15% 87% / 0.5);
+}
+
+.konnectx-site .mesh-bg {
+  background-image: var(--gradient-mesh);
+}
+
+.konnectx-site .section-divider {
+  background: linear-gradient(90deg, transparent, hsl(190 90% 50% / 0.25), transparent);
+  height: 1px;
+}
+
+.konnectx-site .shimmer {
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    hsl(0 0% 100% / 0.04) 37%,
+    transparent 63%
+  );
+  background-size: 200% 100%;
+  animation: kx-shimmer 3s ease-in-out infinite;
+}
+
+@keyframes kx-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes kx-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-kx-marquee {
+  animation: kx-marquee 30s linear infinite;
+}
+
+.animate-kx-marquee:hover {
+  animation-play-state: paused;
+}

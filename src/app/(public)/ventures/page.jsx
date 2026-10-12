@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { KonnectXModal } from '../_components/konnectx';
 import { 
     HeartPulse, 
     MessageSquare, 
@@ -137,6 +138,8 @@ const colorVariants = {
 };
 
 export default function VenturesPage() {
+    const [isKonnectXOpen, setIsKonnectXOpen] = useState(false);
+
     return (
         <TooltipProvider>
             <div className="w-full min-h-screen bg-background relative overflow-hidden">
@@ -252,13 +255,22 @@ export default function VenturesPage() {
                                                 </div>
                                                 <div className="flex items-center gap-2.5">
                                                     <button 
-                                                        onClick={() => toast.info(`Initializing ${venture.name} demo...`)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (venture.name === "KonnectX") {
+                                                                setIsKonnectXOpen(true);
+                                                            } else {
+                                                                toast.info(`Initializing ${venture.name} demo...`);
+                                                            }
+                                                        }}
                                                         className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-105 cursor-pointer"
+                                                        title={venture.name === "KonnectX" ? "Preview Platform" : "Demo"}
                                                     >
                                                         <Play className="w-3.5 h-3.5 fill-current" />
                                                     </button>
                                                     <a 
                                                         href={`mailto:${venture.email}`}
+                                                        onClick={(e) => e.stopPropagation()}
                                                         className="p-2 rounded-full bg-background border border-border/50 text-muted-foreground hover:text-primary hover:border-primary/30 transition-all hover:scale-105 cursor-pointer"
                                                     >
                                                         <Mail className="w-3.5 h-3.5" />
@@ -266,15 +278,25 @@ export default function VenturesPage() {
                                                 </div>
                                             </div>
 
-                                            <Button 
-                                                asChild
-                                                className="w-full rounded-xl font-semibold h-11 bg-primary text-white hover:bg-primary/90 transition-all duration-300 group/btn shadow-md shadow-primary/20 cursor-pointer"
-                                            >
-                                                <a href={venture.website} target="_blank" rel="noopener noreferrer">
-                                                    Go to Platform
+                                            {venture.name === "KonnectX" ? (
+                                                <Button 
+                                                    onClick={() => setIsKonnectXOpen(true)}
+                                                    className="w-full rounded-xl font-bold h-11 bg-primary text-white hover:bg-primary/90 transition-all duration-300 group/btn shadow-md shadow-primary/20 cursor-pointer"
+                                                >
+                                                    Explore Platform
                                                     <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                                                </a>
-                                            </Button>
+                                                </Button>
+                                            ) : (
+                                                <Button 
+                                                    asChild
+                                                    className="w-full rounded-xl font-semibold h-11 bg-primary text-white hover:bg-primary/90 transition-all duration-300 group/btn shadow-md shadow-primary/20 cursor-pointer"
+                                                >
+                                                    <a href={venture.website} target="_blank" rel="noopener noreferrer">
+                                                        Go to Platform
+                                                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                                                    </a>
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -325,6 +347,11 @@ export default function VenturesPage() {
                         </div>
                     </div>
                 </div>
+                {/* KonnectX 1-Page Website Modal */}
+                <KonnectXModal 
+                    isOpen={isKonnectXOpen} 
+                    onClose={() => setIsKonnectXOpen(false)} 
+                />
             </div>
         </TooltipProvider>
     );
