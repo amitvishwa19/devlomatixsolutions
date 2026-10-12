@@ -19,7 +19,7 @@ import "./konnectx.css";
 export function KonnectXLanding({ onClose }) {
   return (
     <LanguageProvider>
-      <div className="konnectx-site relative min-h-screen w-full  selection:text-primary ">
+      <div className="konnectx-site relative min-h-screen w-full bg-background/40  selection:text-primary ">
         <Navbar onClose={onClose} />
         <main>
           <Hero />
