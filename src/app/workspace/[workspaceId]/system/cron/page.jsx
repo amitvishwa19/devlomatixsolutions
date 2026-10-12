@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import axios from "@/utils/axios";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -76,7 +77,7 @@ const CRON_PRESETS = [
     { label: "Every Monday at 9AM", value: "0 9 * * 1" },
 ];
 
-export default function SystemCronManagementPage() {
+export default function SystemCronManagementPage({ className = "p-4 sm:p-6 max-w-7xl mx-auto" }) {
     const params = useParams();
     const workspaceId = params?.workspaceId;
 
@@ -372,7 +373,7 @@ export default function SystemCronManagementPage() {
     };
 
     return (
-        <div className="p-4 sm:p-6 space-y-6 max-w-7xl mx-auto animate-in fade-in-50">
+        <div className={cn("space-y-6 animate-in fade-in-50", className)}>
             {/* Header Area */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
