@@ -7,6 +7,8 @@ import { CurexaModal } from '../_components/curexa';
 import { SolarBrightModal } from '../_components/solarbright';
 import { HireFlowModal } from '../_components/hireflow';
 import { CrystalAuraModal } from '../_components/crystalaura';
+import { FleetXModal } from '../_components/fleetx';
+import { PropXModal } from '../_components/propx';
 import { VenturePartnershipDialog } from '../_components/VenturePartnershipDialog';
 import { 
     HeartPulse, 
@@ -25,7 +27,9 @@ import {
     Database,
     Sparkles,
     SlidersHorizontal,
-    TrendingUp
+    TrendingUp,
+    Truck,
+    Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +73,44 @@ const ventures = [
         features: ["Bulk Sending", "Chatbot Builder", "Lead CRM"],
         tech: ["Node.js", "Redis", "CloudAPI"],
         sla: "99.98%",
+        status: "Live & Operational"
+    },
+    {
+        name: "FleetX",
+        slug: "fleetx",
+        website: "https://fleetx.devlomatix.com",
+        email: "fleetx@devlomatix.com",
+        description: "Autonomous commercial fleet telemetry, CAN-bus fuel siphon guards, dynamic AI route solvers, and automated customer WhatsApp dispatch tracking.",
+        icon: Truck,
+        color: "sky",
+        tag: "Logistics Tech",
+        category: "Logistics & Fleet",
+        metrics: [
+            { label: "Vehicles", value: "12k+" },
+            { label: "Fuel Saved", value: "32%" }
+        ],
+        features: ["CAN Telemetry", "AI Routing", "WhatsApp Alerts"],
+        tech: ["Go", "Next.js", "Redis", "Kafka"],
+        sla: "99.98%",
+        status: "Live & Operational"
+    },
+    {
+        name: "PropX",
+        slug: "propx",
+        website: "https://propx.devlomatix.com",
+        email: "propx@devlomatix.com",
+        description: "Modern real estate asset cloud featuring digital lease e-signatures, visual vacancy stacking plans, automated contractor dispatch, and WhatsApp rent recovery.",
+        icon: Building2,
+        color: "amber",
+        tag: "PropTech",
+        category: "Real Estate & PropTech",
+        metrics: [
+            { label: "Units Managed", value: "35k+" },
+            { label: "Collection", value: "99.2%" }
+        ],
+        features: ["Lease E-Sign", "Stacking Maps", "WhatsApp Invoicing"],
+        tech: ["Next.js", "PostgreSQL", "PayFlow"],
+        sla: "99.99%",
         status: "Live & Operational"
     },
     {
@@ -134,15 +176,17 @@ const categories = [
     "All Sectors",
     "Healthcare",
     "Marketing & Telecom",
+    "Logistics & Fleet",
+    "Real Estate & PropTech",
     "Clean Energy",
     "HR & Recruitment",
     "Wellness & E-Com"
 ];
 
 const aggregateMetrics = [
-    { label: "Active Ventures", value: "5", change: "+100% YoY", icon: Globe },
-    { label: "Active End Users", value: "150k+", change: "Global Reach", icon: TrendingUp },
-    { label: "Monthly Operations", value: "5M+", change: "High Throughput", icon: Zap },
+    { label: "Active Ventures", value: "7", change: "+140% YoY", icon: Globe },
+    { label: "Active End Users", value: "220k+", change: "Global Reach", icon: TrendingUp },
+    { label: "Monthly Operations", value: "8M+", change: "High Throughput", icon: Zap },
     { label: "Clean Energy Monitored", value: "15+ MW", change: "Carbon Offset", icon: Sun },
     { label: "Platform Uptime SLA", value: "99.99%", change: "Enterprise Tier", icon: Shield },
 ];
@@ -162,11 +206,18 @@ const colorVariants = {
         tag: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25",
         btn: "bg-primary hover:bg-primary/90 text-white shadow-primary/20",
     },
+    sky: {
+        card: "from-sky-500/10 via-cyan-500/5 to-transparent border-sky-500/30 hover:border-sky-500/60 shadow-xs hover:shadow-xl hover:shadow-sky-500/15 bg-card",
+        icon: "from-sky-500 to-cyan-600 shadow-sky-500/25",
+        bar: "from-sky-500 via-cyan-500 to-teal-400",
+        tag: "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25",
+        btn: "bg-sky-600 hover:bg-sky-700 text-white shadow-sky-500/20",
+    },
     amber: {
-        card: "from-teal-500/10 via-cyan-500/5 to-transparent border-teal-500/30 hover:border-teal-500/60 shadow-xs hover:shadow-xl hover:shadow-teal-500/15 bg-card",
-        icon: "from-teal-500 to-cyan-600 shadow-teal-500/25",
-        bar: "from-teal-500 via-cyan-500 to-emerald-400",
-        tag: "bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/25",
+        card: "from-amber-500/10 via-orange-500/5 to-transparent border-amber-500/30 hover:border-amber-500/60 shadow-xs hover:shadow-xl hover:shadow-amber-500/15 bg-card",
+        icon: "from-amber-500 to-orange-600 shadow-amber-500/25",
+        bar: "from-amber-500 via-orange-500 to-yellow-400",
+        tag: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
         btn: "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20",
     },
     purple: {
@@ -188,6 +239,8 @@ const colorVariants = {
 export default function VenturesPage() {
     const [isKonnectXOpen, setIsKonnectXOpen] = useState(false);
     const [isCurexaOpen, setIsCurexaOpen] = useState(false);
+    const [isFleetXOpen, setIsFleetXOpen] = useState(false);
+    const [isPropXOpen, setIsPropXOpen] = useState(false);
     const [isSolarBrightOpen, setIsSolarBrightOpen] = useState(false);
     const [isHireFlowOpen, setIsHireFlowOpen] = useState(false);
     const [isCrystalAuraOpen, setIsCrystalAuraOpen] = useState(false);
@@ -202,6 +255,8 @@ export default function VenturesPage() {
             const hash = window.location.hash.replace("#", "").toLowerCase();
             if (hash === "konnectx") setIsKonnectXOpen(true);
             else if (hash === "curexa") setIsCurexaOpen(true);
+            else if (hash === "fleetx") setIsFleetXOpen(true);
+            else if (hash === "propx") setIsPropXOpen(true);
             else if (hash === "solarbright") setIsSolarBrightOpen(true);
             else if (hash === "hireflow") setIsHireFlowOpen(true);
             else if (hash === "crystalaura") setIsCrystalAuraOpen(true);
@@ -220,6 +275,8 @@ export default function VenturesPage() {
 
         if (name === "KonnectX") setIsKonnectXOpen(true);
         else if (name === "Curexa") setIsCurexaOpen(true);
+        else if (name === "FleetX") setIsFleetXOpen(true);
+        else if (name === "PropX") setIsPropXOpen(true);
         else if (name === "SolarBright") setIsSolarBrightOpen(true);
         else if (name === "HireFlow") setIsHireFlowOpen(true);
         else if (name === "CrystalAura") setIsCrystalAuraOpen(true);
@@ -643,19 +700,31 @@ export default function VenturesPage() {
                     onClose={() => handleCloseModal(setIsCurexaOpen)} 
                 />
 
-                {/* 3. SolarBright 1-Page Website Modal */}
+                {/* 3. FleetX 1-Page Website Modal */}
+                <FleetXModal
+                    isOpen={isFleetXOpen}
+                    onClose={() => handleCloseModal(setIsFleetXOpen)}
+                />
+
+                {/* 4. PropX 1-Page Website Modal */}
+                <PropXModal
+                    isOpen={isPropXOpen}
+                    onClose={() => handleCloseModal(setIsPropXOpen)}
+                />
+
+                {/* 5. SolarBright 1-Page Website Modal */}
                 <SolarBrightModal 
                     isOpen={isSolarBrightOpen} 
                     onClose={() => handleCloseModal(setIsSolarBrightOpen)} 
                 />
 
-                {/* 4. HireFlow 1-Page Website Modal */}
+                {/* 6. HireFlow 1-Page Website Modal */}
                 <HireFlowModal 
                     isOpen={isHireFlowOpen} 
                     onClose={() => handleCloseModal(setIsHireFlowOpen)} 
                 />
 
-                {/* 5. CrystalAura 1-Page Website Modal */}
+                {/* 7. CrystalAura 1-Page Website Modal */}
                 <CrystalAuraModal 
                     isOpen={isCrystalAuraOpen} 
                     onClose={() => handleCloseModal(setIsCrystalAuraOpen)} 

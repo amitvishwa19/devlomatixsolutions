@@ -25,6 +25,8 @@ export const getSidebarNavItems = (workspaceId) => {
     const baseSocialhubPath = `${basePath}/socialhub`;
     const baseVaultPath = `${basePath}/vault`;
     const baseCRMPath = `${basePath}/crm`;
+    const baseFleetxPath = `${basePath}/fleetx`;
+    const basePropxPath = `${basePath}/propx`;
 
     return [
         {
@@ -104,6 +106,29 @@ export const getSidebarNavItems = (workspaceId) => {
             ],
             baseUrl: baseAtsPath,
             permission: `navbar:ATS:Parent`
+        },
+        {
+            parent: { title: "FleetX", icon: "truck", url: baseFleetxPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseFleetxPath },
+                { title: "Live Fleet Map", icon: "map-pin", url: `${baseFleetxPath}#live-map` },
+                { title: "Dispatches", icon: "send", url: `${baseFleetxPath}#dispatches` },
+                { title: "Fuel Telemetry", icon: "fuel", url: `${baseFleetxPath}#fuel` },
+            ],
+            baseUrl: baseFleetxPath,
+            permission: `navbar:FleetX:Parent`
+        },
+        {
+            parent: { title: "PropX", icon: "building", url: basePropxPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: basePropxPath },
+                { title: "Properties", icon: "building-2", url: `${basePropxPath}#properties` },
+                { title: "Units & Stacking", icon: "layers", url: `${basePropxPath}#units` },
+                { title: "Leases & E-Sign", icon: "file-signature", url: `${basePropxPath}#leases` },
+                { title: "Maintenance", icon: "wrench", url: `${basePropxPath}#maintenance` },
+            ],
+            baseUrl: basePropxPath,
+            permission: `navbar:PropX:Parent`
         },
         {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },

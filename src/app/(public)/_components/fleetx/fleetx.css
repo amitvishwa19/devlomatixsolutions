@@ -1,0 +1,70 @@
+/* Scoped styling for FleetX 1-Page Website in Modal */
+
+.fleetx-site {
+  --fx-primary: 199 89% 48%;
+  --fx-primary-foreground: 222 47% 11%;
+  --fx-accent: 187 92% 52%;
+  --gradient-fleetx: linear-gradient(135deg, #0284c7, #06b6d4, #38bdf8);
+  --gradient-fleetx-glow: linear-gradient(135deg, hsl(199 89% 48%), hsl(187 92% 52%));
+  --shadow-fleetx-glow: 0 0 35px hsl(199 89% 48% / 0.25);
+  --shadow-fleetx-elevated: 0 10px 30px hsl(199 89% 48% / 0.15), 0 1px 3px hsl(0 0% 0% / 0.1);
+
+  font-family: inherit;
+  scroll-behavior: smooth;
+}
+
+.fleetx-site .text-gradient-fleetx {
+  background: linear-gradient(135deg, #0284c7, #06b6d4, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fleetx-site .glass-card {
+  background: hsl(var(--card) / 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.fleetx-site .telemetry-card {
+  background: radial-gradient(ellipse at top left, hsl(199 89% 48% / 0.08), transparent 70%),
+              hsl(var(--card) / 0.8);
+  border: 1px solid hsl(199 89% 48% / 0.25);
+}
+
+.fleetx-site .module-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background-color: hsl(199 89% 48% / 0.12);
+  border: 1px solid hsl(199 89% 48% / 0.3);
+  color: #0284c7;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dark .fleetx-site .module-badge {
+  color: #38bdf8;
+}
+
+.fleetx-site .radar-ping {
+  position: relative;
+}
+.fleetx-site .radar-ping::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  background: hsl(199 89% 48% / 0.35);
+  animation: fxPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes fxPing {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}

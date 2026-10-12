@@ -9,6 +9,33 @@ import ProjectInquiryDialog from '../_components/ProjectInquiryDialog';
 
 const projects = [
     {
+        title: "KonnectX",
+        category: "Marketing & CRM",
+        description: "Official WhatsApp Cloud API conversational marketing platform with multi-agent team inbox, automated template broadcasting, and AI chatbots.",
+        tech: ["Next.js", "Node.js", "Redis", "Cloud API", "Tailwind CSS"],
+        image: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&h=600&fit=crop",
+        results: "5M+ messages delivered with 99.98% delivery rate",
+        link: "/ventures#konnectx",
+    },
+    {
+        title: "FleetX",
+        category: "Logistics & Fleet",
+        description: "Autonomous commercial fleet telemetry, CAN-bus fuel siphon guards, dynamic AI route solvers, and automated customer WhatsApp dispatch tracking.",
+        tech: ["Go", "Next.js", "Redis", "Kafka", "WebSockets"],
+        image: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?w=800&h=600&fit=crop",
+        results: "32% fuel cost reduction across 12,000+ commercial vehicles",
+        link: "/ventures#fleetx",
+    },
+    {
+        title: "PropX",
+        category: "Real Estate & PropTech",
+        description: "Modern real estate asset cloud featuring digital lease e-signatures, visual vacancy stacking plans, automated contractor dispatch, and WhatsApp rent recovery.",
+        tech: ["Next.js", "PostgreSQL", "PayFlow", "Tailwind CSS"],
+        image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop",
+        results: "99.2% rent collection rate across 35,000+ managed units",
+        link: "/ventures#propx",
+    },
+    {
         title: "Curexa",
         category: "Healthcare",
         description: "A modern healthcare platform providing comprehensive patient care services, wellness programs, and health management tools for individuals and families.",

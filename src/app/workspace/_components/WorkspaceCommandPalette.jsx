@@ -31,6 +31,8 @@ import {
     Cpu,
     Key,
     Tag,
+    Truck,
+    Building2,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
@@ -99,6 +101,24 @@ export default function WorkspaceCommandPalette({ open, setOpen }) {
                         <MessageSquare className="w-4 h-4 text-emerald-500" />
                         <span>WhatsApp Manager & Campaigns</span>
                         <CommandShortcut>WA</CommandShortcut>
+                    </CommandItem>
+
+                    <CommandItem
+                        onSelect={() => runCommand(() => router.push(`/workspace/${workspaceId}/fleetx`))}
+                        className="flex items-center gap-2 text-xs py-2 cursor-pointer"
+                    >
+                        <Truck className="w-4 h-4 text-sky-500" />
+                        <span>FleetX Autonomous Fleet & Logistics</span>
+                        <CommandShortcut>FX</CommandShortcut>
+                    </CommandItem>
+
+                    <CommandItem
+                        onSelect={() => runCommand(() => router.push(`/workspace/${workspaceId}/propx`))}
+                        className="flex items-center gap-2 text-xs py-2 cursor-pointer"
+                    >
+                        <Building2 className="w-4 h-4 text-amber-500" />
+                        <span>PropX Real Estate & Lease Cloud</span>
+                        <CommandShortcut>PX</CommandShortcut>
                     </CommandItem>
 
                     <CommandItem

@@ -68,7 +68,14 @@ import {
     ShieldCheck,
     KeySquare,
     Timer,
-    HelpCircle
+    HelpCircle,
+    Truck,
+    MapPin,
+    Fuel,
+    Building,
+    Building2,
+    Wrench,
+    FileSignature
 } from 'lucide-react';
 
 const ICON_MAP = {
@@ -159,6 +166,15 @@ const ICON_MAP = {
     'shield-check': ShieldCheck,
     'key-square': KeySquare,
     'timer': Timer,
+
+    // FleetX & PropX
+    'truck': Truck,
+    'map-pin': MapPin,
+    'fuel': Fuel,
+    'building': Building,
+    'building-2': Building2,
+    'wrench': Wrench,
+    'file-signature': FileSignature,
 };
 
 export default function SidebarIcon({ name, size = 16, className = "" }) {

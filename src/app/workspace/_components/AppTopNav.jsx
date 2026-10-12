@@ -23,6 +23,7 @@ import {
     Check,
     Layers,
     Building2,
+    Truck,
 } from 'lucide-react';
 import {
     Popover,
@@ -47,6 +48,8 @@ import { toast } from 'sonner';
 const ROUTE_LABELS = {
     flowgenix: { label: 'FlowGenix AI', icon: Bot },
     konnectx: { label: 'WhatsApp Hub', icon: MessageSquare },
+    fleetx: { label: 'FleetX Logistics', icon: Truck },
+    propx: { label: 'PropX Asset Cloud', icon: Building2 },
     article: { label: 'Social Publisher', icon: Share2 },
     document: { label: 'Digital Assets', icon: FolderKanban },
     contact: { label: 'Contacts & CRM', icon: Users },
