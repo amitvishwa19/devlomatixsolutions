@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { createDcrRecordAction } from '../../_actions/dcr-actions';
+import { summarizeSalesCallNotesAction } from '../../_actions/crm-ai-actions';
 
 const OUTCOMES = [
   { value: 'HOT_LEAD', label: '🔥 Hot Lead / High Interest' },
@@ -49,6 +50,7 @@ export default function PostCallSummaryDialog({
   record
 }) {
   const [loading, setLoading] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const [conversation, setConversation] = useState('');
   const [outcome, setOutcome] = useState('FOLLOWUP_SCHEDULED');
   const [nextAction, setNextAction] = useState('Follow up as discussed during the call');
@@ -56,6 +58,53 @@ export default function PostCallSummaryDialog({
   const [dealValue, setDealValue] = useState('');
 
   if (!isOpen || !record) return null;
+
+  const handleAiSummarize = async () => {
+    if (!conversation.trim()) {
+      toast.error('Please enter rough call notes or bullet points to structure with AI.');
+      return;
+    }
+
+    setIsSummarizing(true);
+    try {
+      const res = await summarizeSalesCallNotesAction(workspaceId, {
+        rawNotes: conversation.trim(),
+        contactId: record.contactId || null,
+        dealId: record.dealId || null
+      });
+
+      if (res.success && res.data) {
+        const d = res.data;
+        const formatted = [
+          d.summary || '',
+          d.keyPoints?.length ? `\n📌 Key Points Discussed:\n${d.keyPoints.map(p => `• ${p}`).join('\n')}` : '',
+          d.objections?.length ? `\n⚠️ Objections & Concerns:\n${d.objections.map(o => `• ${o}`).join('\n')}` : '',
+          d.budgetOrCommercials && d.budgetOrCommercials !== 'Not discussed' ? `\n💰 Budget/Commercials: ${d.budgetOrCommercials}` : '',
+          d.nextSteps?.length ? `\n🚀 Agreed Action Items:\n${d.nextSteps.map(s => `• ${s}`).join('\n')}` : ''
+        ].filter(Boolean).join('\n').trim();
+
+        setConversation(formatted);
+
+        if (d.nextSteps && d.nextSteps.length > 0) {
+          setNextAction(d.nextSteps[0]);
+        }
+
+        if (d.objections && d.objections.length > 0) {
+          setOutcome('FOLLOWUP_SCHEDULED');
+        } else {
+          setOutcome('HOT_LEAD');
+        }
+
+        toast.success('Call notes structured by FlowGenix AI!');
+      } else {
+        toast.error(res.error || 'Failed to analyze notes with AI');
+      }
+    } catch (err) {
+      toast.error('Error generating AI meeting summary');
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
 
   const formatDuration = (secs) => {
     const mins = Math.floor(secs / 60);
@@ -121,9 +170,23 @@ export default function PostCallSummaryDialog({
 
         <form onSubmit={handleSave} className="space-y-4 pt-2">
           <div>
-            <Label className="text-xs font-semibold mb-1.5 block">
-              Key Discussion Points & Outcomes *
-            </Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-semibold">
+                Key Discussion Points & Outcomes *
+              </Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleAiSummarize}
+                disabled={isSummarizing || !conversation.trim()}
+                className="h-6 px-2 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10 gap-1.5"
+                title="Transform rough notes into structured executive takeaways & action items"
+              >
+                {isSummarizing ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3 text-indigo-500" />}
+                <span>{isSummarizing ? "Analyzing with AI..." : "✨ AI Structurer & Auto-Fill"}</span>
+              </Button>
+            </div>
             <Textarea
               value={conversation}
               onChange={(e) => setConversation(e.target.value)}

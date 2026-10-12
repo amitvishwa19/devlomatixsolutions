@@ -30,6 +30,7 @@ import {
     Calendar,
     Clock,
     MapPin,
+    Navigation,
     User,
     Building2,
     CheckCircle2,
@@ -68,6 +69,8 @@ export default function DcrModal({
     const isEdit = !!editRecord;
 
     const [loading, setLoading] = useState(false);
+    const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+    const [geolocationData, setGeolocationData] = useState(null);
     const [formData, setFormData] = useState({
         clientName: '',
         contactPerson: '',
@@ -81,11 +84,64 @@ export default function DcrModal({
         nextFollowUpAction: 'Send updated quotation on WhatsApp and call back',
         dealValue: '',
         location: '',
+        geolocation: null,
         durationMinutes: 15,
         objections: '',
         createTask: true,
         callDate: new Date().toISOString().slice(0, 16)
     });
+
+    const handleDetectLocation = () => {
+        if (typeof window === 'undefined' || !navigator?.geolocation) {
+            toast.error("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setIsDetectingLocation(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude, accuracy } = position.coords;
+                const roundedAcc = Math.round(accuracy);
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await res.json();
+                    const shortAddress = [
+                        data.address?.suburb || data.address?.neighbourhood || data.address?.road,
+                        data.address?.city || data.address?.town || data.address?.county,
+                        data.address?.state
+                    ].filter(Boolean).join(', ') || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+
+                    setFormData(prev => ({
+                        ...prev,
+                        location: shortAddress,
+                        geolocation: { latitude, longitude, accuracy: roundedAcc, capturedAt: new Date().toISOString() }
+                    }));
+                    setGeolocationData({ latitude, longitude, accuracy: roundedAcc });
+                    toast.success(`GPS Check-in captured (${roundedAcc}m accuracy)!`);
+                } catch {
+                    const fallback = `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+                    setFormData(prev => ({
+                        ...prev,
+                        location: fallback,
+                        geolocation: { latitude, longitude, accuracy: roundedAcc, capturedAt: new Date().toISOString() }
+                    }));
+                    setGeolocationData({ latitude, longitude, accuracy: roundedAcc });
+                    toast.success("GPS Coordinates captured!");
+                } finally {
+                    setIsDetectingLocation(false);
+                }
+            },
+            (error) => {
+                setIsDetectingLocation(false);
+                if (error.code === error.PERMISSION_DENIED) {
+                    toast.error("Location permission denied. Please allow location access in your browser.");
+                } else {
+                    toast.error("Could not capture GPS location.");
+                }
+            },
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+    };
 
     useEffect(() => {
         if (editRecord) {
@@ -102,11 +158,15 @@ export default function DcrModal({
                 nextFollowUpAction: editRecord.nextFollowUpAction || '',
                 dealValue: editRecord.dealValue ? String(editRecord.dealValue) : '',
                 location: editRecord.location || '',
+                geolocation: editRecord.metadata?.geolocation || null,
                 durationMinutes: editRecord.durationMinutes || 15,
                 objections: editRecord.objections || '',
                 createTask: false,
                 callDate: editRecord.createdAt ? new Date(editRecord.createdAt).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16)
             });
+            if (editRecord.metadata?.geolocation) {
+                setGeolocationData(editRecord.metadata.geolocation);
+            }
         } else {
             setFormData({
                 clientName: '',
@@ -121,11 +181,13 @@ export default function DcrModal({
                 nextFollowUpAction: 'Send updated quotation on WhatsApp and call back',
                 dealValue: '',
                 location: '',
+                geolocation: null,
                 durationMinutes: 15,
                 objections: '',
                 createTask: true,
                 callDate: new Date().toISOString().slice(0, 16)
             });
+            setGeolocationData(null);
         }
     }, [editRecord, isOpen]);
 
@@ -284,15 +346,35 @@ export default function DcrModal({
                         </div>
 
                         <div>
-                            <Label className="text-xs font-semibold flex items-center gap-1 mb-1.5">
-                                <MapPin className="w-3.5 h-3.5 text-amber-500" /> Location / Check-In Address
-                            </Label>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <Label className="text-xs font-semibold flex items-center gap-1">
+                                    <MapPin className="w-3.5 h-3.5 text-amber-500" /> Location / Check-In Address
+                                </Label>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleDetectLocation}
+                                    disabled={isDetectingLocation}
+                                    className="h-5 px-1.5 text-[10px] text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 gap-1 font-bold"
+                                    title="Auto-detect live GPS coordinates"
+                                >
+                                    {isDetectingLocation ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
+                                    <span>{isDetectingLocation ? "Detecting..." : "📍 GPS Check-In"}</span>
+                                </Button>
+                            </div>
                             <Input
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                 placeholder="e.g. Sector 62, Noida / Client HQ"
                                 className="h-9 text-xs"
                             />
+                            {geolocationData && (
+                                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" />
+                                    <span>Verified GPS Check-In (±{geolocationData.accuracy}m accuracy)</span>
+                                </p>
+                            )}
                         </div>
                     </div>
 

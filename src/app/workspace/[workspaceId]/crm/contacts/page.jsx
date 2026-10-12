@@ -400,6 +400,21 @@ export default function ContactsDirectoryPage() {
                                             {/* Actions */}
                                             <td className="py-3.5 px-4 text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    {contact.phone && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 text-[#25D366] hover:bg-[#25D366]/10"
+                                                            title={`Send WhatsApp message to ${contact.name}`}
+                                                            onClick={() => {
+                                                                setWaContact(contact);
+                                                                setIsWaModalOpen(true);
+                                                            }}
+                                                        >
+                                                            <MessageCircle className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    )}
                                                     <Button
                                                         type="button"
                                                         variant="ghost"

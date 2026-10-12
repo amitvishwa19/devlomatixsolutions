@@ -309,6 +309,7 @@ export async function createDcrRecordAction(workspaceId, data) {
                     dealValue: dealValue ? parseFloat(dealValue) : 0,
                     currency,
                     location: location?.trim() || '',
+                    geolocation: data.geolocation || null,
                     durationMinutes: parseInt(durationMinutes) || 15,
                     objections: objections?.trim() || '',
                     loggedAt: new Date().toISOString()

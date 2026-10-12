@@ -32,7 +32,8 @@ import {
     Edit3,
     Send,
     ExternalLink,
-    Briefcase
+    Briefcase,
+    Navigation
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -541,6 +542,18 @@ export default function DcrPage() {
                                                             <MapPin className="w-3 h-3" />
                                                             {record.location}
                                                         </span>
+                                                        {record.metadata?.geolocation && (
+                                                            <a
+                                                                href={`https://www.google.com/maps?q=${record.metadata.geolocation.latitude},${record.metadata.geolocation.longitude}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 text-[10px] font-bold border border-emerald-500/20 transition-colors"
+                                                                title={`GPS Accuracy: ±${record.metadata.geolocation.accuracy || 10}m. Click to open Google Maps.`}
+                                                            >
+                                                                <Navigation className="w-2.5 h-2.5" />
+                                                                <span>GPS Verified</span>
+                                                            </a>
+                                                        )}
                                                     </>
                                                 )}
                                             </div>

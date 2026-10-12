@@ -12,7 +12,9 @@ import {
   Minimize2,
   User,
   Shield,
-  Clock
+  Clock,
+  Disc,
+  Radio
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,9 +35,66 @@ export default function ActiveCallModal({
   onHangup
 }) {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recSeconds, setRecSeconds] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const recIntervalRef = useRef(null);
+
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const remoteAudioRef = useRef(null);
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (recIntervalRef.current) clearInterval(recIntervalRef.current);
+      setIsRecording(false);
+    } else {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const audioCtx = new AudioCtx();
+        const destination = audioCtx.createMediaStreamDestination();
+
+        if (localStream && localStream.getAudioTracks().length > 0) {
+          const localSrc = audioCtx.createMediaStreamSource(localStream);
+          localSrc.connect(destination);
+        }
+        if (remoteStream && remoteStream.getAudioTracks().length > 0) {
+          const remoteSrc = audioCtx.createMediaStreamSource(remoteStream);
+          remoteSrc.connect(destination);
+        }
+
+        chunksRef.current = [];
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+        const recorder = new MediaRecorder(destination.stream, { mimeType });
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+        };
+
+        recorder.start(1000);
+        mediaRecorderRef.current = recorder;
+        setIsRecording(true);
+        setRecSeconds(0);
+        recIntervalRef.current = setInterval(() => setRecSeconds(s => s + 1), 1000);
+      } catch (err) {
+        console.warn('[AUDIO_REC_ERR]', err);
+      }
+    }
+  };
+
+  const handleHangupWithRecordingCleanup = () => {
+    if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop(); } catch {}
+    }
+    if (recIntervalRef.current) clearInterval(recIntervalRef.current);
+    setIsRecording(false);
+    onHangup();
+  };
 
   // Attach local stream to video element
   useEffect(() => {
@@ -150,6 +209,11 @@ export default function ActiveCallModal({
                 <span className="font-mono font-semibold">
                   {status === 'calling' ? 'Ringing...' : formatTime(duration)}
                 </span>
+                {isRecording && (
+                  <span className="text-[10px] bg-rose-500/20 text-rose-400 border border-rose-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5 animate-pulse ml-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> REC {formatTime(recSeconds)}
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -271,11 +335,22 @@ export default function ActiveCallModal({
             <ScreenShare className="w-5 h-5" />
           </Button>
 
+          {/* Record Audio Button */}
+          <Button
+            size="icon"
+            variant={isRecording ? "destructive" : "secondary"}
+            onClick={toggleRecording}
+            className={`w-12 h-12 rounded-full shadow-md ${isRecording ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse' : 'hover:text-rose-500'}`}
+            title={isRecording ? "Stop Recording" : "Record Call Audio (AI Meeting Notes)"}
+          >
+            <Disc className={`w-5 h-5 ${isRecording ? 'animate-spin' : ''}`} />
+          </Button>
+
           {/* Hangup / End Call Button */}
           <Button
             size="icon"
             variant="destructive"
-            onClick={onHangup}
+            onClick={handleHangupWithRecordingCleanup}
             className="w-14 h-14 rounded-full bg-rose-600 hover:bg-rose-700 shadow-xl shadow-rose-600/30"
             title="End Call"
           >
