@@ -101,7 +101,7 @@ export default function CrmDashboardPage() {
     }
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto w-full">
+        <div className="space-y-6 mx-auto w-full">
             {/* Header Banner */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-violet-600/10 border border-border/80 p-5 rounded-2xl">
                 <div>
