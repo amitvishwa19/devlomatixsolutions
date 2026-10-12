@@ -394,11 +394,19 @@ html {
   }
 }
 
-/* Radix ScrollArea horizontal overflow containment */
+/* Radix ScrollArea containment and native scrollbar suppression */
 [data-radix-scroll-area-viewport] {
   width: 100% !important;
   max-width: 100% !important;
   overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+[data-radix-scroll-area-viewport]::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 [data-radix-scroll-area-viewport] > div {

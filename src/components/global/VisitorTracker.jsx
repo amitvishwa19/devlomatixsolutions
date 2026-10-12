@@ -10,7 +10,52 @@ export function VisitorTracker() {
 
     const lastTracked = useRef(null);
     const currentLogIdRef = useRef(null);
-    const startTimeRef = useRef(Date.now());
+    const startTimeRef = useRef(null);
+    const heartbeatDisabledRef = useRef(false);
+    const loggingDisabledRef = useRef(false);
+
+    // Sync heartbeat and logging flags across tabs and components
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            heartbeatDisabledRef.current = localStorage.getItem('visitor_heartbeat_enabled') === 'false';
+            loggingDisabledRef.current = localStorage.getItem('visitor_logging_enabled') === 'false';
+        }
+
+        const handleHeartbeatToggle = (e) => {
+            const enabled = e?.detail?.enabled;
+            if (typeof enabled === 'boolean') {
+                heartbeatDisabledRef.current = !enabled;
+            }
+        };
+
+        const handleLoggingToggle = (e) => {
+            const enabled = e?.detail?.enabled;
+            if (typeof enabled === 'boolean') {
+                loggingDisabledRef.current = !enabled;
+                if (!enabled) currentLogIdRef.current = null;
+            }
+        };
+
+        const handleStorage = (e) => {
+            if (e.key === 'visitor_heartbeat_enabled') {
+                heartbeatDisabledRef.current = e.newValue === 'false';
+            }
+            if (e.key === 'visitor_logging_enabled') {
+                loggingDisabledRef.current = e.newValue === 'false';
+                if (e.newValue === 'false') currentLogIdRef.current = null;
+            }
+        };
+
+        window.addEventListener('visitor_heartbeat_toggle', handleHeartbeatToggle);
+        window.addEventListener('visitor_logging_toggle', handleLoggingToggle);
+        window.addEventListener('storage', handleStorage);
+
+        return () => {
+            window.removeEventListener('visitor_heartbeat_toggle', handleHeartbeatToggle);
+            window.removeEventListener('visitor_logging_toggle', handleLoggingToggle);
+            window.removeEventListener('storage', handleStorage);
+        };
+    }, []);
 
     useEffect(() => {
         if (!pathname) return;
@@ -25,13 +70,23 @@ export function VisitorTracker() {
             return;
         }
 
+        // Check local storage flags
+        if (typeof window !== 'undefined') {
+            heartbeatDisabledRef.current = localStorage.getItem('visitor_heartbeat_enabled') === 'false';
+            loggingDisabledRef.current = localStorage.getItem('visitor_logging_enabled') === 'false';
+        }
+
+        if (loggingDisabledRef.current) {
+            return;
+        }
+
         const fullPath = searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
 
         if (lastTracked.current === fullPath) return;
         lastTracked.current = fullPath;
 
-        // Send final duration update for previous page if available
-        if (currentLogIdRef.current) {
+        // Send final duration update for previous page if available and heartbeat is enabled
+        if (currentLogIdRef.current && !heartbeatDisabledRef.current) {
             const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
             const payload = JSON.stringify({ id: currentLogIdRef.current, duration: timeSpent });
             if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
@@ -85,6 +140,20 @@ export function VisitorTracker() {
         })
         .then(res => res.json())
         .then(data => {
+            if (data?.disabled) {
+                currentLogIdRef.current = null;
+                loggingDisabledRef.current = true;
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('visitor_logging_enabled', 'false');
+                }
+                return;
+            }
+            if (data?.heartbeatEnabled === false) {
+                heartbeatDisabledRef.current = true;
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('visitor_heartbeat_enabled', 'false');
+                }
+            }
             if (data?.id) {
                 currentLogIdRef.current = data.id;
             }
@@ -93,7 +162,7 @@ export function VisitorTracker() {
 
         // Periodic heartbeats every 8 seconds to continuously update dwell duration
         const heartbeatInterval = setInterval(() => {
-            if (currentLogIdRef.current) {
+            if (currentLogIdRef.current && !heartbeatDisabledRef.current && !loggingDisabledRef.current) {
                 const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
                 fetch('/api/telemetry/visitor', {
                     method: 'PATCH',
@@ -105,7 +174,7 @@ export function VisitorTracker() {
 
         // Send final duration on tab close / navigation
         const handleUnload = () => {
-            if (currentLogIdRef.current) {
+            if (currentLogIdRef.current && !heartbeatDisabledRef.current && !loggingDisabledRef.current) {
                 const timeSpent = Math.max(1, Math.round((Date.now() - startTimeRef.current) / 1000));
                 const payload = JSON.stringify({ id: currentLogIdRef.current, duration: timeSpent });
                 if (typeof navigator !== 'undefined' && navigator.sendBeacon) {

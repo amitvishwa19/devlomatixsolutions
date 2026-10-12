@@ -90,6 +90,8 @@ export async function POST(req) {
             return NextResponse.json({ message: "Pathname is required" }, { status: 400 });
         }
 
+        let heartbeatEnabled = true;
+
         // Check if visitor telemetry logging is disabled
         if (workspaceId) {
             const wsSettings = await prisma.appSettings.findUnique({
@@ -98,12 +100,18 @@ export async function POST(req) {
             if (wsSettings?.privacy && wsSettings.privacy.visitorLoggingEnabled === false) {
                 return NextResponse.json({ success: true, disabled: true, message: "Visitor logging disabled" });
             }
+            if (wsSettings?.privacy && wsSettings.privacy.visitorHeartbeatEnabled === false) {
+                heartbeatEnabled = false;
+            }
         }
         const appGlobal = await prisma.appSettings.findUnique({
             where: { key: 'global' }
         });
         if (appGlobal?.privacy && appGlobal.privacy.visitorLoggingEnabled === false) {
             return NextResponse.json({ success: true, disabled: true, message: "Global visitor logging disabled" });
+        }
+        if (appGlobal?.privacy && appGlobal.privacy.visitorHeartbeatEnabled === false) {
+            heartbeatEnabled = false;
         }
 
         // Extract IP & Headers
@@ -161,7 +169,7 @@ export async function POST(req) {
             }
         });
 
-        return NextResponse.json({ success: true, id: log.id });
+        return NextResponse.json({ success: true, id: log.id, heartbeatEnabled });
     } catch (error) {
         console.error("POST Telemetry Visitor Error:", error);
         return NextResponse.json({ message: "Failed to record visitor telemetry" }, { status: 500 });
@@ -186,6 +194,28 @@ export async function PATCH(req) {
 
         if (!id || duration === undefined) {
             return NextResponse.json({ message: "ID and duration are required" }, { status: 400 });
+        }
+
+        // Check if heartbeat is stopped for this visitor log's workspace or global settings
+        const logRecord = await prisma.visitorLog.findUnique({
+            where: { id },
+            select: { workspaceId: true }
+        });
+
+        if (logRecord?.workspaceId) {
+            const wsSettings = await prisma.appSettings.findUnique({
+                where: { key: logRecord.workspaceId }
+            });
+            if (wsSettings?.privacy && (wsSettings.privacy.visitorHeartbeatEnabled === false || wsSettings.privacy.visitorLoggingEnabled === false)) {
+                return NextResponse.json({ success: true, stopped: true, message: "Visitor heartbeat stopped" });
+            }
+        }
+
+        const appGlobal = await prisma.appSettings.findUnique({
+            where: { key: 'global' }
+        });
+        if (appGlobal?.privacy && (appGlobal.privacy.visitorHeartbeatEnabled === false || appGlobal.privacy.visitorLoggingEnabled === false)) {
+            return NextResponse.json({ success: true, stopped: true, message: "Global visitor heartbeat stopped" });
         }
 
         await prisma.visitorLog.update({

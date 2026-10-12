@@ -140,15 +140,17 @@ export async function GET(req, { params }) {
             .sort((a, b) => b.count - a.count)
             .slice(0, 5);
 
-        // Fetch workspace settings for visitor logging status
+        // Fetch workspace settings for visitor logging and heartbeat status
         const workspaceSettings = await prisma.appSettings.findUnique({
             where: { key: workspaceId }
         });
         const visitorLoggingEnabled = workspaceSettings?.privacy?.visitorLoggingEnabled !== false;
+        const visitorHeartbeatEnabled = workspaceSettings?.privacy?.visitorHeartbeatEnabled !== false;
 
         return NextResponse.json({
             logs,
             visitorLoggingEnabled,
+            visitorHeartbeatEnabled,
             pagination: {
                 page,
                 limit,
@@ -170,7 +172,7 @@ export async function GET(req, { params }) {
     }
 }
 
-// PATCH update visitor logging setting
+// PATCH update visitor logging or heartbeat settings
 export async function PATCH(req, { params }) {
     try {
         const { workspaceId } = await params;
@@ -181,10 +183,10 @@ export async function PATCH(req, { params }) {
         }
 
         const body = await req.json();
-        const { visitorLoggingEnabled } = body || {};
+        const { visitorLoggingEnabled, visitorHeartbeatEnabled } = body || {};
 
-        if (typeof visitorLoggingEnabled !== "boolean") {
-            return NextResponse.json({ message: "visitorLoggingEnabled boolean required" }, { status: 400 });
+        if (typeof visitorLoggingEnabled !== "boolean" && typeof visitorHeartbeatEnabled !== "boolean") {
+            return NextResponse.json({ message: "visitorLoggingEnabled or visitorHeartbeatEnabled boolean required" }, { status: 400 });
         }
 
         const existing = await prisma.appSettings.findUnique({
@@ -193,24 +195,33 @@ export async function PATCH(req, { params }) {
 
         const currentPrivacy = (typeof existing?.privacy === 'object' && existing?.privacy) ? existing.privacy : {};
 
+        const nextPrivacy = { ...currentPrivacy };
+        if (typeof visitorLoggingEnabled === 'boolean') {
+            nextPrivacy.visitorLoggingEnabled = visitorLoggingEnabled;
+        }
+        if (typeof visitorHeartbeatEnabled === 'boolean') {
+            nextPrivacy.visitorHeartbeatEnabled = visitorHeartbeatEnabled;
+        }
+
         await prisma.appSettings.upsert({
             where: { key: workspaceId },
             create: {
                 key: workspaceId,
-                privacy: { ...currentPrivacy, visitorLoggingEnabled }
+                privacy: nextPrivacy
             },
             update: {
-                privacy: { ...currentPrivacy, visitorLoggingEnabled }
+                privacy: nextPrivacy
             }
         });
 
         return NextResponse.json({
-            message: `Visitor logging ${visitorLoggingEnabled ? 'enabled' : 'disabled'}`,
-            visitorLoggingEnabled
+            message: "Settings updated successfully",
+            visitorLoggingEnabled: nextPrivacy.visitorLoggingEnabled !== false,
+            visitorHeartbeatEnabled: nextPrivacy.visitorHeartbeatEnabled !== false
         });
     } catch (error) {
         console.error("PATCH Visitor Log Settings Error:", error);
-        return NextResponse.json({ message: "Failed to update visitor logging status" }, { status: 500 });
+        return NextResponse.json({ message: "Failed to update visitor settings" }, { status: 500 });
     }
 }
 
