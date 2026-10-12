@@ -29,40 +29,40 @@ export function Navbar({ onClose }) {
   };
 
   return (
-    <div className="sticky top-0 z-40 w-full border-b px-4">
-      <div className="mx-auto flex h-16 glass items-center justify-between px-4 sm:px-6 lg:px-8 rounded-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-border/40 px-4 bg-background/85 backdrop-blur-xl">
+      <div className="mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <div
           onClick={() => handleNavClick("kx-hero")}
-          className="flex items-center gap-3 cursor-pointer select-none group"
+          className="flex items-center gap-2.5 cursor-pointer select-none group"
         >
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl transition-transform group-hover:scale-105">
+          <div className="relative h-10 w-11 shrink-0 overflow-hidden transition-transform group-hover:scale-105">
             <Image
               src={konnectXLogo}
               alt="KonnectX Logo"
-              width={100}
-              height={100}
-              className="h-full w-full object-contain"
+              width={44}
+              height={36}
+              className="h-full w-full object-contain drop-shadow-sm"
               priority
             />
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-extrabold tracking-tight text-foreground leading-none">
-              Konnect<span className="text-gradient-sun">X</span>
+          <div className="flex items-center gap-2">
+            <span className="font-heading text-lg font-bold tracking-tight text-foreground">
+              Konnect<span className="text-gradient-sun font-extrabold">X</span>
             </span>
-            <span className="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider mt-1">
-              WhatsApp Platform
+            <span className="hidden sm:inline-block text-[10px] uppercase font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+              Cloud API
             </span>
           </div>
         </div>
 
         {/* Desktop Links */}
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden lg:flex items-center gap-1 bg-muted/40 rounded-full px-2 py-1 border border-border/50">
           {navLinks.map((l) => (
             <button
               key={l.id}
               onClick={() => handleNavClick(l.id)}
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary cursor-pointer"
+              className="px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors cursor-pointer"
             >
               {t(l.labelKey)}
             </button>
@@ -73,29 +73,29 @@ export function Navbar({ onClose }) {
         <div className="hidden items-center gap-3 md:flex">
           <LanguageSwitcher />
 
-          {/* <Button
+          <Button
             size="sm"
             variant="outline"
-            className="border-border/60 hover:bg-muted text-xs font-semibold cursor-pointer"
+            className="text-xs font-semibold border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10 cursor-pointer"
             onClick={() => handleNavClick("kx-pricing")}
           >
             {t("nav.pricing")}
-          </Button> */}
+          </Button>
 
-          {/* <Button
+          <Button
             size="sm"
-            className="text-xs font-bold text-white shadow-md cursor-pointer"
+            className="text-xs font-bold text-white shadow-md shadow-cyan-500/20 cursor-pointer"
             style={{ background: "var(--gradient-sun)" }}
             onClick={() => handleNavClick("kx-cta")}
           >
             {t("nav.trial")}
-          </Button> */}
+          </Button>
 
           {/* Close Modal Button */}
           {onClose && (
             <button
               onClick={onClose}
-              className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-secondary/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all cursor-pointer"
+              className="ml-1 flex h-8 w-8 items-center justify-center rounded-lg border border-border/50 bg-secondary/40 text-muted-foreground hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all cursor-pointer"
               title="Close KonnectX View"
               aria-label="Close modal"
             >
@@ -130,7 +130,7 @@ export function Navbar({ onClose }) {
 
       {/* Mobile Drawer */}
       {mobileOpen && (
-        <div className="glass border-t border-border/50 px-5 py-4 md:hidden">
+        <div className="bg-background/95 backdrop-blur-xl border-t border-border/50 px-5 py-4 md:hidden">
           <div className="flex flex-col gap-3">
             {navLinks.map((l) => (
               <button
@@ -144,9 +144,17 @@ export function Navbar({ onClose }) {
             <div className="mt-3 pt-3 border-t border-border/40 flex flex-col gap-2">
               <Button
                 size="sm"
+                variant="outline"
+                className="w-full text-xs font-semibold"
+                onClick={() => handleNavClick("kx-pricing")}
+              >
+                {t("nav.pricing")}
+              </Button>
+              <Button
+                size="sm"
                 className="w-full text-white font-bold"
                 style={{ background: "var(--gradient-sun)" }}
-                onClick={() => handleNavClick("kx-pricing")}
+                onClick={() => handleNavClick("kx-cta")}
               >
                 {t("nav.trial")}
               </Button>
@@ -154,6 +162,6 @@ export function Navbar({ onClose }) {
           </div>
         </div>
       )}
-    </div>
+    </header>
   );
 }

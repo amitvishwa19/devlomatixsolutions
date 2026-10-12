@@ -100,6 +100,7 @@ export function Hero() {
           >
             <div className="absolute -inset-4 rounded-3xl bg-primary/10 blur-2xl -z-10" />
             <div className="relative rounded-2xl border border-white/10 p-1 bg-gradient-to-b from-white/10 to-transparent shadow-2xl backdrop-blur-sm">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={heroDashboard}
                 alt="KonnectX WhatsApp Business API Dashboard"

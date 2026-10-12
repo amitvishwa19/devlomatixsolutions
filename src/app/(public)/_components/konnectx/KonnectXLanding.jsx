@@ -27,13 +27,13 @@ export function KonnectXLanding({ onClose }) {
           <Stats />
           <Industries />
           <Integrations />
-          {/* <Pricing /> */}
+          <Pricing />
           <Testimonials />
           <FAQ />
-          {/* <CTA /> */}
+          <CTA />
         </main>
         <Footer />
-        {/* <ChatbotWidget /> */}
+        <ChatbotWidget />
       </div>
     </LanguageProvider>
   );

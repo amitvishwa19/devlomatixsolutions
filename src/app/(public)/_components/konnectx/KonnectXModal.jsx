@@ -39,16 +39,16 @@ export function KonnectXModal({ isOpen, onClose }) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-50 h-screen w-screen overflow-hidden  flex flex-col"
+        className="fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-background/95 backdrop-blur-xl flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-label="KonnectX Platform Preview"
       >
         {/* Top Floating Quick Return Bar */}
-        <div className="shrink-0 z-50 flex items-center justify-between px-4 py-2 border-b border-border/40 text-xs text-muted-foreground">
+        <div className="shrink-0 z-50 flex items-center justify-between px-4 py-2 border-b border-border/40 text-xs text-muted-foreground bg-background/90 backdrop-blur-md">
           <button
             onClick={onClose}
-            className="flex items-center gap-2 font-semibold text-foreground hover:text-primary transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-muted/60"
+            className="flex items-center gap-2 font-semibold text-foreground hover:text-cyan-400 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-muted/60"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Back to Devlomatix Ventures</span>
@@ -70,7 +70,7 @@ export function KonnectXModal({ isOpen, onClose }) {
         </div>
 
         {/* Shadcn UI ScrollArea for smooth custom scrolling */}
-        <ScrollArea className="flex-1 min-h-screen w-full">
+        <ScrollArea className="flex-1 h-full w-full">
           <KonnectXLanding onClose={onClose} />
         </ScrollArea>
       </motion.div>
