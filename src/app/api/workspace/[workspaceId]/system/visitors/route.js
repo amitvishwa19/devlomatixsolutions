@@ -76,69 +76,88 @@ export async function GET(req, { params }) {
             prisma.visitorLog.count({ where })
         ]);
 
-        // Compute Aggregated Analytics
-        const allLogsForStats = await prisma.visitorLog.findMany({
-            where: {
-                OR: [
-                    { workspaceId: workspaceId },
-                    { workspaceId: null }
-                ]
-            },
-            select: {
-                id: true,
-                sessionId: true,
-                ipAddress: true,
-                country: true,
-                countryCode: true,
-                path: true,
-                device: true,
-                duration: true
-            },
-            take: 1000
-        });
+        // Compute Aggregated Analytics (skip if limit is 1 or minimal query)
+        let stats = {
+            totalVisits: total,
+            uniqueVisitors: 0,
+            avgDuration: 0,
+            topCountries: [],
+            topPages: [],
+            deviceStats: { Desktop: 0, Mobile: 0, Tablet: 0, Other: 0 }
+        };
 
-        // Unique Visitors (distinct sessionId or ipAddress)
-        const uniqueSet = new Set(allLogsForStats.map(l => l.sessionId || l.ipAddress).filter(Boolean));
+        if (limit > 1) {
+            const allLogsForStats = await prisma.visitorLog.findMany({
+                where: {
+                    OR: [
+                        { workspaceId: workspaceId },
+                        { workspaceId: null }
+                    ]
+                },
+                select: {
+                    sessionId: true,
+                    ipAddress: true,
+                    country: true,
+                    countryCode: true,
+                    path: true,
+                    device: true,
+                    duration: true
+                },
+                take: 500
+            });
 
-        // Average Duration in seconds
-        const totalDuration = allLogsForStats.reduce((acc, l) => acc + (l.duration || 0), 0);
-        const avgDuration = allLogsForStats.length > 0 ? Math.round(totalDuration / allLogsForStats.length) : 0;
+            // Unique Visitors (distinct sessionId or ipAddress)
+            const uniqueSet = new Set(allLogsForStats.map(l => l.sessionId || l.ipAddress).filter(Boolean));
 
-        // Country Counts
-        const countryMap = {};
-        // Page Counts
-        const pageMap = {};
-        // Device Counts
-        const deviceStats = { Desktop: 0, Mobile: 0, Tablet: 0, Other: 0 };
+            // Average Duration in seconds
+            const totalDuration = allLogsForStats.reduce((acc, l) => acc + (l.duration || 0), 0);
+            const avgDuration = allLogsForStats.length > 0 ? Math.round(totalDuration / allLogsForStats.length) : 0;
 
-        allLogsForStats.forEach(l => {
-            // Country
-            const cKey = l.countryCode || "UN";
-            if (!countryMap[cKey]) {
-                countryMap[cKey] = { code: cKey, country: l.country || "Unknown", count: 0 };
-            }
-            countryMap[cKey].count++;
+            // Country Counts
+            const countryMap = {};
+            // Page Counts
+            const pageMap = {};
+            // Device Counts
+            const deviceStats = { Desktop: 0, Mobile: 0, Tablet: 0, Other: 0 };
 
-            // Page
-            const pKey = l.path || "/";
-            pageMap[pKey] = (pageMap[pKey] || 0) + 1;
+            allLogsForStats.forEach(l => {
+                // Country
+                const cKey = l.countryCode || "UN";
+                if (!countryMap[cKey]) {
+                    countryMap[cKey] = { code: cKey, country: l.country || "Unknown", count: 0 };
+                }
+                countryMap[cKey].count++;
 
-            // Device
-            if (l.device && deviceStats[l.device] !== undefined) {
-                deviceStats[l.device]++;
-            } else {
-                deviceStats.Other++;
-            }
-        });
+                // Page
+                const pKey = l.path || "/";
+                pageMap[pKey] = (pageMap[pKey] || 0) + 1;
 
-        const topCountries = Object.values(countryMap)
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
+                // Device
+                if (l.device && deviceStats[l.device] !== undefined) {
+                    deviceStats[l.device]++;
+                } else {
+                    deviceStats.Other++;
+                }
+            });
 
-        const topPages = Object.entries(pageMap)
-            .map(([path, count]) => ({ path, count }))
-            .sort((a, b) => b.count - a.count)
-            .slice(0, 5);
+            const topCountries = Object.values(countryMap)
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+            const topPages = Object.entries(pageMap)
+                .map(([path, count]) => ({ path, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+            stats = {
+                totalVisits: total,
+                uniqueVisitors: uniqueSet.size,
+                avgDuration,
+                topCountries,
+                topPages,
+                deviceStats
+            };
+        }
 
         // Fetch workspace settings for visitor logging and heartbeat status
         const workspaceSettings = await prisma.appSettings.findUnique({
@@ -157,18 +176,20 @@ export async function GET(req, { params }) {
                 total,
                 pages: Math.ceil(total / limit) || 1
             },
-            stats: {
-                totalVisits: total,
-                uniqueVisitors: uniqueSet.size,
-                avgDuration,
-                topCountries,
-                topPages,
-                deviceStats
-            }
+            stats
         });
     } catch (error) {
         console.error("GET Visitor Logs Error:", error);
-        return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
+        return NextResponse.json({
+            logs: [],
+            visitorLoggingEnabled: true,
+            visitorHeartbeatEnabled: true,
+            pagination: { page, limit, total: 0, pages: 1 },
+            stats: { totalVisits: 0, uniqueVisitors: 0, avgDuration: 0, topCountries: [], topPages: [], deviceStats: { Desktop: 0, Mobile: 0, Tablet: 0, Other: 0 } },
+            warning: error?.message?.includes('EMAXCONNSESSION')
+                ? "Database connection limit reached in session mode. Please ensure DATABASE_URL uses transaction pooler (port 6543)."
+                : "Unable to load visitor telemetry logs at this moment."
+        }, { status: 200 });
     }
 }
 

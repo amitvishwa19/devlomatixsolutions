@@ -2,14 +2,47 @@ import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
-const prismaClientSingleton = () => {
-    const connectionString = process.env.APP_MODE === 'prod'
+const getEffectiveConnectionString = () => {
+    const isProd = process.env.NODE_ENV === 'production' || 
+                   process.env.APP_MODE === 'prod' || 
+                   process.env.VERCEL === '1';
+
+    // In production / serverless environments, ALWAYS prioritize the pooled DATABASE_URL.
+    // DIRECT_URL is direct session mode (port 5432) intended exclusively for migrations.
+    let conn = isProd
         ? (process.env.DATABASE_URL || process.env.DIRECT_URL)
-        : (process.env.DIRECT_URL || process.env.DATABASE_URL);
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
-    return new PrismaClient({ adapter })
-}
+        : (process.env.DATABASE_URL || process.env.DIRECT_URL);
+
+    if (!conn) return '';
+
+    // If connecting to Supabase Pooler via Session Mode (port 5432),
+    // automatically rewrite port 5432 to 6543 (Transaction Mode) to prevent (EMAXCONNSESSION).
+    if (conn.includes('pooler.supabase.com:5432')) {
+        conn = conn.replace('pooler.supabase.com:5432', 'pooler.supabase.com:6543');
+        if (!conn.includes('pgbouncer=true')) {
+            const separator = conn.includes('?') ? '&' : '?';
+            conn = `${conn}${separator}pgbouncer=true`;
+        }
+    }
+
+    return conn;
+};
+
+const prismaClientSingleton = () => {
+    const connectionString = getEffectiveConnectionString();
+    const isServerless = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+
+    // Configure pg.Pool with serverless-safe limits to prevent exhausting database connections
+    const pool = new Pool({
+        connectionString,
+        max: isServerless ? 2 : 10,
+        idleTimeoutMillis: 10000,
+        connectionTimeoutMillis: 10000,
+    });
+
+    const adapter = new PrismaPg(pool);
+    return new PrismaClient({ adapter });
+};
 
 const SCHEMA_VERSION = 31; // Increment this to force a re-init in dev
 
@@ -58,4 +91,4 @@ export const db = new Proxy({}, {
     }
 });
 
-if (process.env.APP_MODE !== 'prod') globalThis.prismaGlobal = getBaseDb();
+globalThis.prismaGlobal = getBaseDb();

@@ -196,28 +196,6 @@ export async function PATCH(req) {
             return NextResponse.json({ message: "ID and duration are required" }, { status: 400 });
         }
 
-        // Check if heartbeat is stopped for this visitor log's workspace or global settings
-        const logRecord = await prisma.visitorLog.findUnique({
-            where: { id },
-            select: { workspaceId: true }
-        });
-
-        if (logRecord?.workspaceId) {
-            const wsSettings = await prisma.appSettings.findUnique({
-                where: { key: logRecord.workspaceId }
-            });
-            if (wsSettings?.privacy && (wsSettings.privacy.visitorHeartbeatEnabled === false || wsSettings.privacy.visitorLoggingEnabled === false)) {
-                return NextResponse.json({ success: true, stopped: true, message: "Visitor heartbeat stopped" });
-            }
-        }
-
-        const appGlobal = await prisma.appSettings.findUnique({
-            where: { key: 'global' }
-        });
-        if (appGlobal?.privacy && (appGlobal.privacy.visitorHeartbeatEnabled === false || appGlobal.privacy.visitorLoggingEnabled === false)) {
-            return NextResponse.json({ success: true, stopped: true, message: "Global visitor heartbeat stopped" });
-        }
-
         await prisma.visitorLog.update({
             where: { id },
             data: { duration: parseInt(duration) }
