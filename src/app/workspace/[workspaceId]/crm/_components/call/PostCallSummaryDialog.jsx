@@ -76,6 +76,10 @@ export default function PostCallSummaryDialog({
       const res = await createDcrRecordAction(workspaceId, {
         clientName: record.targetName || 'Direct Client',
         contactPerson: record.targetName || 'Contact',
+        phone: record.phone || record.targetPhone || record.clientOrDealInfo?.phone || null,
+        email: record.email || record.targetEmail || record.clientOrDealInfo?.email || null,
+        accountId: record.accountId || record.clientOrDealInfo?.accountId || null,
+        contactId: record.contactId || record.clientOrDealInfo?.contactId || null,
         callType: record.callType === 'video' ? 'VIDEO_DEMO' : 'PHONE_CALL',
         callPurpose: `WebRTC ${record.callType === 'video' ? 'Video' : 'Voice'} Call`,
         conversation: conversation.trim(),

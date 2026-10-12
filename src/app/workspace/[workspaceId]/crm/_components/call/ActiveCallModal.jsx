@@ -35,6 +35,7 @@ export default function ActiveCallModal({
   const [isMinimized, setIsMinimized] = useState(false);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const remoteAudioRef = useRef(null);
 
   // Attach local stream to video element
   useEffect(() => {
@@ -50,6 +51,16 @@ export default function ActiveCallModal({
     }
   }, [remoteStream, isOpen]);
 
+  // Always attach remote stream to audio element so voice call audio ALWAYS plays
+  useEffect(() => {
+    if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.srcObject = remoteStream;
+      remoteAudioRef.current.play().catch((err) => {
+        console.warn('[REMOTE_AUDIO_PLAY_WARN]', err);
+      });
+    }
+  }, [remoteStream, isOpen]);
+
   if (!isOpen || !session) return null;
 
   const isVideo = session.callType === 'video';
@@ -60,63 +71,64 @@ export default function ActiveCallModal({
     return `${mins < 10 ? '0' : ''}${mins}:${remSecs < 10 ? '0' : ''}${remSecs}`;
   };
 
-  // Minimized Picture-in-Picture Floating Bar
-  if (isMinimized) {
-    return (
-      <div className="fixed bottom-6 right-6 z-50 p-3 bg-card/95 backdrop-blur-md border border-border/80 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
-        <div className="relative">
-          <Avatar className="w-10 h-10 border border-primary/30">
-            <AvatarImage src={session.targetAvatar} />
-            <AvatarFallback className="font-bold text-xs bg-indigo-600 text-white">
-              {session.targetName?.charAt(0)?.toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-background animate-pulse" />
-        </div>
-
-        <div>
-          <h4 className="text-xs font-bold text-foreground line-clamp-1">{session.targetName}</h4>
-          <p className="text-[10px] text-muted-foreground font-mono">
-            {status === 'calling' ? 'Calling...' : formatTime(duration)}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1.5 ml-2">
-          <Button
-            size="icon"
-            variant={isMuted ? "destructive" : "secondary"}
-            onClick={onToggleMute}
-            className="h-8 w-8 rounded-full"
-          >
-            {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
-          </Button>
-
-          <Button
-            size="icon"
-            variant="destructive"
-            onClick={onHangup}
-            className="h-8 w-8 rounded-full"
-          >
-            <PhoneOff className="w-3.5 h-3.5" />
-          </Button>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={() => setIsMinimized(false)}
-            className="h-8 w-8 rounded-full"
-          >
-            <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Full Call Window Modal
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in-50">
-      <div className="relative w-full max-w-4xl bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
+    <>
+      {/* Remote audio player mounted persistently to ensure voice audio plays in both minimized and fullscreen modes */}
+      <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
+      {/* Minimized Picture-in-Picture Floating Bar */}
+      {isMinimized ? (
+        <div className="fixed bottom-6 right-6 z-50 p-3 bg-card/95 backdrop-blur-md border border-border/80 rounded-2xl shadow-2xl flex items-center gap-3 animate-in slide-in-from-bottom-5">
+          <div className="relative">
+            <Avatar className="w-10 h-10 border border-primary/30">
+              <AvatarImage src={session.targetAvatar} />
+              <AvatarFallback className="font-bold text-xs bg-indigo-600 text-white">
+                {session.targetName?.charAt(0)?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-background animate-pulse" />
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-foreground line-clamp-1">{session.targetName}</h4>
+            <p className="text-[10px] text-muted-foreground font-mono">
+              {status === 'calling' ? 'Calling...' : formatTime(duration)}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 ml-2">
+            <Button
+              size="icon"
+              variant={isMuted ? "destructive" : "secondary"}
+              onClick={onToggleMute}
+              className="h-8 w-8 rounded-full"
+            >
+              {isMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            </Button>
+
+            <Button
+              size="icon"
+              variant="destructive"
+              onClick={onHangup}
+              className="h-8 w-8 rounded-full"
+            >
+              <PhoneOff className="w-3.5 h-3.5" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setIsMinimized(false)}
+              className="h-8 w-8 rounded-full"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        /* Full Call Window Modal */
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in-50">
+          <div className="relative w-full max-w-4xl bg-slate-950 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[80vh] max-h-[700px]">
         {/* Top Header Bar */}
         <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-black/80 via-black/40 to-transparent flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -155,8 +167,9 @@ export default function ActiveCallModal({
 
         {/* Center Media Feed Canvas */}
         <div className="relative flex-1 w-full bg-slate-900 flex items-center justify-center overflow-hidden">
-          {/* Remote Video Stream (Main Feed) */}
-          {remoteStream && !isCameraOff ? (
+
+          {/* Remote Video Stream (Main Feed for HD Video Calls) */}
+          {isVideo && remoteStream && !isCameraOff ? (
             <video
               ref={remoteVideoRef}
               autoPlay
@@ -164,25 +177,43 @@ export default function ActiveCallModal({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center text-center p-6 space-y-3">
-              <div className="w-24 h-24 rounded-full bg-indigo-600/20 border-2 border-indigo-500/40 flex items-center justify-center animate-pulse">
-                <Avatar className="w-20 h-20">
-                  <AvatarImage src={session.targetAvatar} />
-                  <AvatarFallback className="text-2xl font-bold bg-indigo-600 text-white">
-                    {session.targetName?.charAt(0)?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+            <div className="flex flex-col items-center justify-center text-center p-6 space-y-4">
+              <div className="relative">
+                {/* Concentric Audio Pulse Rings */}
+                <div className={`absolute -inset-4 rounded-full border border-indigo-500/20 ${status === 'connected' ? 'animate-ping duration-1000' : ''}`} />
+                <div className="w-28 h-28 rounded-full bg-gradient-to-tr from-indigo-600/30 via-violet-600/20 to-blue-600/30 border-2 border-indigo-500/50 flex items-center justify-center shadow-2xl">
+                  <Avatar className="w-24 h-24 border-2 border-white/20">
+                    <AvatarImage src={session.targetAvatar} />
+                    <AvatarFallback className="text-3xl font-bold bg-gradient-to-tr from-indigo-600 to-violet-600 text-white">
+                      {session.targetName?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
+
               <div>
-                <h4 className="text-lg font-bold text-white">{session.targetName}</h4>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  {status === 'calling' ? 'Waiting for participant to accept...' : 'Connected in Voice Call'}
+                <h4 className="text-xl font-bold text-white tracking-tight">{session.targetName}</h4>
+                <p className="text-xs text-indigo-400 font-medium mt-1">
+                  {status === 'calling'
+                    ? 'Calling / Ringing...'
+                    : '🟢 Voice Call Active • P2P Audio Connected'}
                 </p>
+
+                {/* Animated Audio Equalizer Bars when connected */}
+                {status === 'connected' && (
+                  <div className="flex items-center justify-center gap-1 mt-3">
+                    <span className="w-1 h-3 bg-indigo-500 rounded-full animate-bounce [animation-delay:0.1s]" />
+                    <span className="w-1 h-5 bg-violet-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                    <span className="w-1 h-4 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.3s]" />
+                    <span className="w-1 h-6 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    <span className="w-1 h-3 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* Local Camera Pip (Self Preview) */}
+          {/* Local Camera Pip (Self Preview only for Video Calls) */}
           {isVideo && (
             <div className="absolute bottom-20 right-4 z-10 w-36 sm:w-48 aspect-video bg-black/80 rounded-2xl overflow-hidden border border-white/20 shadow-xl">
               {!isCameraOff && localStream ? (
@@ -253,5 +284,7 @@ export default function ActiveCallModal({
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 }

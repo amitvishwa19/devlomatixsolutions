@@ -216,56 +216,68 @@ export async function createDcrRecordAction(workspaceId, data) {
 
         // Auto-match or create Account if clientName provided and accountId not provided
         if (clientName?.trim() && !resolvedAccountId) {
-            let existingAccount = await prisma.account.findFirst({
-                where: { workspaceId, name: { equals: clientName.trim(), mode: 'insensitive' } }
-            });
-
-            if (!existingAccount) {
-                existingAccount = await prisma.account.create({
-                    data: {
-                        workspaceId,
-                        userId,
-                        name: clientName.trim(),
-                        phone: phone?.trim() || null,
-                        email: email?.trim() || null,
-                        address: location?.trim() || null,
-                        rating: outcome === 'HOT_LEAD' || outcome === 'WON' ? 'HOT' : 'WARM'
-                    }
+            try {
+                let existingAccount = await prisma.account.findFirst({
+                    where: { workspaceId, name: { equals: clientName.trim(), mode: 'insensitive' } }
                 });
+
+                if (!existingAccount) {
+                    existingAccount = await prisma.account.create({
+                        data: {
+                            workspaceId,
+                            userId,
+                            name: clientName.trim(),
+                            phone: phone?.trim() || null,
+                            email: email?.trim() || null,
+                            address: location?.trim() || null,
+                            rating: outcome === 'HOT_LEAD' || outcome === 'WON' ? 'HOT' : 'WARM'
+                        }
+                    });
+                }
+                resolvedAccountId = existingAccount.id;
+            } catch (accErr) {
+                console.warn("[CREATE_DCR_ACCOUNT_PROVISION_WARNING]", accErr);
             }
-            resolvedAccountId = existingAccount.id;
         }
 
         // Auto-match or create Contact if phone or contactPerson provided and contactId not provided
         if ((contactPerson?.trim() || phone?.trim()) && !resolvedContactId) {
-            let existingContact = null;
-            if (phone?.trim()) {
-                existingContact = await prisma.contact.findFirst({
-                    where: { workspaceId, phone: phone.trim() }
-                });
-            }
+            try {
+                let existingContact = null;
+                if (phone?.trim()) {
+                    existingContact = await prisma.contact.findFirst({
+                        where: { workspaceId, phone: phone.trim() }
+                    });
+                }
 
-            if (!existingContact && contactPerson?.trim()) {
-                existingContact = await prisma.contact.findFirst({
-                    where: { workspaceId, name: { equals: contactPerson.trim(), mode: 'insensitive' } }
-                });
-            }
+                const personName = contactPerson?.trim() || (phone?.trim() ? clientName?.trim() : null);
 
-            if (!existingContact && contactPerson?.trim()) {
-                existingContact = await prisma.contact.create({
-                    data: {
-                        workspaceId,
-                        userId,
-                        name: contactPerson.trim(),
-                        phone: phone?.trim() || null,
-                        email: email?.trim() || null,
-                        accountId: resolvedAccountId || null
-                    }
-                });
-            }
+                if (!existingContact && personName) {
+                    existingContact = await prisma.contact.findFirst({
+                        where: { workspaceId, name: { equals: personName, mode: 'insensitive' } }
+                    });
+                }
 
-            if (existingContact) {
-                resolvedContactId = existingContact.id;
+                if (!existingContact && personName) {
+                    // Contact.phone is a required non-null String in Prisma schema
+                    const safePhone = phone?.trim() || `+91000${Math.floor(1000000 + Math.random() * 9000000)}`;
+                    existingContact = await prisma.contact.create({
+                        data: {
+                            workspaceId,
+                            userId,
+                            name: personName,
+                            phone: safePhone,
+                            email: email?.trim() || null,
+                            accountId: resolvedAccountId || null
+                        }
+                    });
+                }
+
+                if (existingContact) {
+                    resolvedContactId = existingContact.id;
+                }
+            } catch (contactErr) {
+                console.warn("[CREATE_DCR_CONTACT_PROVISION_WARNING]", contactErr);
             }
         }
 

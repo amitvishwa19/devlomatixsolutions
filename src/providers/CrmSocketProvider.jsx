@@ -29,6 +29,89 @@ const getSocketUrl = () => {
   return 'https://socket.devlomatix.in';
 };
 
+// Pure Web Audio tone synthesizer for ringback and incoming call melodies
+function playWebAudioTone(type) {
+  if (typeof window === 'undefined') return null;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    const ctx = new AudioCtx();
+    let isRunning = true;
+
+    if (type === 'ringback') {
+      // Classic phone ringback tone: 440Hz + 480Hz dual sine tones
+      const ring = () => {
+        if (!isRunning || ctx.state === 'closed') return;
+        const now = ctx.currentTime;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(440, now);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(480, now);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.07, now + 0.05);
+        gain.gain.setValueAtTime(0.07, now + 1.5);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.6);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 1.6);
+        osc2.stop(now + 1.6);
+
+        setTimeout(ring, 3800);
+      };
+      ring();
+    } else if (type === 'incoming') {
+      // Pleasant melodic chime sequence: C5, E5, G5, C6 notes repeating
+      const chime = () => {
+        if (!isRunning || ctx.state === 'closed') return;
+        const freqs = [523.25, 659.25, 783.99, 1046.5];
+        freqs.forEach((freq, idx) => {
+          const now = ctx.currentTime + idx * 0.12;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.exponentialRampToValueAtTime(0.12, now + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.45);
+        });
+
+        setTimeout(chime, 2600);
+      };
+      chime();
+    }
+
+    return {
+      stop: () => {
+        isRunning = false;
+        try {
+          ctx.close();
+        } catch (_) {}
+      }
+    };
+  } catch (err) {
+    console.warn('[AUDIO_SYNTH_WARN]', err);
+    return null;
+  }
+}
+
 export function CrmSocketProvider({ children }) {
   const { data: session } = useSession();
   const params = useParams();
@@ -62,6 +145,79 @@ export function CrmSocketProvider({ children }) {
   const webrtcClientRef = useRef(null);
   const timerRef = useRef(null);
   const socketRef = useRef(null);
+  const ringtoneRef = useRef(null);
+  const callTimeoutRef = useRef(null);
+  const activeCallSessionRef = useRef(null);
+  const callStatusRef = useRef('idle');
+  const callDurationRef = useRef(0);
+
+  const incomingAudioRef = useRef(null);
+
+  // Synchronize state to refs for resilient socket callbacks
+  useEffect(() => {
+    activeCallSessionRef.current = activeCallSession;
+  }, [activeCallSession]);
+
+  useEffect(() => {
+    callStatusRef.current = callStatus;
+  }, [callStatus]);
+
+  useEffect(() => {
+    callDurationRef.current = callDuration;
+  }, [callDuration]);
+
+  const stopRingtone = useCallback(() => {
+    if (incomingAudioRef.current) {
+      try {
+        incomingAudioRef.current.pause();
+        incomingAudioRef.current.currentTime = 0;
+      } catch (_) {}
+    }
+    if (ringtoneRef.current) {
+      ringtoneRef.current.stop();
+      ringtoneRef.current = null;
+    }
+  }, []);
+
+  const startRingtone = useCallback((type) => {
+    stopRingtone();
+
+    if (type === 'incoming') {
+      // Play actual MP3 voice call ringtone
+      if (incomingAudioRef.current) {
+        incomingAudioRef.current.currentTime = 0;
+        incomingAudioRef.current.volume = 0.9;
+        const playPromise = incomingAudioRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('[INCOMING_MP3_RINGTONE_WARN] HTML5 Audio autoplay blocked, using fallback chime:', err);
+            ringtoneRef.current = playWebAudioTone('incoming');
+          });
+        }
+      } else {
+        try {
+          const audio = new Audio('/tones/call-ring-tone.mp3');
+          audio.loop = true;
+          audio.volume = 0.9;
+          audio.play().catch(() => {
+            ringtoneRef.current = playWebAudioTone('incoming');
+          });
+          ringtoneRef.current = {
+            stop: () => {
+              try {
+                audio.pause();
+                audio.currentTime = 0;
+              } catch (_) {}
+            }
+          };
+        } catch (_) {
+          ringtoneRef.current = playWebAudioTone('incoming');
+        }
+      }
+    } else if (type === 'ringback') {
+      ringtoneRef.current = playWebAudioTone('ringback');
+    }
+  }, [stopRingtone]);
 
   // 1. Connect Socket
   useEffect(() => {
@@ -106,7 +262,15 @@ export function CrmSocketProvider({ children }) {
 
   // Helper to cleanup WebRTC
   const cleanupCall = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
+    stopRingtone();
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     if (webrtcClientRef.current) {
       webrtcClientRef.current.cleanup();
       webrtcClientRef.current = null;
@@ -116,7 +280,7 @@ export function CrmSocketProvider({ children }) {
     setIsMuted(false);
     setIsCameraOff(false);
     setIsScreenSharing(false);
-  }, []);
+  }, [stopRingtone]);
 
   // 2. Setup WebRTC Signaling Listeners
   useEffect(() => {
@@ -124,7 +288,7 @@ export function CrmSocketProvider({ children }) {
 
     // Incoming Call Ring
     socket.on('call:incoming', (data) => {
-      if (callStatus !== 'idle') {
+      if (callStatusRef.current !== 'idle') {
         // Automatically respond busy if already on a call
         socket.emit('call:response', { roomId: data.roomId, accepted: false, reason: 'busy' });
         return;
@@ -132,17 +296,43 @@ export function CrmSocketProvider({ children }) {
 
       setIncomingCallData(data);
       setCallStatus('incoming');
+      startRingtone('incoming');
+
+      // Auto-decline if ringing for 35 seconds without answer
+      if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = setTimeout(() => {
+        if (callStatusRef.current === 'incoming') {
+          stopRingtone();
+          socket.emit('call:response', {
+            roomId: data.roomId,
+            accepted: false,
+            reason: 'timeout'
+          });
+          setIncomingCallData(null);
+          setCallStatus('idle');
+        }
+      }, 35000);
     });
 
     // Caller: Callee accepted the call
     socket.on('call:accepted', async (data) => {
+      stopRingtone();
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
+      }
+
+      // Guard: Only the caller creates the SDP offer
+      if (!activeCallSessionRef.current?.isCaller) return;
+
       setCallStatus('connected');
       toast.success(`${data.calleeName || 'Client'} connected!`);
 
       // Caller creates and sends SDP Offer
       if (webrtcClientRef.current) {
         try {
-          const offer = await webrtcClientRef.current.createOffer();
+          const isAudioOnly = activeCallSessionRef.current?.callType === 'audio';
+          const offer = await webrtcClientRef.current.createOffer({ isAudioOnly });
           socket.emit('call:sdp:offer', { roomId: data.roomId, sdp: offer });
         } catch (err) {
           console.error('[WEBRTC_OFFER_ERROR]', err);
@@ -151,6 +341,7 @@ export function CrmSocketProvider({ children }) {
 
       // Start call duration timer
       setCallDuration(0);
+      if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
         setCallDuration((prev) => prev + 1);
       }, 1000);
@@ -161,7 +352,14 @@ export function CrmSocketProvider({ children }) {
       cleanupCall();
       setCallStatus('idle');
       setActiveCallSession(null);
-      toast.error(data.reason === 'busy' ? 'User is busy on another call.' : 'Call was declined.');
+      setIncomingCallData(null);
+      toast.error(
+        data.reason === 'busy'
+          ? 'User is busy on another call.'
+          : data.reason === 'timeout'
+          ? 'Call timed out (no answer).'
+          : 'Call was declined.'
+      );
     });
 
     // Callee: Receives SDP Offer from Caller -> sends SDP Answer
@@ -173,6 +371,7 @@ export function CrmSocketProvider({ children }) {
 
           // Start timer for callee
           setCallDuration(0);
+          if (timerRef.current) clearInterval(timerRef.current);
           timerRef.current = setInterval(() => {
             setCallDuration((prev) => prev + 1);
           }, 1000);
@@ -209,8 +408,8 @@ export function CrmSocketProvider({ children }) {
 
     // Call Ended
     socket.on('call:ended', ({ duration }) => {
-      const finishedSession = activeCallSession;
-      const finalDuration = duration || callDuration;
+      const finishedSession = activeCallSessionRef.current;
+      const finalDuration = duration || callDurationRef.current;
 
       cleanupCall();
       setCallStatus('idle');
@@ -236,7 +435,7 @@ export function CrmSocketProvider({ children }) {
       socket.off('call:media:toggle');
       socket.off('call:ended');
     };
-  }, [socket, callStatus, activeCallSession, callDuration, cleanupCall]);
+  }, [socket, cleanupCall, startRingtone, stopRingtone]);
 
   // 3. User Actions: Start Call
   const startCall = async ({ calleeId, calleeName, calleeAvatar, callType = 'video', clientOrDealInfo = null }) => {
@@ -283,12 +482,23 @@ export function CrmSocketProvider({ children }) {
       });
 
       setCallStatus('calling');
+      startRingtone('ringback');
+
+      // 35s calling timeout
+      if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = setTimeout(() => {
+        if (callStatusRef.current === 'calling') {
+          toast.info('No answer from user. Call timed out.');
+          endCall();
+        }
+      }, 35000);
 
       // Dispatch invite via socket
       socket.emit('call:invite', {
         calleeId,
         roomId: currentRoomId,
         callType,
+        workspaceId,
         callerInfo: {
           name: currentUserName,
           avatar: currentUserAvatar,
@@ -305,6 +515,14 @@ export function CrmSocketProvider({ children }) {
   // 4. User Actions: Accept Call
   const acceptCall = async () => {
     if (!incomingCallData || !socket) return;
+    const currentIncoming = incomingCallData;
+    const targetRoomId = currentIncoming.roomId;
+
+    stopRingtone();
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+    }
 
     try {
       const rtc = new WebRtcClient({
@@ -312,46 +530,50 @@ export function CrmSocketProvider({ children }) {
           setRemoteStream(stream);
         },
         onIceCandidate: (candidate) => {
-          if (socketRef.current && incomingCallData.roomId) {
-            socketRef.current.emit('call:ice:candidate', { roomId: incomingCallData.roomId, candidate });
+          if (socketRef.current && targetRoomId) {
+            socketRef.current.emit('call:ice:candidate', { roomId: targetRoomId, candidate });
           }
         }
       });
 
       const stream = await rtc.initLocalMedia({
         audio: true,
-        video: incomingCallData.callType === 'video'
+        video: currentIncoming.callType === 'video'
       });
 
       setLocalStream(stream);
       webrtcClientRef.current = rtc;
 
       setActiveCallSession({
-        roomId: incomingCallData.roomId,
-        targetUserId: incomingCallData.callerId,
-        targetName: incomingCallData.callerName,
-        targetAvatar: incomingCallData.callerAvatar,
-        callType: incomingCallData.callType,
+        roomId: targetRoomId,
+        targetUserId: currentIncoming.callerId,
+        targetName: currentIncoming.callerName,
+        targetAvatar: currentIncoming.callerAvatar,
+        callType: currentIncoming.callType,
         isCaller: false
       });
 
       setCallStatus('connected');
+      setIncomingCallData(null);
 
       // Send acceptance back to caller
       socket.emit('call:response', {
-        roomId: incomingCallData.roomId,
+        roomId: targetRoomId,
         accepted: true
       });
-
-      setIncomingCallData(null);
     } catch (err) {
-      toast.error('Failed to connect to audio/video devices.');
-      rejectCall();
+      toast.error(err.message || 'Failed to connect to audio/video devices.');
+      rejectCall('declined');
     }
   };
 
   // 5. User Actions: Reject Call
   const rejectCall = (reason = 'declined') => {
+    stopRingtone();
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
+    }
     if (incomingCallData && socket) {
       socket.emit('call:response', {
         roomId: incomingCallData.roomId,
@@ -365,24 +587,30 @@ export function CrmSocketProvider({ children }) {
 
   // 6. User Actions: End Call / Hangup
   const endCall = () => {
-    if (activeCallSession && socket) {
-      socket.emit('call:hangup', {
-        roomId: activeCallSession.roomId,
-        duration: callDuration
-      });
+    stopRingtone();
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
     }
 
-    const finished = activeCallSession;
-    const finalDuration = callDuration;
+    const currentSession = activeCallSessionRef.current;
+    const finalDuration = callDurationRef.current;
+
+    if (currentSession && socket) {
+      socket.emit('call:hangup', {
+        roomId: currentSession.roomId,
+        duration: finalDuration
+      });
+    }
 
     cleanupCall();
     setCallStatus('idle');
     setActiveCallSession(null);
     setIncomingCallData(null);
 
-    if (finished) {
+    if (currentSession) {
       setPostCallRecord({
-        ...finished,
+        ...currentSession,
         duration: finalDuration
       });
     }
@@ -455,6 +683,15 @@ export function CrmSocketProvider({ children }) {
   return (
     <CrmSocketContext.Provider value={value}>
       {children}
+
+      {/* Incoming Call Voice Ringtone MP3 Audio Player */}
+      <audio
+        ref={incomingAudioRef}
+        src="/tones/call-ring-tone.mp3"
+        loop
+        preload="auto"
+        className="hidden"
+      />
 
       {/* Global Incoming Call Ringing Dialog */}
       <IncomingCallDialog

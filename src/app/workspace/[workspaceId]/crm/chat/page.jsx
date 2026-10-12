@@ -22,6 +22,10 @@ import {
     WifiOff,
     Shield,
     PhoneCall,
+    PhoneMissed,
+    PhoneOff,
+    PhoneIncoming,
+    PhoneOutgoing,
     Loader2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -35,6 +39,45 @@ import { useCrmSocket } from '@/providers/CrmSocketProvider';
 import { getCrmContactsAction } from '../_actions/contact-actions';
 import { getCrmTeamMembersAction } from '../_actions/team-actions';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+const parseCallLog = (text, attachments) => {
+    const fromAttachment = Array.isArray(attachments)
+        ? attachments.find((a) => a?.type === 'call_log')
+        : attachments?.type === 'call_log'
+        ? attachments
+        : null;
+
+    if (fromAttachment) return fromAttachment;
+
+    if (!text || typeof text !== 'string') return null;
+    const isCallMsg = text.startsWith('📞') || text.startsWith('📹') || text.includes('Voice Call') || text.includes('Video Call');
+    if (!isCallMsg) return null;
+
+    const isVideo = text.includes('Video') || text.includes('📹');
+    let callStatus = 'completed';
+    if (text.toLowerCase().includes('missed')) callStatus = 'missed';
+    else if (text.toLowerCase().includes('declined')) callStatus = 'declined';
+    else if (text.toLowerCase().includes('busy')) callStatus = 'busy';
+
+    let duration = 0;
+    const matchMins = text.match(/(\d+)m/);
+    const matchSecs = text.match(/(\d+)s/);
+    if (matchMins) duration += parseInt(matchMins[1], 10) * 60;
+    if (matchSecs) duration += parseInt(matchSecs[1], 10);
+
+    return {
+        type: 'call_log',
+        callType: isVideo ? 'video' : 'audio',
+        callStatus,
+        duration
+    };
+};
+
+const formatCallDuration = (secs) => {
+    const mins = Math.floor(secs / 60);
+    const remSecs = secs % 60;
+    return mins > 0 ? `${mins}m ${remSecs}s` : `${remSecs}s`;
+};
 
 export default function CrmChatPage() {
     const params = useParams();
@@ -595,6 +638,7 @@ export default function CrmChatPage() {
                             ) : (
                                 currentChatMessages.map((msg, index) => {
                                     const isMe = msg.senderId === currentUserId;
+                                    const callLog = parseCallLog(msg.message, msg.attachments);
 
                                     return (
                                         <div
@@ -609,29 +653,124 @@ export default function CrmChatPage() {
                                                 </Avatar>
                                             )}
 
-                                            <div
-                                                className={`max-w-md p-3 rounded-2xl text-xs shadow-xs space-y-1.5 ${isMe
-                                                    ? 'bg-primary text-primary-foreground rounded-br-xs'
-                                                    : 'bg-muted/80 text-foreground border border-border/60 rounded-bl-xs'
-                                                    }`}
-                                            >
-                                                {!isMe && (
-                                                    <p className="text-[10px] font-bold text-primary">{msg.senderName}</p>
-                                                )}
-                                                <p className="leading-relaxed whitespace-pre-line">{msg.message}</p>
+                                            {callLog ? (
                                                 <div
-                                                    className={`text-[9px] flex items-center justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                                    className={`max-w-xs sm:max-w-sm p-3.5 rounded-2xl text-xs shadow-xs space-y-2.5 border transition-all ${
+                                                        isMe
+                                                            ? 'bg-card border-primary/30 text-foreground rounded-br-xs'
+                                                            : 'bg-muted/60 border-border text-foreground rounded-bl-xs'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div
+                                                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
+                                                                callLog.callStatus === 'completed'
+                                                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                                                    : callLog.callStatus === 'missed'
+                                                                    ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                                                                    : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                                                            }`}
+                                                        >
+                                                            {callLog.callType === 'video' ? (
+                                                                <Video className="w-4 h-4" />
+                                                            ) : callLog.callStatus === 'completed' ? (
+                                                                <PhoneCall className="w-4 h-4" />
+                                                            ) : callLog.callStatus === 'missed' ? (
+                                                                <PhoneMissed className="w-4 h-4" />
+                                                            ) : (
+                                                                <PhoneOff className="w-4 h-4" />
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center justify-between gap-1">
+                                                                <h5 className="text-xs font-bold truncate">
+                                                                    {callLog.callType === 'video' ? 'Video Call' : 'Voice Call'}
+                                                                </h5>
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`text-[9px] px-1.5 py-0 font-medium ${
+                                                                        callLog.callStatus === 'completed'
+                                                                            ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
+                                                                            : callLog.callStatus === 'missed'
+                                                                            ? 'border-rose-500/30 text-rose-600 bg-rose-500/10'
+                                                                            : 'border-amber-500/30 text-amber-600 bg-amber-500/10'
+                                                                    }`}
+                                                                >
+                                                                    {callLog.callStatus === 'completed'
+                                                                        ? 'Completed'
+                                                                        : callLog.callStatus === 'missed'
+                                                                        ? 'Missed'
+                                                                        : callLog.callStatus === 'busy'
+                                                                        ? 'Busy'
+                                                                        : 'Declined'}
+                                                                </Badge>
+                                                            </div>
+
+                                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                                {callLog.callStatus === 'completed' ? (
+                                                                    <span>Duration: <strong className="font-mono text-foreground">{formatCallDuration(callLog.duration || 0)}</strong></span>
+                                                                ) : callLog.callStatus === 'missed' ? (
+                                                                    <span>{isMe ? 'No answer' : 'Missed call'}</span>
+                                                                ) : (
+                                                                    <span>{isMe ? 'Call declined' : 'Declined'}</span>
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-1.5 border-t border-border/50 flex items-center justify-between">
+                                                        <span className="text-[10px] text-muted-foreground font-mono">
+                                                            {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </span>
+
+                                                        {activeChatUser && activeChatUser.id !== currentUserId && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                onClick={() => {
+                                                                    if (callLog.callType === 'video') {
+                                                                        handleStartVideoCall();
+                                                                    } else {
+                                                                        handleStartVoiceCall();
+                                                                    }
+                                                                }}
+                                                                className="h-6 text-[10px] px-2 gap-1 text-primary hover:text-primary hover:bg-primary/10 font-semibold"
+                                                            >
+                                                                <Phone className="w-3 h-3" />
+                                                                Call Back
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div
+                                                    className={`max-w-md p-3 rounded-2xl text-xs shadow-xs space-y-1.5 ${isMe
+                                                        ? 'bg-primary text-primary-foreground rounded-br-xs'
+                                                        : 'bg-muted/80 text-foreground border border-border/60 rounded-bl-xs'
                                                         }`}
                                                 >
-                                                    <span>
-                                                        {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </span>
-                                                    {isMe && <CheckCheck className="w-3 h-3" />}
+                                                    {!isMe && (
+                                                        <p className="text-[10px] font-bold text-primary">{msg.senderName}</p>
+                                                    )}
+                                                    <p className="leading-relaxed whitespace-pre-line">{msg.message}</p>
+                                                    <div
+                                                        className={`text-[9px] flex items-center justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                                            }`}
+                                                    >
+                                                        <span>
+                                                            {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </span>
+                                                        {isMe && <CheckCheck className="w-3 h-3" />}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     );
                                 })

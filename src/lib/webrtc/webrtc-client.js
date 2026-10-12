@@ -17,6 +17,7 @@ export class WebRtcClient {
     this.remoteStream = null;
     this.screenStream = null;
     this.isScreenSharing = false;
+    this.candidateQueue = [];
 
     this.onRemoteStream = onRemoteStream;
     this.onIceCandidate = onIceCandidate;
@@ -27,21 +28,63 @@ export class WebRtcClient {
    * Initialize local camera and microphone media stream
    */
   async initLocalMedia({ audio = true, video = true } = {}) {
+    if (typeof window === 'undefined' || !navigator?.mediaDevices?.getUserMedia) {
+      throw new Error('Microphone access requires HTTPS or localhost. Please ensure a secure browser connection.');
+    }
+
     try {
       this.localStream = await navigator.mediaDevices.getUserMedia({
-        audio: audio ? { echoCancellation: true, noiseSuppression: true } : false,
-        video: video ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } : false
+        audio: audio
+          ? {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            }
+          : false,
+        video: video
+          ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+          : false
       });
+
+      // If peer connection was already instantiated, attach tracks immediately
+      if (this.peerConnection && this.localStream) {
+        const senders = this.peerConnection.getSenders();
+        this.localStream.getTracks().forEach((track) => {
+          const alreadyAdded = senders.some((s) => s.track === track);
+          if (!alreadyAdded) {
+            this.peerConnection.addTrack(track, this.localStream);
+          }
+        });
+      }
+
       return this.localStream;
     } catch (err) {
       console.error('[WEBRTC_MEDIA_ERROR] Failed to get user media:', err);
       // Fallback: Try audio only if video camera fails or is blocked
       if (video) {
         try {
-          this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          this.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true
+            },
+            video: false
+          });
+
+          if (this.peerConnection && this.localStream) {
+            const senders = this.peerConnection.getSenders();
+            this.localStream.getTracks().forEach((track) => {
+              const alreadyAdded = senders.some((s) => s.track === track);
+              if (!alreadyAdded) {
+                this.peerConnection.addTrack(track, this.localStream);
+              }
+            });
+          }
+
           return this.localStream;
         } catch (audioErr) {
-          throw new Error('Could not access microphone or camera. Please check browser permissions.');
+          throw new Error('Could not access microphone. Please check browser permissions.');
         }
       }
       throw err;
@@ -52,6 +95,8 @@ export class WebRtcClient {
    * Create and configure the RTCPeerConnection
    */
   createPeerConnection() {
+    if (this.peerConnection) return this.peerConnection;
+
     this.peerConnection = new RTCPeerConnection({
       iceServers: DEFAULT_ICE_SERVERS
     });
@@ -63,22 +108,33 @@ export class WebRtcClient {
       }
     };
 
-    // Handle Remote Track arrival
+    // Handle Remote Track arrival (both audio and video tracks)
     this.peerConnection.ontrack = (event) => {
-      if (event.streams && event.streams[0]) {
-        this.remoteStream = event.streams[0];
-        if (this.onRemoteStream) {
-          this.onRemoteStream(this.remoteStream);
+      let stream = event.streams && event.streams[0];
+      if (!stream) {
+        if (!this.remoteStream) {
+          this.remoteStream = new MediaStream();
         }
+        if (!this.remoteStream.getTracks().includes(event.track)) {
+          this.remoteStream.addTrack(event.track);
+        }
+        stream = this.remoteStream;
+      } else {
+        this.remoteStream = stream;
+      }
+
+      if (this.onRemoteStream) {
+        this.onRemoteStream(stream);
       }
     };
 
     // Connection state logging
     this.peerConnection.onconnectionstatechange = () => {
-      if (this.onConnectionStateChange) {
-        this.onConnectionStateChange(this.peerConnection.connectionState);
+      const state = this.peerConnection?.connectionState;
+      if (this.onConnectionStateChange && state) {
+        this.onConnectionStateChange(state);
       }
-      console.log(`[WEBRTC_STATE] Connection state: ${this.peerConnection.connectionState}`);
+      console.log(`[WEBRTC_STATE] Connection state: ${state}`);
     };
 
     // Add local tracks to peer connection
@@ -94,11 +150,11 @@ export class WebRtcClient {
   /**
    * Caller: Generate SDP Offer
    */
-  async createOffer() {
+  async createOffer({ isAudioOnly = false } = {}) {
     if (!this.peerConnection) this.createPeerConnection();
     const offer = await this.peerConnection.createOffer({
       offerToReceiveAudio: true,
-      offerToReceiveVideo: true
+      offerToReceiveVideo: !isAudioOnly
     });
     await this.peerConnection.setLocalDescription(offer);
     return offer;
@@ -110,6 +166,8 @@ export class WebRtcClient {
   async handleOfferAndCreateAnswer(offer) {
     if (!this.peerConnection) this.createPeerConnection();
     await this.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    await this.processCandidateQueue();
+
     const answer = await this.peerConnection.createAnswer();
     await this.peerConnection.setLocalDescription(answer);
     return answer;
@@ -121,18 +179,37 @@ export class WebRtcClient {
   async handleAnswer(answer) {
     if (this.peerConnection) {
       await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+      await this.processCandidateQueue();
     }
   }
 
   /**
-   * Add ICE Candidate received from remote peer
+   * Add ICE Candidate received from remote peer (with queueing if remoteDescription not ready)
    */
   async addIceCandidate(candidate) {
-    if (this.peerConnection && candidate) {
+    if (!candidate) return;
+    if (this.peerConnection && this.peerConnection.remoteDescription) {
       try {
         await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
         console.warn('[WEBRTC_ICE_CANDIDATE_WARN]', err);
+      }
+    } else {
+      this.candidateQueue.push(candidate);
+    }
+  }
+
+  /**
+   * Process all queued ICE candidates once remote description is set
+   */
+  async processCandidateQueue() {
+    if (!this.peerConnection || !this.peerConnection.remoteDescription) return;
+    while (this.candidateQueue.length > 0) {
+      const candidate = this.candidateQueue.shift();
+      try {
+        await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.warn('[WEBRTC_ICE_CANDIDATE_QUEUE_WARN]', err);
       }
     }
   }
@@ -229,6 +306,7 @@ export class WebRtcClient {
    */
   cleanup() {
     this.stopScreenShare();
+    this.candidateQueue = [];
 
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => track.stop());
