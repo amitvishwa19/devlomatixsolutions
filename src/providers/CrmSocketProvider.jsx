@@ -14,8 +14,14 @@ import PostCallSummaryDialog from '@/app/workspace/[workspaceId]/crm/_components
 const CrmSocketContext = createContext(null);
 
 const getSocketUrl = () => {
-  if (process.env.NEXT_PUBLIC_SOCKET_SERVER_URL) {
-    return process.env.NEXT_PUBLIC_SOCKET_SERVER_URL;
+  const envUrl =
+    process.env.NEXT_PUBLIC_SOCKET_SERVER ||
+    process.env.NEXT_PUBLIC_SOCKET_SERVER_URL ||
+    process.env.NEXT_PUBLIC_SOCKETSERVER ||
+    process.env.NEXT_PUBLIC_SOCKET_URL;
+
+  if (envUrl) {
+    return envUrl.replace(/\/+$/, '');
   }
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:5001';

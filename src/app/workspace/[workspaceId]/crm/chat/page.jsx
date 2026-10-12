@@ -147,19 +147,68 @@ export default function CrmChatPage() {
 
     const currentRoomId = activeChatUser ? getRoomId(activeChatUser.id) : 'general';
 
-    // 3. Socket Message & Typing Listeners
+    // 3. Socket Message, History & Typing Listeners
     useEffect(() => {
         if (!socket) return;
 
-        // Join active chat room
+        // Join active chat room and request history
         socket.emit('chat:room:join', { roomId: currentRoomId });
+        socket.emit('chat:history:get', { roomId: currentRoomId });
+
+        const handleRoomHistory = (data) => {
+            if (data?.roomId && Array.isArray(data.messages)) {
+                setMessages((prev) => {
+                    const existing = prev[data.roomId] || [];
+                    const messageMap = new Map();
+                    // Load server messages
+                    data.messages.forEach((m) => messageMap.set(m.id, m));
+                    // Retain pending optimistic local messages not yet in history
+                    existing.forEach((m) => {
+                        const key = m.clientMessageId || m.id;
+                        if (!messageMap.has(m.id) && !messageMap.has(key)) {
+                            messageMap.set(key, m);
+                        }
+                    });
+                    const merged = Array.from(messageMap.values()).sort(
+                        (a, b) => new Date(a.timestamp) - new Date(b.timestamp)
+                    );
+                    return {
+                        ...prev,
+                        [data.roomId]: merged
+                    };
+                });
+            }
+        };
 
         const handleMessageReceive = (msg) => {
+            if (!msg?.roomId) return;
             setMessages((prev) => {
                 const roomMsgs = prev[msg.roomId] || [];
+                // Deduplicate by message ID or clientMessageId
+                const exists = roomMsgs.some(
+                    (m) => m.id === msg.id || (m.clientMessageId && m.clientMessageId === msg.clientMessageId)
+                );
+                if (exists) return prev;
+
                 return {
                     ...prev,
                     [msg.roomId]: [...roomMsgs, msg]
+                };
+            });
+        };
+
+        const handleMessageAck = (ack) => {
+            if (!ack?.roomId || !ack?.clientMessageId) return;
+            setMessages((prev) => {
+                const roomMsgs = prev[ack.roomId] || [];
+                return {
+                    ...prev,
+                    [ack.roomId]: roomMsgs.map((m) => {
+                        if (m.id === ack.clientMessageId || m.clientMessageId === ack.clientMessageId) {
+                            return { ...m, id: ack.serverId || m.id, delivered: true, status: 'sent' };
+                        }
+                        return m;
+                    })
                 };
             });
         };
@@ -170,17 +219,21 @@ export default function CrmChatPage() {
             }
         };
 
+        socket.on('chat:room:history', handleRoomHistory);
         socket.on('chat:message:receive', handleMessageReceive);
+        socket.on('chat:message:ack', handleMessageAck);
         socket.on('chat:typing', handleTyping);
 
         return () => {
             socket.emit('chat:room:leave', { roomId: currentRoomId });
+            socket.off('chat:room:history', handleRoomHistory);
             socket.off('chat:message:receive', handleMessageReceive);
+            socket.off('chat:message:ack', handleMessageAck);
             socket.off('chat:typing', handleTyping);
         };
     }, [socket, currentRoomId, currentUserId]);
 
-    // Scroll to bottom on new message
+    // Scroll to bottom on new message or history change
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, currentRoomId]);
@@ -190,14 +243,19 @@ export default function CrmChatPage() {
         e?.preventDefault();
         if (!inputMessage.trim() || !activeChatUser || !socket) return;
 
+        const msgText = inputMessage.trim();
+        const clientMsgId = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
         const newMsg = {
-            id: `msg_${Date.now()}`,
+            id: clientMsgId,
+            clientMessageId: clientMsgId,
             roomId: currentRoomId,
             recipientId: activeChatUser.id,
             senderId: currentUserId,
             senderName: currentUserName,
-            message: inputMessage.trim(),
-            timestamp: new Date().toISOString()
+            message: msgText,
+            timestamp: new Date().toISOString(),
+            delivered: false
         };
 
         // Optimistically update UI
@@ -208,10 +266,11 @@ export default function CrmChatPage() {
 
         // Emit via socket
         socket.emit('chat:message:send', {
+            clientMessageId: clientMsgId,
             roomId: currentRoomId,
             recipientId: activeChatUser.id,
             workspaceId,
-            message: inputMessage.trim(),
+            message: msgText,
             senderId: currentUserId,
             senderName: currentUserName
         });
@@ -514,69 +573,71 @@ export default function CrmChatPage() {
                     </div>
 
                     {/* Message History Thread */}
-                    <ScrollArea className="flex-1 min-h-0  p-4 space-y-3.5 ">
-                        <div className="text-center my-4">
-                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted/60 text-[11px] text-muted-foreground border border-border/60">
-                                <Shield className="w-3 h-3 text-emerald-500" />
-                                Encrypted Real-Time P2P WebRTC & Socket Channel
-                            </div>
-                        </div>
-
-                        {currentChatMessages.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
-                                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-2">
-                                    <MessageSquare className="w-6 h-6" />
+                    <ScrollArea className="flex-1 min-h-0">
+                        <div className="p-4 space-y-3.5">
+                            <div className="text-center my-3">
+                                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-muted/60 text-[11px] text-muted-foreground border border-border/60">
+                                    <Shield className="w-3 h-3 text-emerald-500" />
+                                    Encrypted Real-Time P2P WebRTC & Socket Channel
                                 </div>
-                                <h4 className="text-sm font-bold text-foreground">No messages yet</h4>
-                                <p className="text-xs text-muted-foreground max-w-xs mt-1">
-                                    Start the conversation or click <strong>HD Video Call</strong> above to initiate an encrypted meeting.
-                                </p>
                             </div>
-                        ) : (
-                            currentChatMessages.map((msg, index) => {
-                                const isMe = msg.senderId === currentUserId;
 
-                                return (
-                                    <div
-                                        key={msg.id || index}
-                                        className={`flex items-end gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
-                                    >
-                                        {!isMe && (
-                                            <Avatar className="w-7 h-7 mb-1">
-                                                <AvatarFallback className="text-[10px] bg-slate-700 text-white font-bold">
-                                                    {msg.senderName?.charAt(0) || 'U'}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                        )}
+                            {currentChatMessages.length === 0 ? (
+                                <div className="h-48 flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
+                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+                                        <MessageSquare className="w-6 h-6" />
+                                    </div>
+                                    <h4 className="text-sm font-bold text-foreground">No messages yet</h4>
+                                    <p className="text-xs text-muted-foreground max-w-xs mt-1">
+                                        Start the conversation or click <strong>HD Video Call</strong> above to initiate an encrypted meeting.
+                                    </p>
+                                </div>
+                            ) : (
+                                currentChatMessages.map((msg, index) => {
+                                    const isMe = msg.senderId === currentUserId;
 
+                                    return (
                                         <div
-                                            className={`max-w-md p-3 rounded-2xl text-xs shadow-xs space-y-1 ${isMe
-                                                ? 'bg-primary text-primary-foreground rounded-br-xs'
-                                                : 'bg-muted/80 text-foreground border border-border/60 rounded-bl-xs'
-                                                }`}
+                                            key={msg.id || index}
+                                            className={`flex items-end gap-2 my-2.5 ${isMe ? 'justify-end' : 'justify-start'}`}
                                         >
                                             {!isMe && (
-                                                <p className="text-[10px] font-bold text-primary">{msg.senderName}</p>
+                                                <Avatar className="w-7 h-7 mb-1">
+                                                    <AvatarFallback className="text-[10px] bg-slate-700 text-white font-bold">
+                                                        {msg.senderName?.charAt(0) || 'U'}
+                                                    </AvatarFallback>
+                                                </Avatar>
                                             )}
-                                            <p className="leading-relaxed whitespace-pre-line">{msg.message}</p>
+
                                             <div
-                                                className={`text-[9px] flex items-center justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                                className={`max-w-md p-3 rounded-2xl text-xs shadow-xs space-y-1.5 ${isMe
+                                                    ? 'bg-primary text-primary-foreground rounded-br-xs'
+                                                    : 'bg-muted/80 text-foreground border border-border/60 rounded-bl-xs'
                                                     }`}
                                             >
-                                                <span>
-                                                    {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit'
-                                                    })}
-                                                </span>
-                                                {isMe && <CheckCheck className="w-3 h-3" />}
+                                                {!isMe && (
+                                                    <p className="text-[10px] font-bold text-primary">{msg.senderName}</p>
+                                                )}
+                                                <p className="leading-relaxed whitespace-pre-line">{msg.message}</p>
+                                                <div
+                                                    className={`text-[9px] flex items-center justify-end gap-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                                                        }`}
+                                                >
+                                                    <span>
+                                                        {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </span>
+                                                    {isMe && <CheckCheck className="w-3 h-3" />}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })
-                        )}
-                        <div ref={messagesEndRef} />
+                                    );
+                                })
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
                     </ScrollArea>
 
                     {/* Message Input Bar */}
