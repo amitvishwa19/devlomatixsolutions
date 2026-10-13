@@ -178,8 +178,12 @@ export class WebRtcClient {
    */
   async handleAnswer(answer) {
     if (this.peerConnection) {
-      await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-      await this.processCandidateQueue();
+      try {
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        await this.processCandidateQueue();
+      } catch (err) {
+        console.warn('[WEBRTC_REMOTE_ANSWER_NOTICE] SDP answer notice:', err?.message);
+      }
     }
   }
 
