@@ -22,7 +22,6 @@ import {
     CheckSquare
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { CrmSocketProvider } from '@/providers/CrmSocketProvider';
 
 export default function CrmLayout({ children }) {
     const pathname = usePathname();
@@ -52,14 +51,12 @@ export default function CrmLayout({ children }) {
     };
 
     return (
-        <CrmSocketProvider>
-            <div className="flex flex-col  w-full">
+        <div className="flex flex-col  w-full">
 
-                {/* Main CRM Content Area */}
-                <main className="flex-1 w-full sm:p-6 min-w-0">
-                    {children}
-                </main>
-            </div>
-        </CrmSocketProvider>
+            {/* Main CRM Content Area */}
+            <main className="flex-1 w-full sm:p-6 min-w-0">
+                {children}
+            </main>
+        </div>
     );
 }

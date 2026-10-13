@@ -6,7 +6,7 @@ import { getSidebarNavItems } from "../app/workspace/_lib/sidebar-nav-item.js";
  */
 export function normalizeIdentifier(str) {
     if (typeof str !== "string") return "";
-    return str.toLowerCase().replace(/[\s\-_]/g, "");
+    return str.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /**
@@ -157,6 +157,17 @@ export function canAccessNavGroup(group, tokenOrUser) {
     // Super Admin bypasses all checks
     if (isSuperAdmin(tokenOrUser)) return true;
 
+    const userRoles = extractUserRoles(tokenOrUser);
+    const userPerms = extractUserPermissions(tokenOrUser);
+
+    // 1. Direct Module Role Match: If user has a role whose title matches the group parent title
+    // e.g., role "Devx(CRM)", "eCommerce", "Workspace", "KonnectX", etc.
+    if (group.parent?.title) {
+        const normTitle = normalizeIdentifier(group.parent.title);
+        if (userRoles.some((ur) => normalizeIdentifier(ur) === normTitle)) return true;
+        if (userPerms.some((up) => normalizeIdentifier(up) === normTitle)) return true;
+    }
+
     const requiredPermissions = Array.isArray(group.permission)
         ? group.permission
         : (group.permission ? [group.permission] : []);
@@ -170,29 +181,30 @@ export function canAccessNavGroup(group, tokenOrUser) {
         return true;
     }
 
-    const userRoles = extractUserRoles(tokenOrUser);
-    const userPerms = extractUserPermissions(tokenOrUser);
-
-    // 1. Role match
+    // 2. Role match (against user's assigned roles or permissions)
     if (requiredRoles.length > 0) {
-        const hasRole = requiredRoles.some((reqRole) =>
-            userRoles.some((ur) => normalizeIdentifier(ur) === normalizeIdentifier(reqRole))
-        );
+        const hasRole = requiredRoles.some((reqRole) => {
+            const normReq = normalizeIdentifier(reqRole);
+            return (
+                userRoles.some((ur) => normalizeIdentifier(ur) === normReq) ||
+                userPerms.some((up) => normalizeIdentifier(up) === normReq)
+            );
+        });
         if (hasRole) return true;
     }
 
-    // 2. Permission match
+    // 3. Permission match (against user's permissions OR roles)
     if (requiredPermissions.length > 0) {
         const hasPerm = requiredPermissions.some((reqPerm) => {
             // Direct exact match
             if (userPerms.includes(reqPerm)) return true;
 
-            // Normalized match
+            // Normalized match against user permissions or user roles
             const normReq = normalizeIdentifier(reqPerm);
             if (userPerms.some((up) => normalizeIdentifier(up) === normReq)) return true;
+            if (userRoles.some((ur) => normalizeIdentifier(ur) === normReq)) return true;
 
             // Fallback match for legacy or db style slug e.g. navigation.crm vs navbar:DevX(CRM):Parent
-            // Check if any user permission includes the group parent title or baseUrl slug
             return userPerms.some((up) => {
                 const normUp = normalizeIdentifier(up);
                 if (group.parent?.title && normUp.includes(normalizeIdentifier(group.parent.title))) return true;
@@ -201,6 +213,16 @@ export function canAccessNavGroup(group, tokenOrUser) {
         });
 
         if (hasPerm) return true;
+    }
+
+    // 4. Sub-item permission check: If user possesses any child page permission for this group
+    if (group.parent?.title) {
+        const normTitle = normalizeIdentifier(group.parent.title);
+        const hasChildPerm = userPerms.some((up) => {
+            const normUp = normalizeIdentifier(up);
+            return normUp.startsWith(`navbar${normTitle}`);
+        });
+        if (hasChildPerm) return true;
     }
 
     return false;

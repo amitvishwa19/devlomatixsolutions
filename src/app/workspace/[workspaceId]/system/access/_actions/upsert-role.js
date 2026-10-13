@@ -28,50 +28,43 @@ const handler = async (data) => {
     const activePerms = submittedPerms.filter(p => p.status === true);
     const perms = [];
 
+    // Preload permissions for fast lookup
+    const permValues = activePerms.map(p => p.value).filter(Boolean);
+    const existingDbPerms = permValues.length > 0 
+      ? await db.permission.findMany({ where: { value: { in: permValues } } })
+      : [];
+    const valueToIdMap = new Map(existingDbPerms.map(p => [p.value, p.id]));
+
     for (const p of activePerms) {
-      if (p.value?.startsWith('navigation.')) {
-        const existingPerm = await db.permission.upsert({
-          where: { value: p.value },
-          update: {
-            title: p.title || `Nav: ${p.value.split('.').pop()}`,
-            type: "NAVIGATION",
-            url: p.url || null,
-          },
-          create: {
-            value: p.value,
-            title: p.title || `Nav: ${p.value.split('.').pop()}`,
-            description: `Navigation access for ${p.title || p.value}`,
-            category: p.category || "navigation",
-            type: "NAVIGATION",
-            url: p.url || null,
-            status: true
-          }
-        });
-        perms.push({ id: existingPerm.id });
-      } else if (p.id && !p.id.startsWith('nav-') && !p.id.startsWith('new-')) {
+      if (p.id && !p.id.startsWith('nav-') && !p.id.startsWith('new-')) {
         perms.push({ id: p.id });
+      } else if (p.value && valueToIdMap.has(p.value)) {
+        perms.push({ id: valueToIdMap.get(p.value) });
       } else if (p.value) {
-        const existingPerm = await db.permission.upsert({
+        // Fallback upsert if not found
+        const isNav = p.value.startsWith('navbar:') || p.value.startsWith('navigation.');
+        const upserted = await db.permission.upsert({
           where: { value: p.value },
           update: {
             title: p.title || p.value,
-            category: p.category || (p.value.includes('.') ? p.value.split('.')[0] : 'general'),
-            type: p.type || "ACTION",
+            category: p.category || 'general',
+            type: isNav ? "NAVIGATION" : (p.type || "ACTION"),
             url: p.url || null,
           },
           create: {
             value: p.value,
             title: p.title || p.value,
-            description: p.description || `Permission for ${p.value}`,
-            category: p.category || (p.value.includes('.') ? p.value.split('.')[0] : 'general'),
-            type: p.type || "ACTION",
+            description: p.description || `Permission for ${p.title || p.value}`,
+            category: p.category || 'general',
+            type: isNav ? "NAVIGATION" : (p.type || "ACTION"),
             url: p.url || null,
-            status: true
+            status: true,
           }
         });
-        perms.push({ id: existingPerm.id });
+        perms.push({ id: upserted.id });
       }
     }
+
 
     // Deduplicate permission IDs
     const uniquePerms = Array.from(new Set(perms.map(p => p.id))).map(id => ({ id }));

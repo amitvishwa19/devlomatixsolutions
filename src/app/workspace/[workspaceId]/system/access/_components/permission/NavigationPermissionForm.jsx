@@ -1,228 +1,166 @@
+'use client'
+
+import React, { useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { DynamicIcon } from "lucide-react/dynamic";
-import { getSidebarItems } from "@/app/workspace/_lib/sidebar-nav-item";
+import { ChevronDown, ChevronRight, Shield, ShieldCheck } from "lucide-react";
+import { getSidebarNavItems } from "@/app/workspace/_lib/sidebar-nav-item";
+import { useParams } from "next/navigation";
+import { normalizeIdentifier } from "@/lib/rbac-utils";
 
-export function NavigationPermissionForm({ form, selectedNavItems: legacyItems, setSelectedNavItems: setLegacyItems }) {
-    // Determine state source: either from RHF form or legacy props
-    const rawPermissions = form ? form.watch("permissions") || [] : legacyItems || [];
+export function NavigationPermissionForm({ form }) {
+    const params = useParams();
+    const workspaceId = params?.workspaceId || "default";
 
-    const handleUpdateActivePermissions = (updatedList) => {
-        if (form) {
-            form.setValue("permissions", updatedList, { shouldDirty: true, shouldValidate: true });
-        } else {
-            setLegacyItems?.(updatedList);
-        }
-    };
+    const navStructure = useMemo(() => getSidebarNavItems(workspaceId), [workspaceId]);
+    const formPermissions = form ? form.watch("permissions") || [] : [];
 
-    // Helper to check if an item is selected (handles both object arrays and string arrays)
-    const isItemSelected = (id) => {
-        return rawPermissions.some(p => {
-            const pValue = typeof p === 'object' ? p.value : p;
-            
-            // Match exactly or handle legacy navbar: prefix
-            if (pValue === id) return (typeof p === 'object' ? p.status : true);
-            
-            // Legacy check
-            if (typeof pValue === 'string' && pValue.startsWith('navbar:')) {
-                const slug = id.split('.').pop();
-                return pValue.endsWith(`:${slug}`);
-            }
-            return false;
+    // Helper to get status of a permission by value
+    const getPermStatus = (permValue) => {
+        const normTarget = normalizeIdentifier(permValue);
+        const found = formPermissions.find((p) => {
+            if (!p?.value) return false;
+            return normalizeIdentifier(p.value) === normTarget;
         });
+        return found ? Boolean(found.status) : false;
     };
 
-    // Get the shared navigation structure
-    const navigation = getSidebarItems("testid");
-
-    const normalizePath = (url) => {
-        if (!url) return null;
-        // Strip /workspace/[id] - handle cases like /workspace/cmn... or just /workspace/id
-        return url.replace(/^\/workspace\/[^/]+/, '') || '/';
-    };
-
-    // Group items by category for the UI
-    const groupedNavigation = navigation.reduce((acc, item) => {
-        if (!acc[item.category]) {
-            acc[item.category] = {
-                category: item.category,
-                icon: item.icon || "layout-dashboard",
-                children: []
-            };
-        }
-        if (item.type === 'parent') {
-            acc[item.category].icon = item.icon;
-            acc[item.category].parentTitle = item.title;
-        } else {
-            acc[item.category].children.push(item);
-        }
-        return acc;
-    }, {});
-
-    const navigationGroups = Object.values(groupedNavigation);
-
-    const handleToggleItem = (child) => {
-        const relativeUrl = normalizePath(child.url);
-        const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
-        const id = `navigation.${slug}`;
-        
-        const currentPerms = [...rawPermissions];
-        const existingIndex = currentPerms.findIndex(p => (typeof p === 'object' ? p.value : p) === id);
-
-        if (existingIndex > -1) {
-            let updated;
-            if (typeof currentPerms[existingIndex] === 'object') {
-                updated = currentPerms.map(p => p.value === id ? { ...p, status: !p.status } : p);
-            } else {
-                updated = currentPerms.filter(p => p !== id);
+    // Toggle a single permission
+    const togglePerm = (permValue) => {
+        const normTarget = normalizeIdentifier(permValue);
+        const updated = formPermissions.map((p) => {
+            if (p?.value && normalizeIdentifier(p.value) === normTarget) {
+                return { ...p, status: !p.status };
             }
-            handleUpdateActivePermissions(updated);
-        } else {
-            // Adding new
-            if (form) {
-                handleUpdateActivePermissions([...currentPerms, {
-                    id: `nav-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
-                    value: id,
-                    title: `Navigation ${child.title}`,
-                    url: relativeUrl,
-                    type: 'navigation',
-                    category: child.category,
-                    status: true
-                }]);
-            } else {
-                handleUpdateActivePermissions([...currentPerms, id]);
-            }
-        }
-    };
-
-    const handleToggleCategory = (group) => {
-        const childInfos = group.children.map(child => {
-            const relativeUrl = normalizePath(child.url);
-            const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
-            return {
-                id: `navigation.${slug}`,
-                title: `Navigation ${child.title}`,
-                url: relativeUrl,
-                category: child.category
-            };
+            return p;
         });
-        
-        const allSelected = childInfos.every(ci => isItemSelected(ci.id));
+        form.setValue("permissions", updated, { shouldDirty: true, shouldValidate: true });
+    };
 
-        let updated = [...rawPermissions];
+    // Toggle entire module and all its children
+    const toggleModule = (group, nextStatus) => {
+        const modulePerm = group.permission?.[0] || `navbar:${group.parent.title}:Parent`;
+        const childPerms = (group.child || []).map(
+            (c) => `navbar:${group.parent.title}:${c.title.replace(/[^a-zA-Z0-9]/g, "")}`
+        );
+        const allTargets = new Set([
+            normalizeIdentifier(modulePerm),
+            ...childPerms.map((cp) => normalizeIdentifier(cp)),
+        ]);
 
-        if (allSelected) {
-            // Deselect all
-            if (form) {
-                updated = updated.map(p => childInfos.some(ci => ci.id === p.value) ? { ...p, status: false } : p);
-            } else {
-                const idsToRemove = childInfos.map(ci => ci.id);
-                updated = updated.filter(id => !idsToRemove.includes(id));
+        const updated = formPermissions.map((p) => {
+            if (p?.value && allTargets.has(normalizeIdentifier(p.value))) {
+                return { ...p, status: nextStatus };
             }
-        } else {
-            // Select all
-            childInfos.forEach((ci, index) => {
-                if (!isItemSelected(ci.id)) {
-                    if (form) {
-                        const existingIndex = updated.findIndex(p => p.value === ci.id);
-                        if (existingIndex > -1) {
-                            updated[existingIndex] = { ...updated[existingIndex], status: true };
-                        } else {
-                            updated.push({
-                                id: `nav-${Date.now()}-${Math.random().toString(36).substr(2, index)}`,
-                                value: ci.id,
-                                title: ci.title,
-                                url: ci.url,
-                                type: 'navigation',
-                                category: ci.category,
-                                status: true
-                            });
-                        }
-                    } else {
-                        updated.push(ci.id);
-                    }
-                }
-            });
-        }
-        handleUpdateActivePermissions(updated);
+            return p;
+        });
+        form.setValue("permissions", updated, { shouldDirty: true, shouldValidate: true });
     };
 
     return (
-        <div className="p-6 space-y-6 pb-10">
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-2">
-                {navigationGroups.map((group) => {
-                    const itemIds = group.children.map(child => {
-                        const relativeUrl = normalizePath(child.url);
-                        const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
-                        return `navigation.${slug}`;
-                    });
-                    const allSelected = itemIds.length > 0 && itemIds.every(id => isItemSelected(id));
+        <div className="p-3 space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b">
+                <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Sidebar Navigation Modules
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground">
+                        Enable entire modules or customize access to specific sub-pages
+                    </p>
+                </div>
+            </div>
+
+            <div className="space-y-3">
+                {navStructure.map((group) => {
+                    const moduleTitle = group.parent.title;
+                    const primaryPerm = group.permission?.[0] || `navbar:${moduleTitle}:Parent`;
+                    const isModuleActive = getPermStatus(primaryPerm);
+
+                    const children = group.child || [];
+                    const activeChildrenCount = children.filter((child) => {
+                        const childPerm = `navbar:${moduleTitle}:${child.title.replace(/[^a-zA-Z0-9]/g, "")}`;
+                        return getPermStatus(childPerm);
+                    }).length;
 
                     return (
-                        <div key={group.category} className="p-4 rounded-xl border bg-card/50 hover:bg-card/80 transition-all space-y-3 group/nav">
-                            <div className="flex items-center justify-between">
+                        <div
+                            key={moduleTitle}
+                            className={`border rounded-lg transition-all duration-200 overflow-hidden ${
+                                isModuleActive ? "border-primary/40 bg-primary/5" : "border-border/60 bg-card/40"
+                            }`}
+                        >
+                            {/* Module Header Bar */}
+                            <div className="flex items-center justify-between p-3 bg-muted/20 hover:bg-muted/40 transition-colors">
                                 <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/10 border border-primary/20 group-hover/nav:bg-primary/20 transition-colors">
-                                        <DynamicIcon name={group.icon} size={18} className="text-primary" />
+                                    <div
+                                        className={`w-8 h-8 rounded-md flex items-center justify-center border ${
+                                            isModuleActive
+                                                ? "bg-primary/20 border-primary/30 text-primary"
+                                                : "bg-muted border-border text-muted-foreground opacity-60"
+                                        }`}
+                                    >
+                                        <DynamicIcon name={group.parent.icon || "layout-grid"} className="w-4 h-4" />
                                     </div>
-                                    <h3 className="font-bold text-sm tracking-tight">{group.category}</h3>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold tracking-tight">{moduleTitle}</span>
+                                            {isModuleActive && (
+                                                <Badge variant="outline" className="text-[10px] py-0 px-1.5 border-primary/40 text-primary font-mono">
+                                                    Active
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <p className="text-[10px] font-mono text-muted-foreground opacity-70">
+                                            {children.length > 0
+                                                ? `${activeChildrenCount}/${children.length} pages enabled`
+                                                : "Single page module"}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 pr-2">
-                                    <Label htmlFor={`select-all-${group.category}`} className="text-sm opacity-40">Select All</Label>
+
+                                <div className="flex items-center gap-3">
                                     <Switch
-                                        id={`select-all-${group.category}`}
-                                        checked={allSelected}
-                                        onCheckedChange={() => handleToggleCategory(group)}
-                                        className="scale-75"
+                                        checked={isModuleActive}
+                                        onCheckedChange={(checked) => toggleModule(group, checked)}
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pl-2 border-l-2 border-primary/10 group-hover/nav:border-primary/30 transition-colors ml-4">
-                                {group.children.length > 0 ? (
-                                    group.children.map((child) => {
-                                        const relativeUrl = normalizePath(child.url);
-                                        const slug = relativeUrl === '/' ? 'home' : relativeUrl.replace(/^\//, '').replace(/\//g, '.');
-                                        const id = `navigation.${slug}`;
-                                        const isSelected = isItemSelected(id);
-                                        
+                            {/* Sub-pages list */}
+                            {children.length > 0 && (
+                                <div className="p-3 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t border-border/40 bg-background/50">
+                                    {children.map((child) => {
+                                        const cleanSlug = child.title.replace(/[^a-zA-Z0-9]/g, "");
+                                        const childPerm = `navbar:${moduleTitle}:${cleanSlug}`;
+                                        const isChildActive = getPermStatus(childPerm);
+
                                         return (
-                                            <div key={child.title} className="flex items-center gap-3 group/item p-1">
+                                            <label
+                                                key={child.title}
+                                                className={`flex items-center gap-2.5 p-2 rounded-md border text-xs cursor-pointer transition-all ${
+                                                    isChildActive
+                                                        ? "border-primary/30 bg-primary/10 text-primary font-medium"
+                                                        : "border-transparent hover:bg-muted/50 text-muted-foreground"
+                                                }`}
+                                            >
                                                 <Checkbox
-                                                    id={id}
-                                                    className="rounded-sm"
-                                                    checked={isSelected}
-                                                    onCheckedChange={() => handleToggleItem(child)}
+                                                    checked={isChildActive}
+                                                    onCheckedChange={() => togglePerm(childPerm)}
+                                                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                                 />
-                                                <Label
-                                                    htmlFor={id}
-                                                    className="text-xs font-medium text-muted-foreground group-hover/item:text-foreground cursor-pointer transition-colors"
-                                                >
-                                                    {child.title}
-                                                </Label>
-                                            </div>
-                                        )
-                                    })
-                                ) : (
-                                    <div className="flex items-center gap-3 p-1">
-                                        <Checkbox
-                                            id={`${group.category}:root`}
-                                            className="rounded-sm"
-                                            checked={false} // Placeholder for root category selection if needed
-                                        />
-                                        <Label
-                                            htmlFor={`${group.category}:root`}
-                                            className="text-xs font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-                                        >
-                                            {group.parentTitle || 'View Menu'}
-                                        </Label>
-                                    </div>
-                                )}
-                            </div>
+                                                <DynamicIcon name={child.icon || "file-text"} className="w-3.5 h-3.5 opacity-70" />
+                                                <span className="truncate flex-1">{child.title}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
-                    )
+                    );
                 })}
             </div>
         </div>

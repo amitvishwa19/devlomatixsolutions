@@ -38,8 +38,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Contacts", icon: "users", url: `${basePath}/contact` },
             ],
             baseUrl: basePath,
-            permission: [`navbar:Workspace:Home`],
-            roles: []
+            permission: [`navbar:workspace:Parent`, `navbar:Workspace:Parent`, 'workspace', 'Workspace'],
+            roles: ['workspace', 'Workspace']
         },
         {
             parent: { title: "DevX(CRM)", icon: "rocket", url: baseCRMPath },
@@ -58,8 +58,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Settings", icon: "settings-2", url: `${baseCRMPath}/settings` },
             ],
             baseUrl: baseCRMPath,
-            permission: [`navbar:DevX(CRM):Parent`, `navbar:CRM:Parent`],
-            roles: []
+            permission: [`navbar:DevX(CRM):Parent`, `navbar:CRM:Parent`, 'devxcrm', 'Devx(CRM)'],
+            roles: ['devxcrm', 'Devx(CRM)']
         },
         {
             parent: { title: "eCommerce", icon: "shopping-cart", url: baseEcommercePath },
@@ -75,8 +75,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Settings", icon: "settings", url: `${baseEcommercePath}/settings` },
             ],
             baseUrl: baseEcommercePath,
-            permission: [`navbar:eCommerce:Parent`],
-            roles: []
+            permission: [`navbar:eCommerce:Parent`, 'ecommerce', 'eCommerce'],
+            roles: ['ecommerce', 'eCommerce']
         },
         {
             parent: { title: "KonnectX", icon: "message-circle-more", url: baseWhatsappCloudApiPath },
@@ -95,8 +95,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Settings", icon: "settings-2", url: `${baseWhatsappCloudApiPath}/settings` },
             ],
             baseUrl: baseWhatsappCloudApiPath,
-            permission: [`navbar:KonnectX:Parent`],
-            roles: []
+            permission: [`navbar:KonnectX:Parent`, 'konnectx', 'KonnectX'],
+            roles: ['konnectx', 'KonnectX']
         },
         {
             parent: { title: "HireFlow", icon: "user", url: baseAtsPath },
@@ -109,8 +109,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Settings", icon: "settings", url: `${baseAtsPath}/settings` },
             ],
             baseUrl: baseAtsPath,
-            permission: [`navbar:ATS:Parent`],
-            roles: []
+            permission: [`navbar:HireFlow:Parent`, `navbar:ATS:Parent`, 'hireflow', 'HireFlow'],
+            roles: ['hireflow', 'HireFlow']
         },
         {
             parent: { title: "FleetX", icon: "truck", url: baseFleetxPath },
@@ -121,8 +121,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Fuel Telemetry", icon: "fuel", url: `${baseFleetxPath}#fuel` },
             ],
             baseUrl: baseFleetxPath,
-            permission: [`navbar:FleetX:Parent`],
-            roles: []
+            permission: [`navbar:FleetX:Parent`, 'fleetx', 'FleetX'],
+            roles: ['fleetx', 'FleetX']
         },
         {
             parent: { title: "PropX", icon: "building", url: basePropxPath },
@@ -134,15 +134,15 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Maintenance", icon: "wrench", url: `${basePropxPath}#maintenance` },
             ],
             baseUrl: basePropxPath,
-            permission: [`navbar:PropX:Parent`],
-            roles: []
+            permission: [`navbar:PropX:Parent`, 'propx', 'PropX'],
+            roles: ['propx', 'PropX']
         },
         {
             parent: { title: "FlowGenix", icon: "bot-message-square", url: baseFlowgenixPath },
             child: [],
             baseUrl: baseFlowgenixPath,
-            permission: [`navbar:KonnectXv2:Parent`],
-            roles: []
+            permission: [`navbar:FlowGenix:Parent`, `navbar:KonnectXv2:Parent`, 'flowgenix', 'FlowGenix'],
+            roles: ['flowgenix', 'FlowGenix']
         },
         {
             parent: { title: "FlowForge", icon: "workflow", url: baseFlowforgePath },
@@ -154,8 +154,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Templates", icon: "layers", url: `${baseFlowforgePath}/templates` },
             ],
             baseUrl: baseFlowforgePath,
-            permission: [`navbar:FlowForge:Parent`],
-            roles: []
+            permission: [`navbar:FlowForge:Parent`, 'flowforge', 'FlowForge'],
+            roles: ['flowforge', 'FlowForge']
         },
         {
             parent: { title: "DeskFlow", icon: "messages-square", url: baseDeskflowPath },
@@ -167,8 +167,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Responses", icon: "message-square-text", url: `${baseDeskflowPath}/responses` },
             ],
             baseUrl: baseDeskflowPath,
-            permission: [`navbar:DeskFlow:Parent`],
-            roles: []
+            permission: [`navbar:DeskFlow:Parent`, 'deskflow', 'DeskFlow'],
+            roles: ['deskflow', 'DeskFlow']
         },
         {
             parent: { title: "PayFlow", icon: "credit-card", url: basePayflowPath },
@@ -180,8 +180,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Customers", icon: "users", url: `${basePayflowPath}/customers` },
             ],
             baseUrl: basePayflowPath,
-            permission: [`navbar:PayFlow:Parent`],
-            roles: []
+            permission: [`navbar:PayFlow:Parent`, 'payflow', 'PayFlow'],
+            roles: ['payflow', 'PayFlow']
         },
         {
             parent: { title: "FormCraft", icon: "form-input", url: baseFormcraftPath },
@@ -193,8 +193,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Analytics", icon: "bar-chart-3", url: `${baseFormcraftPath}/analytics` },
             ],
             baseUrl: baseFormcraftPath,
-            permission: [`navbar:FormCraft:Parent`],
-            roles: []
+            permission: [`navbar:FormCraft:Parent`, 'formcraft', 'FormCraft'],
+            roles: ['formcraft', 'FormCraft']
         },
         {
             parent: { title: "MetricPulse", icon: "activity", url: baseMetricpulsePath },
@@ -205,8 +205,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Reports", icon: "pie-chart", url: `${baseMetricpulsePath}/reports` },
             ],
             baseUrl: baseMetricpulsePath,
-            permission: [`navbar:MetricPulse:Parent`],
-            roles: []
+            permission: [`navbar:MetricPulse:Parent`, 'metricpulse', 'MetricPulse'],
+            roles: ['metricpulse', 'MetricPulse']
         },
         {
             parent: { title: "KnowBase", icon: "book-open", url: baseKnowbasePath },
@@ -217,8 +217,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Feedback", icon: "thumbs-up", url: `${baseKnowbasePath}/feedback` },
             ],
             baseUrl: baseKnowbasePath,
-            permission: [`navbar:KnowBase:Parent`],
-            roles: []
+            permission: [`navbar:KnowBase:Parent`, 'knowbase', 'KnowBase'],
+            roles: ['knowbase', 'KnowBase']
         },
         {
             parent: { title: "SocialHub", icon: "share-2", url: baseSocialhubPath },
@@ -230,15 +230,15 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Accounts", icon: "share-2", url: `${baseSocialhubPath}/accounts` },
             ],
             baseUrl: baseSocialhubPath,
-            permission: [`navbar:SocialHub:Parent`],
-            roles: []
+            permission: [`navbar:SocialHub:Parent`, 'socialhub', 'SocialHub'],
+            roles: ['socialhub', 'SocialHub']
         },
         {
             parent: { title: "Documents", icon: "file", url: baseDocPath },
             child: [],
             baseUrl: baseDocPath,
-            permission: [`navbar:Documents:Parent`],
-            roles: []
+            permission: [`navbar:Documents:Parent`, 'documents', 'Documents'],
+            roles: ['documents', 'Documents']
         },
         {
             parent: { title: "Productivity", icon: "folder-kanban", url: baseProductivityPath },
@@ -251,8 +251,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Lead Generation", icon: "user-plus", url: `${baseProductivityPath}/leads` },
             ],
             baseUrl: baseProductivityPath,
-            permission: [`navbar:Productivity:Parent`],
-            roles: []
+            permission: [`navbar:Productivity:Parent`, 'productivity', 'Productivity'],
+            roles: ['productivity', 'Productivity']
         },
         {
             parent: { title: "System", icon: "monitor-cog", url: basePath },
@@ -264,8 +264,8 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Cron Jobs", icon: "timer", url: `${systemPath}/cron` },
             ],
             baseUrl: systemPath,
-            permission: [`navbar:System:Parent`],
-            roles: []
+            permission: [`navbar:System:Parent`, 'system', 'System'],
+            roles: ['system', 'System']
         },
     ];
 };

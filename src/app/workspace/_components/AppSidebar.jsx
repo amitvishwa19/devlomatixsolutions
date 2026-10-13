@@ -97,6 +97,27 @@ export default function AppSidebar() {
         return rawNavigation.filter((item) => canAccessNavGroup(item, userForAuth));
     }, [rawNavigation, isSuperAdmin, userForAuth]);
 
+    // Automatically expand the active group on route change
+    useEffect(() => {
+        const activeItem = navigation.find((item) => {
+            const { baseUrl, child } = item;
+            return (
+                pathname === baseUrl ||
+                child?.some((c) => {
+                    if (c.url === `/workspace/${workspaceId}`) return pathname === c.url;
+                    return pathname === c.url || pathname.startsWith(c.url + "/");
+                })
+            );
+        });
+
+        if (activeItem?.parent?.title) {
+            setOpenGroups((prev) => ({
+                ...prev,
+                [activeItem.parent.title]: true,
+            }));
+        }
+    }, [pathname, workspaceId, navigation]);
+
     return (
         <div>
             <Sidebar collapsible="icon" className="  border-r border-border/50">
@@ -144,37 +165,50 @@ export default function AppSidebar() {
                     <ScrollArea className="h-[75vh]">
                         {navigation.map((item, index) => {
                             const { parent, child, baseUrl } = item;
-                            const isOpen = openGroups[index];
+                            const groupKey = parent.title || baseUrl || String(index);
                             const isGroupActive =
                                 pathname === baseUrl ||
-                                child.some((c) => {
+                                child?.some((c) => {
                                     if (c.url === `/workspace/${workspaceId}`)
                                         return pathname === c.url;
                                     return pathname === c.url || pathname.startsWith(c.url + "/");
                                 });
+
+                            const isOpen = openGroups[groupKey] !== undefined
+                                ? Boolean(openGroups[groupKey])
+                                : Boolean(isGroupActive);
+
+                            const visibleChildren = (child || []).filter((c) => {
+                                if (!c.permission && !c.roles) return true;
+                                return canAccessNavGroup(c, userForAuth);
+                            });
+
                             return (
                                 <SidebarGroup
-                                    key={index}
+                                    key={groupKey}
                                     className="p-0 group-data-[collapsible=icon]:ml-2"
                                 >
                                     <SidebarMenu className="px-3 group-data-[collapsible=icon]:px-0 ">
                                         <SidebarMenuItem>
                                             <SidebarMenuButton
-                                                asChild={!(child && child.length > 0)}
+                                                asChild={!(visibleChildren && visibleChildren.length > 0)}
                                                 onClick={
-                                                    child && child.length > 0
+                                                    visibleChildren && visibleChildren.length > 0
                                                         ? () =>
                                                             setOpenGroups((prev) => {
-                                                                const isCurrentlyOpen = !!prev[index];
-                                                                // Accordion behavior: if we're opening this one, close everything else.
-                                                                // If we're closing this one, just return empty.
-                                                                return isCurrentlyOpen ? {} : { [index]: true };
+                                                                const isCurrentlyOpen = prev[groupKey] !== undefined
+                                                                    ? Boolean(prev[groupKey])
+                                                                    : Boolean(isGroupActive);
+                                                                return {
+                                                                    ...prev,
+                                                                    [groupKey]: !isCurrentlyOpen,
+                                                                };
                                                             })
                                                         : undefined
                                                 }
                                                 className={`w-full flex items-center gap-3 rounded-md text-sm font-medium transition-all duration-300 cursor-pointer ${isGroupActive ? "bg-primary/10 text-primary border-l-2 border-primary shadow-sm shadow-primary/20" : "text-foreground hover:bg-card/50 hover:text-primary border-l-2 border-transparent hover:border-primary"}`}
                                             >
-                                                {child && child.length > 0 ? (
+                                                {visibleChildren && visibleChildren.length > 0 ? (
                                                     <div className="flex flex-row items-center justify-between w-full pr-2">
                                                         <div className="flex flex-row items-center gap-2">
                                                             <DynamicIcon
@@ -217,7 +251,7 @@ export default function AppSidebar() {
                                     </SidebarMenu>
 
                                     <AnimatePresence initial={false}>
-                                        {isOpen && (
+                                        {isOpen && visibleChildren.length > 0 && (
                                             <motion.div
                                                 initial={{ height: 0, opacity: 0 }}
                                                 animate={{ height: "auto", opacity: 1 }}
@@ -230,7 +264,7 @@ export default function AppSidebar() {
                                             >
                                                 <SidebarGroupContent>
                                                     <SidebarMenu className="pl-10 group-data-[collapsible=icon]:pl-0">
-                                                        {child.map((c, i) => {
+                                                        {visibleChildren.map((c, i) => {
                                                             const isActive = pathname === c.url;
                                                             return (
                                                                 <SidebarMenuItem key={i}>

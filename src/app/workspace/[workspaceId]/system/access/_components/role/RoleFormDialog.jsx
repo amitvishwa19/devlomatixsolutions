@@ -180,15 +180,33 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                             </AccordionContent>
                                         </AccordionItem>
 
-                                        {/* Permissions Assignment */}
-                                        <AccordionItem value="role-permissions" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                        {/* Navigation Access */}
+                                        <AccordionItem value="role-navigation" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
                                             <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
                                                         <ShieldPlus className="w-4 h-4 text-primary" />
                                                     </div>
                                                     <div className="text-left py-1">
-                                                        <h4 className="text-sm font-bold tracking-tight">Permissions Assignment</h4>
+                                                        <h4 className="text-sm font-bold tracking-tight">Navigation & Module Access</h4>
+                                                        <p className="text-[10px] text-muted-foreground opacity-60">UI sidebar routes and menu assignment</p>
+                                                    </div>
+                                                </div>
+                                            </AccordionTrigger>
+                                            <AccordionContent className="px-0 pb-0">
+                                                <NavigationPermissionForm form={form} />
+                                            </AccordionContent>
+                                        </AccordionItem>
+
+                                        {/* Permissions Assignment */}
+                                        <AccordionItem value="role-permissions" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
+                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
+                                                        <Plus className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                    <div className="text-left py-1">
+                                                        <h4 className="text-sm font-bold tracking-tight">General Permissions</h4>
                                                         <p className="text-[10px] text-muted-foreground opacity-60">Operation scopes and access levels</p>
                                                     </div>
                                                 </div>
@@ -216,24 +234,6 @@ export function RoleFormDialog({ isOpen, mode, onClose, role, onSubmit, }) {
                                                     role={form.getValues()}
                                                     activePermissions={activePermissions}
                                                 />
-                                            </AccordionContent>
-                                        </AccordionItem>
-
-                                        {/* Navigation Access */}
-                                        <AccordionItem value="role-navigation" className="border border-primary/20 rounded-lg bg-card/50 overflow-hidden group/item">
-                                            <AccordionTrigger className="px-4 bg-muted/40 hover:bg-muted/50 transition-colors cursor-pointer group-data-[state=open]/item:border-b border-primary/10">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="p-2 rounded-md bg-primary/10 border border-primary/20 group-data-[state=open]/item:bg-primary/20 transition-colors">
-                                                        <Plus className="w-4 h-4 text-primary" />
-                                                    </div>
-                                                    <div className="text-left py-1">
-                                                        <h4 className="text-sm font-bold tracking-tight">Navigation Access</h4>
-                                                        <p className="text-[10px] text-muted-foreground opacity-60">UI sidebar routes and menu assignment</p>
-                                                    </div>
-                                                </div>
-                                            </AccordionTrigger>
-                                            <AccordionContent className="px-0 pb-0">
-                                                <NavigationPermissionForm form={form} />
                                             </AccordionContent>
                                         </AccordionItem>
 

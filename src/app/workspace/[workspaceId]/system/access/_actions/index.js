@@ -5,4 +5,6 @@ export * from './upsert-role';
 export * from './delete-role';
 export * from './upsert-permission';
 export * from './delete-permission';
+export * from './sync-navigation-permissions';
+export * from './toggle-role-permission';
 export * from './fcm-actions';

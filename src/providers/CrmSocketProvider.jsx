@@ -152,6 +152,45 @@ export function CrmSocketProvider({ children }) {
   const callDurationRef = useRef(0);
 
   const incomingAudioRef = useRef(null);
+  const incomingToastIdRef = useRef(null);
+  const originalTitleRef = useRef(typeof document !== 'undefined' ? document.title : '');
+  const titleIntervalRef = useRef(null);
+
+  // Auto-request browser desktop notification permission once mounted
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
+  }, []);
+
+  const startTitleFlashing = useCallback((callerName) => {
+    if (typeof document === 'undefined') return;
+    originalTitleRef.current = document.title;
+    let toggle = false;
+    if (titleIntervalRef.current) clearInterval(titleIntervalRef.current);
+    titleIntervalRef.current = setInterval(() => {
+      document.title = toggle
+        ? `📞 Call from ${callerName || 'User'}!`
+        : `🔔 Ringing... - Devlomatix`;
+      toggle = !toggle;
+    }, 1000);
+  }, []);
+
+  const stopTitleFlashing = useCallback(() => {
+    if (titleIntervalRef.current) {
+      clearInterval(titleIntervalRef.current);
+      titleIntervalRef.current = null;
+    }
+    if (typeof document !== 'undefined' && originalTitleRef.current) {
+      document.title = originalTitleRef.current;
+    }
+    if (incomingToastIdRef.current) {
+      toast.dismiss(incomingToastIdRef.current);
+      incomingToastIdRef.current = null;
+    }
+  }, []);
 
   // Synchronize state to refs for resilient socket callbacks
   useEffect(() => {
@@ -167,6 +206,7 @@ export function CrmSocketProvider({ children }) {
   }, [callDuration]);
 
   const stopRingtone = useCallback(() => {
+    stopTitleFlashing();
     if (incomingAudioRef.current) {
       try {
         incomingAudioRef.current.pause();
@@ -177,7 +217,7 @@ export function CrmSocketProvider({ children }) {
       ringtoneRef.current.stop();
       ringtoneRef.current = null;
     }
-  }, []);
+  }, [stopTitleFlashing]);
 
   const startRingtone = useCallback((type) => {
     stopRingtone();
@@ -282,6 +322,9 @@ export function CrmSocketProvider({ children }) {
     setIsScreenSharing(false);
   }, [stopRingtone]);
 
+  const acceptCallRef = useRef(null);
+  const rejectCallRef = useRef(null);
+
   // 2. Setup WebRTC Signaling Listeners
   useEffect(() => {
     if (!socket) return;
@@ -297,6 +340,74 @@ export function CrmSocketProvider({ children }) {
       setIncomingCallData(data);
       setCallStatus('incoming');
       startRingtone('incoming');
+      startTitleFlashing(data.callerName);
+
+      // Trigger Web Desktop Notification if supported
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        try {
+          const notif = new Notification(`Incoming ${data.callType === 'video' ? 'Video' : 'Voice'} Call`, {
+            body: `${data.callerName || 'Team Member'} is calling you... Click to answer.`,
+            icon: data.callerAvatar || '/fevicon.ico',
+            tag: `call-${data.roomId}`,
+            requireInteraction: true,
+          });
+          notif.onclick = () => {
+            window.focus();
+            notif.close();
+          };
+        } catch (e) {
+          console.warn('[DESKTOP_NOTIF_ERROR]', e);
+        }
+      }
+
+      // Display floating sticky alert banner across any workspace screen
+      const toastId = `incoming-call-${data.roomId}`;
+      incomingToastIdRef.current = toastId;
+      toast.custom(
+        (t) => (
+          <div className="flex items-center gap-3 p-3.5 bg-slate-950/95 backdrop-blur-md border-2 border-indigo-500 text-white rounded-2xl shadow-2xl min-w-[320px] max-w-sm animate-in slide-in-from-top-4">
+            <div className="relative shrink-0">
+              <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-sm text-white overflow-hidden border border-indigo-400">
+                {data.callerAvatar ? (
+                  <img src={data.callerAvatar} alt={data.callerName} className="w-full h-full object-cover" />
+                ) : (
+                  data.callerName?.charAt(0)?.toUpperCase() || 'U'
+                )}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-950 animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-xs font-bold text-white truncate">{data.callerName}</h4>
+              <p className="text-[10px] text-slate-400 font-medium">
+                Incoming {data.callType === 'video' ? 'HD Video Call' : 'Voice Call'}...
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  toast.dismiss(t);
+                  rejectCallRef.current?.('declined');
+                }}
+                className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-[11px] font-bold text-white shadow-md transition-colors cursor-pointer"
+              >
+                Decline
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  toast.dismiss(t);
+                  acceptCallRef.current?.();
+                }}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-[11px] font-bold text-white shadow-md shadow-emerald-500/20 transition-colors cursor-pointer animate-pulse"
+              >
+                Answer
+              </button>
+            </div>
+          </div>
+        ),
+        { id: toastId, duration: 35000 }
+      );
 
       // Auto-decline if ringing for 35 seconds without answer
       if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
@@ -584,6 +695,9 @@ export function CrmSocketProvider({ children }) {
     setIncomingCallData(null);
     setCallStatus('idle');
   };
+
+  acceptCallRef.current = acceptCall;
+  rejectCallRef.current = rejectCall;
 
   // 6. User Actions: End Call / Hangup
   const endCall = () => {

@@ -167,8 +167,11 @@ export const authOptions = {
             }
 
             // 2. Continuous Enrichment & Validation
-            // We verify against the DB on sign-in, update, or if crucial info is missing
-            const needsEnrichment = !token.roles || trigger === "signIn" || trigger === "update";
+            // We verify against the DB on sign-in, update, or if data is stale (every 60s)
+            const now = Date.now();
+            const lastEnriched = token.lastEnriched || 0;
+            const isStale = (now - lastEnriched) > 60 * 1000;
+            const needsEnrichment = !token.roles || trigger === "signIn" || trigger === "update" || isStale;
 
             if (needsEnrichment && token.email) {
                 try {
@@ -198,6 +201,7 @@ export const authOptions = {
                         token.roles = usr.roles;
                         token.workspaces = usr.members.map(m => m.serverId);
                         token.invalidUser = false;
+                        token.lastEnriched = now;
                     } else {
                         // User was deleted or not found
                         console.warn(`[NextAuth] User ${token.email} not found in database during JWT enrichment.`);

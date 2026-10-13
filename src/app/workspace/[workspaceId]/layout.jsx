@@ -12,6 +12,7 @@ import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
 import WhatsAppDefaultSync from '@/components/WhatsAppDefaultSync';
 import { OfflineBanner } from '@/components/global/OfflineBanner';
 import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/global/KeyboardShortcutsModal';
+import { CrmSocketProvider } from '@/providers/CrmSocketProvider';
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -75,9 +76,11 @@ export default function WorkspaceLayout({ children }) {
         <>
             <WhatsAppDefaultSync />
             <WorkspaceProvider>
-                <WorkspaceLayoutInner>
-                    {children}
-                </WorkspaceLayoutInner>
+                <CrmSocketProvider>
+                    <WorkspaceLayoutInner>
+                        {children}
+                    </WorkspaceLayoutInner>
+                </CrmSocketProvider>
             </WorkspaceProvider>
         </>
     );

@@ -69,10 +69,34 @@ const handler = async (data) => {
           },
         },
         orderBy: {
-          createdAt: 'desc',
+          category: 'asc',
         },
       }),
     ]);
+
+    let finalPermissions = permissions || [];
+    if (finalPermissions.length === 0) {
+      const { syncNavigationPermissionsToDb } = await import("@/lib/nav-permission-sync");
+      await syncNavigationPermissionsToDb(data?.workspaceId || "default");
+      finalPermissions = await db.permission.findMany({
+        include: {
+          roles: {
+            include: {
+              users: {
+                select: {
+                  id: true,
+                  displayName: true,
+                  email: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          category: 'asc',
+        },
+      });
+    }
 
     const departments = [];
 
@@ -80,9 +104,10 @@ const handler = async (data) => {
       data: {
         users: users || [],
         roles: roles || [],
-        permissions: permissions || [],
+        permissions: finalPermissions,
         departments,
       },
+
     };
   } catch (error) {
     console.error("[getAccessData] Server Action Error:", error);

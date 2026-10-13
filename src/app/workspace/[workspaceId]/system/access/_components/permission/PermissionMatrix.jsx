@@ -1,416 +1,272 @@
-import { useState, useMemo, useRef, useEffect } from"react";
-import { toast } from"sonner";
-import { Search, Layers, Key, Shield, Users, Plus, Eye, PlusCircle, Pencil, Trash2, Settings, FileDown, FileUp, Save, Loader2, Loader, SearchX, } from"lucide-react";
-import { Button } from"@/components/ui/button";
-import { Input } from"@/components/ui/input";
-import { StatsCard } from"./StatsCard.jsx";
-import { PermissionRow } from"./PermissionRow.jsx";
-import PermissionEditor from"./PermissionEditor.jsx";
-import { DeleteConfirmDialog } from"./DeleteConfirmDialog.jsx";
+'use client'
+
+import React, { useState, useMemo, useCallback } from "react";
+import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import {
+    Search,
+    Layers,
+    Key,
+    Shield,
+    Users,
+    RefreshCw,
+    Loader2,
+    CheckCircle2,
+    ShieldCheck,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { StatsCard } from "./StatsCard.jsx";
+import { NavigationPermissionRow } from "./NavigationPermissionRow.jsx";
 import { useAccess } from "@/providers/WorkspaceProvider";
-import { useAction } from"@/hooks/use-action.js";
-import { upsertPermission } from"../../_action/upsert-permission.js";
-import { useSession } from"next-auth/react";
-
-const formatCategoryName = (category) => {
- if (typeof category !=="string") return"";
- return category
- .replace(/[_-]+/g,"")
- .trim()
- .split(/\s+/)
- .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
- .join("");
-};
-
-const getActionFromValue = (value) => {
-  if (typeof value !== "string") return null;
-  if (value.startsWith("navigation.")) return value; // Return full value for navigation
-  if (!value.includes(".")) return null;
-  return value.split(".")[1] || null;
-};
-
-// Sample data
-const samplePermissions = [
- { id:"1", title:"View Users", value:"users.view", color:"#15803D", description:"View user list", category:"users", status: true },
- { id:"2", title:"Create Users", value:"users.create", color:"#15803D", description:"Create new users", category:"users", status: true },
- { id:"3", title:"Edit Users", value:"users.edit", color:"#15803D", description:"Edit existing users", category:"users", status: false },
- { id:"4", title:"Delete Users", value:"users.delete", color:"#15803D", description:"Delete users", category:"users", status: false },
- { id:"5", title:"View Products", value:"products.view", color:"#2563EB", description:"View product list", category:"products", status: true },
- { id:"6", title:"Create Products", value:"products.create", color:"#2563EB", description:"Create new products", category:"products", status: true },
- { id:"7", title:"Edit Products", value:"products.edit", color:"#2563EB", description:"Edit products", category:"products", status: true },
- { id:"8", title:"Delete Products", value:"products.delete", color:"#2563EB", description:"Delete products", category:"products", status: false },
- { id:"9", title:"Export Products", value:"products.export", color:"#2563EB", description:"Export product data", category:"products", status: true },
- { id:"10", title:"View Orders", value:"orders.view", color:"#9333EA", description:"View orders", category:"orders", status: true },
- { id:"11", title:"Create Orders", value:"orders.create", color:"#9333EA", description:"Create orders", category:"orders", status: false },
- { id:"12", title:"Manage Orders", value:"orders.manage", color:"#9333EA", description:"Full order control", category:"orders", status: true },
- { id:"13", title:"View Settings", value:"settings.view", color:"#F59E0B", description:"View settings", category:"settings", status: true },
- { id:"14", title:"Manage Settings", value:"settings.manage", color:"#F59E0B", description:"Manage all settings", category:"settings", status: true },
-];
+import { useAction } from "@/hooks/use-action";
+import { syncNavigationPermissions } from "../../_actions/sync-navigation-permissions";
+import { toggleRolePermission } from "../../_actions/toggle-role-permission";
+import { getSidebarNavItems } from "@/app/workspace/_lib/sidebar-nav-item";
+import { useSession } from "next-auth/react";
+import { normalizeIdentifier } from "@/lib/rbac-utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const PermissionMatrix = () => {
- const { permissions, setPermissions, roles, users } = useAccess()
- const [searchQuery, setSearchQuery] = useState("");
- const [loading, setLoading] = useState(false);
- const { data: session, update } = useSession()
+    const params = useParams();
+    const workspaceId = params?.workspaceId || "default";
+    const { permissions, setPermissions, roles, setRoles, fetchAccessData } = useAccess();
+    const { data: session, update } = useSession();
 
- const [editorModal, setEditorModal] = useState({
- isOpen: false,
- mode:"add",
- category: undefined,
- editData: null,
- });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [filterTab, setFilterTab] = useState("all"); // 'all' | 'assigned' | 'unassigned'
+    const [togglingMap, setTogglingMap] = useState({});
 
- const [deleteModal, setDeleteModal] = useState({
- isOpen: false,
- module: null,
- });
+    // 1. Single Source of Truth: Get all navigation items directly from sidebar-nav-item.js
+    const navStructure = useMemo(() => {
+        return getSidebarNavItems(workspaceId);
+    }, [workspaceId]);
 
- const getUsersForPermission = (permissionId) => {
- const assignedRoles = roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
- const userIds = new Set();
- assignedRoles.forEach(role => role.users?.forEach(u => userIds.add(u.id)));
- return (users || []).filter(u => userIds.has(u.id));
- };
+    // 2. Action to Sync Navigation permissions to Database
+    const { execute: executeSync, loading: isSyncing } = useAction(syncNavigationPermissions, {
+        onSuccess: (data) => {
+            toast.success("Navigation permissions synchronized from sidebar items!", { id: "sync-perms" });
+            fetchAccessData?.();
+            update();
+        },
+        onError: (error) => {
+            console.error("Sync error:", error);
+            toast.error("Failed to sync navigation permissions", { id: "sync-perms" });
+        },
+    });
 
- const getRolesForPermission = (permissionId) => {
- return roles?.filter(r => r.permissions?.some(p => p.id === permissionId)) || [];
- };
+    const handleSync = async () => {
+        toast.loading("Synchronizing navigation permissions...", { id: "sync-perms" });
+        await executeSync({ workspaceId });
+    };
 
- const originalPermissionsRef = useRef(null);
+    // 3. Quick Role Assignment Handler
+    const handleToggleRole = useCallback(
+        async (roleId, permissionId) => {
+            const key = `${roleId}-${permissionId}`;
+            setTogglingMap((prev) => ({ ...prev, [key]: true }));
 
- useEffect(() => {
- if (!originalPermissionsRef.current && permissions?.length) {
- originalPermissionsRef.current = new Map(
- permissions.map((p) => [p.id, JSON.stringify({
- status: p.status,
- title: p.title,
- description: p.description,
- category: p.category,
- value: p.value,
- color: p.color
- })])
- );
- }
- }, [permissions]);
+            try {
+                const res = await toggleRolePermission({ roleId, permissionId });
+                if (res?.data) {
+                    const { assigned } = res.data;
+                    toast.success(assigned ? "Role permission granted" : "Role permission removed", {
+                        duration: 2000,
+                    });
 
- const modules = useMemo(() => {
- const grouped = {};
+                    // Optimistically update roles state in useAccess
+                    setRoles((prevRoles) =>
+                        prevRoles.map((r) => {
+                            if (r.id !== roleId) return r;
+                            const curPerms = r.permissions || [];
+                            const updatedPerms = assigned
+                                ? [...curPerms, { id: permissionId }]
+                                : curPerms.filter((p) => p.id !== permissionId);
+                            return { ...r, permissions: updatedPerms };
+                        })
+                    );
 
- permissions.forEach((permission) => {
- if (!permission || typeof permission !=="object") return;
+                    // Refresh active session in background
+                    update();
+                } else if (res?.message) {
+                    toast.error(res.message);
+                }
+            } catch (err) {
+                console.error("Toggle role error:", err);
+                toast.error("Failed to toggle role permission");
+            } finally {
+                setTogglingMap((prev) => ({ ...prev, [key]: false }));
+            }
+        },
+        [setRoles, update]
+    );
 
- const category = permission.category;
- if (typeof category !=="string") return;
+    // 4. Filter navigation modules by search and status
+    const filteredModules = useMemo(() => {
+        return navStructure.filter((group) => {
+            const moduleTitle = group.parent.title;
+            const primaryPerm = group.permission?.[0] || `navbar:${moduleTitle}:Parent`;
+            const children = group.child || [];
 
- if (!grouped[category]) {
- grouped[category] = {
- category,
- displayName: formatCategoryName(category),
- permissions: {},
- };
- }
+            // Search filter
+            if (searchQuery.trim()) {
+                const q = searchQuery.toLowerCase().trim();
+                const matchModule = moduleTitle.toLowerCase().includes(q) || group.baseUrl.toLowerCase().includes(q);
+                const matchChildren = children.some(
+                    (c) => c.title.toLowerCase().includes(q) || c.url?.toLowerCase().includes(q)
+                );
+                if (!matchModule && !matchChildren) return false;
+            }
 
- const action = getActionFromValue(permission.value);
- if (!action) return;
+            // Tab filter
+            if (filterTab !== "all") {
+                const isAssigned = roles?.some((r) => {
+                    if (normalizeIdentifier(r.title) === normalizeIdentifier(moduleTitle)) return true;
+                    return r.permissions?.some(
+                        (p) =>
+                            normalizeIdentifier(p.value) === normalizeIdentifier(primaryPerm) ||
+                            normalizeIdentifier(p.value) === normalizeIdentifier(moduleTitle)
+                    );
+                });
 
- const key = permission.value.startsWith("navigation.") ? permission.value : action;
- grouped[category].permissions[key] = permission;
- });
+                if (filterTab === "assigned" && !isAssigned) return false;
+                if (filterTab === "unassigned" && isAssigned) return false;
+            }
 
- return Object.values(grouped);
- }, [permissions]);
+            return true;
+        });
+    }, [navStructure, searchQuery, filterTab, roles]);
 
- const filteredModules = useMemo(() => {
- if (!searchQuery) return modules;
- return modules.filter((m) =>
- m.displayName.toLowerCase().includes(searchQuery.toLowerCase())
- );
- }, [modules, searchQuery]);
+    // 5. Stats computation
+    const totalModules = navStructure.length;
+    const totalSubPages = navStructure.reduce((acc, g) => acc + (g.child?.length || 0), 0);
+    const assignedModulesCount = navStructure.filter((group) => {
+        const moduleTitle = group.parent.title;
+        const primaryPerm = group.permission?.[0] || `navbar:${moduleTitle}:Parent`;
+        return roles?.some((r) => {
+            if (normalizeIdentifier(r.title) === normalizeIdentifier(moduleTitle)) return true;
+            return r.permissions?.some(
+                (p) =>
+                    normalizeIdentifier(p.value) === normalizeIdentifier(primaryPerm) ||
+                    normalizeIdentifier(p.value) === normalizeIdentifier(moduleTitle)
+            );
+        });
+    }).length;
 
- const stats = useMemo(() => {
- const totalModules = modules?.length || 0;
- const totalPermissions = permissions?.length || 0;
- const activePermissions = permissions?.filter((p) => p?.status).length || 0;
- const percentage =
- totalPermissions > 0
- ? Math.round((activePermissions / totalPermissions) * 100)
- : 0;
+    const coveragePercentage = totalModules > 0 ? Math.round((assignedModulesCount / totalModules) * 100) : 0;
 
- return { totalModules, totalPermissions, activePermissions, percentage };
- }, [modules, permissions]);
+    return (
+        <div className="space-y-4 ">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard icon={Layers} label="Navigation Modules" value={totalModules} subValue="Driven from sidebar" />
+                <StatsCard icon={Key} label="Sub-pages & Routes" value={totalSubPages} subValue="Granular permission points" />
+                <StatsCard
+                    icon={ShieldCheck}
+                    label="Assigned Modules"
+                    value={assignedModulesCount}
+                    subValue={`${coveragePercentage}% role coverage`}
+                />
+                <StatsCard icon={Users} label="Total Roles" value={roles?.length || 0} subValue="Available for assignment" />
+            </div>
 
- const handlePermissionChange = (permissionId, status) => {
- setPermissions((prev) =>
- prev.map((p) => (p.id === permissionId ? { ...p, status } : p))
- );
- };
+            {/* Controls Header */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl border bg-card shadow-xs">
+                {/* Search */}
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search modules, routes, or sub-pages..."
+                        className="pl-10 text-xs bg-background"
+                    />
+                </div>
 
- const handleBulkToggle = (category, status) => {
- setPermissions((prev) =>
- prev.map((p) => (p.category === category ? { ...p, status } : p))
- );
- toast.success(`${status ?'Enabled':'Disabled'} all permissions for ${formatCategoryName(category)}`);
- };
+                {/* Filter Tabs & Sync Action */}
+                <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center bg-muted/60 p-1 rounded-lg border border-border/50 text-xs">
+                        <button
+                            type="button"
+                            onClick={() => setFilterTab("all")}
+                            className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${filterTab === "all" ? "bg-background shadow-xs text-foreground" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                        >
+                            All ({totalModules})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setFilterTab("assigned")}
+                            className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${filterTab === "assigned"
+                                ? "bg-background shadow-xs text-primary"
+                                : "text-muted-foreground hover:text-foreground"
+                                }`}
+                        >
+                            Assigned ({assignedModulesCount})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setFilterTab("unassigned")}
+                            className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${filterTab === "unassigned"
+                                ? "bg-background shadow-xs text-foreground"
+                                : "text-muted-foreground hover:text-foreground"
+                                }`}
+                        >
+                            Unassigned ({totalModules - assignedModulesCount})
+                        </button>
+                    </div>
 
- const handlePermissionCreate = (category, action) => {
- const newPermission = {
- id: `new-${category}-${action}-${Date.now()}`,
- title: `${action.charAt(0).toUpperCase() + action.slice(1)} ${formatCategoryName(category)}`,
- value: `${category}.${action}`,
- color:"#15803D",
- description: `${action} permission for ${formatCategoryName(category)}`,
- category,
- status: true,
- };
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSync}
+                        disabled={isSyncing}
+                        className="gap-2 text-xs border-primary/30 text-primary  cursor-pointer"
+                    >
+                        {isSyncing ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                            <RefreshCw className="w-3.5 h-3.5" />
+                        )}
+                        <span>Sync Navigation</span>
+                    </Button>
+                </div>
+            </div>
 
- setPermissions((prev) => [...prev, newPermission]);
- toast.success(`Created ${action} permission`);
- };
+            {/* List of Navigation Modules */}
+            <ScrollArea className="space-y-3 h-[60vh]">
+                <div className="space-y-2">
+                    {filteredModules.length > 0 ? (
+                        filteredModules.map((group) => {
+                            const moduleTitle = group.parent.title;
+                            const primaryPermValue = group.permission?.[0] || `navbar:${moduleTitle}:Parent`;
+                            const dbPerm = permissions?.find(
+                                (p) => normalizeIdentifier(p.value) === normalizeIdentifier(primaryPermValue)
+                            );
 
- const { execute } = useAction(upsertPermission, {
- onSuccess: (data) => {
- setLoading(false);
- toast.success('Permission updated successfully', { id:'update-permission'})
- update(); // PRODUCTION GRADE: Refresh session data immediately
- },
- onError: (error) => {
- console.log(error)
- toast.error('Oops somethig went wrong ! try again later', { id:'update-permission'})
- setLoading(false);
- }
- })
-
- const handleSave = async () => {
- if (!originalPermissionsRef.current) {
- toast.info("No changes to save");
- return;
- }
-
- const newlyCreated = permissions.filter((p) => String(p.id).startsWith("new-"));
- const changed = permissions.filter((p) => {
- if (String(p.id).startsWith("new-")) return false;
- const originalJson = originalPermissionsRef.current?.get(p.id);
- if (!originalJson) return false;
-
- const currentJson = JSON.stringify({
- status: p.status,
- title: p.title,
- description: p.description,
- category: p.category,
- value: p.value,
- color: p.color
- });
- return originalJson !== currentJson;
- });
-
- const totalChanges = newlyCreated.length + changed.length;
- if (totalChanges === 0) {
- toast.info("No pending changes to sync");
- return;
- }
-
- setLoading(true);
- toast.loading(`Syncing ${totalChanges} permission changes...`, { id:'update-permission'});
- 
- await execute({ 
- formData: [...newlyCreated, ...changed] 
- });
-
- // Reset tracking after save
- originalPermissionsRef.current = new Map(
- permissions.map((p) => [p.id, JSON.stringify({
- status: p.status,
- title: p.title,
- description: p.description,
- category: p.category,
- value: p.value,
- color: p.color
- })])
- );
- };
-
- const handleEditorSubmit = async (newPermissions) => {
- setPermissions((prev) => {
- const updated = [...prev];
- newPermissions.forEach((newPerm) => {
- const existingIndex = updated.findIndex(
- (p) => p.value === newPerm.value
- );
-
- if (existingIndex !== -1) {
- updated[existingIndex] = {
- ...newPerm,
- ...updated[existingIndex]
- };
- } else if (newPerm.status) {
- updated.unshift({
- ...newPerm,
- id:
- newPerm.id ??
- `new-${newPerm.category}-${Date.now()}-${Math.random()
- .toString(36)
- .slice(2)}`,
- });
- }
- });
- return updated;
- });
-
- setEditorModal({ isOpen: false, mode:"add", category: undefined, editData: null });
- };
-
- const columnHeaders = [
- { key:"view", label:"View", icon: Eye },
- { key:"create", label:"Create", icon: PlusCircle },
- { key:"edit", label:"Edit", icon: Pencil },
- { key:"delete", label:"Delete", icon: Trash2 },
- { key:"manage", label:"Manage", icon: Settings },
- { key:"export", label:"Export", icon: FileDown },
- { key:"import", label:"Import", icon: FileUp },
- ];
-
- const matrixEnabledCount = filteredModules.reduce(
- (acc, m) => acc + Object.values(m.permissions).filter((p) => p?.status).length,
- 0
- );
-
- const matrixTotalCount = filteredModules.reduce(
- (acc, m) => acc + Object.values(m.permissions).filter(Boolean).length,
- 0
- );
-
- return (
- <div className="space-y-6 p-2">
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
- <StatsCard icon={Layers} label="Total Modules"value={stats.totalModules} />
- <StatsCard icon={Key} label="Total Permissions"value={stats.totalPermissions} />
- <StatsCard icon={Shield} label="Active Permissions"value={stats.activePermissions} subValue={`${stats.percentage}% enabled`} />
- <StatsCard icon={Users} label="Coverage"value={`${stats.percentage}%`} />
- </div>
-
- <div className="rounded-md border bg-card overflow-hidden">
- <div className="flex items-center justify-between p-4 border-b bg-muted/30">
- <div className="relative">
- <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"/>
- <Input
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search modules..."
- className="pl-10 pr-4 py-2.5 w-64 bg-background border rounded-md text-sm"
- />
- </div>
-
- <div className="flex items-center gap-2">
- <Button
- variant="outline"
- size="sm"
- onClick={() => setEditorModal({ isOpen: true, mode:"add", category:""})}
- >
- <Plus className="w-4 h-4 mr-2"/>
- Add Permission
- </Button>
-
- <Button size="sm"onClick={handleSave} disabled={loading}>
- {loading ? <Loader className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4"/>}
- </Button>
- </div>
- </div>
-
- <div className="overflow-x-auto">
- <table className="w-full">
- <thead>
- <tr className="border-b bg-muted/20">
- <th className="py-3 px-4 text-left text-xs font-medium text-muted-foreground tracking-wider">
- Module
- </th>
- {columnHeaders.map(({ key, label, icon: Icon }) => (
- <th key={key} className="py-3 px-4 text-center text-xs font-medium text-muted-foreground tracking-wider">
- <div className="flex items-center justify-center gap-1.5">
- <Icon className="w-3.5 h-3.5"/>
- {label}
- </div>
- </th>
- ))}
- <th className="py-3 px-4 text-right text-xs font-medium text-muted-foreground tracking-wider">
- Actions
- </th>
- </tr>
- </thead>
- <tbody>
- {filteredModules.map((module) => (
- <PermissionRow
- key={module.category}
- module={module}
- onPermissionChange={handlePermissionChange}
- onBulkToggle={handleBulkToggle}
- onCreatePermission={handlePermissionCreate}
- onEditModule={(m) => {
- setEditorModal({ isOpen: true, mode:"edit", category: m.category, editData: m });
- }}
- onDeleteModule={(m) => {
- setDeleteModal({ isOpen: true, module: m });
- }}
- getUsersForPermission={getUsersForPermission}
- getRolesForPermission={getRolesForPermission}
- />
- ))}
- </tbody>
- </table>
- </div>
-
- {filteredModules?.length === 0 && (
- <div className="flex flex-col items-center justify-center p-20 border-2 border-dashed border-border/40 rounded-md bg-muted/5 animate-pulse-subtle group overflow-hidden relative mt-4">
- <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"/>
- <div className="w-20 h-20 bg-muted/20 rounded-md flex items-center justify-center mb-8 border border-border/10 shadow-inner group-hover:scale-110 transition-transform duration-500">
- <SearchX className="w-10 text-muted-foreground/30 group-hover:text-primary/40 transition-colors"/>
- </div>
- <h3 className="text-xl font-bold text-foreground/80 mb-3 tracking-tight">
- {searchQuery ?"No permissions match":"No modules defined"}
- </h3>
- <p className="text-xs font-medium text-muted-foreground/60 max-w-[320px] text-center leading-relaxed mb-8">
- {searchQuery 
- ? `We couldn't find any permission modules matching"${searchQuery}". Review your spelling or broaden your search boundaries.`
- :"Establish your first permission module to define granular access control across the user interface and system operations."}
- </p>
- <Button 
- variant="ghost"
- size="sm"
- className="rounded-md font-black uppercase tracking-[0.2em] text-[10px] text-primary/60 hover:text-primary hover:bg-primary/5 transition-all px-8 border border-primary/10"
- onClick={() => searchQuery ? setSearchQuery('') : setEditorModal({ isOpen: true, mode:"add", category:""})}
- >
- {searchQuery ?"Clear Search Cache":"Initialize Permission Hub"}
- </Button>
- </div>
- )}
-
- <div className="p-4 border-t bg-muted/20 text-sm text-muted-foreground text-center">
- {matrixEnabledCount} of {matrixTotalCount} permissions enabled
- </div>
- </div>
-
- <PermissionEditor
- open={editorModal.isOpen}
- onOpenChange={(open) => setEditorModal((prev) => ({ ...prev, isOpen: open }))}
- mode={editorModal.mode}
- category={editorModal.category}
- editData={editorModal.editData}
- onClose={() => setEditorModal({ isOpen: false, mode:"add", category: undefined, editData: null })}
- onSubmit={handleEditorSubmit}
- />
-
- <DeleteConfirmDialog
- open={deleteModal.isOpen}
- onOpenChange={(open) => setDeleteModal((prev) => ({ ...prev, isOpen: open }))}
- title={`Delete ${deleteModal.module?.displayName ||"Module"}?`}
- description={`This will permanently delete the"${deleteModal.module?.displayName}"module and all its permissions. This action cannot be undone.`}
- module={deleteModal.module}
- onConfirm={() => {
- if (deleteModal.module) {
- setPermissions((prev) => prev.filter((p) => p.category !== deleteModal.module.category));
- }
- setDeleteModal({ isOpen: false, module: null });
- }}
- />
- </div>
- );
+                            return (
+                                <NavigationPermissionRow
+                                    key={moduleTitle}
+                                    group={group}
+                                    dbPerm={dbPerm}
+                                    allPerms={permissions || []}
+                                    roles={roles || []}
+                                    onToggleRole={handleToggleRole}
+                                    togglingMap={togglingMap}
+                                />
+                            );
+                        })
+                    ) : (
+                        <div className="text-center py-16 border rounded-xl bg-card/50 space-y-2">
+                            <Key className="w-8 h-8 text-muted-foreground mx-auto opacity-50" />
+                            <h4 className="text-sm font-semibold">No navigation modules found</h4>
+                            <p className="text-xs text-muted-foreground">
+                                Try adjusting your search query or sync navigation permissions
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </ScrollArea>
+        </div>
+    );
 };
