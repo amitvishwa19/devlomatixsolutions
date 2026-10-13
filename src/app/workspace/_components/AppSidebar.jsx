@@ -27,6 +27,7 @@ import { getSidebarNavItems } from "../_lib/sidebar-nav-item";
 import { useAccess } from "@/providers/WorkspaceProvider";
 import { useSession } from "next-auth/react";
 import SettingModal from "../[workspaceId]/system/_components/SettingModal";
+import { canAccessNavGroup, isSuperAdmin as checkIsSuperAdmin } from "@/lib/rbac-utils";
 
 export default function AppSidebar() {
     const pathname = usePathname();
@@ -73,10 +74,28 @@ export default function AppSidebar() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [state, setOpen]);
 
-    const navigation = useMemo(
+    const rawNavigation = useMemo(
         () => getSidebarNavItems(workspaceId),
         [workspaceId],
     );
+
+    const userForAuth = useMemo(() => {
+        if (previewRole) {
+            return {
+                role: previewRole.title,
+                roles: [previewRole],
+                permissions: activePermissions || [],
+            };
+        }
+        return session?.user;
+    }, [previewRole, activePermissions, session?.user]);
+
+    const navigation = useMemo(() => {
+        if (isSuperAdmin || checkIsSuperAdmin(userForAuth)) {
+            return rawNavigation;
+        }
+        return rawNavigation.filter((item) => canAccessNavGroup(item, userForAuth));
+    }, [rawNavigation, isSuperAdmin, userForAuth]);
 
     return (
         <div>

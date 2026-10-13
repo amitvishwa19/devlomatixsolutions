@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
+import { checkPathAccess, isSuperAdmin } from '@/lib/rbac-utils'
 
 export async function proxy(request) {
     const url = request.nextUrl.clone()
@@ -44,9 +45,24 @@ export async function proxy(request) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // Workspace Access Control (Role Guard)
-    // Any authenticated user can access /workspace; role-based checks are handled at the page/action layer.
+    // Workspace Access Control (RBAC Guard)
     if (pathname.startsWith('/workspace/') && token) {
+        // Super Admin bypass: Unrestricted access to all workspace modules
+        if (isSuperAdmin(token)) {
+            return NextResponse.next()
+        }
+
+        const match = pathname.match(/^\/workspace\/([^\/]+)(\/.*)?/)
+        const workspaceId = match ? match[1] : null
+
+        if (workspaceId) {
+            const { allowed, matchedGroup } = checkPathAccess(pathname, workspaceId, token)
+            if (!allowed) {
+                // If user lacks permission, show the Not Found page
+                return NextResponse.rewrite(new URL('/not-found', request.url))
+            }
+        }
+
         return NextResponse.next()
     }
 

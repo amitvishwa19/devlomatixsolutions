@@ -58,7 +58,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Settings", icon: "settings-2", url: `${baseCRMPath}/settings` },
             ],
             baseUrl: baseCRMPath,
-            permission: [`navbar:Workspace:Home`],
+            permission: [`navbar:DevX(CRM):Parent`, `navbar:CRM:Parent`],
             roles: []
         },
         {

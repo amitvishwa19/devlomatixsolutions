@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
 import { getAccessData } from '@/app/workspace/[workspaceId]/system/access/_actions/get-access-data';
+import { isSuperAdmin as checkIsSuperAdmin } from '@/lib/rbac-utils';
 
 const WorkspaceContext = createContext();
 
@@ -16,16 +17,8 @@ export const WorkspaceProvider = ({ children }) => {
     // Derive isSuperAdmin from session roles
     const sessionRoles = useMemo(() => session?.user?.roles || [], [session]);
     const isSuperAdmin = useMemo(() => {
-        // DEV BYPASS: Treat everyone as Super Admin in development mode
-        return true;
-
-        // Broad check for super admin across various naming conventions
-        return sessionRoles.some(r => 
-            r.title?.toLowerCase().replace(/\s/g, '-') === "super-admin" || 
-            r.title?.toLowerCase() === "super admin" ||
-            session?.user?.role === "SUPER_ADMIN"
-        );
-    }, [sessionRoles, session?.user?.role]);
+        return checkIsSuperAdmin(session?.user);
+    }, [session?.user]);
 
     // --- Settings State (from legacy SettingProvider) ---
     const [settings, setSettings] = useState(null);

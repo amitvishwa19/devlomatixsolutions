@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Inter } from "next/font/google";
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { toast } from 'sonner';
 import AppTopNav from '../_components/AppTopNav';
 import AppSidebar from '../_components/AppSidebar';
 import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
@@ -13,11 +15,37 @@ import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/globa
 
 const font = Inter({ subsets: ["latin"] });
 
+function UnauthorizedToastHandler() {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    useEffect(() => {
+        if (searchParams.get('unauthorized') === '1') {
+            const mod = searchParams.get('module') || 'this module';
+            toast.error(`Access Denied: You do not have permission to view ${mod}.`, {
+                id: 'unauthorized-toast',
+                duration: 5000,
+            });
+            const params = new URLSearchParams(searchParams.toString());
+            params.delete('unauthorized');
+            params.delete('module');
+            const newQuery = params.toString();
+            router.replace(newQuery ? `${pathname}?${newQuery}` : pathname, { scroll: false });
+        }
+    }, [searchParams, pathname, router]);
+
+    return null;
+}
+
 function WorkspaceLayoutInner({ children }) {
     const { open, setOpen, Component: ShortcutsModal } = useKeyboardShortcuts();
 
     return (
         <>
+            <Suspense fallback={null}>
+                <UnauthorizedToastHandler />
+            </Suspense>
             <OfflineBanner />
             <ShortcutsModal />
             <div className={`flex h-dvh max-w-[100vw] ${font.className} overflow-hidden bg-background`}>
