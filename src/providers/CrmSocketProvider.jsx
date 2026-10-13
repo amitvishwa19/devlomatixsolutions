@@ -685,13 +685,25 @@ export function CrmSocketProvider({ children }) {
       clearTimeout(callTimeoutRef.current);
       callTimeoutRef.current = null;
     }
-    if (incomingCallData && socket) {
+    const roomId = incomingCallData?.roomId || activeCallSessionRef.current?.roomId;
+    if (roomId && socket) {
       socket.emit('call:response', {
-        roomId: incomingCallData.roomId,
+        roomId,
         accepted: false,
         reason
       });
+      socket.emit('call:hangup', {
+        roomId,
+        duration: 0,
+        reason
+      });
+      socket.emit('call:end', {
+        roomId,
+        duration: 0,
+        reason
+      });
     }
+    cleanupCall();
     setIncomingCallData(null);
     setCallStatus('idle');
   };
@@ -708,12 +720,23 @@ export function CrmSocketProvider({ children }) {
     }
 
     const currentSession = activeCallSessionRef.current;
+    const currentIncoming = incomingCallData;
+    const roomId = currentSession?.roomId || currentIncoming?.roomId;
     const finalDuration = callDurationRef.current;
 
-    if (currentSession && socket) {
+    if (roomId && socket) {
       socket.emit('call:hangup', {
-        roomId: currentSession.roomId,
+        roomId,
         duration: finalDuration
+      });
+      socket.emit('call:end', {
+        roomId,
+        duration: finalDuration
+      });
+      socket.emit('call:response', {
+        roomId,
+        accepted: false,
+        reason: 'declined'
       });
     }
 
@@ -722,7 +745,7 @@ export function CrmSocketProvider({ children }) {
     setActiveCallSession(null);
     setIncomingCallData(null);
 
-    if (currentSession) {
+    if (currentSession && finalDuration > 0) {
       setPostCallRecord({
         ...currentSession,
         duration: finalDuration

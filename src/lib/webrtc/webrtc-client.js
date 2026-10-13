@@ -323,7 +323,12 @@ export class WebRtcClient {
     }
 
     if (this.peerConnection) {
-      this.peerConnection.close();
+      try {
+        this.peerConnection.onconnectionstatechange = null;
+        this.peerConnection.onicecandidate = null;
+        this.peerConnection.ontrack = null;
+        this.peerConnection.close();
+      } catch (_) {}
       this.peerConnection = null;
     }
   }
