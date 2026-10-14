@@ -1,4 +1,5 @@
 import { executeGatewayRequest } from "@/app/workspace/[workspaceId]/flowgenix/_lib/combo-router";
+import { validateGatewayToken } from "@/app/workspace/[workspaceId]/flowgenix/_lib/gateway-auth";
 
 // Standard CORS options handler
 export async function OPTIONS() {
@@ -16,11 +17,9 @@ export async function POST(req, { params }) {
     try {
         const { workspaceId } = await params;
 
-        // Extract authorization header or query token
-        const authHeader = req.headers.get("authorization") || "";
-        const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+        // Extract authorization header (Authorization: Bearer <token> or X-FlowGenix-Key)
+        const authHeader = req.headers.get("authorization") || req.headers.get("x-flowgenix-key") || "";
 
-        // Optional: Can validate token or allow direct workspace context access
         const body = await req.json();
         const {
             model = "auto",
@@ -33,6 +32,24 @@ export async function POST(req, { params }) {
             presence_penalty,
             ...rest
         } = body;
+
+        // Validate Bearer or X-FlowGenix-Key token against active workspace keys
+        const authCheck = await validateGatewayToken(authHeader, workspaceId, model);
+        if (!authCheck.valid) {
+            return new Response(JSON.stringify({
+                error: {
+                    message: authCheck.reason || "Unauthorized. Invalid or missing FlowGenix Gateway token.",
+                    type: "authentication_error",
+                    code: "invalid_api_key"
+                }
+            }), {
+                status: 401,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*'
+                }
+            });
+        }
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return new Response(JSON.stringify({
@@ -52,6 +69,9 @@ export async function POST(req, { params }) {
 
         const result = await executeGatewayRequest({
             workspaceId,
+            keyId: authCheck.keyId || null,
+            keyLabel: authCheck.label || "Gateway Key",
+            keyCap: authCheck.spendCap ?? null,
             model,
             messages,
             stream: Boolean(stream),
@@ -67,8 +87,8 @@ export async function POST(req, { params }) {
             return new Response(JSON.stringify({
                 error: {
                     message: result.error || "FlowGenix upstream resolution failed.",
-                    type: "gateway_error",
-                    code: "all_targets_exhausted",
+                    type: result.status === 402 ? "spend_guard_error" : "gateway_error",
+                    code: result.details?.code || "all_targets_exhausted",
                     details: result.details
                 }
             }), {
@@ -89,9 +109,11 @@ export async function POST(req, { params }) {
                 'Cache-Control': 'no-cache',
                 'Connection': 'keep-alive',
                 'Access-Control-Allow-Origin': '*',
+                'X-FlowGenix-Cache': result.isCached ? 'HIT' : 'MISS',
                 'X-FlowGenix-Resolved-Provider': result.resolvedProvider || '',
                 'X-FlowGenix-Resolved-Model': result.resolvedModel || '',
-                'X-FlowGenix-Latency-Ms': String(result.latencyMs || 0)
+                'X-FlowGenix-Latency-Ms': String(result.latencyMs || 0),
+                'X-FlowGenix-Spend-Guard': result.isDowngradedToFree ? 'Downgraded-To-Free-Tier' : 'Normal'
             }
         });
 

@@ -17,6 +17,8 @@ import {
     Zap,
     Scissors,
     ChevronRight,
+    ChevronDown,
+    BrainCircuit,
     Layers,
     Edit2,
     Check,
@@ -77,6 +79,27 @@ export function ChatTab({ workspaceId }) {
     const [enableCaveman, setEnableCaveman] = useState(true);
     const [lastResponseMeta, setLastResponseMeta] = useState(null);
     const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+    const [expandedReasoning, setExpandedReasoning] = useState({});
+
+    // Parse and extract <think> reasoning tokens from reasoning models (DeepSeek R1, o1)
+    const extractReasoning = (rawContent) => {
+        if (!rawContent || typeof rawContent !== 'string') return { reasoning: null, answer: rawContent, isThinking: false };
+        const thinkMatch = rawContent.match(/<think>([\s\S]*?)(?:<\/think>|$)/i);
+        if (!thinkMatch) return { reasoning: null, answer: rawContent, isThinking: false };
+
+        const reasoning = thinkMatch[1].trim();
+        const isThinking = !rawContent.includes('</think>');
+        const answer = rawContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/i, '').trim();
+
+        return { reasoning, answer, isThinking };
+    };
+
+    const toggleReasoning = (idx) => {
+        setExpandedReasoning(prev => ({
+            ...prev,
+            [idx]: prev[idx] === undefined ? false : !prev[idx]
+        }));
+    };
 
     // Scroll references
     const messagesContainerRef = useRef(null);
@@ -700,17 +723,63 @@ export function ChatTab({ workspaceId }) {
                                                 </div>
                                             )}
 
-                                            {/* Text Bubble */}
-                                            {msg.content && (
-                                                <div
-                                                    className={`px-4 py-2.5 rounded-xl text-xs leading-relaxed whitespace-pre-wrap ${isUser
-                                                        ? 'bg-primary text-primary-foreground font-medium rounded-tr-xs shadow-xs'
-                                                        : 'bg-secondary/40 border border-border/40 text-foreground rounded-tl-xs shadow-xs font-mono'
-                                                        }`}
-                                                >
-                                                    {msg.content}
-                                                </div>
-                                            )}
+                                            {/* Text Bubble & Reasoning Accordion */}
+                                            {msg.content && (() => {
+                                                if (isUser) {
+                                                    return (
+                                                        <div className="px-4 py-2.5 rounded-xl text-xs leading-relaxed whitespace-pre-wrap bg-primary text-primary-foreground font-medium rounded-tr-xs shadow-xs">
+                                                            {msg.content}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                const { reasoning, answer, isThinking } = extractReasoning(msg.content);
+                                                const isExpanded = expandedReasoning[i] ?? (isThinking ? true : false);
+
+                                                return (
+                                                    <div className="bg-secondary/40 border border-border/40 text-foreground rounded-xl rounded-tl-xs p-3 shadow-xs space-y-2 max-w-full">
+                                                        {/* Collapsible Reasoning Process Accordion */}
+                                                        {reasoning && (
+                                                            <div className="rounded-lg border border-primary/25 bg-primary/5 overflow-hidden">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleReasoning(i)}
+                                                                    className="w-full px-3 py-1.5 flex items-center justify-between text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                                                                >
+                                                                    <span className="flex items-center gap-1.5 font-mono">
+                                                                        <BrainCircuit className="w-3.5 h-3.5 text-primary" />
+                                                                        {isThinking ? (
+                                                                            <span className="flex items-center gap-1">
+                                                                                <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                                                                                Reasoning in progress...
+                                                                            </span>
+                                                                        ) : (
+                                                                            "Thought Process (Deep Reasoning)"
+                                                                        )}
+                                                                    </span>
+                                                                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                                </button>
+                                                                {isExpanded && (
+                                                                    <div className="px-3 py-2 text-[11px] font-mono text-muted-foreground whitespace-pre-wrap border-t border-primary/15 bg-black/25 leading-relaxed">
+                                                                        {reasoning}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Final Answer */}
+                                                        {answer ? (
+                                                            <div className="text-xs leading-relaxed whitespace-pre-wrap font-mono">
+                                                                {answer}
+                                                            </div>
+                                                        ) : isThinking ? null : (
+                                                            <div className="text-xs leading-relaxed whitespace-pre-wrap font-mono">
+                                                                {msg.content}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
 
                                         {isUser && (

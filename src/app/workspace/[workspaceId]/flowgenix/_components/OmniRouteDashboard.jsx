@@ -15,7 +15,9 @@ import {
     MessageSquare, 
     Bot,
     BarChart3,
-    BrainCircuit
+    BrainCircuit,
+    Code2,
+    Wallet
 } from 'lucide-react';
 
 import { OverviewTab } from './tabs/OverviewTab';
@@ -27,6 +29,8 @@ import { CompressionTab } from './tabs/CompressionTab';
 import { LogsTab } from './tabs/LogsTab';
 import { ChatTab } from './tabs/ChatTab';
 import { AnalyticsTab } from './tabs/AnalyticsTab';
+import { IntegrationsTab } from './tabs/IntegrationsTab';
+import { FinOpsTab } from './tabs/FinOpsTab';
 
 export function OmniRouteDashboard({ workspaceId, userId }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -73,11 +77,17 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         <TabsTrigger value="analytics" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <BarChart3 className="h-3.5 w-3.5" /> Analytics
                         </TabsTrigger>
+                        <TabsTrigger value="finops" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                            <Wallet className="h-3.5 w-3.5" /> FinOps
+                        </TabsTrigger>
                         <TabsTrigger value="compression" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <TrendingDown className="h-3.5 w-3.5" /> Compression
                         </TabsTrigger>
                         <TabsTrigger value="logs" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
                             <Activity className="h-3.5 w-3.5" /> Logs
+                        </TabsTrigger>
+                        <TabsTrigger value="integrations" className="gap-1.5 font-semibold text-xs px-1 py-1 rounded-md text-muted-foreground data-[state=active]:text-foreground data-[state=active]:bg-background shadow-xs">
+                            <Code2 className="h-3.5 w-3.5" /> Integrations
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>
@@ -138,6 +148,14 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         </ScrollArea>
                     </TabsContent>
 
+                    <TabsContent value="finops" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <FinOpsTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
                     <TabsContent value="compression" className="mt-0 h-full">
                         <ScrollArea className="h-full">
                             <div className="p-2">
@@ -150,6 +168,14 @@ export function OmniRouteDashboard({ workspaceId, userId }) {
                         <ScrollArea className="h-full">
                             <div className="p-2">
                                 <LogsTab workspaceId={workspaceId} />
+                            </div>
+                        </ScrollArea>
+                    </TabsContent>
+
+                    <TabsContent value="integrations" className="mt-0 h-full">
+                        <ScrollArea className="h-full">
+                            <div className="p-2">
+                                <IntegrationsTab workspaceId={workspaceId} />
                             </div>
                         </ScrollArea>
                     </TabsContent>

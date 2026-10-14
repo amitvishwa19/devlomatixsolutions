@@ -54,6 +54,7 @@ export async function POST(req, { params }) {
                 'Content-Type': upstreamResponse.headers.get('Content-Type') || (stream ? 'text/event-stream' : 'application/json'),
                 'Cache-Control': 'no-cache',
                 'Connection': 'keep-alive',
+                'X-FlowGenix-Cache': result.isCached ? 'HIT' : 'MISS',
                 'X-FlowGenix-Resolved-Provider': result.resolvedProvider || '',
                 'X-FlowGenix-Resolved-Model': result.resolvedModel || '',
                 'X-FlowGenix-Latency-Ms': String(result.latencyMs || 0)

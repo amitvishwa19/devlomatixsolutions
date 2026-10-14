@@ -3,6 +3,10 @@ import { db } from "@/lib/db";
 import { compressPayload, estimateTokens } from "./compression-engine";
 import { recordTelemetry } from "./telemetry-store";
 import { runAgentOrchestrator } from "./agent-orchestrator";
+import { circuitBreaker } from "./circuit-breaker";
+import { prepareProviderRequest, selectOptimalKey, normalizeReasoningContent } from "./provider-adapters";
+import { gatewayCache } from "./gateway-cache";
+import { spendGuard } from "./spend-guard";
 
 // Ensure Node.js prefers IPv4 on dual-stack hosts and tolerates system clock skew in dev/custom environments
 try {
@@ -22,7 +26,8 @@ export const ROUTING_PRESETS = {
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek Chat" },
         { provider: "anthropic", model: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
-        { provider: "openai", model: "gpt-4o-mini", name: "GPT-4o Mini" }
+        { provider: "openai", model: "gpt-4o-mini", name: "GPT-4o Mini" },
+        { provider: "ollama", model: "llama3.2:latest", name: "Local Ollama (Offline Protection)" }
     ],
     "auto/coding": [
         { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
@@ -140,7 +145,11 @@ export async function resolveCandidateTargets(workspaceId, requestedModel) {
     // 5. Query all active models in the workspace to append as fallbacks
     const activeWorkspaceModels = await db.agentModel.findMany({
         where: { workspaceId, isActive: true },
-        orderBy: { createdAt: "desc" }
+        orderBy: [
+            { isDefault: "desc" },
+            { updatedAt: "desc" },
+            { createdAt: "desc" }
+        ]
     });
 
     const combinedTargets = [...initialTargets];
@@ -181,12 +190,104 @@ export async function executeGatewayRequest({
         return await runAgentOrchestrator({ workspaceId, model: requestedModel.trim(), messages, stream });
     }
 
-    const resolution = await resolveCandidateTargets(workspaceId, requestedModel);
-    const candidates = resolution.targets;
+    const keyId = extraParams.keyId || null;
+    const keyLabel = extraParams.keyLabel || "Gateway Key";
+    const keyCap = extraParams.keyCap || null;
 
-    // Fetch all active configured keys for this workspace
+    // High-Performance Response Cache Check (serves duplicate queries in <5ms at $0 cost)
+    const enableCache = extraParams.cache !== false && !stream;
+    const cacheKey = enableCache ? gatewayCache.generateCacheKey({
+        workspaceId,
+        model: requestedModel,
+        messages,
+        temperature: extraParams.temperature,
+        responseFormat: extraParams.response_format || extraParams.responseFormat
+    }) : null;
+
+    if (enableCache && cacheKey) {
+        const cached = gatewayCache.get(cacheKey);
+        if (cached) {
+            const latencyMs = Math.max(2, Date.now() - startTime);
+            console.log(`[FlowGenix Cache] ⚡ Cache HIT for ${requestedModel} (${latencyMs}ms, saved ${cached.tokensIn + cached.tokensOut} tokens)`);
+            
+            spendGuard.recordSpend({
+                workspaceId,
+                keyId,
+                keyLabel,
+                keyCap,
+                provider: cached.resolvedProvider,
+                model: cached.resolvedModel,
+                tokensIn: cached.tokensIn,
+                tokensOut: cached.tokensOut,
+                isCached: true
+            });
+
+            recordTelemetry({
+                workspaceId,
+                requestModel: requestedModel,
+                resolvedProvider: `${cached.resolvedProvider.toUpperCase()} (CACHED)`,
+                resolvedModel: cached.resolvedModel,
+                tokensIn: cached.tokensIn,
+                tokensOut: cached.tokensOut,
+                compressionSavings: "100%",
+                latencyMs,
+                status: 200
+            });
+
+            return {
+                success: true,
+                response: new Response(cached.body, {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-FlowGenix-Cache': 'HIT',
+                        'X-FlowGenix-Resolved-Provider': cached.resolvedProvider,
+                        'X-FlowGenix-Resolved-Model': cached.resolvedModel,
+                        'X-FlowGenix-Latency-Ms': String(latencyMs)
+                    }
+                }),
+                resolvedProvider: cached.resolvedProvider,
+                resolvedModel: cached.resolvedModel,
+                latencyMs,
+                isCached: true
+            };
+        }
+    }
+
+    // Spend Guard Pre-flight Budget Verification
+    const budgetCheck = await spendGuard.checkBudget(workspaceId, keyId);
+    if (!budgetCheck.allowed) {
+        return {
+            success: false,
+            status: 402,
+            error: `FlowGenix Spend Guard: ${budgetCheck.reason}`,
+            details: { code: "budget_exceeded" }
+        };
+    }
+
+    const resolution = await resolveCandidateTargets(workspaceId, requestedModel);
+    let candidates = resolution.targets;
+    let isDowngradedToFree = false;
+
+    if (budgetCheck.shouldDowngradeToFree) {
+        console.warn(`[FlowGenix SpendGuard] 🛡️ ${budgetCheck.reason} Routing via 100% Free Tier.`);
+        candidates = [
+            { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel Llama 3.1 (Spend Guard Free Tier)" },
+            { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Cloud (Free Tier)" },
+            { provider: "google", model: "gemini-2.0-flash", name: "Google AI Studio (Free Tier)" },
+            { provider: "ollama", model: "llama3.2:latest", name: "Local Ollama" }
+        ];
+        isDowngradedToFree = true;
+    }
+
+    // Fetch all active configured keys for this workspace (prioritizing default and latest updated)
     const configuredModels = await db.agentModel.findMany({
-        where: { workspaceId, isActive: true }
+        where: { workspaceId, isActive: true },
+        orderBy: [
+            { isDefault: "desc" },
+            { updatedAt: "desc" },
+            { createdAt: "desc" }
+        ]
     });
 
     if (!configuredModels || configuredModels.length === 0) {
@@ -197,11 +298,14 @@ export async function executeGatewayRequest({
         };
     }
 
+    // Group all active configurations per provider (supporting multi-key fallback)
     const providerMap = new Map();
     configuredModels.forEach(m => {
-        if (!providerMap.has(m.provider.toLowerCase())) {
-            providerMap.set(m.provider.toLowerCase(), m);
+        const prov = m.provider.toLowerCase();
+        if (!providerMap.has(prov)) {
+            providerMap.set(prov, []);
         }
+        providerMap.get(prov).push(m);
     });
 
     let totalSavingsPercent = 0;
@@ -253,193 +357,303 @@ export async function executeGatewayRequest({
     delete cleanExtraParams.maxTokens;
     delete cleanExtraParams.max_tokens;
 
-    // Cascading Failover Loop
+    // Cascading Failover Loop across candidate models & providers
     for (let i = 0; i < candidates.length; i++) {
         const candidate = candidates[i];
-        const dbConfig = providerMap.get(candidate.provider.toLowerCase());
+        const dbConfigs = providerMap.get(candidate.provider.toLowerCase()) || [];
 
         // Skip candidate if no active key configured for this provider in this workspace
-        if (!dbConfig || !dbConfig.apiKey) {
+        if (dbConfigs.length === 0) {
             continue;
         }
 
-        let targetModel = candidate.model;
-        if (!targetModel || targetModel === "main" || targetModel === "auto" || targetModel.toLowerCase().includes("main")) {
-            targetModel = (dbConfig.name && !dbConfig.name.toLowerCase().includes("main")) 
-                ? dbConfig.name 
-                : (DEFAULT_PROVIDER_MODELS[candidate.provider.toLowerCase()] || "auto");
-        }
+        // Sort candidate keys using P2C priority and circuit health
+        const sortedDbConfigs = [...dbConfigs].sort((a, b) => {
+            const aCheck = circuitBreaker.canExecute(a.id, candidate.provider);
+            const bCheck = circuitBreaker.canExecute(b.id, candidate.provider);
+            if (aCheck.allowed && !bCheck.allowed) return -1;
+            if (!aCheck.allowed && bCheck.allowed) return 1;
+            if (a.isDefault && !b.isDefault) return -1;
+            if (!a.isDefault && b.isDefault) return 1;
+            return 0;
+        });
 
-        const baseUrl = getProviderBaseUrl(candidate.provider, dbConfig.baseUrl);
-        const endpoint = `${baseUrl}/chat/completions`;
-        const cleanApiKey = dbConfig.apiKey.replace(/^Bearer\s+/i, '').trim();
-
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 35000); // 35s timeout for high reasoning models
-
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${cleanApiKey}`,
-                ...(candidate.provider === 'openrouter' ? { 
-                    'HTTP-Referer': 'https://devlomatix.com', 
-                    'X-Title': 'FlowGenix' 
-                } : {})
-            };
-
-            const payload = {
-                model: targetModel,
-                messages: cleanMessages,
-                stream: Boolean(stream),
-                max_tokens: safeMaxTokens,
-                ...cleanExtraParams
-            };
-
-            const targetRes = await fetch(endpoint, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(payload),
-                signal: controller.signal
-            });
-
-            clearTimeout(timeoutId);
-
-            // If success, log telemetry and return response
-            if (targetRes.ok) {
-                const latencyMs = Date.now() - startTime;
-
-                recordTelemetry({
-                    workspaceId,
-                    requestModel: requestedModel,
-                    resolvedProvider: dbConfig.provider.toUpperCase(),
-                    resolvedModel: targetModel,
-                    tokensIn: inputTokens,
-                    tokensOut: stream ? 150 : 200,
-                    compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
-                    latencyMs,
-                    status: targetRes.status
-                });
-
-                return {
-                    success: true,
-                    response: targetRes,
-                    resolvedProvider: candidate.provider,
-                    resolvedModel: targetModel,
-                    latencyMs
-                };
+        // Try each configured key for this provider (in order of default, recent, and health)
+        for (const dbConfig of sortedDbConfigs) {
+            const isOllama = candidate.provider.toLowerCase() === 'ollama';
+            if (!dbConfig || (!dbConfig.apiKey && !isOllama)) {
+                continue;
             }
 
-            // If non-200 (e.g. 429 Rate Limit, 400/402 Credit Limit, 500 Server Error, 404 Model Not Found)
-            const errorText = await targetRes.text().catch(() => "Unknown response body");
+            let targetModel = candidate.model;
+            if (!targetModel || targetModel === "main" || targetModel === "auto" || targetModel.toLowerCase().includes("main")) {
+                targetModel = (dbConfig.name && !dbConfig.name.toLowerCase().includes("main")) 
+                    ? dbConfig.name 
+                    : (DEFAULT_PROVIDER_MODELS[candidate.provider.toLowerCase()] || "auto");
+            }
 
-            // Smart Auto-Recovery for OpenRouter / LLM Credit & max_tokens limit errors
-            if (candidate.provider === 'openrouter' && (targetRes.status === 400 || targetRes.status === 402 || targetRes.status === 403)) {
-                const affordableMatch = errorText.match(/can only afford (\d+)/i);
-                const hasMaxTokensMsg = errorText.toLowerCase().includes("fewer max_tokens") || errorText.toLowerCase().includes("more credits");
+            // Adaptive Circuit Breaker Check: immediately bypass keys in cooldown (0ms latency penalty)
+            const breakerCheck = circuitBreaker.canExecute(dbConfig.id, candidate.provider, targetModel);
+            if (!breakerCheck.allowed) {
+                console.warn(`[FlowGenix CircuitBreaker] ⚡ Fast-bypassing key ${dbConfig.id} (${candidate.provider}/${targetModel}): ${breakerCheck.reason}`);
+                errorsTried.push({
+                    provider: candidate.provider,
+                    model: targetModel,
+                    keyId: dbConfig.id,
+                    status: 503,
+                    error: `Circuit Breaker: ${breakerCheck.reason}`
+                });
+                continue;
+            }
 
-                if (affordableMatch || hasMaxTokensMsg) {
-                    const affordableCount = affordableMatch ? parseInt(affordableMatch[1], 10) : 1024;
-                    // Lower max_tokens to fit comfortably in the user's available token balance
-                    const retryLimit = Math.max(128, Math.min(affordableCount > 100 ? affordableCount - 100 : affordableCount, 1500));
-                    
-                    console.log(`[FlowGenix Gateway] Auto-recovering OpenRouter ${targetModel} (available credits: ~${affordableCount} tokens). Retrying with max_tokens=${retryLimit}...`);
+            const baseUrl = getProviderBaseUrl(candidate.provider, dbConfig.baseUrl);
+            const endpoint = `${baseUrl}/chat/completions`;
+            const cleanApiKey = dbConfig.apiKey ? dbConfig.apiKey.replace(/^Bearer\s+/i, '').trim() : 'ollama';
 
+            try {
+                const controller = new AbortController();
+                const timeoutMs = isOllama ? 5000 : 35000;
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+                const { headers, payload } = prepareProviderRequest({
+                    provider: candidate.provider,
+                    model: targetModel,
+                    messages: cleanMessages,
+                    stream,
+                    safeMaxTokens,
+                    cleanApiKey,
+                    extraParams: cleanExtraParams
+                });
+
+                const targetRes = await fetch(endpoint, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                // If success, reset circuit breaker, log telemetry and return response
+                if (targetRes.ok) {
+                    circuitBreaker.recordSuccess(dbConfig.id, candidate.provider, targetModel);
+                    const latencyMs = Date.now() - startTime;
+
+                    if (enableCache && cacheKey && !stream) {
+                        try {
+                            const clonedForCache = targetRes.clone();
+                            clonedForCache.text().then(cachedBody => {
+                                gatewayCache.set(cacheKey, {
+                                    body: cachedBody,
+                                    resolvedProvider: candidate.provider,
+                                    resolvedModel: targetModel,
+                                    tokensIn: inputTokens,
+                                    tokensOut: 200
+                                });
+                            }).catch(() => {});
+                        } catch {}
+                    }
+
+                    recordTelemetry({
+                        workspaceId,
+                        requestModel: requestedModel,
+                        resolvedProvider: dbConfig.provider.toUpperCase(),
+                        resolvedModel: targetModel,
+                        tokensIn: inputTokens,
+                        tokensOut: stream ? 150 : 200,
+                        compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
+                        latencyMs,
+                        status: targetRes.status
+                    });
+
+                    spendGuard.recordSpend({
+                        workspaceId,
+                        keyId,
+                        keyLabel,
+                        keyCap,
+                        provider: candidate.provider,
+                        model: targetModel,
+                        tokensIn: inputTokens,
+                        tokensOut: stream ? 150 : 200,
+                        isCached: false,
+                        compressionSavingsPercent: totalSavingsPercent
+                    });
+
+                    return {
+                        success: true,
+                        response: targetRes,
+                        resolvedProvider: candidate.provider,
+                        resolvedModel: targetModel,
+                        latencyMs,
+                        isDowngradedToFree
+                    };
+                }
+
+                // If non-200 (e.g. 429 Rate Limit, 400/402 Credit Limit, 500 Server Error, 404 Model Not Found)
+                const errorText = await targetRes.text().catch(() => "Unknown response body");
+                const retryAfter = targetRes.headers.get('retry-after');
+
+                // Trip or update circuit breaker state
+                circuitBreaker.recordFailure(dbConfig.id, candidate.provider, targetModel, targetRes.status, errorText, retryAfter);
+
+                // Smart Auto-Recovery for OpenRouter / LLM Credit & max_tokens limit errors
+                if (candidate.provider === 'openrouter' && (targetRes.status === 400 || targetRes.status === 402 || targetRes.status === 403)) {
+                    const isNeverPurchased = errorText.toLowerCase().includes("never purchased credits") || errorText.toLowerCase().includes("insufficient credits");
+                    const affordableMatch = errorText.match(/can only afford (\d+)/i);
+                    const hasMaxTokensMsg = errorText.toLowerCase().includes("fewer max_tokens") || errorText.toLowerCase().includes("more credits");
+
+                    // 1. If key has never purchased credits or ran out of credits, auto-fall back to OpenRouter free models
+                    if (isNeverPurchased && targetModel !== "openrouter/free") {
+                        console.log(`[FlowGenix Gateway] OpenRouter key reported insufficient credits. Auto-recovering with 'openrouter/free'...`);
+                        try {
+                            const freeRes = await fetch(endpoint, {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({
+                                    ...payload,
+                                    model: 'openrouter/free'
+                                })
+                            });
+
+                            if (freeRes.ok) {
+                                circuitBreaker.recordSuccess(dbConfig.id, candidate.provider, 'openrouter/free');
+                                const latencyMs = Date.now() - startTime;
+                                recordTelemetry({
+                                    workspaceId,
+                                    requestModel: requestedModel,
+                                    resolvedProvider: dbConfig.provider.toUpperCase(),
+                                    resolvedModel: 'openrouter/free',
+                                    tokensIn: inputTokens,
+                                    tokensOut: stream ? 150 : 200,
+                                    compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
+                                    latencyMs,
+                                    status: freeRes.status
+                                });
+
+                                return {
+                                    success: true,
+                                    response: freeRes,
+                                    resolvedProvider: candidate.provider,
+                                    resolvedModel: 'openrouter/free',
+                                    latencyMs
+                                };
+                            }
+                        } catch (freeErr) {
+                            console.warn("[FlowGenix Gateway] OpenRouter 'openrouter/free' recovery failed:", freeErr.message);
+                        }
+                    }
+
+                    // 2. If it is a max_tokens budget calculation error, lower max_tokens
+                    if (affordableMatch || (hasMaxTokensMsg && !isNeverPurchased)) {
+                        const affordableCount = affordableMatch ? parseInt(affordableMatch[1], 10) : 1024;
+                        const retryLimit = Math.max(128, Math.min(affordableCount > 100 ? affordableCount - 100 : affordableCount, 1500));
+                        
+                        console.log(`[FlowGenix Gateway] Auto-recovering OpenRouter ${targetModel} (available credits: ~${affordableCount} tokens). Retrying with max_tokens=${retryLimit}...`);
+
+                        try {
+                            const retryRes = await fetch(endpoint, {
+                                method: 'POST',
+                                headers,
+                                body: JSON.stringify({
+                                    ...payload,
+                                    max_tokens: retryLimit
+                                })
+                            });
+
+                            if (retryRes.ok) {
+                                circuitBreaker.recordSuccess(dbConfig.id, candidate.provider, targetModel);
+                                const latencyMs = Date.now() - startTime;
+                                recordTelemetry({
+                                    workspaceId,
+                                    requestModel: requestedModel,
+                                    resolvedProvider: dbConfig.provider.toUpperCase(),
+                                    resolvedModel: targetModel,
+                                    tokensIn: inputTokens,
+                                    tokensOut: stream ? 150 : 200,
+                                    compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
+                                    latencyMs,
+                                    status: retryRes.status
+                                });
+
+                                return {
+                                    success: true,
+                                    response: retryRes,
+                                    resolvedProvider: candidate.provider,
+                                    resolvedModel: targetModel,
+                                    latencyMs
+                                };
+                            }
+                        } catch (retryErr) {
+                            console.warn("[FlowGenix Gateway] OpenRouter auto-retry failed:", retryErr.message);
+                        }
+                    }
+                }
+
+                // Auto-recovery for OpenRouter missing / deprecated model (404 or invalid model ID)
+                if (candidate.provider === 'openrouter' && (targetRes.status === 404 || (targetRes.status === 400 && errorText.includes('model ID'))) && targetModel !== 'auto') {
+                    console.log(`[FlowGenix Gateway] OpenRouter model ${targetModel} returned ${targetRes.status}. Auto-recovering with 'auto'...`);
                     try {
-                        const retryRes = await fetch(endpoint, {
+                        const autoRes = await fetch(endpoint, {
                             method: 'POST',
                             headers,
                             body: JSON.stringify({
                                 ...payload,
-                                max_tokens: retryLimit
+                                model: 'auto'
                             })
                         });
 
-                        if (retryRes.ok) {
+                        if (autoRes.ok) {
+                            circuitBreaker.recordSuccess(dbConfig.id, candidate.provider, 'auto');
                             const latencyMs = Date.now() - startTime;
                             recordTelemetry({
                                 workspaceId,
                                 requestModel: requestedModel,
                                 resolvedProvider: dbConfig.provider.toUpperCase(),
-                                resolvedModel: targetModel,
+                                resolvedModel: 'auto',
                                 tokensIn: inputTokens,
                                 tokensOut: stream ? 150 : 200,
                                 compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
                                 latencyMs,
-                                status: retryRes.status
+                                status: autoRes.status
                             });
 
                             return {
                                 success: true,
-                                response: retryRes,
+                                response: autoRes,
                                 resolvedProvider: candidate.provider,
-                                resolvedModel: targetModel,
+                                resolvedModel: 'auto',
                                 latencyMs
                             };
                         }
-                    } catch (retryErr) {
-                        console.warn("[FlowGenix Gateway] OpenRouter auto-retry failed:", retryErr.message);
+                    } catch (autoErr) {
+                        console.warn("[FlowGenix Gateway] OpenRouter 'auto' recovery failed:", autoErr.message);
                     }
                 }
+
+                console.warn(`[FlowGenix Gateway] Failover: ${candidate.provider}/${targetModel} (key ${dbConfig.id}) status ${targetRes.status}. Cascading to backup...`);
+
+                errorsTried.push({
+                    provider: candidate.provider,
+                    model: targetModel,
+                    keyId: dbConfig.id,
+                    status: targetRes.status,
+                    error: errorText.slice(0, 150)
+                });
+
+            } catch (fetchErr) {
+                const causeDetail = fetchErr.cause ? ` (${fetchErr.cause.message || fetchErr.cause.code || ''})` : '';
+                const errorMsg = fetchErr.name === 'AbortError' ? 'Timeout (35s)' : `${fetchErr.message}${causeDetail}`;
+                console.warn(`[FlowGenix Gateway] Failover: Network error on ${candidate.provider}/${targetModel}: ${errorMsg}`);
+                
+                circuitBreaker.recordFailure(dbConfig.id, candidate.provider, targetModel, 504, errorMsg);
+
+                errorsTried.push({
+                    provider: candidate.provider,
+                    model: targetModel,
+                    keyId: dbConfig.id,
+                    error: errorMsg
+                });
             }
-
-            // Auto-recovery for OpenRouter missing / deprecated model (404 or invalid model ID)
-            if (candidate.provider === 'openrouter' && (targetRes.status === 404 || (targetRes.status === 400 && errorText.includes('model ID'))) && targetModel !== 'auto') {
-                console.log(`[FlowGenix Gateway] OpenRouter model ${targetModel} returned ${targetRes.status}. Auto-recovering with 'auto'...`);
-                try {
-                    const autoRes = await fetch(endpoint, {
-                        method: 'POST',
-                        headers,
-                        body: JSON.stringify({
-                            ...payload,
-                            model: 'auto'
-                        })
-                    });
-
-                    if (autoRes.ok) {
-                        const latencyMs = Date.now() - startTime;
-                        recordTelemetry({
-                            workspaceId,
-                            requestModel: requestedModel,
-                            resolvedProvider: dbConfig.provider.toUpperCase(),
-                            resolvedModel: 'auto',
-                            tokensIn: inputTokens,
-                            tokensOut: stream ? 150 : 200,
-                            compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
-                            latencyMs,
-                            status: autoRes.status
-                        });
-
-                        return {
-                            success: true,
-                            response: autoRes,
-                            resolvedProvider: candidate.provider,
-                            resolvedModel: 'auto',
-                            latencyMs
-                        };
-                    }
-                } catch (autoErr) {
-                    console.warn("[FlowGenix Gateway] OpenRouter 'auto' recovery failed:", autoErr.message);
-                }
-            }
-
-            console.warn(`[FlowGenix Gateway] Failover: ${candidate.provider}/${targetModel} status ${targetRes.status}. Cascading to backup...`);
-
-            errorsTried.push({
-                provider: candidate.provider,
-                model: targetModel,
-                status: targetRes.status,
-                error: errorText.slice(0, 150)
-            });
-
-        } catch (fetchErr) {
-            const causeDetail = fetchErr.cause ? ` (${fetchErr.cause.message || fetchErr.cause.code || ''})` : '';
-            const errorMsg = fetchErr.name === 'AbortError' ? 'Timeout (35s)' : `${fetchErr.message}${causeDetail}`;
-            console.warn(`[FlowGenix Gateway] Failover: Network error on ${candidate.provider}/${targetModel}: ${errorMsg}`);
-            errorsTried.push({
-                provider: candidate.provider,
-                model: targetModel,
-                error: errorMsg
-            });
         }
     }
 

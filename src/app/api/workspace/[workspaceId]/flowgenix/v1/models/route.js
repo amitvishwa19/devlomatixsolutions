@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { ROUTING_PRESETS } from "@/app/workspace/[workspaceId]/flowgenix/_lib/combo-router";
-import { getCombosAction } from "@/app/workspace/[workspaceId]/flowgenix/_action/combo-actions";
+import { validateGatewayToken } from "@/app/workspace/[workspaceId]/flowgenix/_lib/gateway-auth";
 
 export async function OPTIONS() {
     return new Response(null, {
@@ -8,7 +8,7 @@ export async function OPTIONS() {
         headers: {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-FlowGenix-Key',
         }
     });
 }
@@ -16,6 +16,29 @@ export async function OPTIONS() {
 export async function GET(req, { params }) {
     try {
         const { workspaceId } = await params;
+        const authHeader = req.headers.get("authorization") || req.headers.get("x-flowgenix-key") || "";
+
+        // Validate API Key if provided
+        let modelScope = "all";
+        if (authHeader) {
+            const authCheck = await validateGatewayToken(authHeader, workspaceId);
+            if (!authCheck.valid) {
+                return new Response(JSON.stringify({
+                    error: {
+                        message: authCheck.reason || "Unauthorized. Invalid FlowGenix Gateway token.",
+                        type: "authentication_error",
+                        code: "invalid_api_key"
+                    }
+                }), {
+                    status: 401,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Access-Control-Allow-Origin': '*'
+                    }
+                });
+            }
+            modelScope = authCheck.modelScope || "all";
+        }
 
         // 1. Fetch DB configured models
         const dbModels = await db.agentModel.findMany({
@@ -23,11 +46,19 @@ export async function GET(req, { params }) {
             select: { id: true, name: true, provider: true, label: true, createdAt: true }
         });
 
-        // 2. Fetch custom combos
-        const customCombosRes = await getCombosAction(workspaceId);
-        const customCombos = customCombosRes.data || [];
+        // 2. Fetch custom combos directly from DB
+        let customCombos = [];
+        try {
+            const config = await db.agentConfig.findFirst({
+                where: { workspaceId, name: "workspace_combos_manifest" }
+            });
+            if (config?.systemPrompt) {
+                const parsed = JSON.parse(config.systemPrompt);
+                if (Array.isArray(parsed)) customCombos = parsed;
+            }
+        } catch {}
 
-        const modelsList = [];
+        let modelsList = [];
 
         // Add System Presets
         Object.keys(ROUTING_PRESETS).forEach(presetId => {
@@ -67,9 +98,13 @@ export async function GET(req, { params }) {
                 permission: [],
                 root: m.name,
                 parent: null,
-                type: "provider_model"
             });
         });
+
+        // Apply model scoping if the key is restricted to a single model or combo
+        if (modelScope && modelScope !== "all") {
+            modelsList = modelsList.filter(m => m.id === modelScope || m.root === modelScope);
+        }
 
         return new Response(JSON.stringify({
             object: "list",

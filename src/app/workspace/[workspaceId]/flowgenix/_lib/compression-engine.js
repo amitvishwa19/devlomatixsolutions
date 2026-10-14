@@ -19,23 +19,29 @@ export function applyRtkFilter(input) {
 
     let text = input;
 
-    // 1. Compress consecutive blank lines
-    text = text.replace(/\n{3,}/g, '\n\n');
+    // 1. Strip ANSI escape sequences & terminal color codes
+    text = text.replace(/\u001b\[[0-9;]*[a-zA-Z]/g, '');
+    text = text.replace(/\[[0-9;]*m/g, '');
 
-    // 2. Compress Git Diffs (removes unchanged hunk context padding and index metadata lines)
+    // 2. Compress consecutive blank lines and carriage returns
+    text = text.replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+
+    // 3. Compress Git Diffs (removes unchanged hunk context padding and index metadata lines)
     if (text.includes('diff --git') || text.includes('index ') || text.includes('@@ -')) {
         text = text.replace(/^index [0-9a-f]+\.\.[0-9a-f]+.*$/gm, '');
         text = text.replace(/^===\s*$/gm, '');
+        text = text.replace(/^\s*\\\s*No newline at end of file.*$/gm, '');
         // Collapse repetitive +/- whitespace
         text = text.replace(/\n\s*\n/g, '\n');
     }
 
-    // 3. Compress Build Output & Stack Traces (trim node_modules / gradle / mvn noise)
+    // 4. Compress Build Output & Stack Traces (trim node_modules / gradle / mvn noise)
     text = text.replace(/^\s*at\s+.*node_modules.*$/gm, '');
     text = text.replace(/^\s*at\s+.*internal\/process.*$/gm, '');
     text = text.replace(/\[webpack\.cache\.PackFileCacheStrategy\]\s*Stored\s*\(.*?\)/g, '');
+    text = text.replace(/npm\s+warn\s+deprecated\s+.*$/gim, '');
 
-    // 4. Minify embedded JSON blocks if detected
+    // 5. Minify embedded JSON blocks if detected
     text = text.replace(/\{(\s*"[a-zA-Z0-9_-]+":\s*("[^"]*"|\d+|true|false|null|\[.*?\]|\{.*?\})\s*,?\s*){3,}\}/gs, (match) => {
         try {
             const parsed = JSON.parse(match);
