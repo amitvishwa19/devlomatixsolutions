@@ -6,7 +6,7 @@ import { getWhatsappDefault } from "@/lib/whatsapp-default";
 import * as cloudApi from '../../konnectx/_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { executeHireFlowAiPrompt, executeCandidateCopilotChat } from "../_lib/flowgenix-client";
+import { executeHireFlowAiPrompt, executeCandidateCopilotChat, generateInterviewKitAI } from "../_lib/flowgenix-client";
 
 /**
  * Get all Candidates for a workspace
@@ -767,5 +767,271 @@ export async function bulkUpdateCandidatesAiScoreAction(workspaceId, { candidate
         return { success: false, error: error.message || "Failed to bulk update AI scores" };
     }
 }
+
+/**
+ * Generate AI-tailored interview kit addressing candidate gaps and resume background
+ */
+export async function generateCandidateInterviewKitAction(workspaceId, {
+    candidateId,
+    round = "Round 2: Competency & Objection Handling",
+    difficulty = "In-Depth",
+    focusAreas = [],
+    customInstructions = ""
+}) {
+    try {
+        const session = await ensureWorkspaceAccess(workspaceId);
+        if (!candidateId) {
+            return { success: false, error: "Candidate ID is required" };
+        }
+
+        const candidate = await prisma.candidate.findUnique({
+            where: { id: candidateId },
+            include: {
+                scorecards: {
+                    include: {
+                        interviewer: {
+                            select: { id: true, displayName: true, username: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                },
+                applications: {
+                    where: { workspaceId },
+                    include: {
+                        job: {
+                            include: { category: true }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        });
+
+        if (!candidate) {
+            return { success: false, error: "Candidate not found" };
+        }
+
+        const targetJob = candidate.applications?.[0]?.job || null;
+
+        // Auto-extract weaknesses from past scorecards
+        const detectedWeaknesses = [];
+        const seenWeaknessKeys = new Set();
+
+        if (Array.isArray(candidate.scorecards)) {
+            for (const sc of candidate.scorecards) {
+                // If scorecard overall score is low (<= 3.0 / 5)
+                if (sc.score != null && sc.score <= 3.0 && !seenWeaknessKeys.has('overall_' + sc.id)) {
+                    detectedWeaknesses.push({
+                        id: `sc_low_${sc.id}`,
+                        label: `${sc.stage || 'Interview'} Overall Rating`,
+                        score: sc.score,
+                        feedback: sc.feedback ? sc.feedback.slice(0, 180) : "Underperformed relative to team benchmark"
+                    });
+                    seenWeaknessKeys.add('overall_' + sc.id);
+                }
+
+                // Check competency attributes (e.g., ratings in 7 criteria)
+                if (sc.attributes && typeof sc.attributes === 'object') {
+                    for (const [key, val] of Object.entries(sc.attributes)) {
+                        const numVal = typeof val === 'number' ? val : parseFloat(val);
+                        if (!isNaN(numVal) && numVal <= 3.0 && !seenWeaknessKeys.has(key)) {
+                            seenWeaknessKeys.add(key);
+                            const readableLabel = key
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, l => l.toUpperCase());
+                            detectedWeaknesses.push({
+                                id: key,
+                                label: readableLabel,
+                                score: numVal,
+                                feedback: `Scored ${numVal}/5 in previous round`
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        // Call FlowGenix AI Interview Kit generator
+        const genRes = await generateInterviewKitAI({
+            workspaceId,
+            candidate,
+            job: targetJob,
+            round,
+            difficulty,
+            weaknesses: detectedWeaknesses,
+            focusAreas,
+            customInstructions
+        });
+
+        if (!genRes.success || !genRes.data) {
+            return {
+                success: false,
+                error: genRes.error || "Failed to generate interview kit. Please verify FlowGenix model availability."
+            };
+        }
+
+        const kitData = genRes.data;
+        const kitId = `kit_${Date.now()}`;
+        const enrichedKit = {
+            ...kitData,
+            id: kitId,
+            createdAt: new Date().toISOString(),
+            createdBy: session.user.displayName || session.user.username || "Interviewer",
+            round,
+            difficulty,
+            weaknessesAnalyzed: detectedWeaknesses
+        };
+
+        // Persist kit into candidate.parsedData
+        const currentParsed = (candidate.parsedData && typeof candidate.parsedData === 'object' && !Array.isArray(candidate.parsedData))
+            ? candidate.parsedData
+            : {};
+        const existingKits = Array.isArray(currentParsed.interviewKits) ? currentParsed.interviewKits : [];
+
+        const updatedParsed = {
+            ...currentParsed,
+            latestInterviewKit: enrichedKit,
+            interviewKits: [enrichedKit, ...existingKits.filter(k => k.id !== kitId)].slice(0, 10)
+        };
+
+        await prisma.candidate.update({
+            where: { id: candidateId },
+            data: { parsedData: updatedParsed }
+        });
+
+        // Add ATS Note for activity logging
+        await prisma.atsNote.create({
+            data: {
+                candidateId,
+                userId: session.user.userId || session.user.id,
+                applicationId: candidate.applications?.[0]?.id || null,
+                text: `Generated AI Interview Kit for "${round}" (${difficulty} rigor, ${kitData.questions?.length || 0} questions + practical role-play).`,
+                isPrivate: false
+            }
+        }).catch(err => console.warn("[ATS_NOTE_LOG_WARN]", err.message));
+
+        return {
+            success: true,
+            kit: enrichedKit,
+            aiMeta: {
+                resolvedModel: genRes.resolvedModel,
+                resolvedProvider: genRes.resolvedProvider,
+                latencyMs: genRes.latencyMs,
+                source: genRes.source
+            }
+        };
+    } catch (error) {
+        console.error("[GENERATE_INTERVIEW_KIT_ACTION_ERROR]", error);
+        return { success: false, error: error.message || "Failed to generate interview kit" };
+    }
+}
+
+/**
+ * Save evaluation results from an AI Interview Kit into an official Scorecard
+ */
+export async function saveInterviewKitScorecardAction(workspaceId, {
+    candidateId,
+    kitId,
+    round = "Interview Round",
+    questionRatings = {},
+    rolePlayRating = null,
+    overallScore = null,
+    feedback = "",
+    recommendation = "yes"
+}) {
+    try {
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = session.user.userId || session.user.id;
+
+        if (!candidateId) {
+            return { success: false, error: "Candidate ID is required" };
+        }
+
+        // Calculate average score if not explicitly set
+        let finalScore = overallScore;
+        if (finalScore == null) {
+            const numericScores = [];
+            Object.values(questionRatings || {}).forEach(val => {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num > 0) numericScores.push(num);
+            });
+            if (rolePlayRating != null && !isNaN(parseFloat(rolePlayRating))) {
+                numericScores.push(parseFloat(rolePlayRating));
+            }
+            if (numericScores.length > 0) {
+                finalScore = parseFloat((numericScores.reduce((a, b) => a + b, 0) / numericScores.length).toFixed(1));
+            } else {
+                finalScore = 3.0;
+            }
+        }
+
+        // Find active job application
+        const app = await prisma.jobApplication.findFirst({
+            where: { candidateId, workspaceId },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        const attributes = {
+            source: "ai_interview_kit",
+            kitId: kitId || null,
+            round,
+            questionRatings,
+            rolePlayRating,
+            evaluatedAt: new Date().toISOString()
+        };
+
+        const scorecard = await prisma.scorecard.create({
+            data: {
+                candidateId,
+                applicationId: app?.id || null,
+                interviewerId: userId,
+                stage: round || "INTERVIEW",
+                score: finalScore,
+                feedback: feedback || `Evaluated via AI Interview Kit (${round}). Overall score: ${finalScore}/5.`,
+                recommendation: recommendation || "yes",
+                attributes
+            },
+            include: {
+                interviewer: {
+                    select: { id: true, displayName: true, username: true, email: true, avatar: true }
+                }
+            }
+        });
+
+        // Update overall candidate rating average
+        const allCards = await prisma.scorecard.findMany({
+            where: { candidateId },
+            select: { score: true }
+        });
+        if (allCards.length > 0) {
+            const avg = allCards.reduce((acc, c) => acc + (c.score || 0), 0) / allCards.length;
+            await prisma.candidate.update({
+                where: { id: candidateId },
+                data: { rating: parseFloat(avg.toFixed(1)) }
+            }).catch(() => null);
+        }
+
+        // Log note
+        await prisma.atsNote.create({
+            data: {
+                candidateId,
+                userId,
+                applicationId: app?.id || null,
+                text: `Submitted scorecard from AI Interview Kit (${round}) with rating ${finalScore}/5. Recommendation: ${recommendation.toUpperCase()}.`,
+                isPrivate: false
+            }
+        }).catch(err => console.warn("[ATS_NOTE_LOG_WARN]", err.message));
+
+        return {
+            success: true,
+            scorecard,
+            message: `Scorecard saved successfully with rating ${finalScore}/5!`
+        };
+    } catch (error) {
+        console.error("[SAVE_INTERVIEW_KIT_SCORECARD_ERROR]", error);
+        return { success: false, error: error.message || "Failed to save interview kit scorecard" };
+    }
+}
+
 
 

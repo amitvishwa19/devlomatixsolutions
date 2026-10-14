@@ -274,3 +274,117 @@ function parseJsonFromText(text) {
 
     return null;
 }
+
+/**
+ * Generate a Tailored AI Interview Kit with Competency Gaps, Question Rubrics, and Role-Play
+ */
+export async function generateInterviewKitAI({
+    workspaceId,
+    candidate,
+    job,
+    round = "Round 2: Competency & Objection Handling",
+    difficulty = "In-Depth",
+    weaknesses = [],
+    focusAreas = [],
+    customInstructions = ""
+}) {
+    const candidateName = candidate?.name || "Candidate";
+    const jobTitle = job?.title || candidate?.applications?.[0]?.job?.title || "Target Position";
+    const candidateSkills = Array.isArray(candidate?.skills) ? candidate.skills.join(", ") : (candidate?.skills || "N/A");
+    const candidateSummary = candidate?.summary || candidate?.parsedData?.summary || "N/A";
+    const candidateExperience = candidate?.experience || candidate?.parsedData?.experience || [];
+
+    const systemPrompt = `You are an elite Talent Assessor and Executive Hiring Strategist.
+Your goal is to generate a comprehensive, highly targeted, and rigorous "AI Interview Kit" for an interviewer conducting a high-stakes interview.
+You must analyze the candidate's actual background, the job role, and any previously detected performance weaknesses or scorecard gaps.
+Output MUST be valid, well-formed JSON conforming strictly to the requested schema. No conversational preamble.`;
+
+    const weaknessesContext = weaknesses && weaknesses.length > 0 
+        ? weaknesses.map(w => `- ${w.label || w.id}: Rated ${w.score || 2}/5 (${w.feedback || 'Weakness identified in previous scorecard'})`).join("\n")
+        : "No previous scorecard gaps logged. Focus on role competency and stress-testing resume claims.";
+
+    const userPrompt = `
+Generate an AI Interview Kit for:
+CANDIDATE: ${candidateName}
+TARGET ROLE: ${jobTitle}
+TARGET INTERVIEW ROUND: ${round}
+RIGOR / DEPTH LEVEL: ${difficulty}
+
+CANDIDATE SUMMARY & RESUME:
+${candidateSummary}
+
+KEY SKILLS:
+${candidateSkills}
+
+WORK EXPERIENCE:
+${JSON.stringify(candidateExperience.slice(0, 4))}
+
+PREVIOUS SCORECARD EVALUATION WEAKNESSES / GAPS:
+${weaknessesContext}
+
+SELECTED FOCUS COMPETENCIES:
+${focusAreas && focusAreas.length > 0 ? focusAreas.join(", ") : "Communication, Sales Execution, Objection Handling, Technical Learning, Role-Play"}
+
+SPECIAL INSTRUCTIONS:
+${customInstructions || "Generate 5 high-signal questions specifically targeted at uncovering whether candidate can perform at the required standard."}
+
+Respond ONLY with a JSON object in this exact structure:
+{
+  "kitTitle": "${jobTitle} — ${round} Kit",
+  "generatedAt": "${new Date().toISOString()}",
+  "candidateName": "${candidateName}",
+  "targetRole": "${jobTitle}",
+  "round": "${round}",
+  "difficulty": "${difficulty}",
+  "executiveBriefing": "2-3 sentences advising the interviewer on candidate's background, where their true strengths lie, and what critical gap this interview must confirm or dispel.",
+  "flaggedGaps": [
+    {
+      "area": "Specific competency name",
+      "concern": "Why this is a risk based on resume or previous scorecards",
+      "suggestedProbeAngle": "The angle to pursue during this round"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "category": "e.g. Practical Role-Play / Objection Handling / Technical Depth / Prospecting / Team Alignment",
+      "competency": "e.g. Ability to convince customers",
+      "question": "The exact, articulate question for the interviewer to speak aloud",
+      "context": "Why ask this specifically to this candidate based on their history or previous low rating",
+      "strongAnswerRubric": [
+        "Concrete trait 1 of an exceptional 5/5 answer",
+        "Concrete trait 2 of an exceptional 5/5 answer"
+      ],
+      "redFlags": [
+        "Warning sign 1 indicating candidate is superficial or unpracticed (1-2/5)",
+        "Warning sign 2 indicating lack of real depth"
+      ],
+      "probingFollowUp": "Follow-up question to ask if candidate gives a rehearsed or vague answer"
+    }
+  ],
+  "practicalRolePlay": {
+    "title": "Role-Play Scenario Title",
+    "durationMinutes": 5,
+    "scenario": "Detailed scenario setup (e.g. Sales pitch, objection navigation, technical outage)",
+    "interviewerPersona": "The persona the interviewer should adopt (e.g. Skeptical CFO, hesitant prospect)",
+    "candidateTask": "The specific objective candidate must accomplish in 3-5 minutes",
+    "evaluationChecklist": [
+      "Key execution factor 1",
+      "Key execution factor 2",
+      "Key execution factor 3"
+    ]
+  }
+}`;
+
+    const result = await executeHireFlowAiPrompt({
+        workspaceId,
+        systemPrompt,
+        userPrompt,
+        model: "auto",
+        temperature: 0.3,
+        responseFormat: "json",
+        maxTokens: 3500
+    });
+
+    return result;
+}

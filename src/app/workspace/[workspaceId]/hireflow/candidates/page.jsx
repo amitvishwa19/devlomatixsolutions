@@ -804,7 +804,7 @@ export default function TalentDatabasePage() {
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ duration: 0.2 }}
-                                className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3"
                             >
                                 {filteredTalents.map((candidate, idx) => (
                                     <motion.div
@@ -813,97 +813,133 @@ export default function TalentDatabasePage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.02 }}
                                     >
-                                        <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5 hover:border-primary/20 transition-all group cursor-default h-full flex flex-col">
-                                            <CardHeader className="p-6 pb-2 flex flex-row items-start justify-between space-y-0">
-                                                <div className="flex items-center gap-4">
-                                                    <Avatar className="h-14 w-14 border-2 border-primary/20 shadow-lg">
-                                                        <AvatarFallback className="bg-primary/5 text-primary text-lg">
+                                        <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-xl overflow-hidden shadow-sm hover:border-primary/30 hover:shadow-md transition-all group cursor-default h-full flex flex-col">
+                                            <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between space-y-0 gap-2 border-b border-border/10">
+                                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                    <Avatar className="h-9 w-9 border border-primary/20 shadow-xs shrink-0">
+                                                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
                                                             {getInitials(candidate.name)}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    <div>
-                                                        <h3 className="text-lg group-hover:text-primary transition-colors">{candidate.name}</h3>
-                                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                                            <p className="text-[10px] font-bold text-muted-foreground opacity-70">{candidate.role}</p>
+                                                    <div className="min-w-0 flex-1">
+                                                        <h3
+                                                            className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate cursor-pointer"
+                                                            title={candidate.name}
+                                                            onClick={() => {
+                                                                setSelectedCandidateId(candidate.id);
+                                                                setIsDetailsModalOpen(true);
+                                                            }}
+                                                        >
+                                                            {candidate.name}
+                                                        </h3>
+                                                        <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-muted-foreground truncate">
+                                                            <span className="truncate max-w-[90px] sm:max-w-[110px]" title={candidate.role}>{candidate.role}</span>
                                                             {candidate.departmentName && (
                                                                 <>
-                                                                    <span className="w-1 h-1 rounded-full bg-border" />
-                                                                    <span className="text-[10px] text-primary font-medium">{candidate.departmentName}</span>
+                                                                    <span className="w-1 h-1 rounded-full bg-border shrink-0" />
+                                                                    <span className="text-primary/90 font-medium truncate max-w-[80px]" title={candidate.departmentName}>
+                                                                        {candidate.departmentName}
+                                                                    </span>
                                                                 </>
                                                             )}
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-end gap-1">
+                                                <div className="flex flex-col items-end gap-1 shrink-0">
                                                     <button
                                                         type="button"
                                                         onClick={() => handleOpenScoreModal(candidate)}
-                                                        className={`group/score flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-semibold border transition-all cursor-pointer shadow-xs ${candidate.rawScore === null
+                                                        className={`group/score flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border transition-all cursor-pointer shadow-xs ${candidate.rawScore === null
                                                             ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border-amber-500/30 hover:border-amber-500/50'
                                                             : 'bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 hover:border-primary/40'
                                                             }`}
                                                         title="Click to update AI Score"
                                                     >
-                                                        <Sparkles size={10} className={`group-hover/score:scale-110 transition-transform ${candidate.rawScore === null ? 'text-amber-500' : ''}`} />
+                                                        <Sparkles size={9} className={`group-hover/score:scale-110 transition-transform ${candidate.rawScore === null ? 'text-amber-500' : 'text-primary'}`} />
                                                         <span>{candidate.score}</span>
                                                         {candidate.rawScore !== null ? (
                                                             <span className="text-[9px] opacity-60">({candidate.rawScore}%)</span>
                                                         ) : (
                                                             <span className="text-[9px] opacity-75 underline decoration-amber-500/50">Rate</span>
                                                         )}
-                                                        <Edit3 size={10} className="opacity-0 group-hover/score:opacity-100 transition-opacity ml-0.5" />
+                                                        <Edit3 size={9} className="opacity-0 group-hover/score:opacity-100 transition-opacity ml-0.5" />
                                                     </button>
-                                                    <Badge variant="outline" className={`${getStageBadgeStyle(candidate.status)} text-[9px] font-bold uppercase tracking-wider`}>
+                                                    <Badge variant="outline" className={`${getStageBadgeStyle(candidate.status)} text-[9px] px-1.5 py-0 font-bold uppercase tracking-wider h-4 leading-none`}>
                                                         {candidate.status}
                                                     </Badge>
                                                 </div>
                                             </CardHeader>
-                                            <CardContent className="p-6 pt-4 flex-1 flex flex-col gap-6">
-                                                <div className="flex items-center justify-between text-[11px] font-bold text-muted-foreground/60">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <MapPin size={12} /> {candidate.location}
+                                            <CardContent className="p-3 pt-2 flex-1 flex flex-col gap-2">
+                                                <div className="flex items-center justify-between text-[10px] text-muted-foreground/70">
+                                                    <div className="flex items-center gap-1 truncate max-w-[130px]" title={candidate.location}>
+                                                        <MapPin size={11} className="shrink-0" />
+                                                        <span className="truncate">{candidate.location}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <Clock size={12} /> {candidate.applied}
+                                                    <div className="flex items-center gap-1 shrink-0">
+                                                        <Clock size={11} />
+                                                        <span>{candidate.applied}</span>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex flex-wrap gap-2">
-                                                    {candidate.tags.map((tag, i) => (
-                                                        <Badge key={i} variant="outline" className="h-7 rounded-md border-border/40 bg-muted/10 font-bold px-2 text-[10px] opacity-60">
-                                                            {tag}
-                                                        </Badge>
-                                                    ))}
+                                                <div className="flex flex-wrap gap-1 items-center min-h-[20px]">
+                                                    {candidate.tags && candidate.tags.length > 0 ? (
+                                                        <>
+                                                            {candidate.tags.slice(0, 3).map((tag, i) => (
+                                                                <Badge key={i} variant="outline" className="h-5 rounded px-1.5 py-0 text-[10px] font-medium border-border/40 bg-muted/20 text-muted-foreground truncate max-w-[100px]">
+                                                                    {tag}
+                                                                </Badge>
+                                                            ))}
+                                                            {candidate.tags.length > 3 && (
+                                                                <span className="text-[9px] font-mono font-semibold text-muted-foreground bg-muted/30 px-1 py-0.5 rounded border border-border/30">
+                                                                    +{candidate.tags.length - 3}
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-[10px] text-muted-foreground/40 italic">No skills tagged</span>
+                                                    )}
                                                 </div>
 
-                                                <div className="mt-auto pt-4 flex items-center gap-2">
+                                                <div className="mt-auto pt-2 border-t border-border/20 flex items-center gap-1.5">
                                                     <Button
                                                         variant="outline"
-                                                        className="flex-1 rounded-md text-[9px] border-border/40 hover:bg-primary/5 hover:border-primary/20 transition-all"
+                                                        size="sm"
+                                                        className="flex-1 h-7 rounded-md text-[10px] font-semibold border-border/40 hover:bg-primary/10 hover:text-primary transition-all px-2"
                                                         onClick={() => {
                                                             setSelectedCandidateId(candidate.id);
                                                             setIsDetailsModalOpen(true);
                                                         }}
                                                     >
-                                                        View Profile <ExternalLink size={12} className="ml-2 opacity-50" />
+                                                        <span>View Profile</span>
+                                                        <ExternalLink size={10} className="ml-1 opacity-50" />
                                                     </Button>
-                                                    <Button variant="ghost" size="icon" className="w-10 rounded-md opacity-40 hover:opacity-100">
-                                                        <Mail size={16} />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="w-7 h-7 rounded-md opacity-60 hover:opacity-100 hover:text-primary"
+                                                        title={candidate.email}
+                                                        onClick={() => {
+                                                            setSelectedCandidateId(candidate.id);
+                                                            setIsDetailsModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <Mail size={13} />
                                                     </Button>
                                                     {candidate.resumeUrl && (
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="w-10 rounded-md opacity-40 hover:opacity-100 hover:text-emerald-500"
+                                                            className="w-7 h-7 rounded-md opacity-60 hover:opacity-100 hover:text-emerald-500"
+                                                            title="View Resume"
                                                             onClick={() => window.open(candidate.resumeUrl, '_blank')}
                                                         >
-                                                            <FileText size={16} />
+                                                            <FileText size={13} />
                                                         </Button>
                                                     )}
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="w-10 rounded-md opacity-40 hover:opacity-100">
-                                                                <MoreHorizontal size={16} />
+                                                            <Button variant="ghost" size="icon" className="w-7 h-7 rounded-md opacity-60 hover:opacity-100">
+                                                                <MoreHorizontal size={13} />
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="rounded-md border-border/40 bg-card/90 backdrop-blur-xl">

@@ -35,9 +35,11 @@ import {
     Zap,
     Copy,
     Check,
-    RotateCcw
+    RotateCcw,
+    Brain
 } from 'lucide-react';
 import Scorecards from './Scorecards';
+import InterviewKitTab from './InterviewKitTab';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -568,6 +570,21 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                         <Button
                                             variant="outline"
                                             size="sm"
+                                            onClick={() => setActiveTab('interview_kit')}
+                                            className={`h-8 rounded-md text-[10px] font-bold border-indigo-500/30 gap-1.5 transition-all ${
+                                                activeTab === 'interview_kit'
+                                                    ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50'
+                                                    : 'bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20'
+                                            }`}
+                                            title="Open AI Interview Kit & Question Rubric"
+                                        >
+                                            <Brain size={13} />
+                                            <span>Interview Kit</span>
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
                                             onClick={() => setIsAddContactOpen(true)}
                                             className="h-8 rounded-md text-[10px] bg-card/60 border-border/40 hover:bg-primary/10 hover:text-primary transition-all font-bold gap-1"
                                             title="Save Candidate as CRM Contact"
@@ -630,6 +647,11 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                                         <Sparkles className="w-3.5 h-3.5 text-primary" />
                                                         AI Copilot
                                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                    </TabsTrigger>
+                                                    <TabsTrigger value="interview_kit" className="rounded-md px-3 text-xs data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-400 data-[state=active]:shadow-sm font-bold flex items-center gap-1.5">
+                                                        <Brain className="w-3.5 h-3.5 text-indigo-400" />
+                                                        Interview Kit
+                                                        <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1 py-0.2 rounded font-mono font-bold">AI</span>
                                                     </TabsTrigger>
                                                     <TabsTrigger value="rate" className="rounded-md px-3 text-xs data-[state=active]:bg-card data-[state=active]:text-amber-500 data-[state=active]:shadow-xl font-bold flex items-center gap-1.5">
                                                         <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
@@ -1442,6 +1464,15 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                                 </div>
                                             </div>
                                         </Card>
+                                    </TabsContent>
+
+                                    {/* AI Interview Kit Generator & Live Evaluator Tab */}
+                                    <TabsContent value="interview_kit" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-6">
+                                        <InterviewKitTab
+                                            candidateData={candidateData}
+                                            workspaceId={workspaceId}
+                                            onScorecardSaved={mutate}
+                                        />
                                     </TabsContent>
 
                                     {/* Rate Candidate Tab (Communication, Sales, Customers, IT Learn, Team, Role-play) */}
