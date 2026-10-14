@@ -149,13 +149,13 @@ export default function CandidateDetailPage() {
         email: candidateData.email,
         phone: candidateData.phone || "N/A",
         location: candidateData.location || "N/A",
-        summary: candidateData.aiInsights?.summary || "No summary available.",
+        summary: candidateData.aiInsights?.summary || candidateData.parsedData?.summary || candidateData.aiSummary || candidateData.summary || "No summary available.",
         skills: candidateData.skills || [],
         aiInsights: {
-            matchingScore: candidateData.aiMatchScore || 0,
-            summary: candidateData.aiInsights?.summary || "Deep analysis pending...",
-            pros: candidateData.aiInsights?.pros || [],
-            cons: candidateData.aiInsights?.cons || []
+            matchingScore: candidateData.aiMatchScore || candidateData.parsedData?.aiMatchScore || 0,
+            summary: candidateData.aiInsights?.summary || candidateData.parsedData?.summary || candidateData.aiSummary || candidateData.summary || "Deep analysis pending...",
+            pros: candidateData.aiInsights?.pros || candidateData.parsedData?.pros || [],
+            cons: candidateData.aiInsights?.cons || candidateData.parsedData?.cons || []
         },
         experience: candidateData.experience || [],
         education: candidateData.education || [],
@@ -322,13 +322,13 @@ export default function CandidateDetailPage() {
  </CardHeader>
  <CardContent className="p-8 pt-4 space-y-6">
  <p className="text-base font-medium leading-relaxed opacity-80">
- {candidate.aiInsights.summary}
+ {candidate.aiInsights?.summary || "Deep analysis pending..."}
  </p>
  <div className="grid grid-cols-2 gap-8">
  <div className="space-y-4">
  <h4 className="text-[10px] text-emerald-500">Key Strengths</h4>
  <div className="space-y-2">
- {candidate.aiInsights.pros.map((pro, i) => (
+ {(candidate.aiInsights?.pros || []).map((pro, i) => (
  <div key={i} className="flex items-center gap-2 text-xs font-bold opacity-80">
  <CheckCircle2 size={16} className="text-emerald-500 shrink-0"/>
  {pro}
@@ -339,7 +339,7 @@ export default function CandidateDetailPage() {
  <div className="space-y-4">
  <h4 className="text-[10px] text-amber-500">Considerations</h4>
  <div className="space-y-2">
- {candidate.aiInsights.cons.map((con, i) => (
+ {(candidate.aiInsights?.cons || []).map((con, i) => (
  <div key={i} className="flex items-center gap-2 text-sm font-bold opacity-80">
  <AlertCircle size={16} className="text-amber-500 shrink-0"/>
  {con}
@@ -471,12 +471,12 @@ export default function CandidateDetailPage() {
  <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
  <CardHeader className="flex flex-row items-center justify-between p-8 pb-4">
  <div className="flex items-center gap-4">
- <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-primary">
- {(card.interviewer?.name ||"TM").split('').map(n => n[0]).join('')}
+ <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
+ {getInitials(card.interviewer?.displayName || card.interviewer?.username || card.interviewer?.name) || "TM"}
  </div>
  <div>
  <CardTitle className="text-lg">{card.stage}</CardTitle>
- <p className="text-[10px] opacity-40">by {card.interviewer?.name ||"Team Member"} • {new Date(card.createdAt).toLocaleDateString()}</p>
+ <p className="text-[10px] opacity-40">by {card.interviewer?.displayName || card.interviewer?.username || card.interviewer?.name || "Team Member"} • {new Date(card.createdAt).toLocaleDateString()}</p>
  </div>
  </div>
  <div className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground shadow-lg shadow-primary/20">

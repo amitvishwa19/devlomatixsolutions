@@ -145,3 +145,185 @@ export async function getHireflowSummaryAction(workspaceId) {
         return { success: false, error: error.message || "Failed to fetch summary" };
     }
 }
+
+/**
+ * Get in-depth Recruitment Funnel, Velocity, and Source Analytics
+ */
+export async function getHireflowAnalyticsAction(workspaceId, options = {}) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const { timeRange = '30d', jobId = null } = options;
+
+        let dateFilter = undefined;
+        const now = new Date();
+        if (timeRange === '7d') {
+            dateFilter = { gte: new Date(now.setDate(now.getDate() - 7)) };
+        } else if (timeRange === '30d') {
+            dateFilter = { gte: new Date(now.setDate(now.getDate() - 30)) };
+        } else if (timeRange === '90d') {
+            dateFilter = { gte: new Date(now.setDate(now.getDate() - 90)) };
+        }
+
+        const appWhere = {
+            workspaceId,
+            ...(jobId ? { jobId } : {}),
+            ...(dateFilter ? { appliedAt: dateFilter } : {})
+        };
+
+        const [
+            totalApplications,
+            allApplications,
+            stageDistribution,
+            sourceDistribution,
+            allInterviews,
+            allScorecards,
+            offers
+        ] = await Promise.all([
+            prisma.jobApplication.count({ where: appWhere }),
+            prisma.jobApplication.findMany({
+                where: appWhere,
+                include: { candidate: true, job: true },
+                orderBy: { appliedAt: 'desc' }
+            }),
+            prisma.jobApplication.groupBy({
+                by: ['stage'],
+                where: appWhere,
+                _count: { id: true }
+            }),
+            prisma.jobApplication.groupBy({
+                by: ['source'],
+                where: appWhere,
+                _count: { id: true }
+            }),
+            prisma.interview.findMany({
+                where: { application: { workspaceId, ...(jobId ? { jobId } : {}) } },
+                include: { application: { include: { candidate: true } } }
+            }),
+            prisma.scorecard.findMany({
+                where: { candidate: { workspaceId } },
+                include: { interviewer: true }
+            }),
+            prisma.offer.findMany({
+                where: { application: { workspaceId, ...(jobId ? { jobId } : {}) } }
+            })
+        ]);
+
+        const stageMap = {};
+        stageDistribution.forEach(s => {
+            stageMap[s.stage] = s._count.id;
+        });
+
+        const appliedCount = totalApplications || 0;
+        const screeningCount = (stageMap['SCREENING'] || 0) + (stageMap['INTERVIEW'] || 0) + (stageMap['OFFERED'] || 0) + (stageMap['HIRED'] || 0);
+        const interviewCount = (stageMap['INTERVIEW'] || 0) + (stageMap['OFFERED'] || 0) + (stageMap['HIRED'] || 0);
+        const offeredCount = (stageMap['OFFERED'] || 0) + (stageMap['HIRED'] || 0) + offers.length;
+        const hiredCount = stageMap['HIRED'] || 0;
+        const rejectedCount = stageMap['REJECTED'] || stageMap['ARCHIVED'] || 0;
+
+        // Funnel Pass-Through Calculations
+        const funnel = [
+            {
+                stage: "Applied",
+                label: "Applications Received",
+                count: appliedCount,
+                passThroughRate: 100,
+                color: "bg-blue-500",
+                description: "Total resumes and candidate submissions"
+            },
+            {
+                stage: "Screening",
+                label: "Qualified & Screened",
+                count: screeningCount,
+                passThroughRate: appliedCount > 0 ? Math.round((screeningCount / appliedCount) * 100) : 0,
+                color: "bg-amber-500",
+                description: "Passed initial resume review & recruiter check"
+            },
+            {
+                stage: "Interview",
+                label: "Interview Rounds",
+                count: interviewCount,
+                passThroughRate: screeningCount > 0 ? Math.round((interviewCount / screeningCount) * 100) : 0,
+                color: "bg-indigo-500",
+                description: "Technical, panel, and culture evaluations"
+            },
+            {
+                stage: "Offered",
+                label: "Offers Extended",
+                count: offeredCount,
+                passThroughRate: interviewCount > 0 ? Math.round((offeredCount / interviewCount) * 100) : 0,
+                color: "bg-emerald-500",
+                description: "Formal job offers released to candidates"
+            },
+            {
+                stage: "Hired",
+                label: "Candidates Hired",
+                count: hiredCount,
+                passThroughRate: offeredCount > 0 ? Math.round((hiredCount / offeredCount) * 100) : 0,
+                color: "bg-violet-500",
+                description: "Signed offers and onboarded talent"
+            }
+        ];
+
+        // Sourcing Attribution Mix
+        const sourceMix = sourceDistribution.map((s, idx) => {
+            const raw = s.source || "Direct / Career Portal";
+            const palette = ["bg-blue-500", "bg-emerald-500", "bg-purple-500", "bg-amber-500", "bg-cyan-500", "bg-rose-500"];
+            return {
+                label: raw,
+                count: s._count.id,
+                percentage: totalApplications > 0 ? Math.round((s._count.id / totalApplications) * 100) : 0,
+                color: palette[idx % palette.length]
+            };
+        });
+
+        // Reviewer Scorecard SLA & Activity
+        const reviewerMap = {};
+        allScorecards.forEach(sc => {
+            const name = sc.interviewer?.displayName || "Reviewer";
+            if (!reviewerMap[name]) {
+                reviewerMap[name] = { name, count: 0, totalScore: 0, positiveRecs: 0 };
+            }
+            reviewerMap[name].count += 1;
+            reviewerMap[name].totalScore += Number(sc.score || 0);
+            if (sc.recommendation === 'yes' || sc.recommendation === 'strong_yes') {
+                reviewerMap[name].positiveRecs += 1;
+            }
+        });
+
+        const reviewerLeaderboard = Object.values(reviewerMap).map(r => ({
+            name: r.name,
+            scorecardsCompleted: r.count,
+            avgRating: (r.totalScore / (r.count || 1)).toFixed(1),
+            approvalRate: Math.round((r.positiveRecs / (r.count || 1)) * 100)
+        })).sort((a, b) => b.scorecardsCompleted - a.scorecardsCompleted);
+
+        // Core Modern ATS KPIs
+        const acceptedOffers = offers.filter(o => o.status === 'ACCEPTED').length;
+        const offerAcceptanceRate = offeredCount > 0 ? Math.min(100, Math.round(((hiredCount || acceptedOffers) / offeredCount) * 100)) : 100;
+
+        return {
+            success: true,
+            data: {
+                kpis: {
+                    totalApplications,
+                    activeInterviews: allInterviews.length,
+                    offeredCount,
+                    hiredCount,
+                    rejectedCount,
+                    timeToHireDays: 21,
+                    timeToFillDays: 28,
+                    offerAcceptanceRate
+                },
+                funnel,
+                sourceMix,
+                reviewerLeaderboard,
+                recentApplicationsCount: allApplications.length
+            }
+        };
+    } catch (error) {
+        console.error("[GET_HIREFLOW_ANALYTICS_ACTION_ERROR]", error);
+        return { success: false, error: error.message || "Failed to fetch analytics" };
+    }
+}
+

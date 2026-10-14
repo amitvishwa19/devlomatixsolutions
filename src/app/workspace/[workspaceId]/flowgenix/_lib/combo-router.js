@@ -17,8 +17,6 @@ try {
 export const ROUTING_PRESETS = {
     "auto": [
         { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
-        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
-        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Llama Free" },
         { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel Llama 3.1" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Llama 3.3" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
@@ -27,39 +25,31 @@ export const ROUTING_PRESETS = {
         { provider: "openai", model: "gpt-4o-mini", name: "GPT-4o Mini" }
     ],
     "auto/coding": [
-        { provider: "openrouter", model: "qwen/qwen-2.5-coder-32b-instruct", name: "OpenRouter Qwen Coder" },
-        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
-        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Llama Free" },
+        { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
         { provider: "anthropic", model: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" },
-        { provider: "freemodel", model: "qwen/qwen-2.5-72b-instruct", name: "Qwen 2.5 72B" },
         { provider: "openai", model: "gpt-4o", name: "GPT-4o" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Llama 3.3" }
     ],
     "auto/fast": [
+        { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Llama 3.3 (High Speed)" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
-        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Fast" },
-        { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel Llama 3.1" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" }
     ],
     "auto/cheap": [
-        { provider: "openrouter", model: "meta-llama/llama-3.1-8b-instruct:free", name: "OpenRouter Free" },
-        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
-        { provider: "freemodel", model: "meta-llama/llama-3.1-8b-instruct", name: "FreeModel (Free Tier)" },
+        { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
         { provider: "groq", model: "llama-3.3-70b-versatile", name: "Groq Cloud (Free Tier)" },
         { provider: "google", model: "gemini-2.0-flash", name: "Google AI Studio (Free Tier)" },
         { provider: "deepseek", model: "deepseek-chat", name: "DeepSeek V3" }
     ],
     "auto/smart": [
+        { provider: "openrouter", model: "auto", name: "OpenRouter Auto" },
         { provider: "anthropic", model: "claude-3-7-sonnet", name: "Claude 3.7 Sonnet" },
         { provider: "deepseek", model: "deepseek-reasoner", name: "DeepSeek R1" },
-        { provider: "openrouter", model: "deepseek/deepseek-r1", name: "OpenRouter DeepSeek R1" },
-        { provider: "openrouter", model: "google/gemini-2.0-flash-exp:free", name: "OpenRouter Gemini Free" },
         { provider: "google", model: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
-        { provider: "openai", model: "gpt-4o", name: "GPT-4o" },
-        { provider: "freemodel", model: "deepseek-ai/deepseek-r1-distill-llama-70b", name: "FreeModel DeepSeek R1" }
+        { provider: "openai", model: "gpt-4o", name: "GPT-4o" }
     ]
 };
 
@@ -389,6 +379,46 @@ export async function executeGatewayRequest({
                     } catch (retryErr) {
                         console.warn("[FlowGenix Gateway] OpenRouter auto-retry failed:", retryErr.message);
                     }
+                }
+            }
+
+            // Auto-recovery for OpenRouter missing / deprecated model (404 or invalid model ID)
+            if (candidate.provider === 'openrouter' && (targetRes.status === 404 || (targetRes.status === 400 && errorText.includes('model ID'))) && targetModel !== 'auto') {
+                console.log(`[FlowGenix Gateway] OpenRouter model ${targetModel} returned ${targetRes.status}. Auto-recovering with 'auto'...`);
+                try {
+                    const autoRes = await fetch(endpoint, {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({
+                            ...payload,
+                            model: 'auto'
+                        })
+                    });
+
+                    if (autoRes.ok) {
+                        const latencyMs = Date.now() - startTime;
+                        recordTelemetry({
+                            workspaceId,
+                            requestModel: requestedModel,
+                            resolvedProvider: dbConfig.provider.toUpperCase(),
+                            resolvedModel: 'auto',
+                            tokensIn: inputTokens,
+                            tokensOut: stream ? 150 : 200,
+                            compressionSavings: totalSavingsPercent > 0 ? `${totalSavingsPercent}%` : "0%",
+                            latencyMs,
+                            status: autoRes.status
+                        });
+
+                        return {
+                            success: true,
+                            response: autoRes,
+                            resolvedProvider: candidate.provider,
+                            resolvedModel: 'auto',
+                            latencyMs
+                        };
+                    }
+                } catch (autoErr) {
+                    console.warn("[FlowGenix Gateway] OpenRouter 'auto' recovery failed:", autoErr.message);
                 }
             }
 

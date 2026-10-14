@@ -133,3 +133,84 @@ export async function deleteJobAction(workspaceId, jobId) {
         return { success: false, error: error.message || "Failed to delete job" };
     }
 }
+
+/**
+ * AI Job Requisition & Evaluation Rubric Generator powered by FlowGenix
+ */
+export async function generateAiJobRequisitionAction(workspaceId, { title, department, level, notes }) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const { executeHireFlowAiPrompt } = await import("../_lib/flowgenix-client");
+
+        const systemPrompt = `You are a Principal Talent Acquisition Architect and Head of People.
+Create a modern, high-converting job requisition and structured scorecard rubric based on the provided role parameters.
+Return valid JSON strictly following the requested schema without markdown backticks.`;
+
+        const userPrompt = `
+Role Details:
+- Target Job Title: ${title || 'Software Engineer'}
+- Department / Team: ${department || 'Engineering'}
+- Seniority Level: ${level || 'Mid / Senior'}
+- Notes / Tech Stack / Culture: ${notes || 'Fast-paced high-growth technology company'}
+
+Generate valid JSON matching this schema:
+{
+    "description": "Engaging 3-4 paragraph overview of the role, team impact, and why top talent should join.",
+    "responsibilities": [
+        "Key responsibility 1",
+        "Key responsibility 2",
+        "Key responsibility 3",
+        "Key responsibility 4"
+    ],
+    "requirements": [
+        "Core requirement 1 (e.g. 4+ years in modern distributed backend)",
+        "Core requirement 2",
+        "Core requirement 3",
+        "Core requirement 4"
+    ],
+    "niceToHave": [
+        "Bonus skill 1",
+        "Bonus skill 2"
+    ],
+    "scorecardRubric": [
+        { "competency": "Technical Competency", "weight": 35, "criteria": "Demonstrates mastery of core tech stack and system design" },
+        { "competency": "Problem Solving & Execution", "weight": 25, "criteria": "Breaks down ambiguity, writes clean, maintainable code" },
+        { "competency": "Communication & Collaboration", "weight": 20, "criteria": "Clear cross-functional communicator, gives constructive feedback" },
+        { "competency": "Culture & Leadership", "weight": 20, "criteria": "Owner mindset, high curiosity, proactive accountability" }
+    ],
+    "knockoutQuestions": [
+        "Knockout application question 1 (e.g. Do you have at least 3 years of hands-on experience with TypeScript?)",
+        "Knockout application question 2"
+    ]
+}
+`;
+
+        const res = await executeHireFlowAiPrompt({
+            workspaceId,
+            systemPrompt,
+            userPrompt,
+            model: "auto/smart",
+            temperature: 0.3,
+            responseFormat: "json"
+        });
+
+        if (!res.success || !res.data) {
+            throw new Error(res.error || "Failed to generate job specification via FlowGenix");
+        }
+
+        return {
+            success: true,
+            data: res.data,
+            aiMeta: {
+                resolvedModel: res.resolvedModel,
+                resolvedProvider: res.resolvedProvider,
+                latencyMs: res.latencyMs
+            }
+        };
+    } catch (error) {
+        console.error("[GENERATE_AI_JOB_REQUISITION_ERROR]", error);
+        return { success: false, error: error.message || "Failed to generate requisition" };
+    }
+}
+

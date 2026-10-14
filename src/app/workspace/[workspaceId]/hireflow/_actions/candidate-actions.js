@@ -6,6 +6,7 @@ import { getWhatsappDefault } from "@/lib/whatsapp-default";
 import * as cloudApi from '../../konnectx/_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { executeHireFlowAiPrompt, executeCandidateCopilotChat } from "../_lib/flowgenix-client";
 
 /**
  * Get all Candidates for a workspace
@@ -72,7 +73,28 @@ export async function getCandidateByIdAction(workspaceId, candidateId) {
 
         if (!candidate) return { success: false, error: "Candidate not found" };
 
-        return { success: true, data: candidate };
+        const parsed = candidate.parsedData || {};
+        const normalizedCandidate = {
+            ...candidate,
+            role: candidate.applications?.[0]?.job?.title || candidate.summary || "Applicant",
+            aiInsights: {
+                matchingScore: candidate.aiMatchScore || parsed.aiMatchScore || 0,
+                summary: candidate.aiSummary || parsed.summary || candidate.summary || "Deep analysis pending...",
+                pros: Array.isArray(parsed.pros) ? parsed.pros : [],
+                cons: Array.isArray(parsed.cons) ? parsed.cons : [],
+                skills: Array.isArray(parsed.skills) && parsed.skills.length ? parsed.skills : candidate.skills,
+                matchedSkills: Array.isArray(parsed.matchedSkills) ? parsed.matchedSkills : [],
+                missingSkills: Array.isArray(parsed.missingSkills) ? parsed.missingSkills : [],
+                seniorityLevel: parsed.seniorityLevel || "Mid-Level",
+                recommendedAction: parsed.recommendedAction || "Under Evaluation",
+                suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions : [],
+                aiProvider: parsed.aiProvider || "FlowGenix",
+                aiModel: parsed.aiModel || "auto",
+                aiLatencyMs: parsed.aiLatencyMs || null
+            }
+        };
+
+        return { success: true, data: normalizedCandidate };
     } catch (error) {
         console.error("[GET_CANDIDATE_BY_ID_ACTION_ERROR]", error);
         return { success: false, error: error.message || "Failed to fetch candidate" };
@@ -187,33 +209,18 @@ export async function createCandidateNoteAction(workspaceId, data) {
 }
 
 /**
- * Create a scorecard
+ * Create a candidate scorecard
  */
 export async function createCandidateScorecardAction(workspaceId, data) {
-    try {
-        const session = await ensureWorkspaceAccess(workspaceId);
-        const userId = session.user.userId || session.user.id;
-
-        const { candidateId, applicationId, interviewId, scores, feedback, overallScore, recommendation } = data;
-
-        const scorecard = await prisma.scorecard.create({
-            data: {
-                candidateId,
-                applicationId,
-                attributes: scores,
-                feedback,
-                score: Number(overallScore) || 0,
-                recommendation,
-                interviewerId: userId
-            },
-            include: { interviewer: true }
-        });
-
-        return { success: true, data: scorecard };
-    } catch (error) {
-        console.error("[CREATE_CANDIDATE_SCORECARD_ACTION_ERROR]", error);
-        return { success: false, error: error.message || "Failed to create scorecard" };
-    }
+    return submitScorecardAction(workspaceId, {
+        candidateId: data.candidateId,
+        applicationId: data.applicationId,
+        stage: data.stage,
+        score: data.overallScore !== undefined ? data.overallScore : data.score,
+        feedback: data.feedback,
+        recommendation: data.recommendation,
+        attributes: data.scores || data.attributes
+    });
 }
 
 /**
@@ -236,64 +243,57 @@ export async function aiParseResumeAction(workspaceId, { candidateId, resumeText
 
         if (!candidate) return { success: false, error: "Candidate not found" };
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
-        if (!apiKey) return { success: false, error: "Gemini API key is missing" };
+        const targetJob = candidate.applications?.[0]?.job;
+        const jobRequirements = (targetJob?.requirements || []).join(', ');
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-1.5-flash",
-            generationConfig: { responseMimeType: "application/json" }
+        const systemPrompt = `You are an elite Principal Technical Recruiter and ATS AI Evaluator.
+Perform a thorough, multi-dimensional semantic analysis of this candidate against the target requisition.
+Return valid JSON strictly following the requested schema without markdown code blocks.`;
+
+        const userPrompt = `
+Candidate Profile:
+- Name: ${candidate.name}
+- Email: ${candidate.email}
+- Phone: ${candidate.phone || 'N/A'}
+- Current Target Role: ${targetJob?.title || candidate.summary || 'Applicant'}
+- Job Requirements to Compare Against: ${jobRequirements || 'Standard role competencies'}
+- Job Description Context: ${targetJob?.description || 'N/A'}
+${resumeText ? `Additional Resume Text: ${resumeText}` : ''}
+
+Analyze the resume and return valid JSON strictly following this schema:
+{
+    "summary": "High-impact 2-3 sentence executive summary of the candidate's career trajectory, key achievements, and primary strengths.",
+    "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"],
+    "matchedSkills": ["Skills present in resume that match the job requisition"],
+    "missingSkills": ["Key skills or requirements from the job description that seem weak or missing from the candidate's background"],
+    "pros": ["Key strength 1 (e.g. 5+ yrs in distributed systems)", "Key strength 2", "Key strength 3"],
+    "cons": ["Potential risk / gap 1 (e.g. limited cloud infrastructure experience)", "Potential gap 2"],
+    "aiMatchScore": 88,
+    "experienceYears": "Estimated years of professional experience (e.g. 5+ years)",
+    "seniorityLevel": "Junior" | "Mid-Level" | "Senior" | "Lead / Staff" | "Executive",
+    "recommendedAction": "Strong Match - Advance to Interview" | "Qualified - Conduct Recruiter Screen" | "Borderline - Review Gaps" | "Weak Fit - Archive",
+    "suggestedQuestions": [
+        "Tailored interview question 1 probing their resume gaps or past project scale",
+        "Tailored interview question 2",
+        "Tailored interview question 3"
+    ]
+}
+`;
+
+        const aiRes = await executeHireFlowAiPrompt({
+            workspaceId,
+            systemPrompt,
+            userPrompt,
+            model: "auto",
+            temperature: 0.2,
+            responseFormat: "json"
         });
 
-        const prompt = `
-            You are an expert recruitment AI. Thoroughly analyze this candidate's resume/profile.
-            Candidate Name: ${candidate.name}
-            Candidate Email: ${candidate.email}
-            Candidate Phone: ${candidate.phone || 'N/A'}
-            Current Job/Target Role: ${candidate.applications?.[0]?.job?.title || candidate.summary || 'Applicant'}
-            ${resumeText ? `Additional Resume Text: ${resumeText}` : ''}
-
-            Extract and return structured JSON strictly with:
-            {
-                "summary": "Concise 2-3 sentence executive summary of candidate experience, achievements, and core value.",
-                "skills": ["Skill 1", "Skill 2", "Skill 3", "Skill 4", "Skill 5"],
-                "pros": ["Key strength 1", "Key strength 2", "Key strength 3"],
-                "cons": ["Potential gap or area to probe 1", "Potential gap 2"],
-                "aiMatchScore": 85,
-                "experienceYears": "Estimated years of experience (e.g. 5+ years)",
-                "suggestedRole": "Best fitting job title based on resume"
-            }
-        `;
-
-        const contentParts = [];
-
-        // If candidate has an attached resume URL (PDF / Doc / Image), fetch and attach as inlineData
-        const resumeUrl = candidate.resumeUrl || candidate.applications?.[0]?.resumeUrl;
-        if (resumeUrl && !resumeText) {
-            try {
-                const fileRes = await fetch(resumeUrl);
-                if (fileRes.ok) {
-                    const arrayBuf = await fileRes.arrayBuffer();
-                    const base64Data = Buffer.from(arrayBuf).toString("base64");
-                    const contentType = fileRes.headers.get("content-type") || "application/pdf";
-                    const mimeType = contentType.includes("pdf") ? "application/pdf" : (contentType.split(';')[0] || "application/pdf");
-                    
-                    contentParts.push({
-                        inlineData: {
-                            mimeType,
-                            data: base64Data
-                        }
-                    });
-                }
-            } catch (fetchError) {
-                console.warn("[AI_PARSE_RESUME_FETCH_WARNING] Could not fetch attached resume file, falling back to text prompt:", fetchError);
-            }
+        if (!aiRes.success || !aiRes.data) {
+            throw new Error(aiRes.error || "FlowGenix returned empty evaluation data");
         }
 
-        contentParts.push(prompt);
-
-        const result = await model.generateContent(contentParts);
-        const parsed = JSON.parse(result.response.text());
+        const parsed = aiRes.data;
 
         const updated = await prisma.candidate.update({
             where: { id: candidateId },
@@ -302,11 +302,46 @@ export async function aiParseResumeAction(workspaceId, { candidateId, resumeText
                 skills: Array.isArray(parsed.skills) && parsed.skills.length ? parsed.skills : candidate.skills,
                 aiMatchScore: Number(parsed.aiMatchScore) || candidate.aiMatchScore || 85,
                 aiSummary: parsed.summary || candidate.aiSummary,
-                parsedData: parsed
+                parsedData: {
+                    ...parsed,
+                    aiProvider: aiRes.resolvedProvider,
+                    aiModel: aiRes.resolvedModel,
+                    aiLatencyMs: aiRes.latencyMs,
+                    aiSource: aiRes.source,
+                    parsedAt: new Date().toISOString()
+                }
             }
         });
 
-        return { success: true, data: updated };
+        const normalizedUpdated = {
+            ...updated,
+            aiInsights: {
+                matchingScore: updated.aiMatchScore || parsed.aiMatchScore || 0,
+                summary: updated.aiSummary || parsed.summary || updated.summary,
+                pros: Array.isArray(parsed.pros) ? parsed.pros : [],
+                cons: Array.isArray(parsed.cons) ? parsed.cons : [],
+                skills: Array.isArray(parsed.skills) ? parsed.skills : updated.skills,
+                matchedSkills: Array.isArray(parsed.matchedSkills) ? parsed.matchedSkills : [],
+                missingSkills: Array.isArray(parsed.missingSkills) ? parsed.missingSkills : [],
+                seniorityLevel: parsed.seniorityLevel || "Mid-Level",
+                recommendedAction: parsed.recommendedAction || "Under Evaluation",
+                suggestedQuestions: Array.isArray(parsed.suggestedQuestions) ? parsed.suggestedQuestions : [],
+                aiProvider: aiRes.resolvedProvider,
+                aiModel: aiRes.resolvedModel,
+                aiLatencyMs: aiRes.latencyMs
+            }
+        };
+
+        return { 
+            success: true, 
+            data: normalizedUpdated,
+            aiMeta: {
+                resolvedModel: aiRes.resolvedModel,
+                resolvedProvider: aiRes.resolvedProvider,
+                latencyMs: aiRes.latencyMs,
+                source: aiRes.source
+            }
+        };
     } catch (error) {
         console.error("[AI_PARSE_RESUME_ACTION_ERROR]", error);
         return { success: false, error: error.message || "Failed to parse resume" };
@@ -455,7 +490,7 @@ export async function getCandidateCommunicationsAction({ workspaceId, candidateI
 }
 
 /**
- * AI-Powered Tailored Interview Questions Generator
+ * AI-Powered Tailored Interview Questions Generator via FlowGenix
  */
 export async function generateAiInterviewQuestionsAction({ workspaceId, candidateId, jobId }) {
     try {
@@ -472,53 +507,265 @@ export async function generateAiInterviewQuestionsAction({ workspaceId, candidat
             ? await prisma.job.findUnique({ where: { id: jobId } })
             : candidate.applications?.[0]?.job;
 
-        const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMENI_API_KEY;
-        if (!apiKey) {
-            return { success: false, error: "Gemini API key is not configured" };
-        }
+        const systemPrompt = `You are a Principal Hiring Manager and Technical Recruiter.
+Generate 5 tailored, high-signal interview questions for this specific candidate applying for this job opening.
+Return JSON strictly following the requested schema without markdown backticks.`;
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            generationConfig: { responseMimeType: "application/json" }
+        const userPrompt = `
+Candidate Information:
+- Name: ${candidate.name}
+- Skills: ${(candidate.skills || []).join(', ')}
+- Summary: ${candidate.summary || candidate.aiSummary || 'Not provided'}
+- Parsed Data: ${JSON.stringify(candidate.parsedData || {})}
+
+Target Job Requisition:
+- Title: ${job?.title || 'Open Position'}
+- Description: ${job?.description || 'Standard technical role'}
+- Requirements: ${(job?.requirements || []).join(', ')}
+
+Return JSON strictly following this schema:
+{
+    "questions": [
+        {
+            "category": "Technical Skill" | "System Design" | "Behavioral / Leadership" | "Problem Solving" | "Resume Gap / Verification",
+            "question": "Clear and detailed question text",
+            "objective": "What specific competency or signal this question probes",
+            "expectedSignals": "What a strong answer vs weak answer sounds like",
+            "difficulty": "Easy" | "Medium" | "Hard"
+        }
+    ]
+}
+`;
+
+        const aiRes = await executeHireFlowAiPrompt({
+            workspaceId,
+            systemPrompt,
+            userPrompt,
+            model: "auto/smart",
+            temperature: 0.3,
+            responseFormat: "json"
         });
 
-        const prompt = `
-            You are a Principal Hiring Manager and Technical Recruiter.
-            Generate 5 tailored, high-signal interview questions for this specific candidate applying for this job opening.
+        if (!aiRes.success || !aiRes.data) {
+            throw new Error(aiRes.error || "Failed to generate questions via FlowGenix");
+        }
 
-            Candidate Information:
-            - Name: ${candidate.name}
-            - Skills: ${(candidate.skills || []).join(', ')}
-            - Summary: ${candidate.summary || candidate.aiSummary || 'Not provided'}
-            - Parsed Data: ${JSON.stringify(candidate.parsedData || {})}
-
-            Target Job Requisition:
-            - Title: ${job?.title || 'Open Position'}
-            - Description: ${job?.description || 'Standard technical role'}
-            - Requirements: ${(job?.requirements || []).join(', ')}
-
-            Return JSON strictly following this schema:
-            {
-                "questions": [
-                    {
-                        "category": "Technical Skill" | "System Design" | "Behavioral / Leadership" | "Problem Solving" | "Resume Gap / Verification",
-                        "question": "Clear and detailed question text",
-                        "objective": "What specific competency or signal this question probes",
-                        "expectedSignals": "What a strong answer vs weak answer sounds like",
-                        "difficulty": "Easy" | "Medium" | "Hard"
-                    }
-                ]
+        return { 
+            success: true, 
+            questions: aiRes.data.questions || [],
+            aiMeta: {
+                resolvedModel: aiRes.resolvedModel,
+                resolvedProvider: aiRes.resolvedProvider,
+                latencyMs: aiRes.latencyMs
             }
-        `;
-
-        const result = await model.generateContent(prompt);
-        const responseText = result.response.text();
-        const parsed = JSON.parse(responseText);
-
-        return { success: true, questions: parsed.questions || [] };
+        };
     } catch (error) {
         console.error("[GENERATE_AI_INTERVIEW_QUESTIONS_ERROR]", error);
         return { success: false, error: error.message || "Failed to generate interview questions" };
     }
 }
+
+/**
+ * Interactive Candidate Copilot Chat Action powered by FlowGenix
+ */
+export async function chatCandidateCopilotAction(workspaceId, { candidateId, messages, model = "auto/smart" }) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const candidate = await prisma.candidate.findUnique({
+            where: { id: candidateId },
+            include: {
+                applications: {
+                    where: { workspaceId },
+                    include: { job: { include: { department: true } } }
+                },
+                scorecards: {
+                    include: { interviewer: true },
+                    orderBy: { createdAt: 'desc' }
+                },
+                notes: {
+                    include: { user: true },
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        });
+
+        if (!candidate) return { success: false, error: "Candidate not found" };
+
+        const targetJob = candidate.applications?.[0]?.job;
+
+        const copilotRes = await executeCandidateCopilotChat({
+            workspaceId,
+            candidate,
+            job: targetJob,
+            messages,
+            model
+        });
+
+        if (!copilotRes.success) {
+            throw new Error(copilotRes.error || "Failed to get copilot response");
+        }
+
+        return {
+            success: true,
+            message: {
+                role: "assistant",
+                content: copilotRes.content
+            },
+            aiMeta: {
+                resolvedModel: copilotRes.resolvedModel,
+                resolvedProvider: copilotRes.resolvedProvider,
+                latencyMs: copilotRes.latencyMs,
+                source: copilotRes.source
+            }
+        };
+    } catch (error) {
+        console.error("[CHAT_CANDIDATE_COPILOT_ACTION_ERROR]", error);
+        return { success: false, error: error.message || "Failed to chat with candidate copilot" };
+    }
+}
+
+/**
+ * Submit structured candidate scorecard review
+ */
+export async function submitScorecardAction(workspaceId, { candidateId, applicationId, stage, score, feedback, recommendation, attributes }) {
+    try {
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = session.user.userId || session.user.id;
+
+        if (!candidateId) {
+            return { success: false, error: "Candidate ID is required" };
+        }
+
+        // Find active application if not passed
+        let targetAppId = applicationId;
+        if (!targetAppId) {
+            const app = await prisma.jobApplication.findFirst({
+                where: { candidateId, workspaceId }
+            });
+            targetAppId = app?.id || null;
+        }
+
+        const numericScore = typeof score === 'number' ? score : parseFloat(score) || 3.0;
+
+        const scorecard = await prisma.scorecard.create({
+            data: {
+                candidateId,
+                applicationId: targetAppId,
+                interviewerId: userId,
+                stage: stage || "INTERVIEW",
+                score: numericScore,
+                feedback: feedback || "",
+                recommendation: recommendation || "maybe",
+                attributes: attributes || {}
+            },
+            include: {
+                interviewer: {
+                    select: { id: true, displayName: true, username: true, email: true, avatar: true }
+                }
+            }
+        });
+
+        // Compute new average rating
+        const allCards = await prisma.scorecard.findMany({
+            where: { candidateId },
+            select: { score: true }
+        });
+        if (allCards.length > 0) {
+            const avg = allCards.reduce((acc, c) => acc + (c.score || 0), 0) / allCards.length;
+            await prisma.candidate.update({
+                where: { id: candidateId },
+                data: { rating: parseFloat(avg.toFixed(1)) }
+            }).catch(() => null);
+        }
+
+        // Add an ATS audit note
+        await prisma.atsNote.create({
+            data: {
+                candidateId,
+                applicationId: targetAppId,
+                userId,
+                text: `[SCORECARD SUBMITTED] Stage: ${stage || 'Interview'} | Rating: ${numericScore}/5 | Recommendation: ${recommendation?.toUpperCase() || 'EVALUATED'}\nFeedback: ${feedback ? feedback.substring(0, 180) + '...' : 'No written notes.'}`,
+                isPrivate: false
+            }
+        }).catch(() => null);
+
+        return { success: true, message: "Scorecard submitted successfully", data: scorecard };
+    } catch (error) {
+        console.error("[SUBMIT_SCORECARD_ACTION_ERROR]", error);
+        return { success: false, error: error.message || "Failed to submit scorecard" };
+    }
+}
+
+/**
+ * Bulk Update or Auto-Evaluate Candidates AI Match Score (for unrated or selected candidates)
+ */
+export async function bulkUpdateCandidatesAiScoreAction(workspaceId, { candidateIds, mode, score }) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        // If candidateIds is not passed or empty, target all candidates in this workspace without an AI score
+        let targetIds = Array.isArray(candidateIds) && candidateIds.length > 0 ? candidateIds : null;
+        if (!targetIds) {
+            const unscored = await prisma.candidate.findMany({
+                where: {
+                    workspaceId,
+                    OR: [
+                        { aiMatchScore: null },
+                        { aiMatchScore: 0 }
+                    ]
+                },
+                select: { id: true }
+            });
+            targetIds = unscored.map(c => c.id);
+        }
+
+        if (targetIds.length === 0) {
+            return { success: true, count: 0, message: "No unrated candidates found" };
+        }
+
+        if (mode === 'manual') {
+            const numericScore = Math.min(100, Math.max(0, Math.round(Number(score) || 75)));
+            const result = await prisma.candidate.updateMany({
+                where: {
+                    id: { in: targetIds },
+                    workspaceId
+                },
+                data: {
+                    aiMatchScore: numericScore
+                }
+            });
+            return { success: true, count: result.count, message: `Updated AI score to ${numericScore}% for ${result.count} candidate(s)` };
+        }
+
+        // If mode === 'ai', evaluate each candidate with FlowGenix AI
+        let successful = 0;
+        const errors = [];
+
+        for (const cid of targetIds) {
+            try {
+                const evalRes = await aiParseResumeAction(workspaceId, { candidateId: cid });
+                if (evalRes.success) {
+                    successful++;
+                } else {
+                    errors.push({ candidateId: cid, error: evalRes.error });
+                }
+            } catch (err) {
+                errors.push({ candidateId: cid, error: err.message });
+            }
+        }
+
+        return {
+            success: true,
+            count: successful,
+            total: targetIds.length,
+            errors,
+            message: `FlowGenix evaluated ${successful} of ${targetIds.length} candidate(s)`
+        };
+    } catch (error) {
+        console.error("[BULK_UPDATE_AI_SCORE_ERROR]", error);
+        return { success: false, error: error.message || "Failed to bulk update AI scores" };
+    }
+}
+
+
