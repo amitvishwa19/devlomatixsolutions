@@ -6,6 +6,7 @@
 export const getSidebarNavItems = (workspaceId) => {
     const basePath = `/workspace/${workspaceId}`;
     const baseWhatsappCloudApiPath = `${basePath}/konnectx`;
+    const baseWhatsappLegacyPath = `${basePath}/konnectx-legacy`;
     const baseWhatsappCrmPath = `${basePath}/wacrm`;
     const baseDocPath = `${basePath}/document`;
     const systemPath = `${basePath}/system`;
@@ -97,6 +98,25 @@ export const getSidebarNavItems = (workspaceId) => {
             baseUrl: baseWhatsappCloudApiPath,
             permission: [`navbar:KonnectX:Parent`, 'konnectx', 'KonnectX'],
             roles: ['konnectx', 'KonnectX']
+        },
+        {
+            parent: { title: "Konnect", icon: "smartphone", url: baseWhatsappLegacyPath },
+            child: [
+                { title: "Dashboard", icon: "layout-grid", url: baseWhatsappLegacyPath },
+                { title: "Messages", icon: "messages-square", url: `${baseWhatsappLegacyPath}/chats` },
+                { title: "Contacts", icon: "users", url: `${baseWhatsappLegacyPath}/contacts` },
+                { title: "Templates", icon: "zap", url: `${baseWhatsappLegacyPath}/template` },
+                { title: "Campaigns", icon: "megaphone", url: `${baseWhatsappLegacyPath}/campaigns` },
+                { title: "Bulk Sender", icon: "zap", url: `${baseWhatsappLegacyPath}/bulk-sender` },
+                { title: "Flows", icon: "workflow", url: `${baseWhatsappLegacyPath}/flows` },
+                { title: "Chatbot", icon: "bot", url: `${baseWhatsappLegacyPath}/chatbot` },
+                { title: "Reports", icon: "file-spreadsheet", url: `${baseWhatsappLegacyPath}/reports` },
+                { title: "Analytics", icon: "bar-chart-3", url: `${baseWhatsappLegacyPath}/analytics` },
+                { title: "Settings", icon: "settings-2", url: `${baseWhatsappLegacyPath}/settings` },
+            ],
+            baseUrl: baseWhatsappLegacyPath,
+            permission: [`navbar:Konnect:Parent`, 'konnect', 'Konnect', 'konnectx', 'KonnectX'],
+            roles: ['konnect', 'Konnect', 'konnectx', 'KonnectX']
         },
         {
             parent: { title: "HireFlow", icon: "user", url: baseAtsPath },

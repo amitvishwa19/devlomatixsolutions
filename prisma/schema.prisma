@@ -1843,3 +1843,193 @@ model CrmActivity {
   @@index([createdAt])
 }
 
+// =========================================================
+// KONNECT LEGACY (WHATSAPP WEB QR / BAILEYS DEDICATED TABLES)
+// Isolated completely from KonnectX (Cloud API)
+// =========================================================
+
+model KonnectLegacyMessage {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  waId        String?  @unique
+  jid         String
+  phoneNumber String?
+  pushName    String?
+  text        String   @db.Text
+  fromMe      Boolean  @default(false)
+  status      String   @default("SENT") // SENT, DELIVERED, READ, FAILED
+  timestamp   BigInt
+  mediaUrl    String?
+  mediaType   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([jid])
+  @@index([createdAt])
+}
+
+model KonnectLegacyContact {
+  id                String    @id @default(cuid())
+  workspaceId       String
+  userId            String
+  name              String
+  phone             String
+  whatsappName      String?
+  email             String?
+  tags              String[]  @default([])
+  notes             String?   @db.Text
+  avatar            String?
+  isSyncedFromPhone Boolean   @default(false)
+  lastMessage       String?   @db.Text
+  lastInteraction   DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([workspaceId, phone])
+  @@index([workspaceId])
+  @@index([phone])
+  @@index([userId])
+}
+
+model KonnectLegacyCampaign {
+  id              String                           @id @default(cuid())
+  workspaceId     String
+  userId          String
+  name            String
+  description     String?                          @db.Text
+  messageText     String                           @db.Text
+  mediaUrl        String?
+  status          String                           @default("DRAFT") // DRAFT, IN_PROGRESS, COMPLETED, PAUSED
+  minDelaySeconds Int                              @default(3)
+  maxDelaySeconds Int                              @default(6)
+  scheduledAt     DateTime?
+  createdAt       DateTime                         @default(now())
+  updatedAt       DateTime                         @updatedAt
+  recipients      KonnectLegacyCampaignRecipient[]
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([status])
+}
+
+model KonnectLegacyCampaignRecipient {
+  id         String                @id @default(cuid())
+  campaignId String
+  phone      String
+  name       String?
+  status     String                @default("PENDING") // PENDING, SENT, FAILED
+  error      String?
+  sentAt     DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  campaign   KonnectLegacyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([status])
+}
+
+model KonnectLegacyChatbotRule {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  keyword     String
+  matchType   String   @default("contains") // contains, exact, starts_with
+  response    String   @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([keyword])
+}
+
+model KonnectLegacyFlow {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  userId         String
+  name           String
+  description    String?  @db.Text
+  triggerKeyword String   @default("HI")
+  welcomeMessage String   @db.Text
+  steps          Json     // array of { option, response }
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model KonnectLegacySetting {
+  id                   String   @id @default(cuid())
+  workspaceId          String   @unique
+  userId               String
+  minDelaySeconds      Int      @default(3)
+  maxDelaySeconds      Int      @default(8)
+  simulateTyping       Boolean  @default(true)
+  batchSize            Int      @default(50)
+  batchCooldownMinutes Int      @default(2)
+  autoReadIncoming     Boolean  @default(false)
+  dailySafetyLimit     Int      @default(500)
+  webhookUrl           String?
+  aiEnabled            Boolean  @default(false)
+  aiModel              String   @default("gemini-2.0-flash")
+  aiSystemPrompt       String?  @db.Text
+  aiTemperature        Float    @default(0.7)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model KonnectLegacyTemplateGroup {
+  id          String                  @id @default(cuid())
+  workspaceId String
+  userId      String
+  name        String
+  description String?                 @db.Text
+  color       String?                 @default("#10b981")
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  templates   KonnectLegacyTemplate[]
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model KonnectLegacyTemplate {
+  id           String                      @id @default(cuid())
+  workspaceId  String
+  userId       String
+  name         String
+  category     String                      @default("MARKETING") // MARKETING, UTILITY, AUTHENTICATION, GREETING, REMINDER
+  language     String                      @default("en_US")
+  headerType   String                      @default("NONE") // NONE, TEXT, IMAGE, VIDEO, DOCUMENT
+  headerText   String?
+  headerMedia  String?
+  body         String                      @db.Text
+  footer       String?
+  buttons      Json?                       @default("[]") // [{ type: 'QUICK_REPLY' | 'URL' | 'PHONE_NUMBER', text: string, value: string }]
+  variables    String[]                    @default([])
+  sampleValues Json?                       @default("{}")
+  status       String                      @default("APPROVED") // APPROVED (instant for Baileys/linked phone), DRAFT, ARCHIVED
+  groupId      String?
+  group        KonnectLegacyTemplateGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  metadata     Json?
+  createdAt    DateTime                    @default(now())
+  updatedAt    DateTime                    @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+  @@index([groupId])
+  @@index([category])
+  @@index([status])
+}
+
+
