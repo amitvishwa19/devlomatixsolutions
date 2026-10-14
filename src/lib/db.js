@@ -44,7 +44,7 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter });
 };
 
-const SCHEMA_VERSION = 31; // Increment this to force a re-init in dev
+const SCHEMA_VERSION = 32; // Increment this to force a re-init in dev
 
 // Store the singleton on the global object to prevent multiple instances in dev
 const getBaseDb = () => {
@@ -62,6 +62,8 @@ const getBaseDb = () => {
         !globalThis.prismaGlobal.role || 
         !globalThis.prismaGlobal.permission ||
         !globalThis.prismaGlobal.eCommerceStore ||
+        !globalThis.prismaGlobal.konnectLegacyTemplate ||
+        !globalThis.prismaGlobal.konnectLegacyTemplateGroup ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 
@@ -80,9 +82,16 @@ const getBaseDb = () => {
  */
 export const db = new Proxy({}, {
     get: (target, prop) => {
-        const currentDb = getBaseDb();
+        let currentDb = getBaseDb();
         if (prop === 'then') return undefined; // Avoid proxy being treated as a promise
         
+        // Dynamic self-healing fallback for new models in dev mode
+        if (process.env.NODE_ENV !== 'production' && typeof prop === 'string' && currentDb[prop] === undefined && !prop.startsWith('$') && !prop.startsWith('_')) {
+            globalThis.prismaGlobal = prismaClientSingleton();
+            globalThis.prismaGlobal._schemaVersion = SCHEMA_VERSION;
+            currentDb = globalThis.prismaGlobal;
+        }
+
         const value = currentDb[prop];
         if (typeof value === 'function') {
             return value.bind(currentDb);

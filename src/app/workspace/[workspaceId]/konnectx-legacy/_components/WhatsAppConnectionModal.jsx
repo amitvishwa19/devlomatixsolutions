@@ -35,6 +35,7 @@ import {
     disconnectWhatsAppAction,
     sendTestMessageAction
 } from '../_actions/connection-actions';
+import { useKonnectxSocket } from '../_lib/use-konnectx-socket';
 
 export default function WhatsAppConnectionModal({
     isOpen,
@@ -56,7 +57,7 @@ export default function WhatsAppConnectionModal({
     const [testMessage, setTestMessage] = useState('Hello! This is a test message from Devlomatix Konnect.');
     const [isSendingTest, setIsSendingTest] = useState(false);
 
-    // Poll status while waiting for scan or connecting
+    // Fetch status once on demand
     const pollStatus = useCallback(async () => {
         if (!isOpen) return;
         try {
@@ -82,20 +83,38 @@ export default function WhatsAppConnectionModal({
         } catch (_) {}
     }, [workspaceId, isOpen, onStatusChange, onConnected]);
 
-    useEffect(() => {
-        let timer;
-        if (isOpen && (status === 'SCAN_QR' || status === 'QR_REQUIRED' || status === 'CONNECTING' || isLoading)) {
-            timer = setInterval(pollStatus, 2000);
-        }
-        return () => clearInterval(timer);
-    }, [isOpen, status, isLoading, pollStatus]);
-
     // Initial check when opening modal
     useEffect(() => {
         if (isOpen) {
             pollStatus();
         }
     }, [isOpen, pollStatus]);
+
+    // Real-time status & QR code updates via WebSockets (Zero polling!)
+    useKonnectxSocket({
+        workspaceId,
+        onStatusUpdate: (res) => {
+            if (!isOpen) return;
+            setStatus(res.status);
+            if (res.qrCode) {
+                setQrCode(res.qrCode);
+                setIsLoading(false);
+            } else if (res.status === 'CONNECTED' || res.status === 'LOGGED_OUT' || res.status === 'LOGOUT') {
+                setQrCode(null);
+                setIsLoading(false);
+            }
+            if (res.phoneNumber) setPhoneNumber(res.phoneNumber);
+            if (res.deviceName) setDeviceName(res.deviceName);
+
+            if (res.status === 'CONNECTED' && onConnected) {
+                onConnected(res);
+            }
+
+            if (onStatusChange) {
+                onStatusChange(res);
+            }
+        }
+    });
 
     // Trigger Connection / Generate QR
     const handleStartConnection = async (forceNewQr = true) => {

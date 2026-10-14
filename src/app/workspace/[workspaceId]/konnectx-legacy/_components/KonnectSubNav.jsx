@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import WhatsAppConnectionModal from './WhatsAppConnectionModal';
 import { getWhatsAppConnectionStatusAction } from '../_actions/connection-actions';
+import { useKonnectxSocket } from '../_lib/use-konnectx-socket';
 
 export default function KonnectSubNav({ workspaceId }) {
     const pathname = usePathname();
@@ -46,6 +47,7 @@ export default function KonnectSubNav({ workspaceId }) {
         { label: "Settings", href: `${basePath}/settings`, icon: Settings2 },
     ];
 
+    // Initial load on mount
     useEffect(() => {
         let isMounted = true;
         const checkStatus = async () => {
@@ -56,12 +58,23 @@ export default function KonnectSubNav({ workspaceId }) {
             }
         };
         checkStatus();
-        const interval = setInterval(checkStatus, 10000);
         return () => {
             isMounted = false;
-            clearInterval(interval);
         };
     }, [workspaceId]);
+
+    // Real-time status update from socket server (no recurring polling!)
+    useKonnectxSocket({
+        workspaceId,
+        onStatusUpdate: (data) => {
+            setIsConnected(data.status === 'CONNECTED');
+            if (data.phoneNumber) {
+                setDevicePhone(data.phoneNumber);
+            } else if (data.status === 'DISCONNECTED' || data.status === 'LOGGED_OUT') {
+                setDevicePhone(null);
+            }
+        }
+    });
 
     return (
         <div className="w-full border-b border-border/40 bg-card/40 backdrop-blur-md sticky top-0 z-30">

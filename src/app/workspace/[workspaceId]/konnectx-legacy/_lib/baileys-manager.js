@@ -12,6 +12,7 @@ import pino from 'pino';
 import QRCode from 'qrcode';
 import { db } from '@/lib/db';
 import { usePrismaAuthState } from './prisma-auth-adapter';
+import { emitKonnectxEvent } from '@/lib/socket-bridge';
 
 /**
  * Robust helper to extract clean text and media info from various WhatsApp message wrappers
@@ -110,24 +111,17 @@ class KonnectLegacyManager {
                 select: { id: true, status: true, phoneNumber: true }
             });
 
-            if (dbAuth && dbAuth.status !== 'LOGOUT') {
+            if (dbAuth && dbAuth.status !== 'LOGGED_OUT' && dbAuth.status !== 'LOGOUT') {
                 const keysCount = await db.whatsAppSessionKey.count({
                     where: { whatsappAuthId: dbAuth.id }
                 });
 
-                if (keysCount > 0) {
+                if (keysCount > 0 && dbAuth.status === 'CONNECTED') {
                     if (state.status !== 'CONNECTING' && (!state.sock || state.status !== 'CONNECTED')) {
-                        console.log(`[KONNECT-LEGACY] Reconnecting socket for ${sessionId} (${keysCount} stored keys)...`);
-                        await this.connect(sessionId);
-                    }
-
-                    // If connecting, wait briefly up to 4s for open state
-                    if (state.status === 'CONNECTING') {
-                        let attempts = 0;
-                        while (state.status === 'CONNECTING' && attempts < 8) {
-                            await new Promise(r => setTimeout(r, 500));
-                            attempts++;
-                        }
+                        console.log(`[KONNECT-LEGACY] Background reconnecting socket for ${sessionId} (${keysCount} stored keys)...`);
+                        this.connect(sessionId).catch(err => {
+                            console.warn(`[KONNECT-LEGACY] ensureActiveSocket background connect warn:`, err.message);
+                        });
                     }
                 }
             }
@@ -237,6 +231,16 @@ class KonnectLegacyManager {
                 console.error(`[KONNECT-LEGACY] Listener error for ${sessionId}:`, err);
             }
         }
+
+        // Real-time broadcast to socket server room workspace:{sessionId}
+        emitKonnectxEvent(sessionId, 'konnectx:status:update', {
+            workspaceId: sessionId,
+            status: state.status,
+            qrCode: state.qrCode,
+            phoneNumber: state.phoneNumber,
+            deviceName: state.deviceName,
+            connectedAt: state.connectedAt
+        });
     }
 
     /**
@@ -314,6 +318,25 @@ class KonnectLegacyManager {
                     }
                 }).catch(() => {});
             }
+
+            // Real-time broadcast to socket server room workspace:{sessionId}
+            emitKonnectxEvent(sessionId, 'konnectx:message:new', {
+                workspaceId: sessionId,
+                jid,
+                message: {
+                    id,
+                    waId: id,
+                    jid,
+                    phoneNumber: cleanPhone,
+                    pushName: msg.pushName || null,
+                    text: content.text,
+                    fromMe,
+                    status: fromMe ? 'SENT' : 'DELIVERED',
+                    timestamp: Number(timestamp) * 1000,
+                    mediaUrl: content.mediaUrl || null,
+                    mediaType: content.mediaType || null
+                }
+            });
         } catch (err) {
             console.warn('[KONNECT-LEGACY] Save message err:', err.message);
         }
@@ -608,6 +631,38 @@ class KonnectLegacyManager {
                 }
             });
 
+            // Handle Message Status Receipts (Sent, Delivered, Read ticks)
+            sock.ev.on('messages.update', async (updates) => {
+                if (!Array.isArray(updates)) return;
+                for (const update of updates) {
+                    const waId = update.key?.id;
+                    const jid = update.key?.remoteJid;
+                    const rawStatus = update.update?.status;
+                    if (!waId || rawStatus === undefined) continue;
+
+                    let statusStr = 'SENT';
+                    if (rawStatus >= 4) {
+                        statusStr = 'READ';
+                    } else if (rawStatus === 3) {
+                        statusStr = 'DELIVERED';
+                    }
+
+                    // Update DB record
+                    await db.konnectLegacyMessage.updateMany({
+                        where: { waId },
+                        data: { status: statusStr }
+                    }).catch(() => null);
+
+                    // Real-time broadcast to socket server room workspace:{sessionId}
+                    emitKonnectxEvent(sessionId, 'konnectx:message:status', {
+                        workspaceId: sessionId,
+                        jid,
+                        messageId: waId,
+                        status: statusStr
+                    });
+                }
+            });
+
             // Wait up to 5 seconds for QR code or connected status to be generated by WhatsApp
             let waitAttempts = 0;
             while (waitAttempts < 10 && state.status === 'CONNECTING' && !state.qrCode) {
@@ -748,6 +803,23 @@ class KonnectLegacyManager {
         } catch (dbErr) {
             console.warn('[KONNECT-LEGACY] Failed to record sent message in DB:', dbErr.message);
         }
+
+        // Real-time broadcast outbound message to socket server room workspace:{sessionId}
+        const outboundWaId = sent.key?.id || `out_${Date.now()}`;
+        emitKonnectxEvent(sessionId, 'konnectx:message:new', {
+            workspaceId: sessionId,
+            jid: targetJid,
+            message: {
+                id: outboundWaId,
+                waId: outboundWaId,
+                jid: targetJid,
+                phoneNumber: cleanPhone,
+                text: messagePayload.text || '[Media Message]',
+                fromMe: true,
+                status: 'SENT',
+                timestamp: Date.now()
+            }
+        });
 
         return sent;
     }

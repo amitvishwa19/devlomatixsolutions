@@ -6,22 +6,14 @@ import {
     Search,
     Send,
     MessageSquare,
-    Smartphone,
-    User,
     Check,
     CheckCheck,
     Clock,
-    Paperclip,
-    Smile,
     RefreshCw,
     QrCode,
     ArrowLeft,
     Loader2,
-    Sparkles,
     AlertCircle,
-    Bot,
-    Phone,
-    MoreVertical,
     MessageSquarePlus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -39,6 +31,7 @@ import {
 import { getWhatsAppConnectionStatusAction } from '../_actions/connection-actions';
 import WhatsAppConnectionModal from '../_components/WhatsAppConnectionModal';
 import NewChatModal from '../_components/NewChatModal';
+import { useKonnectxSocket } from '../_lib/use-konnectx-socket';
 
 export default function KonnectChatsPage() {
     const params = useParams();
@@ -61,14 +54,24 @@ export default function KonnectChatsPage() {
     const [isNewChatOpen, setIsNewChatOpen] = useState(false);
 
     const messagesEndRef = useRef(null);
+    const selectedChatRef = useRef(null);
+    const prevMessagesCountRef = useRef(0);
 
-    // Auto-scroll to bottom of messages
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Keep ref in sync without triggering effects
+    useEffect(() => {
+        selectedChatRef.current = selectedChat;
+    }, [selectedChat]);
+
+    // Auto-scroll to bottom only when new messages are added
+    const scrollToBottom = (behavior = 'smooth') => {
+        messagesEndRef.current?.scrollIntoView({ behavior });
     };
 
     useEffect(() => {
-        scrollToBottom();
+        if (messages.length > prevMessagesCountRef.current) {
+            scrollToBottom('smooth');
+        }
+        prevMessagesCountRef.current = messages.length;
     }, [messages]);
 
     // Check device connection
@@ -81,37 +84,48 @@ export default function KonnectChatsPage() {
         } catch (_) {}
     }, [workspaceId]);
 
-    // Load conversations list
-    const loadConversations = useCallback(async () => {
-        setLoadingChats(true);
+    // Load conversations list (silent for background polling to prevent flicker)
+    const loadConversations = useCallback(async (silent = false) => {
+        if (!silent) setLoadingChats(true);
         try {
             const res = await getChatsAction(workspaceId);
             if (res.success) {
                 setConversations(res.conversations || []);
-                if (res.conversations?.length > 0 && !selectedChat) {
+                // If no chat is currently selected, select the first thread
+                if (res.conversations?.length > 0 && !selectedChatRef.current) {
                     setSelectedChat(res.conversations[0]);
                 }
             }
         } catch (err) {
-            console.error(err);
+            console.error("[LOAD_CONVERSATIONS_ERROR]", err);
         } finally {
-            setLoadingChats(false);
+            if (!silent) setLoadingChats(false);
         }
-    }, [workspaceId, selectedChat]);
+    }, [workspaceId]);
 
-    // Load message history when selected chat changes
-    const loadMessages = useCallback(async (jid) => {
+    // Load message history for active chat
+    const loadMessages = useCallback(async (jid, silent = false) => {
         if (!jid) return;
-        setLoadingMessages(true);
+        if (!silent) setLoadingMessages(true);
         try {
             const res = await getChatMessagesAction(workspaceId, jid);
             if (res.success) {
-                setMessages(res.messages || []);
+                const newMessages = res.messages || [];
+                setMessages(prev => {
+                    // Avoid unnecessary re-renders if nothing changed
+                    if (prev.length !== newMessages.length) return newMessages;
+                    const prevLast = prev[prev.length - 1];
+                    const nextLast = newMessages[newMessages.length - 1];
+                    if (prevLast?.id !== nextLast?.id || prevLast?.status !== nextLast?.status) {
+                        return newMessages;
+                    }
+                    return prev;
+                });
             }
         } catch (err) {
-            console.error(err);
+            console.error("[LOAD_MESSAGES_ERROR]", err);
         } finally {
-            setLoadingMessages(false);
+            if (!silent) setLoadingMessages(false);
         }
     }, [workspaceId]);
 
@@ -122,9 +136,9 @@ export default function KonnectChatsPage() {
             const res = await syncChatHistoryAction(workspaceId);
             if (res.success) {
                 toast.success(res.message || "Synced successfully with phone");
-                await loadConversations();
-                if (selectedChat?.jid) {
-                    await loadMessages(selectedChat.jid);
+                await loadConversations(false);
+                if (selectedChatRef.current?.jid) {
+                    await loadMessages(selectedChatRef.current.jid, false);
                 }
             } else {
                 toast.error(res.error || "Sync failed");
@@ -148,36 +162,98 @@ export default function KonnectChatsPage() {
         setSelectedChat(conversation);
         if (initialMessage) {
             setMessages([initialMessage]);
+            prevMessagesCountRef.current = 1;
         }
     };
 
+    // 1. Initial mount load
     useEffect(() => {
         checkConnection();
-        loadConversations();
+        loadConversations(false);
     }, [checkConnection, loadConversations]);
 
+    // 2. Load messages on chat switch
     useEffect(() => {
-        if (selectedChat?.jid) {
-            loadMessages(selectedChat.jid);
+        const jid = selectedChat?.jid;
+        if (jid) {
+            prevMessagesCountRef.current = 0;
+            loadMessages(jid, false);
+        } else {
+            setMessages([]);
         }
-    }, [selectedChat, loadMessages]);
+    }, [selectedChat?.jid, loadMessages]);
 
-    // Periodic poll for new messages in active chat
-    useEffect(() => {
-        if (!selectedChat?.jid) return;
-        const interval = setInterval(() => {
-            loadMessages(selectedChat.jid);
-        }, 3500);
-        return () => clearInterval(interval);
-    }, [selectedChat, loadMessages]);
+    // 3. Real-time WhatsApp events via WebSockets (Eliminates 4.5s & 10s polling!)
+    useKonnectxSocket({
+        workspaceId,
+        onStatusUpdate: (data) => {
+            setIsConnected(data.status === 'CONNECTED');
+        },
+        onNewMessage: (data) => {
+            const incomingMsg = data?.message;
+            if (!incomingMsg) return;
 
-    // Periodic poll for conversations list update
-    useEffect(() => {
-        const interval = setInterval(() => {
-            loadConversations();
-        }, 8000);
-        return () => clearInterval(interval);
-    }, [loadConversations]);
+            // 1. If incoming message belongs to currently open chat, append to messages
+            if (data.jid === selectedChatRef.current?.jid) {
+                setMessages(prev => {
+                    const exists = prev.some(m =>
+                        (m.id && m.id === incomingMsg.id) ||
+                        (m.waId && incomingMsg.waId && m.waId === incomingMsg.waId) ||
+                        (m.fromMe && incomingMsg.fromMe && m.text === incomingMsg.text && Math.abs((m.timestamp || 0) - (incomingMsg.timestamp || 0)) < 10000)
+                    );
+                    if (exists) {
+                        return prev.map(m =>
+                            (m.id === incomingMsg.id || (m.waId && incomingMsg.waId && m.waId === incomingMsg.waId))
+                                ? { ...m, ...incomingMsg }
+                                : m
+                        );
+                    }
+                    return [...prev, incomingMsg];
+                });
+            }
+
+            // 2. Update conversation thread in left sidebar & bump to top
+            setConversations(prev => {
+                const targetJid = data.jid;
+                const existingIndex = prev.findIndex(c => c.jid === targetJid);
+                const isCurrentlySelected = selectedChatRef.current?.jid === targetJid;
+
+                if (existingIndex !== -1) {
+                    const existingChat = prev[existingIndex];
+                    const updatedChat = {
+                        ...existingChat,
+                        lastMessage: incomingMsg.text || existingChat.lastMessage,
+                        timestamp: incomingMsg.timestamp || Date.now(),
+                        unreadCount: isCurrentlySelected ? 0 : ((existingChat.unreadCount || 0) + (incomingMsg.fromMe ? 0 : 1))
+                    };
+                    const withoutExisting = prev.filter((_, idx) => idx !== existingIndex);
+                    return [updatedChat, ...withoutExisting];
+                }
+
+                // New conversation thread
+                const cleanPhone = targetJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
+                const newChat = {
+                    jid: targetJid,
+                    name: incomingMsg.name || `+${cleanPhone}`,
+                    phone: cleanPhone,
+                    lastMessage: incomingMsg.text || '',
+                    timestamp: incomingMsg.timestamp || Date.now(),
+                    unreadCount: isCurrentlySelected ? 0 : (incomingMsg.fromMe ? 0 : 1)
+                };
+                return [newChat, ...prev];
+            });
+        },
+        onMessageStatus: (data) => {
+            if (!data?.messageId || !data?.status) return;
+            setMessages(prev =>
+                prev.map(m =>
+                    (m.id === data.messageId || m.waId === data.messageId)
+                        ? { ...m, status: data.status }
+                        : m
+                )
+            );
+        }
+    });
 
     // Send Message
     const handleSendMessage = async (e) => {
@@ -339,7 +415,7 @@ export default function KonnectChatsPage() {
                                                 <div className="flex items-center justify-between">
                                                     <h4 className="text-xs font-bold text-foreground truncate">{chat.name}</h4>
                                                     <span className="text-[10px] text-muted-foreground font-mono">
-                                                        {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {chat.timestamp && !isNaN(new Date(chat.timestamp).getTime()) ? new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                                                     </span>
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground truncate mt-0.5">
@@ -452,7 +528,7 @@ export default function KonnectChatsPage() {
                                                     <div className={`flex items-center justify-end gap-1 text-[9px] ${
                                                         isMe ? 'text-emerald-100/80' : 'text-muted-foreground'
                                                     }`}>
-                                                        <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        <span>{msg.timestamp && !isNaN(new Date(msg.timestamp).getTime()) ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                                                         {isMe && (
                                                             msg.status === 'READ' ? <CheckCheck size={12} className="text-cyan-300" /> :
                                                             msg.status === 'DELIVERED' ? <CheckCheck size={12} /> :
@@ -505,7 +581,7 @@ export default function KonnectChatsPage() {
                         </div>
                         <h3 className="text-sm font-bold text-foreground">Select a Conversation</h3>
                         <p className="text-[11px] max-w-xs text-muted-foreground">
-                            Pick a chat from the left pane, or click "New Chat" to message any WhatsApp phone number.
+                            Pick a chat from the left pane, or click &quot;New Chat&quot; to message any WhatsApp phone number.
                         </p>
                         <Button
                             size="sm"
