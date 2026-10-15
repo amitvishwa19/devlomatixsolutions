@@ -431,13 +431,7 @@ export default function WhatsAppChatsPage() {
                 setSelectedJid(currentJid => {
                     if (currentJid && currentJid.startsWith('segment:')) return currentJid;
                     if (!currentJid && data.conversations.length > 0) return data.conversations[0].jid;
-                    if (currentJid) {
-                        const existsInConv = data.conversations.some(c => getPhoneLast10(c.jid) === getPhoneLast10(currentJid));
-                        if (existsInConv) return currentJid;
-                        const existsInContacts = allContacts.some(c => getPhoneLast10(c.phone) === getPhoneLast10(currentJid));
-                        if (existsInContacts) return currentJid;
-                        return data.conversations.length > 0 ? data.conversations[0].jid : currentJid;
-                    }
+                    if (currentJid) return currentJid;
                     return currentJid;
                 });
             }
@@ -710,9 +704,21 @@ export default function WhatsAppChatsPage() {
                 const convIndex = prev.findIndex(c => getPhoneLast10(c.jid) === targetPhone10);
 
                 if (convIndex === -1) {
-                    // New conversation from a new number: trigger full sync
+                    // New conversation from a new/unsaved number: synthesize immediately into conversation list
+                    const fullJid = targetJid.includes('@') ? targetJid : `${targetPhone10}@s.whatsapp.net`;
+                    const newConv = {
+                        jid: fullJid,
+                        name: data.senderName || incomingMsg.senderName || `+${targetPhone10}`,
+                        lastMessage: incomingMsg.text || incomingMsg.metadata?.caption || (incomingMsg.metadata?.type ? `[${incomingMsg.metadata.type.toUpperCase()}]` : '[Message]'),
+                        timestamp: incomingMsg.timestamp || Math.floor(Date.now() / 1000),
+                        createdAt: new Date().toISOString(),
+                        fromMe: false,
+                        unreadCount: isCurrentlyViewing ? 0 : 1,
+                        messages: [incomingMsg],
+                        sharedWith: []
+                    };
                     fetchConversations();
-                    return prev;
+                    return [newConv, ...prev];
                 }
 
                 const existingConv = prev[convIndex];
