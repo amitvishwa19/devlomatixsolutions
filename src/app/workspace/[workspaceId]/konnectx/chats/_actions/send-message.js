@@ -7,6 +7,7 @@ import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import * as cloudApi from '../../_lib/whatsapp-cloud-api';
 import { symmetricDecrypt } from "@/lib/encryption";
 import { getWhatsappDefault } from "@/lib/whatsapp-default";
+import { emitKonnectxEvent } from "@/lib/socket-bridge";
 
 const SendMessageSchema = z.object({
     workspaceId: z.string(),
@@ -209,7 +210,7 @@ const handler = async (data) => {
 
             const waMessageId = result.data?.messages?.[0]?.id;
             const formattedJid = cleanTo.length === 10 ? `91${cleanTo}@s.whatsapp.net` : (cleanTo.includes('@') ? cleanTo : `${cleanTo}@s.whatsapp.net`);
-            await db.whatsAppMessage.create({
+            const createdMsg = await db.whatsAppMessage.create({
                 data: {
                     userId,
                     waId: waMessageId || `local_${Date.now()}`,
@@ -225,6 +226,22 @@ const handler = async (data) => {
                         originalPayload: data,
                         phone_number_id: String(cloudCredentials?.phoneNumberId || cloudCredentials?.phone_number_id || "")
                     }
+                }
+            });
+
+            // Broadcast outbound message to all subscribers in workspace
+            await emitKonnectxEvent(workspaceId, 'konnectx:cloud:message:new', {
+                workspaceId,
+                jid: formattedJid,
+                message: {
+                    id: createdMsg.id,
+                    waId: createdMsg.waId,
+                    jid: createdMsg.jid,
+                    text: createdMsg.text,
+                    fromMe: true,
+                    timestamp: Number(createdMsg.timestamp),
+                    status: createdMsg.status,
+                    metadata: createdMsg.metadata
                 }
             });
         } catch (dbError) {

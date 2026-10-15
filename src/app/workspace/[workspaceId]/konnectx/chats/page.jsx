@@ -51,6 +51,7 @@ import ManageContactModal from "./_components/ManageContactModal";
 import ForwardMessageModal from "./_components/ForwardMessageModal";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useCrmSocket } from "@/providers/CrmSocketProvider";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -163,10 +164,68 @@ const MessageStatus = ({ status }) => {
     }
 };
 
+let sharedAudioCtx = null;
+
+function getSharedAudioContext() {
+    if (typeof window === 'undefined') return null;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx) {
+        sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+}
+
+if (typeof window !== 'undefined') {
+    const unlockAudio = () => {
+        getSharedAudioContext();
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    window.addEventListener('touchstart', unlockAudio, { once: true });
+}
+
+function playMessageTone() {
+    if (typeof window === 'undefined') return;
+    try {
+        const ctx = getSharedAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+        }
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        // Pleasant high-pitch bell chime (880Hz -> 1320Hz)
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1320, now + 0.08);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.36);
+    } catch (_) {}
+}
+
 export default function WhatsAppChatsPage() {
     const { workspaceId } = useParams();
     const { data: session } = useSession();
     const userId = session?.user?.userId || '';
+    const { socket, isConnected } = useCrmSocket() || {};
     const [conversations, setConversations] = useState([]);
     const [selectedJid, setSelectedJid] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -300,11 +359,62 @@ export default function WhatsAppChatsPage() {
         ? activeSegmentData?.name
         : (selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0]);
 
+    const selectedJidRef = useRef(selectedJid);
+    selectedJidRef.current = selectedJid;
+
+    const allContactsRef = useRef(allContacts);
+    allContactsRef.current = allContacts;
+
+    // Track active conversation globally so WorkspaceMessageNotifier knows when user is actively reading it
+    useEffect(() => {
+        window.__konnectx_active_jid = selectedJid;
+        return () => {
+            window.__konnectx_active_jid = null;
+        };
+    }, [selectedJid]);
+
+    // Listen for global open-chat events and query param deep links
+    useEffect(() => {
+        const handleOpenChat = (e) => {
+            if (e.detail?.jid) {
+                setSelectedJid(e.detail.jid);
+                setActiveTab('chats');
+            }
+        };
+        window.addEventListener('konnectx:open-chat', handleOpenChat);
+
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryJid = urlParams.get('jid');
+            if (queryJid) {
+                setSelectedJid(queryJid);
+                setActiveTab('chats');
+            }
+        }
+
+        return () => {
+            window.removeEventListener('konnectx:open-chat', handleOpenChat);
+        };
+    }, []);
+
     // Server Action Hooks
     const { execute: executeConversations } = useAction(getConversations, {
         onSuccess: (data) => {
             if (data.conversations) {
                 setConversations(prevConversations => {
+                    // In fallback polling mode (when socket disconnected), play alert for new incoming messages
+                    if (!isConnected && prevConversations.length > 0) {
+                        data.conversations.forEach(newConv => {
+                            const prevConv = prevConversations.find(p => getPhoneLast10(p.jid) === getPhoneLast10(newConv.jid));
+                            if (prevConv && newConv.timestamp > prevConv.timestamp) {
+                                const latestMsg = newConv.messages?.[newConv.messages.length - 1];
+                                if (latestMsg && !latestMsg.fromMe) {
+                                    playMessageTone();
+                                }
+                            }
+                        });
+                    }
+
                     const incomingConvMap = new Map(data.conversations.map(c => [getPhoneLast10(c.jid), c]));
                     const mergedResults = data.conversations.map(newConv => {
                         const prevConv = prevConversations.find(p => getPhoneLast10(p.jid) === getPhoneLast10(newConv.jid));
@@ -524,6 +634,14 @@ export default function WhatsAppChatsPage() {
         executeDeleteConversation({ workspaceId, jid: jidToDelete }, { jid: jidToDelete });
     };
 
+    // Request desktop notification permission on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+        }
+    }, []);
+
+    // Initial Data Fetch on Mount or Account Switch
     useEffect(() => {
         fetchConversations();
         fetchTemplates();
@@ -543,16 +661,138 @@ export default function WhatsAppChatsPage() {
         };
         window.addEventListener('wa-account-switched', handleSwitch);
 
-        // Continuous polling every 3.5 seconds to fetch latest messages live
-        const interval = setInterval(() => {
-            fetchConversations();
-        }, 3500);
-
         return () => {
-            clearInterval(interval);
             window.removeEventListener('wa-account-switched', handleSwitch);
         };
     }, [workspaceId]);
+
+    // Dual-Mode Socket & Fallback Polling Timer
+    useEffect(() => {
+        if (!workspaceId) return;
+
+        if (isConnected) {
+            console.log('[KONNECTX_CHATS] Live WebSocket connected. Polling disabled.');
+            return;
+        }
+
+        // Fallback polling active only when socket is disconnected
+        console.warn('[KONNECTX_CHATS] Socket disconnected. Activating 4s fallback polling.');
+        const fallbackInterval = setInterval(() => {
+            fetchConversations();
+        }, 4000);
+
+        return () => {
+            clearInterval(fallbackInterval);
+        };
+    }, [isConnected, workspaceId]);
+
+    // WebSocket Real-Time Event Handlers
+    useEffect(() => {
+        if (!socket || !isConnected) return;
+
+        const handleNewMessage = (data) => {
+            console.log('[KONNECTX_CHATS] Live socket message event received:', data);
+            if (!data || data.workspaceId !== workspaceId) return;
+
+            const incomingMsg = data.message;
+            if (!incomingMsg) return;
+
+            const targetJid = data.jid || incomingMsg.jid;
+            const targetPhone10 = getPhoneLast10(targetJid);
+            const isCurrentlyViewing = getPhoneLast10(selectedJidRef.current) === targetPhone10;
+
+            // If user is actively reading this conversation, play the incoming audio chime
+            if (isCurrentlyViewing && !incomingMsg.fromMe) {
+                playMessageTone();
+            }
+
+            setConversations(prev => {
+                const convIndex = prev.findIndex(c => getPhoneLast10(c.jid) === targetPhone10);
+
+                if (convIndex === -1) {
+                    // New conversation from a new number: trigger full sync
+                    fetchConversations();
+                    return prev;
+                }
+
+                const existingConv = prev[convIndex];
+                const alreadyExists = existingConv.messages?.some(m =>
+                    (incomingMsg.id && m.id === incomingMsg.id) ||
+                    (incomingMsg.waId && m.waId === incomingMsg.waId) ||
+                    (String(m.id).startsWith('temp_') && m.text === incomingMsg.text && Math.abs((m.timestamp || 0) - (incomingMsg.timestamp || 0)) < 30)
+                );
+
+                let updatedMessages;
+                if (alreadyExists) {
+                    updatedMessages = existingConv.messages.map(m => {
+                        if (
+                            (incomingMsg.id && m.id === incomingMsg.id) ||
+                            (incomingMsg.waId && m.waId === incomingMsg.waId) ||
+                            (String(m.id).startsWith('temp_') && m.text === incomingMsg.text)
+                        ) {
+                            return { ...m, ...incomingMsg, status: incomingMsg.status || 'SENT' };
+                        }
+                        return m;
+                    });
+                } else {
+                    updatedMessages = [...(existingConv.messages || []), incomingMsg];
+                }
+
+                const updatedConv = {
+                    ...existingConv,
+                    messages: updatedMessages,
+                    lastMessage: incomingMsg.text || incomingMsg.metadata?.caption || (incomingMsg.metadata?.type ? `[${incomingMsg.metadata.type.toUpperCase()}]` : '[Message]'),
+                    timestamp: incomingMsg.timestamp || Math.floor(Date.now() / 1000),
+                    unreadCount: (!isCurrentlyViewing && !incomingMsg.fromMe)
+                        ? (existingConv.unreadCount || 0) + 1
+                        : (isCurrentlyViewing ? 0 : existingConv.unreadCount || 0)
+                };
+
+                const newConversations = [...prev];
+                newConversations.splice(convIndex, 1);
+                newConversations.unshift(updatedConv);
+                return newConversations;
+            });
+
+            if (isCurrentlyViewing) {
+                scrollToBottom('smooth');
+            }
+        };
+
+        const handleMessageStatus = (data) => {
+            if (!data || data.workspaceId !== workspaceId) return;
+
+            setConversations(prev => prev.map(conv => {
+                if (!conv.messages?.some(m => m.waId === data.waId)) return conv;
+                return {
+                    ...conv,
+                    messages: conv.messages.map(m =>
+                        m.waId === data.waId ? { ...m, status: data.status } : m
+                    )
+                };
+            }));
+        };
+
+        const handleRefresh = (data) => {
+            if (!data || data.workspaceId === workspaceId) {
+                fetchConversations();
+            }
+        };
+
+        socket.on('konnectx:cloud:message:new', handleNewMessage);
+        socket.on('konnectx:message:new', handleNewMessage);
+        socket.on('konnectx:cloud:message:status', handleMessageStatus);
+        socket.on('konnectx:message:status', handleMessageStatus);
+        socket.on('konnectx:cloud:refresh', handleRefresh);
+
+        return () => {
+            socket.off('konnectx:cloud:message:new', handleNewMessage);
+            socket.off('konnectx:message:new', handleNewMessage);
+            socket.off('konnectx:cloud:message:status', handleMessageStatus);
+            socket.off('konnectx:message:status', handleMessageStatus);
+            socket.off('konnectx:cloud:refresh', handleRefresh);
+        };
+    }, [socket, isConnected, workspaceId]);
 
     const scrollToBottom = (behavior = 'auto') => {
         const doScroll = () => {
@@ -994,6 +1234,18 @@ export default function WhatsAppChatsPage() {
                     <div className="flex items-center gap-2">
                         <MessageSquare className="w-4 h-4 text-primary" />
                         <h1 className="text-xl font-bold tracking-tight">WhatsApp Chats</h1>
+                        <Badge
+                            variant="outline"
+                            className={`text-[10px] px-2 py-0 h-5 font-medium flex items-center gap-1.5 ${
+                                isConnected
+                                    ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/10'
+                                    : 'border-amber-500/30 text-amber-400 bg-amber-500/10'
+                            }`}
+                            title={isConnected ? 'Real-time WebSocket connected (0 polling)' : 'Socket offline. Fallback polling active (4s interval).'}
+                        >
+                            <span className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                            <span>{isConnected ? 'Live' : 'Polling Fallback'}</span>
+                        </Badge>
                     </div>
                     <div className="flex flex-row gap-2">
                         <div className="relative w-80 border rounded-lg">

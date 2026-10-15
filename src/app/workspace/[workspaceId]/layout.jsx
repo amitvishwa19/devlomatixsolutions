@@ -13,6 +13,7 @@ import WhatsAppDefaultSync from '@/components/WhatsAppDefaultSync';
 import { OfflineBanner } from '@/components/global/OfflineBanner';
 import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/global/KeyboardShortcutsModal';
 import { CrmSocketProvider } from '@/providers/CrmSocketProvider';
+import WorkspaceMessageNotifier from '../_components/WorkspaceMessageNotifier';
 
 const font = Inter({ subsets: ["latin"] });
 
@@ -49,6 +50,7 @@ function WorkspaceLayoutInner({ children }) {
             </Suspense>
             <OfflineBanner />
             <ShortcutsModal />
+            <WorkspaceMessageNotifier />
             <div className={`flex h-dvh max-w-[100vw] ${font.className} overflow-hidden bg-background`}>
                 <SidebarProvider>
                     <AppSidebar />

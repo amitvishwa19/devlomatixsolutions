@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { 
     MessageSquare, Send, Workflow, Bot, Zap, Users, 
-    ShoppingCart, FileSpreadsheet, ArrowRight, Sparkles, Layers
+    ShoppingBag, ShoppingCart, FileSpreadsheet, ArrowRight, Sparkles, Layers
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

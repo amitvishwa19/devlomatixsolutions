@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { symmetricDecrypt } from "@/lib/encryption";
 import { getMediaUrl } from "@/app/workspace/[workspaceId]/konnectx/_lib/whatsapp-cloud-api";
 import { sendAndroidNotification } from "@/utils/fcm-notification";
+import { emitKonnectxEvent } from "@/lib/socket-bridge";
 
 // The VERIFY_TOKEN is now strictly tied to the ENCRYPTION_KEY environment variable
 const VERIFY_TOKEN = process.env.ENCRYPTION_KEY;
@@ -51,6 +52,44 @@ export async function POST(req) {
             const messages = value.messages;
             const statuses = value.statuses;
 
+            // Resolve credential and workspace associated with this phone number ID
+            const credentials = await db.credentials.findMany({
+                where: { platform: 'WHATSAPP_CLOUD' }
+            });
+
+            let targetCred = null;
+            for (const c of credentials) {
+                let cloudCreds = null;
+                const stored = c.credentials;
+                if (typeof stored === 'string' && stored.includes(':')) {
+                    try {
+                        const decryptedStr = symmetricDecrypt(stored);
+                        cloudCreds = JSON.parse(decryptedStr);
+                    } catch (e) { }
+                } else if (typeof stored === 'string') {
+                    try { cloudCreds = JSON.parse(stored); } catch (e) { }
+                } else { cloudCreds = stored; }
+
+                if (cloudCreds?.enc) {
+                    try {
+                        const decryptedStr = symmetricDecrypt(cloudCreds.enc);
+                        cloudCreds = JSON.parse(decryptedStr);
+                    } catch (e) { }
+                }
+
+                const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
+                if (credPhoneId === String(phoneNumberId)) {
+                    targetCred = c;
+                    break;
+                }
+            }
+
+            let resolvedWorkspaceId = targetCred?.workspaceId;
+            if (!resolvedWorkspaceId && targetCred?.userId) {
+                const ws = await db.server.findFirst({ where: { userId: targetCred.userId }, select: { id: true } }).catch(() => null);
+                resolvedWorkspaceId = ws?.id;
+            }
+
             // 1. Handle Status Updates (Delivered, Read, Failed)
             if (statuses && statuses.length > 0) {
                 for (const statusObj of statuses) {
@@ -77,6 +116,15 @@ export async function POST(req) {
                             data: { ...updateData, updatedAt: new Date() }
                         });
 
+                        // Broadcast delivery receipt in real time via socket
+                        if (resolvedWorkspaceId) {
+                            emitKonnectxEvent(resolvedWorkspaceId, 'konnectx:cloud:message:status', {
+                                workspaceId: resolvedWorkspaceId,
+                                waId,
+                                status: status.toUpperCase()
+                            });
+                        }
+
                         // Phase 1: Update Delivery Log for Analytics
                         await db.whatsAppDeliveryLog.updateMany({
                             where: { waId },
@@ -94,38 +142,6 @@ export async function POST(req) {
             }
 
             if (messages && messages.length > 0) {
-                // 1. Identify the user/credential associated with this phone number ID
-                const credentials = await db.credentials.findMany({
-                    where: { platform: 'WHATSAPP_CLOUD' }
-                });
-
-                let targetCred = null;
-                for (const c of credentials) {
-                    let cloudCreds = null;
-                    const stored = c.credentials;
-                    if (typeof stored === 'string' && stored.includes(':')) {
-                        try {
-                            const decryptedStr = symmetricDecrypt(stored);
-                            cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) { }
-                    } else if (typeof stored === 'string') {
-                        try { cloudCreds = JSON.parse(stored); } catch (e) { }
-                    } else { cloudCreds = stored; }
-
-                    if (cloudCreds?.enc) {
-                        try {
-                            const decryptedStr = symmetricDecrypt(cloudCreds.enc);
-                            cloudCreds = JSON.parse(decryptedStr);
-                        } catch (e) { }
-                    }
-
-                    const credPhoneId = String(cloudCreds?.phoneNumberId || cloudCreds?.phone_number_id || "");
-                    if (credPhoneId === String(phoneNumberId)) {
-                        targetCred = c;
-                        break;
-                    }
-                }
-
                 if (!targetCred) {
                     console.error(`[Webhook] No credential found matching PhoneID: ${phoneNumberId}`);
                     return NextResponse.json({ success: true });
@@ -259,6 +275,7 @@ export async function POST(req) {
                     console.log(`[Webhook] Processing ${message.type} from ${from}: ${textBody}`);
 
                     // Phase 3: Auto-Sync Contact
+                    let senderProfileName = value.contacts?.[0]?.profile?.name || null;
                     try {
                         const phone = from.replace(/\D/g, '');
                         let contact = await db.contact.findFirst({
@@ -269,7 +286,7 @@ export async function POST(req) {
                             contact = await db.contact.create({
                                 data: {
                                     userId,
-                                    name: value.contacts?.[0]?.profile?.name || `WA User (${phone})`,
+                                    name: senderProfileName || `WA User (${phone})`,
                                     phone,
                                     type: 'LEAD',
                                     tags: ['WHATSAPP_LEAD'],
@@ -299,6 +316,9 @@ export async function POST(req) {
                                 }
                             });
                         }
+                        if (contact?.name) {
+                            senderProfileName = contact.name;
+                        }
                     } catch (contactErr) {
                         console.error('[Webhook] Contact Sync Error:', contactErr);
                     }
@@ -315,7 +335,7 @@ export async function POST(req) {
                     }
 
                     // 3. Save Message to Database
-                    await db.whatsAppMessage.create({
+                    const savedNewMsg = await db.whatsAppMessage.create({
                         data: {
                             userId,
                             waId: msgId,
@@ -342,6 +362,26 @@ export async function POST(req) {
                             }
                         }
                     });
+
+                    // Broadcast real-time incoming message to workspace subscribers
+                    if (resolvedWorkspaceId) {
+                        console.log(`[Webhook] Emitting konnectx:cloud:message:new for workspace ${resolvedWorkspaceId}`);
+                        await emitKonnectxEvent(resolvedWorkspaceId, 'konnectx:cloud:message:new', {
+                            workspaceId: resolvedWorkspaceId,
+                            jid: contactJid,
+                            senderName: senderProfileName || value.contacts?.[0]?.profile?.name || from,
+                            message: {
+                                id: savedNewMsg.id,
+                                waId: savedNewMsg.waId,
+                                jid: savedNewMsg.jid,
+                                text: savedNewMsg.text,
+                                fromMe: false,
+                                timestamp: Number(savedNewMsg.timestamp),
+                                status: savedNewMsg.status,
+                                metadata: savedNewMsg.metadata
+                            }
+                        });
+                    }
 
                     // 4. Send Push Notification
                     try {

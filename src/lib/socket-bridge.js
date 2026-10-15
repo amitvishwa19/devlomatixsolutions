@@ -43,13 +43,13 @@ export async function emitKonnectxEvent(workspaceId, event, data) {
       });
 
       if (res.ok) {
+        console.log(`[SOCKET_BRIDGE] Dispatched '${event}' to workspace '${workspaceId}' via ${baseUrl}`);
         return; // Successfully dispatched
+      } else {
+        console.warn(`[SOCKET_BRIDGE_FAIL] ${res.status} ${res.statusText} from ${endpoint}`);
       }
-    } catch (_) {
-      // Continue to next candidate URL or fail safely without breaking caller
+    } catch (err) {
+      console.warn(`[SOCKET_BRIDGE_ERR] Failed connecting to ${baseUrl}: ${err.message}`);
     }
   }
-
-  // Non-intrusive debug log if all candidate URLs were unreachable
-  // console.debug(`[SOCKET_BRIDGE_UNREACHABLE] Could not emit '${event}' to workspace '${workspaceId}'`);
 }
