@@ -48,19 +48,22 @@ import { importContacts } from './_actions/import-contacts';
 import { sendMessage } from './_actions/send-message';
 import { removeContactShare } from './_actions/remove-contact-share';
 
-// Modular Components
-import ManageCategoriesDialog from './_components/ManageCategoriesDialog';
-import ManageTagsDialog from './_components/ManageTagsDialog';
-import ManageGroupsDialog from './_components/ManageGroupsDialog';
-import ContactDialog from './_components/ContactDialog';
-import ReviewImportDialog from './_components/ReviewImportDialog';
-import BulkDeleteDialog from './_components/BulkDeleteDialog';
-import BulkTagDialog from './_components/BulkTagDialog';
-import BulkCategoryDialog from './_components/BulkCategoryDialog';
-import BulkGroupDialog from './_components/BulkGroupDialog';
-import MessageDialog from './_components/MessageDialog';
+import dynamic from 'next/dynamic';
+
+// Modular Components & Lazy-Loaded Dialogs
 import ContactCard from './_components/ContactCard';
-import ShareContactDialog from './_components/ShareContactDialog';
+
+const ManageCategoriesDialog = dynamic(() => import('./_components/ManageCategoriesDialog'), { ssr: false });
+const ManageTagsDialog = dynamic(() => import('./_components/ManageTagsDialog'), { ssr: false });
+const ManageGroupsDialog = dynamic(() => import('./_components/ManageGroupsDialog'), { ssr: false });
+const ContactDialog = dynamic(() => import('./_components/ContactDialog'), { ssr: false });
+const ReviewImportDialog = dynamic(() => import('./_components/ReviewImportDialog'), { ssr: false });
+const BulkDeleteDialog = dynamic(() => import('./_components/BulkDeleteDialog'), { ssr: false });
+const BulkTagDialog = dynamic(() => import('./_components/BulkTagDialog'), { ssr: false });
+const BulkCategoryDialog = dynamic(() => import('./_components/BulkCategoryDialog'), { ssr: false });
+const BulkGroupDialog = dynamic(() => import('./_components/BulkGroupDialog'), { ssr: false });
+const MessageDialog = dynamic(() => import('./_components/MessageDialog'), { ssr: false });
+const ShareContactDialog = dynamic(() => import('./_components/ShareContactDialog'), { ssr: false });
 
 export default function ContactsPage() {
     const params = useParams();
