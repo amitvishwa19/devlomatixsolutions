@@ -986,7 +986,7 @@ export default function WhatsAppChatsPage() {
     }
 
     return (
-        <div id='main-content-container' className="h-full flex flex-col overflow-hidden shadow-2xl transition-all ">
+        <div id='main-content-container' className="absolute inset-0 flex flex-col overflow-hidden shadow-2xl transition-all">
 
 
             <div className="border-b border-border/50 bg-card/20 backdrop-blur-sm shrink-0">
@@ -1026,6 +1026,7 @@ export default function WhatsAppChatsPage() {
 
 
             <div className="flex-1 min-h-0 flex overflow-hidden">
+
 
                 <div className="w-[320px] md:w-[360px] border-r border-border/50 flex flex-col h-full shrink-0 overflow-hidden bg-card/5">
                     <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col flex-1 min-h-0 w-full overflow-hidden">
@@ -1082,7 +1083,7 @@ export default function WhatsAppChatsPage() {
                                 ))}
                             </div>
 
-                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                            <ScrollArea id="chats-contacts-list" className="flex-1 min-h-0 w-full overflow-hidden">
                                 <div id="chats-contacts-list-content" className="flex flex-col w-full min-w-0">
                                     {displayConversations.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
@@ -1247,7 +1248,7 @@ export default function WhatsAppChatsPage() {
                                 ))}
                             </div>
 
-                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                            <ScrollArea className="flex-1 min-h-0 w-full overflow-hidden">
                                 <div className="flex flex-col w-full min-w-0">
                                     {filteredContacts.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center flex-1 h-full text-center p-8 animate-in fade-in zoom-in duration-700">
@@ -1298,7 +1299,7 @@ export default function WhatsAppChatsPage() {
                             </ScrollArea>
                         </TabsContent>
 
-                        <TabsContent value="segments" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col">
+                        <TabsContent value="segments" className="flex-1 min-h-0 m-0 p-0 border-0 data-[state=active]:flex flex-col overflow-hidden">
                             {/* Sub Segment Filter Badges */}
                             <div className="px-3 py-1.5 border-b border-border/40 bg-card/20 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
                                 <div className="flex items-center gap-1">
@@ -1332,7 +1333,7 @@ export default function WhatsAppChatsPage() {
                                 )}
                             </div>
 
-                            <ScrollArea className="flex-1 min-h-0 w-full overflow-x-hidden [&>div>div]:block! [&>div>div]:w-full">
+                            <ScrollArea className="flex-1 min-h-0 w-full overflow-hidden">
                                 <div className="flex flex-col p-2.5 space-y-3 w-full">
                                     {/* 1. CATEGORIES SECTION */}
                                     {(segmentViewFilter === 'all' || segmentViewFilter === 'categories') && (
@@ -1672,6 +1673,8 @@ export default function WhatsAppChatsPage() {
                         </TabsContent>
                     </Tabs>
                 </div>
+
+
 
                 <div className="flex-1 min-w-0 flex flex-col h-full overflow-hidden bg-background/30 backdrop-blur-[2px]">
                     {selectedJid ? (

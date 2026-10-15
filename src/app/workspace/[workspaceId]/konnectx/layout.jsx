@@ -10,9 +10,7 @@ export const metadata = {
 export default async function DashboardLayout({ children }) {
     return (
         <KonnectxProvider>
-            <div className={`w-full h-full min-h-full ${font.className}`}>
-                {children}
-            </div>
+            {children}
         </KonnectxProvider>
     );
 }
