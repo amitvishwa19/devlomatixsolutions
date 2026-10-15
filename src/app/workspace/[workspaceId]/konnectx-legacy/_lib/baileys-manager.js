@@ -835,14 +835,22 @@ class KonnectLegacyManager {
                 loggedText = bodyText;
 
                 const interactiveMsg = {
-                    interactiveMessage: proto.Message.InteractiveMessage.create({
-                        body: proto.Message.InteractiveMessage.Body.create({ text: bodyText }),
-                        footer: footerText ? proto.Message.InteractiveMessage.Footer.create({ text: footerText }) : undefined,
-                        header: headerProto,
-                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
-                            buttons: nativeButtons
-                        })
-                    })
+                    viewOnceMessage: {
+                        message: {
+                            messageContextInfo: {
+                                deviceListMetadata: {},
+                                deviceListMetadataVersion: 2
+                            },
+                            interactiveMessage: proto.Message.InteractiveMessage.create({
+                                body: proto.Message.InteractiveMessage.Body.create({ text: bodyText }),
+                                footer: footerText ? proto.Message.InteractiveMessage.Footer.create({ text: footerText }) : undefined,
+                                header: headerProto,
+                                nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                                    buttons: nativeButtons
+                                })
+                            })
+                        }
+                    }
                 };
 
                 const userJid = state.sock.authState?.creds?.me?.id || state.sock.user?.id || (state.phoneNumber ? `${state.phoneNumber}@s.whatsapp.net` : undefined);
