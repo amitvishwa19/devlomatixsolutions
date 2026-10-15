@@ -428,6 +428,8 @@ model WhatsAppMessage {
   @@index([userId])
   @@index([jid])
   @@index([createdAt])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([jid, createdAt(sort: Desc)])
 }
 
 model WhatsAppConnectionLog {
@@ -487,6 +489,8 @@ model Contact {
   @@index([credentialId])
   @@index([phone])
   @@index([accountId])
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([userId, phone])
 }
 
 model BotFlow {

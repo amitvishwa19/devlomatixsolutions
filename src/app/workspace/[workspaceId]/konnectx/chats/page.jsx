@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams } from "next/navigation";
 import {
     Search,
@@ -47,8 +47,12 @@ import { getContacts } from "../contacts/_actions/get-contacts";
 import { getGroups } from "../contacts/_actions/get-groups";
 import { getCategories } from "../contacts/_actions/get-categories";
 import { getTemplates } from "../template/_actions/get-templates";
-import ManageContactModal from "./_components/ManageContactModal";
-import ForwardMessageModal from "./_components/ForwardMessageModal";
+import dynamic from "next/dynamic";
+
+const ManageContactModal = dynamic(() => import("./_components/ManageContactModal"), { ssr: false });
+const ForwardMessageModal = dynamic(() => import("./_components/ForwardMessageModal"), { ssr: false });
+import ChatInputBar from "./_components/ChatInputBar";
+
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useCrmSocket } from "@/providers/CrmSocketProvider";
@@ -230,7 +234,6 @@ export default function WhatsAppChatsPage() {
     const [selectedJid, setSelectedJid] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
-    const [newMessage, setNewMessage] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [templates, setTemplates] = useState([]);
     const [previewTemplate, setPreviewTemplate] = useState(null);
@@ -351,13 +354,22 @@ export default function WhatsAppChatsPage() {
     }
 
     // Derived State: Get the actual chat object based on selectedJid
-    const selectedChat = isSegmentChat ? null : conversations.find(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
-    const selectedContact = isSegmentChat ? null : allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
+    const selectedChat = useMemo(() => {
+        if (isSegmentChat || !selectedJid) return null;
+        const targetLast10 = getPhoneLast10(selectedJid);
+        return conversations.find(c => getPhoneLast10(c.jid) === targetLast10) || null;
+    }, [isSegmentChat, selectedJid, conversations]);
+
+    const selectedContact = useMemo(() => {
+        if (isSegmentChat || !selectedJid) return null;
+        return getContactForJid(selectedJid);
+    }, [isSegmentChat, selectedJid, getContactForJid]);
 
     // Display name for the header
-    const activeName = isSegmentChat
-        ? activeSegmentData?.name
-        : (selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0]);
+    const activeName = useMemo(() => {
+        if (isSegmentChat) return activeSegmentData?.name;
+        return selectedChat?.name || selectedContact?.name || selectedJid?.split('@')[0];
+    }, [isSegmentChat, activeSegmentData?.name, selectedChat?.name, selectedContact?.name, selectedJid]);
 
     const selectedJidRef = useRef(selectedJid);
     selectedJidRef.current = selectedJid;
@@ -835,11 +847,9 @@ export default function WhatsAppChatsPage() {
         }
     }, [selectedJid, selectedChat?.messages?.length]);
 
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!newMessage.trim() || !selectedJid || isSending) return;
-
-        const textToSend = newMessage;
+    const handleSendMessage = useCallback(async (text) => {
+        const textToSend = typeof text === 'string' ? text.trim() : "";
+        if (!textToSend || !selectedJid || isSending) return;
 
         // Handle Broadcast Mode for Group / Category / Tag
         if (isSegmentChat && activeSegmentData) {
@@ -863,7 +873,6 @@ export default function WhatsAppChatsPage() {
                 [selectedJid]: [...(prev[selectedJid] || []), optimisticMsg]
             }));
 
-            setNewMessage("");
             setIsSending(true);
 
             executeSendBroadcastMessage({
@@ -906,21 +915,15 @@ export default function WhatsAppChatsPage() {
             return conv;
         }));
 
-        setNewMessage("");
         setIsSending(true);
         scrollToBottom('smooth');
         executeSendMessage({ workspaceId, to: selectedJid, type: 'text', body: textToSend }, { to: selectedJid, tempId, type: 'text' });
-    };
+    }, [selectedJid, isSending, isSegmentChat, activeSegmentData, workspaceId, executeSendBroadcastMessage, executeSendMessage, scrollToBottom]);
 
     const handleGetAiSuggestions = () => {
         if (!selectedChat || selectedChat.messages.length === 0) return;
         setIsAiLoading(true);
         executeAiSuggestions({ workspaceId, messages: selectedChat.messages.slice(-10) });
-    };
-
-    const handleApplySuggestion = (text) => {
-        setNewMessage(text);
-        setAiSuggestions([]);
     };
 
     const handleOpenTemplatePicker = () => {
@@ -1131,11 +1134,25 @@ export default function WhatsAppChatsPage() {
         setIsPreviewOpen(true);
     };
 
-    // Helper: Find contact for a JID
-    const getContactForJid = (jid) => {
+    // Helper: Map all contacts by normalized last 10 digits for O(1) instant lookup
+    const contactByLast10Map = useMemo(() => {
+        const map = new Map();
+        for (const c of allContacts) {
+            if (c.phone) {
+                const last10 = getPhoneLast10(c.phone);
+                if (last10 && !map.has(last10)) {
+                    map.set(last10, c);
+                }
+            }
+        }
+        return map;
+    }, [allContacts]);
+
+    const getContactForJid = useCallback((jid) => {
+        if (!jid) return null;
         const jidLast10 = getPhoneLast10(jid);
-        return allContacts.find(c => getPhoneLast10(c.phone) === jidLast10);
-    };
+        return contactByLast10Map.get(jidLast10) || null;
+    }, [contactByLast10Map]);
 
     const handleSelectContactChat = (contact) => {
         const contactLast10 = getPhoneLast10(contact.phone);
@@ -1148,41 +1165,42 @@ export default function WhatsAppChatsPage() {
         setActiveTab('chats');
     };
 
+    const filteredConversations = useMemo(() => {
+        const searchLower = searchTerm.trim().toLowerCase();
+        return conversations.filter(c => {
+            const contact = getContactForJid(c.jid);
+            const contactName = contact?.name || "";
+            const contactPhone = contact?.phone || "";
 
-    const filteredConversations = conversations.filter(c => {
-        const contact = getContactForJid(c.jid);
-        const contactName = contact?.name || "";
-        const contactPhone = contact?.phone || "";
-        const searchLower = searchTerm.toLowerCase();
+            const matchesSearch = !searchLower ||
+                c.jid.toLowerCase().includes(searchLower) ||
+                (c.name || "").toLowerCase().includes(searchLower) ||
+                contactName.toLowerCase().includes(searchLower) ||
+                contactPhone.includes(searchLower);
 
-        const matchesSearch = !searchTerm ||
-            c.jid.toLowerCase().includes(searchLower) ||
-            (c.name || "").toLowerCase().includes(searchLower) ||
-            contactName.toLowerCase().includes(searchLower) ||
-            contactPhone.includes(searchTerm);
+            if (!matchesSearch) return false;
 
-        let matchesSegment = true;
+            if (activeSegment.startsWith('group:')) {
+                const groupId = activeSegment.split(':')[1];
+                return contact?.groups?.some(g => g.id === groupId);
+            } else if (activeSegment.startsWith('category:')) {
+                const catName = activeSegment.split(':')[1];
+                return contact?.category === catName;
+            } else if (activeSegment.startsWith('tag:')) {
+                const tagName = activeSegment.split(':')[1];
+                return contact?.tags?.includes(tagName);
+            }
 
-        if (activeSegment.startsWith('group:')) {
-            const groupId = activeSegment.split(':')[1];
-            matchesSegment = contact?.groups?.some(g => g.id === groupId);
-        } else if (activeSegment.startsWith('category:')) {
-            const catName = activeSegment.split(':')[1];
-            matchesSegment = contact?.category === catName;
-        } else if (activeSegment.startsWith('tag:')) {
-            const tagName = activeSegment.split(':')[1];
-            matchesSegment = contact?.tags?.includes(tagName);
-        }
-
-        return matchesSearch && matchesSegment;
-    });
+            return true;
+        });
+    }, [conversations, searchTerm, activeSegment, getContactForJid]);
 
     const displayConversations = useMemo(() => {
         let list = [...filteredConversations];
         if (selectedJid && !selectedJid.startsWith('segment:')) {
             const hasConv = list.some(c => getPhoneLast10(c.jid) === getPhoneLast10(selectedJid));
             if (!hasConv) {
-                const contact = getContactForJid(selectedJid) || allContacts.find(c => getPhoneLast10(c.phone) === getPhoneLast10(selectedJid));
+                const contact = getContactForJid(selectedJid);
                 if (contact) {
                     const cleanPhoneDigits = contact.phone.replace(/\D/g, '');
                     const jid = cleanPhoneDigits.length === 10 ? `91${cleanPhoneDigits}@s.whatsapp.net` : `${cleanPhoneDigits}@s.whatsapp.net`;
@@ -1198,26 +1216,31 @@ export default function WhatsAppChatsPage() {
             }
         }
         return list;
-    }, [filteredConversations, selectedJid, allContacts]);
+    }, [filteredConversations, selectedJid, getContactForJid]);
 
-    const filteredContacts = allContacts.filter(contact => {
-        const matchesSearch = contact.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            contact.phone.includes(searchTerm);
+    const filteredContacts = useMemo(() => {
+        const searchLower = searchTerm.trim().toLowerCase();
+        return allContacts.filter(contact => {
+            const matchesSearch = !searchLower ||
+                (contact.name || "").toLowerCase().includes(searchLower) ||
+                (contact.phone || "").includes(searchLower);
 
-        let matchesSegment = true;
-        if (activeSegment.startsWith('group:')) {
-            const groupId = activeSegment.split(':')[1];
-            matchesSegment = contact.groups?.some(g => g.id === groupId);
-        } else if (activeSegment.startsWith('category:')) {
-            const catName = activeSegment.split(':')[1];
-            matchesSegment = contact.category === catName;
-        } else if (activeSegment.startsWith('tag:')) {
-            const tagName = activeSegment.split(':')[1];
-            matchesSegment = contact.tags?.includes(tagName);
-        }
+            if (!matchesSearch) return false;
 
-        return matchesSearch && matchesSegment;
-    });
+            if (activeSegment.startsWith('group:')) {
+                const groupId = activeSegment.split(':')[1];
+                return contact.groups?.some(g => g.id === groupId);
+            } else if (activeSegment.startsWith('category:')) {
+                const catName = activeSegment.split(':')[1];
+                return contact.category === catName;
+            } else if (activeSegment.startsWith('tag:')) {
+                const tagName = activeSegment.split(':')[1];
+                return contact.tags?.includes(tagName);
+            }
+
+            return true;
+        });
+    }, [allContacts, searchTerm, activeSegment]);
 
     const handleTabChange = (value) => {
         setActiveTab(value);
@@ -2337,77 +2360,19 @@ export default function WhatsAppChatsPage() {
                             )}
 
                             {/* Chat Input */}
-                            <div className="p-4 bg-card/30 backdrop-blur-sm border-t border-border/50 flex items-center gap-3 shrink-0">
-                                <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
-                                    <Smile className="w-5 h-5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="rounded-full text-muted-foreground hover:text-primary transition-colors">
-                                    <Paperclip className="w-5 h-5" />
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    title="Send a Template"
-                                    onClick={handleOpenTemplatePicker}
-                                    className="rounded-full text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                    <Layout className="w-5 h-5" />
-                                </Button>
-
-                                <form onSubmit={handleSendMessage} className="flex-1 flex flex-col gap-2">
-                                    {/* AI Suggestions Chips */}
-                                    {aiSuggestions.length > 0 && (
-                                        <div className="flex flex-wrap gap-2 mb-1 animate-in slide-in-from-bottom-2 duration-300">
-                                            {aiSuggestions.map((s, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    onClick={() => handleApplySuggestion(s)}
-                                                    className="bg-primary/10 hover:bg-primary/20 text-primary text-[10px] px-2.5 py-1 rounded-full border border-primary/20 transition-colors max-w-[200px] truncate"
-                                                >
-                                                    {s}
-                                                </button>
-                                            ))}
-                                            <button
-                                                type="button"
-                                                onClick={() => setAiSuggestions([])}
-                                                className="text-[10px] text-muted-foreground hover:text-foreground px-2"
-                                            >
-                                                Clear
-                                            </button>
-                                        </div>
-                                    )}
-                                    <div className="flex gap-3 items-center">
-                                        <div className="flex-1 relative">
-                                            <Input
-                                                className="bg-background/50 border-border/30 h-10 rounded-full px-4 text-xs focus-visible:ring-primary/20 w-full"
-                                                placeholder={isSegmentChat ? `Broadcast to all ${activeSegmentData?.recipients?.length || 0} members of ${activeSegmentData?.name || 'group'}...` : "Type a message..."}
-                                                value={newMessage}
-                                                onChange={(e) => setNewMessage(e.target.value)}
-                                            />
-                                            <Button
-                                                type="button"
-                                                onClick={handleGetAiSuggestions}
-                                                disabled={isAiLoading || (!selectedChat && !isSegmentChat)}
-                                                variant="ghost"
-                                                size="icon"
-                                                className="absolute right-1 top-1 w-8 h-8 rounded-full text-primary hover:bg-primary/10"
-                                            >
-                                                {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-                                            </Button>
-                                        </div>
-                                        <Button
-                                            type="submit"
-                                            disabled={!newMessage.trim() || isSending}
-                                            className="rounded-full w-10 h-10 p-0 bg-primary hover:bg-primary/90 shrink-0"
-                                            title={isSegmentChat ? `Broadcast message to ${activeSegmentData?.recipients?.length || 0} members` : "Send message"}
-                                        >
-                                            {isSending ? <Loader2 className="w-4 h-4 animate-spin font-bold" /> : <Send className="w-4 h-4" />}
-                                        </Button>
-                                    </div>
-                                </form>
-                            </div>
+                            <ChatInputBar
+                                onSendMessage={handleSendMessage}
+                                onOpenTemplatePicker={handleOpenTemplatePicker}
+                                onGetAiSuggestions={handleGetAiSuggestions}
+                                aiSuggestions={aiSuggestions}
+                                onClearAiSuggestions={() => setAiSuggestions([])}
+                                isAiLoading={isAiLoading}
+                                isSending={isSending}
+                                placeholder={isSegmentChat ? `Broadcast to all ${activeSegmentData?.recipients?.length || 0} members of ${activeSegmentData?.name || 'group'}...` : "Type a message..."}
+                                isSegmentChat={isSegmentChat}
+                                activeSegmentData={activeSegmentData}
+                                disabled={!selectedChat && !isSegmentChat}
+                            />
                         </>
                     ) : (
                         <div id='chat-empty' className="flex-1 flex flex-col items-center justify-center p-8 text-center h-full bg-muted/5 animate-in fade-in zoom-in duration-700">

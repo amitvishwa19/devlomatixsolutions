@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { useSession } from 'next-auth/react';
 
@@ -12,6 +12,7 @@ const WorkspaceContext = createContext();
 
 export const WorkspaceProvider = ({ children }) => {
     const { workspaceId } = useParams();
+    const pathname = usePathname();
     const { data: session } = useSession();
     
     // Derive isSuperAdmin from session roles
@@ -30,7 +31,7 @@ export const WorkspaceProvider = ({ children }) => {
     const [roles, setRoles] = useState([]);
     const [permissions, setPermissions] = useState([]); // All available permission definitions
     const [departments, setDepartments] = useState([]);
-    const [accessLoading, setAccessLoading] = useState(true);
+    const [accessLoading, setAccessLoading] = useState(false);
     const [previewRole, setPreviewRole] = useState(null);
 
     const DEFAULT_BRANDING = {
@@ -174,8 +175,13 @@ export const WorkspaceProvider = ({ children }) => {
 
     useEffect(() => {
         fetchSettings();
-        if (workspaceId) fetchAccessData();
-    }, [fetchSettings, fetchAccessData, workspaceId]);
+        const isAccessRoute = pathname?.includes('/system/access');
+        if (workspaceId && (isAccessRoute || previewRole)) {
+            fetchAccessData();
+        } else {
+            setAccessLoading(false);
+        }
+    }, [fetchSettings, fetchAccessData, workspaceId, pathname, previewRole]);
 
     const value = useMemo(() => ({
         // Core

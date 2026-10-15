@@ -11,6 +11,7 @@ const GetConversationsSchema = z.object({
     workspaceId: z.string(),
     credentialId: z.string().optional(),
     phoneNumberId: z.string().optional(),
+    limit: z.number().optional()
 });
 
 const handler = async (data) => {
@@ -124,12 +125,21 @@ const handler = async (data) => {
                     { workspaceId },
                     { userId: { in: workspaceUserIds } }
                 ]
+            },
+            select: {
+                id: true,
+                name: true,
+                phone: true
             }
         });
 
         const allShares = db.conversationShare.findMany({
             where: { workspaceId },
-            include: {
+            select: {
+                id: true,
+                jid: true,
+                sharedWithUserId: true,
+                sharedByUserId: true,
                 sharedWith: {
                     select: { id: true, displayName: true, email: true }
                 }
@@ -137,7 +147,16 @@ const handler = async (data) => {
         });
 
         const allProducts = db.eCommerceProduct.findMany({
-            where: { userId: { in: workspaceUserIds } }
+            where: { userId: { in: workspaceUserIds } },
+            select: {
+                id: true,
+                sku: true,
+                title: true,
+                price: true,
+                currency: true,
+                imageUrl: true,
+                imageUrls: true
+            }
         }).catch(() => []);
 
         const allTemplates = db.messageTemplate.findMany({
@@ -195,9 +214,25 @@ const handler = async (data) => {
             ];
         }
 
+        const messageLimit = Math.min(Number(data.limit) || 800, 3000);
+
+        const messageSelect = {
+            id: true,
+            waId: true,
+            jid: true,
+            text: true,
+            fromMe: true,
+            timestamp: true,
+            status: true,
+            metadata: true,
+            createdAt: true
+        };
+
         const ownMessages = await db.whatsAppMessage.findMany({
             where: messageWhere,
-            orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
+            orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }],
+            take: messageLimit,
+            select: messageSelect
         }).catch(() => []);
 
         const assignedWhere = { jid: { in: assignedJids } };
@@ -216,7 +251,9 @@ const handler = async (data) => {
         const assignedMessages = assignedJids.length > 0
             ? await db.whatsAppMessage.findMany({
                 where: assignedWhere,
-                orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }]
+                orderBy: [{ timestamp: 'desc' }, { createdAt: 'desc' }],
+                take: messageLimit,
+                select: messageSelect
             }).catch(() => [])
             : [];
 
@@ -234,7 +271,10 @@ const handler = async (data) => {
         // Fetch contacts owned by assigning users for name resolution
         const assigningUserIds = [...new Set(assignedShares.map(s => s.sharedByUserId))];
         const assignorContacts = assigningUserIds.length > 0
-            ? await db.contact.findMany({ where: { userId: { in: assigningUserIds } } })
+            ? await db.contact.findMany({ 
+                where: { userId: { in: assigningUserIds } },
+                select: { id: true, name: true, phone: true }
+              })
             : [];
 
         const contactMap = {};
