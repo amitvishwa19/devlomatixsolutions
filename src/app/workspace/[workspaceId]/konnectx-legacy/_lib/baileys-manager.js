@@ -732,6 +732,7 @@ class KonnectLegacyManager {
         if (!targetJid.includes('@s.whatsapp.net') && !targetJid.includes('@g.us')) {
             targetJid = `${targetJid}@s.whatsapp.net`;
         }
+        const cleanPhone = targetJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
 
         let messagePayload;
         if (typeof content === 'string') {
@@ -755,7 +756,6 @@ class KonnectLegacyManager {
                 select: { userId: true }
             });
             const userId = authRecord?.userId || sessionId;
-            const cleanPhone = targetJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
 
             await db.konnectLegacyMessage.upsert({
                 where: { waId: sent.key?.id || `out_${Date.now()}` },
