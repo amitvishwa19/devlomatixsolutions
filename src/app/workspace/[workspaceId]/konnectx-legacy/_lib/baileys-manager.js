@@ -60,6 +60,20 @@ function extractMessageContent(msg) {
         text = m.listResponseMessage.title;
     } else if (m.templateButtonReplyMessage?.selectedDisplayText) {
         text = m.templateButtonReplyMessage.selectedDisplayText;
+    } else if (m.interactiveResponseMessage) {
+        const resp = m.interactiveResponseMessage;
+        if (resp.body?.text) {
+            text = resp.body.text;
+        } else if (resp.nativeFlowResponseMessage?.paramsJson) {
+            try {
+                const parsed = JSON.parse(resp.nativeFlowResponseMessage.paramsJson);
+                text = parsed.display_text || parsed.title || parsed.id || '[Button Clicked]';
+            } catch (_) {
+                text = '[Button Clicked]';
+            }
+        } else {
+            text = '[Button Clicked]';
+        }
     } else if (m.protocolMessage) {
         return null; // ignore protocol messages (revokes, sync keys)
     } else {
@@ -734,20 +748,173 @@ class KonnectLegacyManager {
         }
         const cleanPhone = targetJid.replace('@s.whatsapp.net', '').replace('@g.us', '');
 
-        let messagePayload;
-        if (typeof content === 'string') {
-            messagePayload = { text: content };
-        } else if (content.text) {
-            messagePayload = { text: content.text };
-        } else if (content.image) {
-            messagePayload = { image: content.image, caption: content.caption || '' };
-        } else if (content.document) {
-            messagePayload = { document: content.document, fileName: content.fileName || 'file.pdf', mimetype: 'application/pdf' };
-        } else {
-            messagePayload = content;
-        }
+        let sent;
+        let loggedText = typeof content === 'string' ? content : (content.text || content.body || '[Media Message]');
 
-        const sent = await state.sock.sendMessage(targetJid, messagePayload);
+        if (content && typeof content === 'object' && Array.isArray(content.buttons) && content.buttons.length > 0) {
+            try {
+                // Map buttons to nativeFlow interactive buttons
+                const nativeButtons = content.buttons.map((btn, idx) => {
+                    const btnType = (btn.type || 'QUICK_REPLY').toUpperCase();
+                    if (btnType === 'URL') {
+                        return {
+                            name: 'cta_url',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: btn.text || 'Visit Website',
+                                url: btn.value || 'https://devlomatix.com',
+                                merchant_url: btn.value || 'https://devlomatix.com'
+                            })
+                        };
+                    } else if (btnType === 'PHONE_NUMBER' || btnType === 'CALL') {
+                        return {
+                            name: 'cta_call',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: btn.text || 'Call Now',
+                                phone_number: btn.value || ''
+                            })
+                        };
+                    } else if (btnType === 'COPY_CODE') {
+                        return {
+                            name: 'cta_copy',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: btn.text || 'Copy Code',
+                                copy_code: btn.value || ''
+                            })
+                        };
+                    } else {
+                        return {
+                            name: 'quick_reply',
+                            buttonParamsJson: JSON.stringify({
+                                display_text: btn.text || `Option ${idx + 1}`,
+                                id: btn.value || `btn_${idx + 1}`
+                            })
+                        };
+                    }
+                });
+
+                let headerProto = undefined;
+                if (content.headerText) {
+                    headerProto = {
+                        title: content.headerText,
+                        hasMediaAttachment: false
+                    };
+                } else if (content.image?.url) {
+                    try {
+                        const media = await prepareWAMessageMedia(
+                            { image: { url: content.image.url } },
+                            { upload: state.sock.waUploadToServer }
+                        );
+                        headerProto = {
+                            hasMediaAttachment: true,
+                            imageMessage: media.imageMessage
+                        };
+                    } catch (e) {
+                        console.warn('[BAILEYS] Header image upload warn:', e.message);
+                    }
+                } else if (content.document?.url) {
+                    try {
+                        const media = await prepareWAMessageMedia(
+                            {
+                                document: { url: content.document.url },
+                                mimetype: content.document.mimetype || 'application/pdf',
+                                fileName: content.fileName || 'document.pdf'
+                            },
+                            { upload: state.sock.waUploadToServer }
+                        );
+                        headerProto = {
+                            hasMediaAttachment: true,
+                            documentMessage: media.documentMessage
+                        };
+                    } catch (e) {
+                        console.warn('[BAILEYS] Header doc upload warn:', e.message);
+                    }
+                }
+
+                const bodyText = content.text || content.body || '';
+                const footerText = content.footer || '';
+                loggedText = bodyText;
+
+                const interactiveMsg = {
+                    interactiveMessage: proto.Message.InteractiveMessage.create({
+                        body: proto.Message.InteractiveMessage.Body.create({ text: bodyText }),
+                        footer: footerText ? proto.Message.InteractiveMessage.Footer.create({ text: footerText }) : undefined,
+                        header: headerProto,
+                        nativeFlowMessage: proto.Message.InteractiveMessage.NativeFlowMessage.create({
+                            buttons: nativeButtons
+                        })
+                    })
+                };
+
+                const userJid = state.sock.authState?.creds?.me?.id || state.sock.user?.id || (state.phoneNumber ? `${state.phoneNumber}@s.whatsapp.net` : undefined);
+                const waMessage = generateWAMessageFromContent(targetJid, interactiveMsg, {
+                    userJid,
+                    upload: state.sock.waUploadToServer
+                });
+
+                const isGroup = targetJid.endsWith('@g.us');
+                const additionalNodes = [
+                    {
+                        tag: 'biz',
+                        attrs: {},
+                        content: [
+                            {
+                                tag: 'interactive',
+                                attrs: {
+                                    type: 'native_flow',
+                                    v: '1'
+                                },
+                                content: [
+                                    {
+                                        tag: 'native_flow',
+                                        attrs: {
+                                            v: '9',
+                                            name: 'mixed'
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ];
+
+                if (!isGroup) {
+                    additionalNodes.push({
+                        tag: 'bot',
+                        attrs: { biz_bot: '1' }
+                    });
+                }
+
+                await state.sock.relayMessage(targetJid, waMessage.message, {
+                    messageId: waMessage.key.id,
+                    additionalNodes
+                });
+
+                sent = waMessage;
+            } catch (interactiveErr) {
+                console.warn('[BAILEYS] Interactive button send failed, falling back to clean text:', interactiveErr.message);
+                const buttonList = content.buttons.map((b, i) => `👉 ${b.text || `Option ${i + 1}`}${b.value ? `: ${b.value}` : ''}`).join('\n');
+                const fallbackText = `${content.text || content.body || ''}\n\n${buttonList}${content.footer ? `\n\n_${content.footer}_` : ''}`;
+                loggedText = fallbackText;
+                sent = await state.sock.sendMessage(targetJid, { text: fallbackText });
+            }
+        } else {
+            let messagePayload;
+            if (typeof content === 'string') {
+                messagePayload = { text: content };
+            } else if (content.text) {
+                messagePayload = { text: content.text };
+            } else if (content.image) {
+                messagePayload = { image: content.image, caption: content.caption || '' };
+                loggedText = content.caption || '[Image]';
+            } else if (content.document) {
+                messagePayload = { document: content.document, fileName: content.fileName || 'file.pdf', mimetype: 'application/pdf' };
+                loggedText = content.caption || content.fileName || '[Document]';
+            } else {
+                messagePayload = content;
+            }
+
+            sent = await state.sock.sendMessage(targetJid, messagePayload);
+        }
 
         // Record in isolated KonnectLegacyMessage table
         try {
@@ -760,7 +927,7 @@ class KonnectLegacyManager {
             await db.konnectLegacyMessage.upsert({
                 where: { waId: sent.key?.id || `out_${Date.now()}` },
                 update: {
-                    text: messagePayload.text || '[Media Message]',
+                    text: loggedText,
                     status: 'SENT'
                 },
                 create: {
@@ -769,7 +936,7 @@ class KonnectLegacyManager {
                     waId: sent.key?.id || `out_${Date.now()}`,
                     jid: targetJid,
                     phoneNumber: cleanPhone,
-                    text: messagePayload.text || '[Media Message]',
+                    text: loggedText,
                     fromMe: true,
                     timestamp: BigInt(Math.floor(Date.now() / 1000)),
                     status: 'SENT'
@@ -786,7 +953,7 @@ class KonnectLegacyManager {
                         }
                     },
                     update: {
-                        lastMessage: messagePayload.text || '[Media Message]',
+                        lastMessage: loggedText,
                         lastInteraction: new Date()
                     },
                     create: {
@@ -794,7 +961,7 @@ class KonnectLegacyManager {
                         userId,
                         name: `+${cleanPhone}`,
                         phone: cleanPhone,
-                        lastMessage: messagePayload.text || '[Media Message]',
+                        lastMessage: loggedText,
                         lastInteraction: new Date(),
                         tags: ['Linked Device']
                     }
@@ -805,7 +972,7 @@ class KonnectLegacyManager {
         }
 
         // Real-time broadcast outbound message to socket server room workspace:{sessionId}
-        const outboundWaId = sent.key?.id || `out_${Date.now()}`;
+        const outboundWaId = sent?.key?.id || `out_${Date.now()}`;
         emitKonnectxEvent(sessionId, 'konnectx:message:new', {
             workspaceId: sessionId,
             jid: targetJid,
@@ -814,7 +981,7 @@ class KonnectLegacyManager {
                 waId: outboundWaId,
                 jid: targetJid,
                 phoneNumber: cleanPhone,
-                text: messagePayload.text || '[Media Message]',
+                text: loggedText,
                 fromMe: true,
                 status: 'SENT',
                 timestamp: Date.now()

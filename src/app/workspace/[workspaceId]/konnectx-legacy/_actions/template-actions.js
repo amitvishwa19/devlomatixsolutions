@@ -280,20 +280,6 @@ export async function testSendTemplateAction(workspaceId, { templateId, recipien
             ? substituteVariables(template.headerText, sampleValues)
             : null;
 
-        // Compose full text
-        let fullMessage = '';
-        if (renderedHeader) fullMessage += `*${renderedHeader}*\n\n`;
-        fullMessage += renderedBody;
-        if (template.footer) fullMessage += `\n\n_${template.footer}_`;
-
-        // Add button hints in text if buttons defined
-        if (Array.isArray(template.buttons) && template.buttons.length > 0) {
-            const buttonLines = template.buttons
-                .map((btn, i) => `[${i + 1}] ${btn.text || btn.title || btn}`)
-                .join(' | ');
-            fullMessage += `\n\n${buttonLines}`;
-        }
-
         // Ensure active socket before sending
         if (typeof konnectLegacyManager?.ensureActiveSocket === 'function') {
             await konnectLegacyManager.ensureActiveSocket(workspaceId);
@@ -301,21 +287,44 @@ export async function testSendTemplateAction(workspaceId, { templateId, recipien
             await konnectLegacyManager.connect(workspaceId);
         }
 
-        // Send via Baileys manager
+        const hasButtons = Array.isArray(template.buttons) && template.buttons.length > 0;
         let messagePayload;
-        if (template.headerType === 'IMAGE' && template.headerMedia) {
+
+        if (hasButtons) {
             messagePayload = {
-                image: { url: template.headerMedia },
-                caption: fullMessage
+                text: renderedBody,
+                headerText: renderedHeader,
+                footer: template.footer,
+                buttons: template.buttons
             };
-        } else if (template.headerType === 'DOCUMENT' && template.headerMedia) {
-            messagePayload = {
-                document: { url: template.headerMedia },
-                caption: fullMessage,
-                fileName: `${template.name}.pdf`
-            };
+
+            if (template.headerType === 'IMAGE' && template.headerMedia) {
+                messagePayload.image = { url: template.headerMedia };
+            } else if (template.headerType === 'DOCUMENT' && template.headerMedia) {
+                messagePayload.document = { url: template.headerMedia };
+                messagePayload.fileName = `${template.name}.pdf`;
+            }
         } else {
-            messagePayload = { text: fullMessage };
+            // Compose full text
+            let fullMessage = '';
+            if (renderedHeader) fullMessage += `*${renderedHeader}*\n\n`;
+            fullMessage += renderedBody;
+            if (template.footer) fullMessage += `\n\n_${template.footer}_`;
+
+            if (template.headerType === 'IMAGE' && template.headerMedia) {
+                messagePayload = {
+                    image: { url: template.headerMedia },
+                    caption: fullMessage
+                };
+            } else if (template.headerType === 'DOCUMENT' && template.headerMedia) {
+                messagePayload = {
+                    document: { url: template.headerMedia },
+                    caption: fullMessage,
+                    fileName: `${template.name}.pdf`
+                };
+            } else {
+                messagePayload = { text: fullMessage };
+            }
         }
 
         const sent = await konnectLegacyManager.sendMessage(workspaceId, jid, messagePayload);
