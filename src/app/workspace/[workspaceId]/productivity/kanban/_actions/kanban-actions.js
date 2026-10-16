@@ -4,8 +4,10 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import { db } from "@/lib/db";
 
+import { revalidatePath } from "next/cache";
+
 /**
- * Fetch kanban columns and user-scoped tasks
+ * Fetch kanban columns and tasks scoped to workspace
  */
 export async function getKanbanDataAction(workspaceId) {
     try {
@@ -19,17 +21,11 @@ export async function getKanbanDataAction(workspaceId) {
             return { success: false, error: "User ID not found in session" };
         }
 
-        const columns = await db.kanbanColumn.findMany({
+        let columns = await db.kanbanColumn.findMany({
             where: { workspaceId },
             orderBy: { order: 'asc' },
             include: {
                 tasks: {
-                    where: {
-                        OR: [
-                            { userId },
-                            { assigneeId: userId }
-                        ]
-                    },
                     include: {
                         assignee: {
                             select: {
@@ -61,6 +57,162 @@ export async function getKanbanDataAction(workspaceId) {
                 }
             }
         });
+
+        // If workspace has no Kanban columns yet, auto-seed default stages & sample tasks
+        if (columns.length === 0) {
+            const defaultStages = [
+                { title: 'To Do', order: 0 },
+                { title: 'In Progress', order: 1 },
+                { title: 'Review', order: 2 },
+                { title: 'Done', order: 3 }
+            ];
+
+            const createdCols = [];
+            for (const stage of defaultStages) {
+                const col = await db.kanbanColumn.create({
+                    data: {
+                        title: stage.title,
+                        order: stage.order,
+                        workspaceId,
+                        userId
+                    }
+                });
+                createdCols.push(col);
+            }
+
+            const todoCol = createdCols[0];
+            const inProgressCol = createdCols[1];
+            const reviewCol = createdCols[2];
+            const doneCol = createdCols[3];
+
+            if (todoCol) {
+                await db.kanbanTask.create({
+                    data: {
+                        title: 'Follow up on Enterprise Cloud Proposal',
+                        content: 'Send revised SLA terms and confirm payment milestone with Vikram Mehta.',
+                        type: 'task',
+                        priority: 'urgent',
+                        dueDate: new Date(Date.now() + 1000 * 60 * 60 * 2),
+                        order: 0,
+                        columnId: todoCol.id,
+                        workspaceId,
+                        userId,
+                        checklists: {
+                            create: [
+                                { title: 'Review custom SLA with legal', completed: true, order: 0 },
+                                { title: 'Send revised quotation PDF via email', completed: false, order: 1 },
+                                { title: 'Confirm payment terms', completed: false, order: 2 }
+                            ]
+                        }
+                    }
+                });
+                await db.kanbanTask.create({
+                    data: {
+                        title: 'Schedule Technical Architecture Discovery Call',
+                        content: 'Deep dive call with Engineering Lead at Vertex Design Studio.',
+                        type: 'task',
+                        priority: 'high',
+                        dueDate: new Date(Date.now() + 1000 * 60 * 60 * 6),
+                        order: 1,
+                        columnId: todoCol.id,
+                        workspaceId,
+                        userId
+                    }
+                });
+            }
+
+            if (inProgressCol) {
+                await db.kanbanTask.create({
+                    data: {
+                        title: 'Remit PayFlow Invoice Payment Reminder',
+                        content: 'Invoice INV-2026-087 is pending for Hyperion Logistics Ltd. Send 1-click payment link via WhatsApp.',
+                        type: 'task',
+                        priority: 'urgent',
+                        dueDate: new Date(Date.now() - 1000 * 60 * 60 * 18),
+                        order: 0,
+                        columnId: inProgressCol.id,
+                        workspaceId,
+                        userId,
+                        checklists: {
+                            create: [
+                                { title: 'Generate invoice summary', completed: true, order: 0 },
+                                { title: 'Dispatch WhatsApp payment link', completed: false, order: 1 }
+                            ]
+                        }
+                    }
+                });
+            }
+
+            if (reviewCol) {
+                await db.kanbanTask.create({
+                    data: {
+                        title: 'Quarterly Executive Review Meeting',
+                        content: 'Review account metrics and platform expansion opportunities.',
+                        type: 'task',
+                        priority: 'medium',
+                        dueDate: new Date(Date.now() + 1000 * 60 * 60 * 48),
+                        order: 0,
+                        columnId: reviewCol.id,
+                        workspaceId,
+                        userId
+                    }
+                });
+            }
+
+            if (doneCol) {
+                await db.kanbanTask.create({
+                    data: {
+                        title: 'Send WhatsApp Welcome & Case Study',
+                        content: 'Welcome newly onboarded lead from Inbound campaign.',
+                        type: 'task',
+                        priority: 'low',
+                        dueDate: new Date(Date.now() - 1000 * 60 * 60 * 2),
+                        order: 0,
+                        columnId: doneCol.id,
+                        workspaceId,
+                        userId
+                    }
+                });
+            }
+
+            // Fetch newly seeded columns and tasks
+            columns = await db.kanbanColumn.findMany({
+                where: { workspaceId },
+                orderBy: { order: 'asc' },
+                include: {
+                    tasks: {
+                        include: {
+                            assignee: {
+                                select: {
+                                    id: true,
+                                    displayName: true,
+                                    avatar: true,
+                                    email: true,
+                                }
+                            },
+                            checklists: {
+                                orderBy: { order: 'asc' }
+                            },
+                            activities: {
+                                orderBy: { createdAt: 'desc' },
+                                take: 10,
+                                include: {
+                                    user: {
+                                        select: {
+                                            displayName: true,
+                                            avatar: true
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        orderBy: {
+                            order: 'asc'
+                        }
+                    }
+                }
+            });
+        }
 
         return { success: true, columns };
     } catch (error) {
@@ -196,6 +348,25 @@ export async function createKanbanTaskAction(workspaceId, taskData) {
             },
         });
 
+        // Sync with CRM Activity Feed
+        try {
+            await db.crmActivity.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    type: "TASK",
+                    title: `Task Scheduled: ${title}`,
+                    description: `Priority: ${priority || 'medium'} | Type: ${type || 'task'}`,
+                    metadata: { taskId: task.id, type, priority }
+                }
+            });
+        } catch (crmErr) {
+            console.warn("[CRM_ACTIVITY_KANBAN_CREATE_LOG_IGNORED]", crmErr?.message);
+        }
+
+        revalidatePath(`/workspace/${workspaceId}/productivity/kanban`);
+        revalidatePath(`/workspace/${workspaceId}/crm/tasks`);
+
         return { success: true, task };
     } catch (error) {
         console.error("createKanbanTaskAction Error:", error);
@@ -251,6 +422,9 @@ export async function updateKanbanTaskAction(taskId, taskData) {
             });
         }
 
+        revalidatePath(`/workspace/${task.workspaceId}/productivity/kanban`);
+        revalidatePath(`/workspace/${task.workspaceId}/crm/tasks`);
+
         return { success: true, task };
     } catch (error) {
         console.error("updateKanbanTaskAction Error:", error);
@@ -266,13 +440,39 @@ export async function updateTaskOrderAction(taskId, columnId, order) {
         const session = await getServerSession(authOptions);
         if (!session) return { success: false, error: "Unauthorized" };
 
+        const userId = session.user.userId || session.user.id;
+
         const updatedTask = await db.kanbanTask.update({
             where: { id: taskId },
             data: {
                 columnId,
                 order
+            },
+            include: {
+                column: { select: { title: true } }
             }
         });
+
+        // Sync with CRM Activity if task is moved to a completion stage
+        try {
+            const colTitle = updatedTask.column?.title?.toLowerCase() || '';
+            if (colTitle.includes('done') || colTitle.includes('complete')) {
+                await db.crmActivity.create({
+                    data: {
+                        workspaceId: updatedTask.workspaceId,
+                        userId,
+                        type: "TASK",
+                        title: `Task Completed: ${updatedTask.title}`,
+                        description: `Moved to ${updatedTask.column?.title || 'Done'} on Kanban Board`
+                    }
+                });
+            }
+        } catch (crmErr) {
+            console.warn("[CRM_ACTIVITY_KANBAN_STAGE_CHANGE_LOG_IGNORED]", crmErr?.message);
+        }
+
+        revalidatePath(`/workspace/${updatedTask.workspaceId}/productivity/kanban`);
+        revalidatePath(`/workspace/${updatedTask.workspaceId}/crm/tasks`);
 
         return { success: true, task: updatedTask };
     } catch (error) {

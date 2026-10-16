@@ -327,19 +327,32 @@ export async function createDcrRecordAction(workspaceId, data) {
             try {
                 // Find or create Default Kanban Column
                 let defaultCol = await prisma.kanbanColumn.findFirst({
-                    where: { workspaceId }
+                    where: { workspaceId },
+                    orderBy: { order: 'asc' }
                 });
+
+                if (!defaultCol) {
+                    defaultCol = await prisma.kanbanColumn.create({
+                        data: {
+                            title: 'To Do',
+                            order: 0,
+                            workspaceId,
+                            userId
+                        }
+                    });
+                }
 
                 if (defaultCol) {
                     await prisma.kanbanTask.create({
                         data: {
                             columnId: defaultCol.id,
+                            workspaceId,
                             userId,
                             title: `Follow-up: ${clientName || contactPerson} (${nextFollowUpAction || outcome})`,
-                            description: `DCR Follow-up reminder for ${clientName || contactPerson}.\nPhone: ${phone || 'N/A'}\nPrevious Discussion: ${conversation.trim().slice(0, 200)}...`,
-                            priority: outcome === 'HOT_LEAD' ? 'HIGH' : 'MEDIUM',
+                            content: `DCR Follow-up reminder for ${clientName || contactPerson}.\nPhone: ${phone || 'N/A'}\nPrevious Discussion: ${conversation.trim().slice(0, 200)}...`,
+                            priority: outcome === 'HOT_LEAD' ? 'high' : 'medium',
                             dueDate: new Date(nextFollowUpDate),
-                            tags: ['DCR-Followup', callType]
+                            type: 'task'
                         }
                     });
                 }
@@ -351,6 +364,7 @@ export async function createDcrRecordAction(workspaceId, data) {
         revalidatePath(`/workspace/${workspaceId}/crm/dcr`);
         revalidatePath(`/workspace/${workspaceId}/crm`);
         revalidatePath(`/workspace/${workspaceId}/crm/activities`);
+        revalidatePath(`/workspace/${workspaceId}/crm/tasks`);
 
         return { success: true, data: activity };
     } catch (error) {

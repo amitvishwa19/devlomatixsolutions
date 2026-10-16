@@ -43,6 +43,7 @@ export default function CrmLayout({ children }) {
         { title: "Candidates", href: `${baseCRMPath}/candidates`, icon: UserCheck },
         { title: "Companies", href: `${baseCRMPath}/accounts`, icon: Building2 },
         { title: "Tasks", href: `${baseCRMPath}/tasks`, icon: CheckSquare },
+        { title: "Kanban", href: `${baseCRMPath}/kanban`, icon: Kanban },
         { title: "Forecast & Leaderboard", href: `${baseCRMPath}/analytics`, icon: BarChart3 },
         { title: "Automations", href: `${baseCRMPath}/automations`, icon: Zap },
         { title: "Activities", href: `${baseCRMPath}/activities`, icon: Activity },
@@ -54,11 +55,16 @@ export default function CrmLayout({ children }) {
         return pathname.startsWith(item.href);
     };
 
-    return (
-        <div className="flex flex-col  w-full">
+    const isFullBleedRoute = pathname?.includes('/tasks') || pathname?.includes('/kanban') || pathname?.includes('/pipeline');
 
+    if (isFullBleedRoute) {
+        return children;
+    }
+
+    return (
+        <div className="flex flex-col w-full">
             {/* Main CRM Content Area */}
-            <main className="flex-1 w-full sm:p-6 min-w-0">
+            <main className="flex-1 w-full min-w-0 sm:p-6">
                 {children}
             </main>
         </div>
