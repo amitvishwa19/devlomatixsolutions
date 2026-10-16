@@ -366,8 +366,8 @@ export default function QuotationBuilder({
         createdAt: initialData?.createdAt || new Date().toISOString(),
         data: {
             client: {
-                contactId: selectedContactId,
-                accountId: selectedAccountId,
+                contactId: selectedContactId && selectedContactId !== 'MANUAL' && selectedContactId !== 'NONE' ? selectedContactId : null,
+                accountId: selectedAccountId && selectedAccountId !== 'NONE' && selectedAccountId !== 'MANUAL' ? selectedAccountId : null,
                 name: clientName,
                 company: clientCompany,
                 email: clientEmail,
@@ -387,7 +387,7 @@ export default function QuotationBuilder({
                 issueDate,
                 validUntil,
                 currency,
-                dealId: selectedDealId
+                dealId: selectedDealId && selectedDealId !== 'NONE' && selectedDealId !== 'MANUAL' ? selectedDealId : null
             },
             items,
             summary,

@@ -3,12 +3,13 @@
 import React, { useRef, useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Printer, FileText, Share2, Link2, CreditCard, ShieldCheck } from 'lucide-react';
+import { Download, Printer, FileText, Share2, Link2, CreditCard, ShieldCheck, Mail } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { convertQuotationToPayFlowInvoiceAction } from '../../_actions/quotation-actions';
+import SendQuotationEmailModal from './SendQuotationEmailModal';
 import lightLogo from '@/assets/logo/light_logo.png';
 
 export const CURRENCY_SYMBOLS = {
@@ -389,6 +390,7 @@ export default function QuotationDocumentPreview({
     };
 
     const [isConvertingInvoice, setIsConvertingInvoice] = useState(false);
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
     const handleCopyPublicLink = () => {
         if (!data?.id) {
@@ -471,6 +473,17 @@ export default function QuotationDocumentPreview({
                                 {isConvertingInvoice ? "Converting..." : "Create Invoice"}
                             </Button>
                         )}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEmailModalOpen(true)}
+                            className="h-8 text-xs font-semibold"
+                            title="Send quotation via email with PDF attached"
+                        >
+                            <Mail className="w-3.5 h-3.5 mr-1 text-blue-500" />
+                            Send Email
+                        </Button>
                         <Button
                             type="button"
                             variant="outline"
@@ -934,6 +947,19 @@ export default function QuotationDocumentPreview({
                     <div className="border-t border-[#cbd5e1] mt-8" />
                 </div>
             </div>
+
+            {showActions && (
+                <SendQuotationEmailModal
+                    isOpen={isEmailModalOpen}
+                    onClose={() => setIsEmailModalOpen(false)}
+                    workspaceId={data.workspaceId}
+                    quotation={data}
+                    targetElementRef={documentRef}
+                    onSuccess={(updated) => {
+                        if (onStatusChange) onStatusChange('sent', updated);
+                    }}
+                />
+            )}
         </div>
     );
 }

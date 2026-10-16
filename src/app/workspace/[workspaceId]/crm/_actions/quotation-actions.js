@@ -6,6 +6,65 @@ import { getValidUserId } from "./auth-helper";
 import { dispatchWhatsAppFromCrmAction } from "./whatsapp-template-actions";
 import { createInvoice } from "../../payflow/_actions/payflow-actions";
 import { revalidatePath } from "next/cache";
+import React from "react";
+import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import { render } from "@react-email/render";
+import QuotationEmailTemplate from "@/emails/QuotationEmailTemplate";
+
+
+/**
+ * Safely create a CrmActivity record, verifying foreign key references (contactId, dealId, accountId).
+ * Prevents foreign key constraint violations from causing quotation actions to fail.
+ */
+async function safeLogCrmActivity(workspaceId, userId, activityData) {
+    if (!workspaceId) return null;
+    try {
+        let validContactId = null;
+        if (activityData.contactId && activityData.contactId !== 'MANUAL' && activityData.contactId !== 'NONE') {
+            const c = await prisma.contact.findFirst({
+                where: { id: activityData.contactId, workspaceId },
+                select: { id: true }
+            }).catch(() => null);
+            if (c) validContactId = c.id;
+        }
+
+        let validDealId = null;
+        if (activityData.dealId && activityData.dealId !== 'MANUAL' && activityData.dealId !== 'NONE') {
+            const d = await prisma.deal.findFirst({
+                where: { id: activityData.dealId, workspaceId },
+                select: { id: true }
+            }).catch(() => null);
+            if (d) validDealId = d.id;
+        }
+
+        let validAccountId = null;
+        if (activityData.accountId && activityData.accountId !== 'MANUAL' && activityData.accountId !== 'NONE') {
+            const a = await prisma.account.findFirst({
+                where: { id: activityData.accountId, workspaceId },
+                select: { id: true }
+            }).catch(() => null);
+            if (a) validAccountId = a.id;
+        }
+
+        return await prisma.crmActivity.create({
+            data: {
+                workspaceId,
+                userId: userId || 'system',
+                type: activityData.type || "NOTE",
+                title: activityData.title || "Quotation Activity",
+                description: activityData.description || null,
+                metadata: activityData.metadata || null,
+                contactId: validContactId,
+                dealId: validDealId,
+                accountId: validAccountId
+            }
+        });
+    } catch (err) {
+        console.warn("[SAFE_CRM_ACTIVITY_LOG_WARN]", err.message || err);
+        return null;
+    }
+}
 
 /**
  * Fetch all quotations for a workspace with metrics and filters
@@ -164,21 +223,14 @@ export async function saveCrmQuotationAction(workspaceId, payload) {
                 }
             });
 
-            // Log activity on linked contact if available
-            const contactId = data?.client?.contactId;
-            if (contactId) {
-                await prisma.crmActivity.create({
-                    data: {
-                        workspaceId,
-                        userId,
-                        contactId,
-                        dealId: data?.quotation?.dealId || null,
-                        type: "NOTE",
-                        title: `Quotation Created (${finalNumber})`,
-                        description: `Created quotation "${data?.quotation?.title || finalNumber}" valued at ${data?.summary?.currency || '₹'}${Number(total).toLocaleString()}.`
-                    }
-                }).catch(err => console.warn('[QUOTATION_ACTIVITY_LOG_WARN]', err));
-            }
+            // Log activity on linked contact/deal if available
+            await safeLogCrmActivity(workspaceId, userId, {
+                contactId: data?.client?.contactId,
+                dealId: data?.quotation?.dealId,
+                type: "NOTE",
+                title: `Quotation Created (${finalNumber})`,
+                description: `Created quotation "${data?.quotation?.title || finalNumber}" valued at ${data?.summary?.currency || '₹'}${Number(total).toLocaleString()}.`
+            });
         }
 
         revalidatePath(`/workspace/${workspaceId}/crm/quotations`);
@@ -392,17 +444,13 @@ export async function submitPublicQuotationAcceptanceAction(id, payload) {
                             }
                         });
 
-                        await prisma.crmActivity.create({
-                            data: {
-                                workspaceId: deal.workspaceId,
-                                userId: deal.userId,
-                                dealId: deal.id,
-                                contactId: deal.contactId || null,
-                                accountId: deal.accountId || null,
-                                type: "DEAL_STAGE_CHANGE",
-                                title: `Deal Closed Won: Quotation ${quotation.quotationNumber} Accepted`,
-                                description: `Quotation ${quotation.quotationNumber} was e-signed and approved by ${signatoryName}. Deal automatically moved to "${winningStage.name}".`
-                            }
+                        await safeLogCrmActivity(deal.workspaceId, deal.userId, {
+                            dealId: deal.id,
+                            contactId: deal.contactId,
+                            accountId: deal.accountId,
+                            type: "DEAL_STAGE_CHANGE",
+                            title: `Deal Closed Won: Quotation ${quotation.quotationNumber} Accepted`,
+                            description: `Quotation ${quotation.quotationNumber} was e-signed and approved by ${signatoryName}. Deal automatically moved to "${winningStage.name}".`
                         });
                     }
                 }
@@ -413,17 +461,13 @@ export async function submitPublicQuotationAcceptanceAction(id, payload) {
 
         // Log general activity
         if (quotation.workspaceId) {
-            await prisma.crmActivity.create({
-                data: {
-                    workspaceId: quotation.workspaceId,
-                    userId: quotation.userId,
-                    dealId: dealId || null,
-                    contactId: existingData?.client?.contactId || null,
-                    type: "NOTE",
-                    title: `Quotation ${quotation.quotationNumber} E-Signed & Accepted`,
-                    description: `Client authorized quotation ${quotation.quotationNumber} for ₹${Number(quotation.total).toLocaleString('en-IN')}. Signed by: ${signatoryName}.`
-                }
-            }).catch(e => console.warn(e));
+            await safeLogCrmActivity(quotation.workspaceId, quotation.userId, {
+                dealId,
+                contactId: existingData?.client?.contactId,
+                type: "NOTE",
+                title: `Quotation ${quotation.quotationNumber} E-Signed & Accepted`,
+                description: `Client authorized quotation ${quotation.quotationNumber} for ₹${Number(quotation.total).toLocaleString('en-IN')}. Signed by: ${signatoryName}.`
+            });
 
             revalidatePath(`/workspace/${quotation.workspaceId}/crm/quotations`);
             revalidatePath(`/workspace/${quotation.workspaceId}/crm/pipeline`);
@@ -469,17 +513,13 @@ export async function submitPublicQuotationDeclineAction(id, payload) {
         });
 
         if (quotation.workspaceId) {
-            await prisma.crmActivity.create({
-                data: {
-                    workspaceId: quotation.workspaceId,
-                    userId: quotation.userId,
-                    dealId: existingData?.quotation?.dealId || null,
-                    contactId: existingData?.client?.contactId || null,
-                    type: "NOTE",
-                    title: `Quotation ${quotation.quotationNumber} Declined / Revision Requested`,
-                    description: `Client declined quotation: "${reason || 'No specific feedback provided.'}"`
-                }
-            }).catch(e => console.warn(e));
+            await safeLogCrmActivity(quotation.workspaceId, quotation.userId, {
+                dealId: existingData?.quotation?.dealId,
+                contactId: existingData?.client?.contactId,
+                type: "NOTE",
+                title: `Quotation ${quotation.quotationNumber} Declined / Revision Requested`,
+                description: `Client declined quotation: "${reason || 'No specific feedback provided.'}"`
+            });
 
             revalidatePath(`/workspace/${quotation.workspaceId}/crm/quotations`);
         }
@@ -554,22 +594,18 @@ export async function convertQuotationToPayFlowInvoiceAction(workspaceId, quotat
         });
 
         // Log CRM Activity
-        await prisma.crmActivity.create({
-            data: {
-                workspaceId,
-                userId,
-                dealId: qData.quotation?.dealId || null,
-                contactId: client.contactId || null,
-                type: "INVOICE_GENERATED",
-                title: `PayFlow Invoice Created: ${invoice.id}`,
-                description: `Quotation ${quotation.quotationNumber} converted to Invoice ${invoice.id} (${invoice.amount}) with Razorpay Smart Link.`,
-                metadata: {
-                    invoiceId: invoice.id,
-                    quotationNumber: quotation.quotationNumber,
-                    amount: invoice.amount
-                }
+        await safeLogCrmActivity(workspaceId, userId, {
+            dealId: qData.quotation?.dealId,
+            contactId: client.contactId,
+            type: "INVOICE_GENERATED",
+            title: `PayFlow Invoice Created: ${invoice.id}`,
+            description: `Quotation ${quotation.quotationNumber} converted to Invoice ${invoice.id} (${invoice.amount}) with Razorpay Smart Link.`,
+            metadata: {
+                invoiceId: invoice.id,
+                quotationNumber: quotation.quotationNumber,
+                amount: invoice.amount
             }
-        }).catch(err => console.warn(err));
+        });
 
         revalidatePath(`/workspace/${workspaceId}/crm/quotations`);
         revalidatePath(`/workspace/${workspaceId}/payflow`);
@@ -628,3 +664,251 @@ export async function getContactQuotationsAction(workspaceId, contactId) {
         return { success: false, error: error.message || "Failed to fetch contact quotations" };
     }
 }
+
+/**
+ * Send quotation via Email with React Email template and attached PDF
+ */
+export async function sendCrmQuotationViaEmailAction(workspaceId, payload) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+        const userId = await getValidUserId();
+
+        const {
+            quotationId,
+            recipientEmail,
+            recipientName,
+            subject,
+            customMessage,
+            pdfBase64,
+            pdfFilename
+        } = payload || {};
+
+        if (!quotationId || !recipientEmail) {
+            return { success: false, error: "Quotation ID and Recipient Email are required" };
+        }
+
+        const quotation = await prisma.quotation.findFirst({
+            where: { id: quotationId, workspaceId }
+        });
+
+        if (!quotation) {
+            return { success: false, error: "Quotation not found" };
+        }
+
+        const qData = quotation.data || {};
+        const client = qData.client || {};
+        const quotationInfo = qData.quotation || {};
+        const items = qData.items || [];
+        const companyInfo = qData.company || {};
+        const summary = qData.summary || {};
+
+        const currency = quotationInfo.currency || summary.currency || 'INR';
+        const currencySymbol = currency === 'INR' ? '₹' : (currency === 'USD' ? '$' : (currency === 'EUR' ? '€' : '₹'));
+        const totalAmount = Number(quotation.total) || Number(summary.grandTotal) || 0;
+
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'https://devlomatix.com';
+        const publicUrl = `${baseUrl}/quotations/view/${quotation.id}`;
+
+        const companyName = companyInfo.name || "Devlomatix Solutions";
+        const companyEmail = companyInfo.email || "sales@devlomatix.com";
+        const companyPhone = companyInfo.phone || "+91 98765 43210";
+        const companyWebsite = companyInfo.website || "https://devlomatix.com";
+        const companyLogo = companyInfo.logoUrl || "";
+
+        const clientDisplayName = recipientName || client.contactPerson || client.name || quotation.clientName || 'Valued Client';
+        const clientCompany = client.company || "";
+
+        const emailSubject = subject || `Commercial Proposal: ${quotation.quotationNumber} - ${quotationInfo.title || 'Official Quotation'}`;
+        const finalPdfName = pdfFilename || `Quotation_${quotation.quotationNumber}.pdf`;
+
+        // Prepare attachments
+        const attachments = [];
+        if (pdfBase64) {
+            const cleanBase64 = String(pdfBase64).replace(/^data:application\/pdf;base64,/, '').replace(/^data:.*?;base64,/, '');
+            attachments.push({
+                filename: finalPdfName,
+                content: Buffer.from(cleanBase64, 'base64')
+            });
+        }
+
+        // Email props for template
+        const templateProps = {
+            quotationNumber: quotation.quotationNumber,
+            quotationTitle: quotationInfo.title || "Commercial Proposal",
+            clientName: clientDisplayName,
+            clientCompany,
+            companyName,
+            companyLogo,
+            companyEmail: process.env.SALES_MAIL || companyEmail || "sales@devlomatix.com",
+            companyPhone,
+            companyWebsite,
+            currencySymbol,
+            totalAmount,
+            items,
+            issueDate: quotationInfo.issueDate || (quotation.createdAt ? new Date(quotation.createdAt).toLocaleDateString() : ''),
+            validUntil: quotationInfo.validUntil || '',
+            customMessage,
+            publicUrl,
+            hasAttachment: attachments.length > 0,
+            attachmentName: finalPdfName
+        };
+
+        let emailDispatched = false;
+        let dispatchMethod = 'RESEND';
+        let errorDetail = null;
+
+        // 1. Try Resend (Workspace Credentials first, then process.env.RESEND_API_KEY)
+        try {
+            const credential = await prisma.credentials.findFirst({
+                where: {
+                    workspaceId,
+                    platform: 'RESEND'
+                }
+            });
+
+            let apiKey = process.env.RESEND_API_KEY;
+            if (credential?.credentials) {
+                const creds = typeof credential.credentials === 'string' ? JSON.parse(credential.credentials) : credential.credentials;
+                if (creds.apiKey || creds.api_key) {
+                    apiKey = creds.apiKey || creds.api_key;
+                }
+            }
+
+            if (apiKey) {
+                const resendClient = new Resend(apiKey);
+                const rawFrom = process.env.SALES_MAIL || process.env.RESEND_FROM_EMAIL || 'sales@devlomatix.com';
+                const fromEmailMatch = rawFrom.match(/<([^>]+)>/);
+                const pureSenderEmail = fromEmailMatch ? fromEmailMatch[1].trim() : rawFrom.trim();
+                const senderDisplayName = (companyName || 'Devlomatix Solutions').replace(/[<>\r\n]/g, '').trim();
+                const fromHeader = `${senderDisplayName} <${pureSenderEmail}>`;
+
+                const emailHtml = await render(<QuotationEmailTemplate {...templateProps} />);
+
+                const resendPayload = {
+                    from: fromHeader,
+                    to: recipientEmail,
+                    reply_to: process.env.SALES_MAIL || companyEmail || pureSenderEmail,
+                    subject: emailSubject,
+                    html: emailHtml,
+                };
+
+                if (attachments.length > 0) {
+                    resendPayload.attachments = attachments;
+                }
+
+                const resendResult = await resendClient.emails.send(resendPayload);
+                if (resendResult?.error) {
+                    console.error("[QUOTATION_EMAIL_RESEND_ERROR]", resendResult.error);
+                    throw new Error(resendResult.error.message || "Resend dispatch failed");
+                }
+
+                console.info("[QUOTATION_EMAIL_RESEND_SUCCESS]", {
+                    id: resendResult?.data?.id,
+                    recipient: recipientEmail,
+                    from: fromHeader,
+                    replyTo: resendPayload.reply_to,
+                    hasAttachments: attachments.length > 0
+                });
+
+                emailDispatched = true;
+                dispatchMethod = 'RESEND';
+            }
+        } catch (resendErr) {
+            console.error("[QUOTATION_EMAIL_RESEND_FAILED]", resendErr);
+            errorDetail = resendErr.message;
+        }
+
+        // 2. Fallback to Nodemailer if Resend did not send and MAIL_SERVICE_HOST is provided
+        if (!emailDispatched && process.env.MAIL_SERVICE_HOST) {
+            try {
+                const transporter = nodemailer.createTransport({
+                    host: process.env.MAIL_SERVICE_HOST,
+                    port: Number(process.env.MAIL_SERVICE_PORT) || 587,
+                    secure: false,
+                    auth: {
+                        user: process.env.MAIL_SERVICE_USERNAME,
+                        pass: process.env.MAIL_SERVICE_PASSWORD
+                    }
+                });
+
+                const emailHtml = await render(<QuotationEmailTemplate {...templateProps} />);
+
+                const mailOptions = {
+                    from: `"${companyName}" <${process.env.SALES_MAIL || process.env.MAIL_SERVER_ADDRESS || process.env.MAIL_SERVICE_NAME || 'sales@devlomatix.com'}>`,
+                    to: recipientEmail,
+                    replyTo: process.env.SALES_MAIL || companyEmail || 'sales@devlomatix.com',
+                    subject: emailSubject,
+                    html: emailHtml,
+                    attachments: attachments.map(a => ({
+                        filename: a.filename,
+                        content: a.content,
+                        contentType: 'application/pdf'
+                    }))
+                };
+
+                await transporter.sendMail(mailOptions);
+                emailDispatched = true;
+                dispatchMethod = 'NODEMAILER';
+            } catch (smtpErr) {
+                console.error("[QUOTATION_EMAIL_SMTP_FAILED]", smtpErr);
+                errorDetail = smtpErr.message;
+            }
+        }
+
+        // If neither service sent the email, report the actual failure
+        if (!emailDispatched) {
+            return {
+                success: false,
+                error: errorDetail || "Failed to dispatch email. Please verify your recipient email and email service configuration."
+            };
+        }
+
+        // Update status to 'sent' if currently 'draft'
+        let updatedQuotation = quotation;
+        if (quotation.status === 'draft') {
+            updatedQuotation = await prisma.quotation.update({
+                where: { id: quotationId },
+                data: { status: 'sent' }
+            });
+        }
+
+        // Log CRM Activity
+        await safeLogCrmActivity(workspaceId, userId, {
+            dealId: quotationInfo.dealId,
+            contactId: client.contactId,
+            type: "EMAIL",
+            title: `Quotation Emailed: ${quotation.quotationNumber}`,
+            description: `Sent proposal to ${recipientEmail} (${clientDisplayName}) with PDF attachment ${finalPdfName} via ${dispatchMethod}.`,
+            metadata: {
+                quotationId: quotation.id,
+                quotationNumber: quotation.quotationNumber,
+                recipientEmail,
+                subject: emailSubject,
+                hasPdfAttachment: attachments.length > 0,
+                dispatchMethod
+            }
+        });
+
+        revalidatePath(`/workspace/${workspaceId}/crm/quotations`);
+        revalidatePath(`/workspace/${workspaceId}/crm/quotations/${quotationId}`);
+        if (quotationInfo.dealId) {
+            revalidatePath(`/workspace/${workspaceId}/crm/pipeline`);
+        }
+        if (client.contactId) {
+            revalidatePath(`/workspace/${workspaceId}/crm/contacts/${client.contactId}`);
+        }
+
+        return {
+            success: true,
+            data: {
+                quotation: updatedQuotation,
+                dispatchMethod,
+                recipientEmail
+            }
+        };
+    } catch (error) {
+        console.error("[SEND_CRM_QUOTATION_VIA_EMAIL_ERROR]", error);
+        return { success: false, error: error.message || "Failed to send quotation email" };
+    }
+}
+

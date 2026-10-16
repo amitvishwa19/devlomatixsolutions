@@ -26,7 +26,8 @@ import {
     MessageCircle,
     Link2,
     Receipt,
-    ExternalLink
+    ExternalLink,
+    Mail
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,7 @@ import {
 } from '../_actions/quotation-actions';
 import QuotationDocumentPreview, { CURRENCY_SYMBOLS } from './_components/QuotationDocumentPreview';
 import SendQuotationModal from './_components/SendQuotationModal';
+import SendQuotationEmailModal from './_components/SendQuotationEmailModal';
 
 export default function CrmQuotationsDirectoryPage() {
     const params = useParams();
@@ -80,6 +82,7 @@ export default function CrmQuotationsDirectoryPage() {
     // Modals
     const [selectedPreviewQuotation, setSelectedPreviewQuotation] = useState(null);
     const [selectedSendQuotation, setSelectedSendQuotation] = useState(null);
+    const [selectedEmailQuotation, setSelectedEmailQuotation] = useState(null);
 
     const loadQuotations = async (showToast = false) => {
         if (!workspaceId) return;
@@ -489,6 +492,18 @@ export default function CrmQuotationsDirectoryPage() {
                                                         <MessageCircle className="w-3.5 h-3.5" />
                                                     </Button>
 
+                                                    {/* Email Outreach with PDF */}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 rounded-lg text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                                                        title="Send to client via Email (PDF Attached)"
+                                                        onClick={() => setSelectedEmailQuotation(q)}
+                                                    >
+                                                        <Mail className="w-3.5 h-3.5" />
+                                                    </Button>
+
                                                     {/* Quick Preview */}
                                                     <Button
                                                         type="button"
@@ -522,6 +537,10 @@ export default function CrmQuotationsDirectoryPage() {
                                                             <DropdownMenuItem onClick={() => window.open(`/quotations/view/${q.id}`, '_blank')}>
                                                                 <ExternalLink className="w-3.5 h-3.5 mr-2 text-primary" />
                                                                 Open Client Portal View
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setSelectedEmailQuotation(q)}>
+                                                                <Mail className="w-3.5 h-3.5 mr-2 text-blue-600" />
+                                                                Send via Email (PDF Attached)
                                                             </DropdownMenuItem>
 
                                                             <DropdownMenuSeparator />
@@ -602,6 +621,15 @@ export default function CrmQuotationsDirectoryPage() {
                 onClose={() => setSelectedSendQuotation(null)}
                 workspaceId={workspaceId}
                 quotation={selectedSendQuotation}
+                onSuccess={() => loadQuotations()}
+            />
+
+            {/* Email Client Dispatch Modal with Attached PDF */}
+            <SendQuotationEmailModal
+                isOpen={!!selectedEmailQuotation}
+                onClose={() => setSelectedEmailQuotation(null)}
+                workspaceId={workspaceId}
+                quotation={selectedEmailQuotation}
                 onSuccess={() => loadQuotations()}
             />
         </div>
