@@ -12,6 +12,8 @@ import {
     Clock,
     MapPin,
     User,
+    UserCheck,
+    Phone,
     Building2,
     CheckCircle2,
     Sparkles,
@@ -56,7 +58,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from 'sonner';
 
 import { getDcrRecordsAction, deleteDcrRecordAction } from '../_actions/dcr-actions';
-import DcrModal from './_components/DcrModal';
+import DcrSheet from './_components/DcrSheet';
 import AiFollowupModal from './_components/AiFollowupModal';
 
 const OUTCOME_CONFIG = {
@@ -200,11 +202,11 @@ export default function DcrPage() {
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Activity_Center_Report_${dateRangeFilter}_${new Date().toISOString().slice(0, 10)}.csv`);
+        link.setAttribute("download", `DCR_Daily_Call_Report_${dateRangeFilter}_${new Date().toISOString().slice(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success("Activity Center CSV Export downloaded successfully!");
+        toast.success("DCR CSV Export downloaded successfully!");
     };
 
     const handlePrint = () => {
@@ -222,13 +224,13 @@ export default function DcrPage() {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                                Activity Center
+                                DCR (Daily Call Record)
                                 <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
-                                    Calls, Visits & Meetings
+                                    Calls, Visits & Check-Ins
                                 </Badge>
                             </h1>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Track daily client conversations, on-site field visits, objections, and scheduled follow-ups.
+                                Track daily client meetings, whom you met, contact numbers, GPS check-in locations, and discussion notes.
                             </p>
                         </div>
                     </div>
@@ -307,7 +309,7 @@ export default function DcrPage() {
                         className="h-8 text-xs gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>Log Sales Activity</span>
+                        <span>Log Daily Call (DCR)</span>
                     </Button>
                 </div>
             </div>
@@ -470,18 +472,18 @@ export default function DcrPage() {
             {loading ? (
                 <div className="p-12 text-center text-muted-foreground flex flex-col items-center justify-center gap-3 bg-card border border-border rounded-xl">
                     <RefreshCw className="w-6 h-6 animate-spin text-primary" />
-                    <p className="text-xs font-medium">Loading Activity Center Records...</p>
+                    <p className="text-xs font-medium">Loading Daily Call Records (DCR)...</p>
                 </div>
             ) : records.length === 0 ? (
                 <div className="p-16 text-center bg-card border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
                     <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3">
                         <PhoneCall className="w-7 h-7" />
                     </div>
-                    <h3 className="text-base font-bold text-foreground">No Activity Records Found</h3>
+                    <h3 className="text-base font-bold text-foreground">No Daily Call Records Found</h3>
                     <p className="text-xs text-muted-foreground max-w-sm mt-1 mb-5">
                         {searchQuery || typeFilter !== 'ALL' || outcomeFilter !== 'ALL'
-                            ? "No activity records match the applied filters. Try resetting the filters."
-                            : "No field visits or calls logged for this date. Start recording your daily sales interactions to build CRM intelligence."}
+                            ? "No call records match the applied filters. Try resetting the filters."
+                            : "No field visits or calls logged for this date. Record whom you met, phone number, and location to build sales momentum."}
                     </p>
                     <Button
                         onClick={() => {
@@ -492,7 +494,7 @@ export default function DcrPage() {
                         size="sm"
                     >
                         <Plus className="w-4 h-4" />
-                        <span>Log First Activity</span>
+                        <span>Log First Call / Visit (DCR)</span>
                     </Button>
                 </div>
             ) : (
@@ -508,7 +510,7 @@ export default function DcrPage() {
                                 key={record.id}
                                 className="p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-primary/40 transition-all duration-200 shadow-xs hover:shadow-md space-y-3.5"
                             >
-                                {/* Top Row: Type, Timestamp, Client Name, Quick Action Buttons */}
+                                {/* Top Row: Type, Timestamp, Client Name, Whom Met, Contact Number, Location */}
                                 <div className="flex flex-wrap items-start justify-between gap-2.5">
                                     <div className="flex items-center gap-3">
                                         <div className={`p-2.5 rounded-xl border flex items-center justify-center ${typeInfo.color}`}>
@@ -519,22 +521,29 @@ export default function DcrPage() {
                                                 <h3 className="text-sm font-bold text-foreground">
                                                     {record.clientName}
                                                 </h3>
-                                                {record.contactPerson && record.contactPerson !== record.clientName && (
-                                                    <span className="text-xs text-muted-foreground font-medium">
-                                                        ({record.contactPerson})
+                                                {record.contactPerson && (
+                                                    <span className="inline-flex items-center gap-1 text-xs text-primary font-medium bg-primary/10 px-2 py-0.5 rounded-md">
+                                                        <UserCheck className="w-3 h-3" /> Met: {record.contactPerson}
                                                     </span>
                                                 )}
                                                 <Badge variant="outline" className={`text-[10px] font-semibold border ${outcomeInfo.bg}`}>
                                                     {outcomeInfo.label}
                                                 </Badge>
                                             </div>
-                                            <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5">
+                                            <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-muted-foreground mt-1">
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="w-3 h-3" />
                                                     {new Date(record.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(record.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </span>
-                                                <span>•</span>
-                                                <span>{record.durationMinutes || 15} mins duration</span>
+                                                {record.phone && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1 font-medium text-foreground">
+                                                            <Phone className="w-3 h-3 text-blue-500" />
+                                                            {record.phone}
+                                                        </span>
+                                                    </>
+                                                )}
                                                 {record.location && (
                                                     <>
                                                         <span>•</span>
@@ -551,11 +560,13 @@ export default function DcrPage() {
                                                                 title={`GPS Accuracy: ±${record.metadata.geolocation.accuracy || 10}m. Click to open Google Maps.`}
                                                             >
                                                                 <Navigation className="w-2.5 h-2.5" />
-                                                                <span>GPS Verified</span>
+                                                                <span>GPS Check-In</span>
                                                             </a>
                                                         )}
                                                     </>
                                                 )}
+                                                <span>•</span>
+                                                <span>{record.durationMinutes || 15} mins duration</span>
                                             </div>
                                         </div>
                                     </div>
@@ -676,8 +687,8 @@ export default function DcrPage() {
                 </div>
             )}
 
-            {/* DCR Entry / Edit Modal */}
-            <DcrModal
+            {/* DCR Entry / Edit Bottomsheet on Right Side */}
+            <DcrSheet
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 workspaceId={workspaceId}

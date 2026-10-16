@@ -33,7 +33,7 @@ export default function CrmLayout({ children }) {
     const navItems = [
         { title: "Dashboard", href: baseCRMPath, icon: LayoutDashboard, exact: true },
         { title: "Chat & Calls", href: `${baseCRMPath}/chat`, icon: Video },
-        { title: "Activity Center", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
+        { title: "DCR (Daily Call Record)", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
         { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
         { title: "360° Contacts", href: `${baseCRMPath}/contacts`, icon: Users },

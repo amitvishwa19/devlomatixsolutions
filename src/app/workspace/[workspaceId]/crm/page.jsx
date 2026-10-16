@@ -18,7 +18,8 @@ import {
     Clock,
     XCircle,
     ChevronRight,
-    Loader2
+    Loader2,
+    PhoneCall
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -113,6 +114,12 @@ export default function CrmDashboardPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <Link href={`/workspace/${workspaceId}/crm/dcr`}>
+                        <Button variant="outline" className="h-8 text-xs font-semibold gap-1.5 shadow-sm bg-background/80 hover:bg-background">
+                            <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Daily Call Record (DCR)</span>
+                        </Button>
+                    </Link>
                     <Link href={`/workspace/${workspaceId}/crm/pipeline`}>
                         <Button className="h-8 text-xs font-semibold gap-1.5 shadow-sm">
                             <span>Open Pipeline Board</span>
