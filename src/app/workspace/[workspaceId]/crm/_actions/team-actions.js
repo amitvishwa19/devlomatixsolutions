@@ -8,9 +8,15 @@ import { ensureWorkspaceAccess } from "@/lib/auth-utils";
  */
 export async function getCrmTeamMembersAction(workspaceId) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const currentUserId = session?.user?.userId || session?.user?.id;
+        const currentUserEmail = session?.user?.email;
 
         const users = await prisma.user.findMany({
+            where: {
+                ...(currentUserId ? { id: { not: currentUserId } } : {}),
+                ...(currentUserEmail ? { email: { not: currentUserEmail } } : {})
+            },
             select: {
                 id: true,
                 displayName: true,

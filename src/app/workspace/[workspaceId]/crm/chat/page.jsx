@@ -85,6 +85,7 @@ export default function CrmChatPage() {
     const { data: session } = useSession();
 
     const currentUserId = session?.user?.userId || session?.user?.id;
+    const currentUserEmail = session?.user?.email;
     const currentUserName = session?.user?.displayName || session?.user?.name || 'Sales Rep';
 
     const {
@@ -149,18 +150,29 @@ export default function CrmChatPage() {
         loadContacts();
     }, [workspaceId]);
 
-    // 3. Set default active chat user if none is selected
+    // Team members excluding current user's own id and email
+    const otherTeamMembers = React.useMemo(() => {
+        return teamMembers.filter((member) => {
+            if (currentUserId && member.id === currentUserId) return false;
+            if (currentUserEmail && member.email && member.email.toLowerCase() === currentUserEmail.toLowerCase()) return false;
+            return true;
+        });
+    }, [teamMembers, currentUserId, currentUserEmail]);
+
+    // 3. Set default active chat user if none is selected or if activeChatUser is self
     useEffect(() => {
-        if (!activeChatUser && teamMembers.length > 0) {
-            const firstOther = teamMembers.find((m) => m.id !== currentUserId) || teamMembers[0];
-            if (firstOther) {
-                setActiveChatUser({ ...firstOther, type: 'team' });
-            }
+        const isSelf = activeChatUser && (
+            (currentUserId && activeChatUser.id === currentUserId) ||
+            (currentUserEmail && activeChatUser.email && activeChatUser.email.toLowerCase() === currentUserEmail.toLowerCase())
+        );
+
+        if ((!activeChatUser || isSelf) && otherTeamMembers.length > 0) {
+            setActiveChatUser({ ...otherTeamMembers[0], type: 'team' });
         }
-    }, [teamMembers, activeChatUser, currentUserId]);
+    }, [otherTeamMembers, activeChatUser, currentUserId, currentUserEmail]);
 
     // Filter lists by search query
-    const filteredTeamMembers = teamMembers.filter((member) => {
+    const filteredTeamMembers = otherTeamMembers.filter((member) => {
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -406,7 +418,7 @@ export default function CrmChatPage() {
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="grid grid-cols-2 h-8">
                             <TabsTrigger value="team" className="text-xs">
-                                Sales Team ({teamMembers.length})
+                                Sales Team ({otherTeamMembers.length})
                             </TabsTrigger>
                             <TabsTrigger value="contacts" className="text-xs">
                                 CRM Contacts ({contacts.length})
@@ -441,7 +453,6 @@ export default function CrmChatPage() {
                             filteredTeamMembers.map((member) => {
                                 const online = isUserOnline(member.id);
                                 const active = activeChatUser?.id === member.id;
-                                const isMe = member.id === currentUserId;
 
                                 return (
                                     <button
@@ -467,11 +478,6 @@ export default function CrmChatPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-1">
                                                 <h4 className="text-xs font-bold truncate">{member.name}</h4>
-                                                {isMe && (
-                                                    <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded shrink-0 ${active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
-                                                        You
-                                                    </span>
-                                                )}
                                             </div>
                                             <p className={`text-[11px] truncate ${active ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                                 {member.title || member.email}
