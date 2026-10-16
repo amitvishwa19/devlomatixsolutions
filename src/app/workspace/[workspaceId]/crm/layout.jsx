@@ -20,7 +20,8 @@ import {
     Video,
     MessageSquare,
     CheckSquare,
-    UserCheck
+    UserCheck,
+    FileSpreadsheet
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -37,6 +38,7 @@ export default function CrmLayout({ children }) {
         { title: "DCR (Daily Call Record)", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
         { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
+        { title: "Quotations", href: `${baseCRMPath}/quotations`, icon: FileSpreadsheet },
         { title: "360° Contacts", href: `${baseCRMPath}/contacts`, icon: Users },
         { title: "Candidates", href: `${baseCRMPath}/candidates`, icon: UserCheck },
         { title: "Companies", href: `${baseCRMPath}/accounts`, icon: Building2 },

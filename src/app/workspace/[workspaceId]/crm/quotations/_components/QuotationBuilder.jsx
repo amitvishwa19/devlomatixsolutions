@@ -1,0 +1,829 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import Link from 'next/link';
+import {
+    Plus,
+    Trash2,
+    Save,
+    ArrowLeft,
+    FileText,
+    Eye,
+    Building2,
+    User,
+    Calendar,
+    Sparkles,
+    Check,
+    Loader2,
+    ExternalLink
+} from 'lucide-react';
+
+import QuotationDocumentPreview, { CURRENCY_SYMBOLS } from './QuotationDocumentPreview';
+import { saveCrmQuotationAction } from '../../_actions/quotation-actions';
+import { getCrmContactsAction } from '../../_actions/contact-actions';
+import { getAccountsAction } from '../../_actions/account-actions';
+import { getDealsAction } from '../../_actions/deal-actions';
+import { useSettings } from '@/providers/WorkspaceProvider';
+
+const DEFAULT_TERMS = `1. Validity: This quotation is valid for 30 calendar days from the date of issue.
+2. Payment Terms: 50% advance upon project sign-off; 50% upon milestone completion.
+3. Delivery: Delivery timelines commence after receipt of advance and scope confirmation.
+4. Taxes: All statutory duties and taxes are charged as applicable at the time of invoice.`;
+
+const DEFAULT_NOTES = `Thank you for the opportunity to partner with your organization. This proposal reflects our mutual discussions regarding scope, deliverables, and service standards.`;
+
+export default function QuotationBuilder({
+    workspaceId,
+    initialData = null,
+    onSaved
+}) {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const paramContactId = searchParams?.get('contactId');
+    const paramAccountId = searchParams?.get('accountId');
+
+    const isEdit = !!initialData?.id;
+
+    // View tabs: 'editor' or 'preview' (on mobile/desktop)
+    const [viewMode, setViewMode] = useState('split'); // 'split' | 'editor' | 'preview'
+    const [previewTheme, setPreviewTheme] = useState('modern');
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Context datasets
+    const [contacts, setContacts] = useState([]);
+    const [accounts, setAccounts] = useState([]);
+    const [deals, setDeals] = useState([]);
+
+    // Form States
+    const [quotationNumber, setQuotationNumber] = useState(
+        initialData?.quotationNumber || `QT-${new Date().toISOString().slice(0, 7).replace('-', '')}-${Math.floor(1000 + Math.random() * 9000)}`
+    );
+    const [title, setTitle] = useState(initialData?.data?.quotation?.title || 'Commercial & Technical Proposal');
+    const [issueDate, setIssueDate] = useState(
+        initialData?.data?.quotation?.issueDate || new Date().toISOString().split('T')[0]
+    );
+    const [validUntil, setValidUntil] = useState(
+        initialData?.data?.quotation?.validUntil || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    );
+    const [currency, setCurrency] = useState(initialData?.data?.quotation?.currency || 'INR');
+    const [status, setStatus] = useState(initialData?.status || 'draft');
+
+    // Client Info
+    const [selectedContactId, setSelectedContactId] = useState(initialData?.data?.client?.contactId || '');
+    const [selectedAccountId, setSelectedAccountId] = useState(initialData?.data?.client?.accountId || '');
+    const [selectedDealId, setSelectedDealId] = useState(initialData?.data?.quotation?.dealId || '');
+    const [clientName, setClientName] = useState(initialData?.clientName || initialData?.data?.client?.name || '');
+    const [clientCompany, setClientCompany] = useState(initialData?.data?.client?.company || '');
+    const [clientEmail, setClientEmail] = useState(initialData?.data?.client?.email || '');
+    const [clientPhone, setClientPhone] = useState(initialData?.data?.client?.phone || '');
+    const [clientAddress, setClientAddress] = useState(initialData?.data?.client?.address || '');
+
+    const { settings } = useSettings?.() || {};
+
+    // Company Info
+    const [companyName, setCompanyName] = useState(
+        initialData?.data?.company?.name || settings?.branding?.appName || settings?.general?.name || 'Devlomatix Solutions'
+    );
+    const [companyLogo, setCompanyLogo] = useState(
+        initialData?.data?.company?.logoUrl ||
+        settings?.branding?.logoLightUrl ||
+        settings?.branding?.lightLogoUrl ||
+        settings?.branding?.logoUrl ||
+        settings?.general?.imageUrl ||
+        ''
+    );
+    const [companyEmail, setCompanyEmail] = useState(
+        initialData?.data?.company?.email || settings?.branding?.email || 'sales@devlomatix.com'
+    );
+    const [companyPhone, setCompanyPhone] = useState(
+        initialData?.data?.company?.phone || settings?.branding?.phone || '+91 98765 43210'
+    );
+    const [companyAddress, setCompanyAddress] = useState(
+        initialData?.data?.company?.address || settings?.branding?.address || 'Vadodara, Gujarat, India'
+    );
+    const [companyTaxId, setCompanyTaxId] = useState(initialData?.data?.company?.taxId || 'GSTIN: 24AAAAA0000A1Z5');
+
+    // Sync branding from workspace settings for new quotations
+    useEffect(() => {
+        if (!initialData?.id && settings) {
+            if (settings.branding?.appName && companyName === 'Devlomatix Solutions') {
+                setCompanyName(settings.branding.appName);
+            }
+            const logo = settings.branding?.logoLightUrl ||
+                settings.branding?.lightLogoUrl ||
+                settings.branding?.logoUrl ||
+                settings.general?.imageUrl;
+            if (logo && !companyLogo) {
+                setCompanyLogo(logo);
+            }
+        }
+    }, [settings, initialData]);
+
+    // Line items
+    const [items, setItems] = useState(
+        initialData?.data?.items?.length ? initialData.data.items : [
+            {
+                id: 'item-1',
+                name: 'Custom Web & Mobile Application Development',
+                description: 'Full-stack application architecture, UI/UX design, cloud deployment, and API integration.',
+                quantity: 1,
+                unitPrice: 75000,
+                discountPercent: 0,
+                taxPercent: 18,
+                total: 88500
+            }
+        ]
+    );
+
+    // Terms & Notes
+    const [terms, setTerms] = useState(initialData?.data?.terms || DEFAULT_TERMS);
+    const [notes, setNotes] = useState(initialData?.data?.notes || DEFAULT_NOTES);
+
+    // Load workspace data for dropdowns
+    useEffect(() => {
+        if (!workspaceId) return;
+
+        async function loadData() {
+            try {
+                const [contactsRes, accountsRes, dealsRes] = await Promise.all([
+                    getCrmContactsAction(workspaceId).catch(() => ({ success: false })),
+                    getAccountsAction(workspaceId).catch(() => ({ success: false })),
+                    getDealsAction(workspaceId).catch(() => ({ success: false }))
+                ]);
+
+                if (contactsRes.success && Array.isArray(contactsRes.data)) {
+                    setContacts(contactsRes.data);
+                }
+                if (accountsRes.success && Array.isArray(accountsRes.data)) {
+                    setAccounts(accountsRes.data);
+                }
+                if (dealsRes.success && Array.isArray(dealsRes.data)) {
+                    setDeals(dealsRes.data);
+                }
+            } catch (err) {
+                console.error("Error loading dropdown data:", err);
+            }
+        }
+
+        loadData();
+    }, [workspaceId]);
+
+    // Handle Contact Selection
+    const handleSelectContact = (contactId) => {
+        setSelectedContactId(contactId);
+        if (contactId === 'MANUAL') return;
+
+        const c = contacts.find(item => item.id === contactId);
+        if (c) {
+            setClientName(c.name || '');
+            setClientPhone(c.phone || '');
+            setClientEmail(c.email || '');
+            if (c.account?.name) setClientCompany(c.account.name);
+            if (c.address) setClientAddress(c.address);
+            if (c.accountId) setSelectedAccountId(c.accountId);
+        }
+    };
+
+    // Handle Company/Account Selection
+    const handleSelectAccount = (accountId) => {
+        setSelectedAccountId(accountId);
+        if (accountId === 'NONE') return;
+
+        const acc = accounts.find(a => a.id === accountId);
+        if (acc) {
+            setClientCompany(acc.name || '');
+            if (acc.phone && !clientPhone) setClientPhone(acc.phone);
+            if (acc.email && !clientEmail) setClientEmail(acc.email);
+            if (acc.address && !clientAddress) setClientAddress(acc.address);
+        }
+    };
+
+    // Auto-select contact from query param if provided
+    useEffect(() => {
+        if (paramContactId && contacts.length > 0 && !selectedContactId) {
+            handleSelectContact(paramContactId);
+        }
+    }, [paramContactId, contacts]);
+
+    // Auto-select account from query param if provided
+    useEffect(() => {
+        if (paramAccountId && accounts.length > 0 && !selectedAccountId) {
+            handleSelectAccount(paramAccountId);
+        }
+    }, [paramAccountId, accounts]);
+
+    // Recalculate Item Line Total
+    const updateItem = (index, field, value) => {
+        const updated = [...items];
+        const item = { ...updated[index], [field]: value };
+
+        const qty = Number(item.quantity) || 0;
+        const price = Number(item.unitPrice) || 0;
+        const discount = Number(item.discountPercent) || 0;
+        const tax = Number(item.taxPercent) || 0;
+
+        const baseAmount = qty * price;
+        const discountAmount = (baseAmount * discount) / 100;
+        const taxableAmount = Math.max(0, baseAmount - discountAmount);
+        const taxAmount = (taxableAmount * tax) / 100;
+
+        item.total = Math.round(taxableAmount + taxAmount);
+        updated[index] = item;
+        setItems(updated);
+    };
+
+    const addItem = () => {
+        setItems([
+            ...items,
+            {
+                id: `item-${Date.now()}`,
+                name: '',
+                description: '',
+                quantity: 1,
+                unitPrice: 0,
+                discountPercent: 0,
+                taxPercent: 18,
+                total: 0
+            }
+        ]);
+    };
+
+    const removeItem = (index) => {
+        if (items.length <= 1) {
+            toast.error("At least one line item is required");
+            return;
+        }
+        setItems(items.filter((_, i) => i !== index));
+    };
+
+    // Financial Computations
+    const summary = useMemo(() => {
+        let subtotal = 0;
+        let discountTotal = 0;
+        let taxTotal = 0;
+
+        items.forEach(item => {
+            const qty = Number(item.quantity) || 0;
+            const price = Number(item.unitPrice) || 0;
+            const discPct = Number(item.discountPercent) || 0;
+            const taxPct = Number(item.taxPercent) || 0;
+
+            const base = qty * price;
+            const disc = (base * discPct) / 100;
+            const taxable = Math.max(0, base - disc);
+            const tax = (taxable * taxPct) / 100;
+
+            subtotal += base;
+            discountTotal += disc;
+            taxTotal += tax;
+        });
+
+        const grandTotal = Math.round(subtotal - discountTotal + taxTotal);
+        return {
+            subtotal: Math.round(subtotal),
+            discountTotal: Math.round(discountTotal),
+            taxTotal: Math.round(taxTotal),
+            grandTotal,
+            currency
+        };
+    }, [items, currency]);
+
+    // Live document data for preview
+    const previewData = useMemo(() => ({
+        id: initialData?.id || 'new-quotation',
+        quotationNumber,
+        clientName: clientName || clientCompany || 'Client Name',
+        total: summary.grandTotal,
+        status,
+        createdAt: initialData?.createdAt || new Date().toISOString(),
+        data: {
+            client: {
+                contactId: selectedContactId,
+                accountId: selectedAccountId,
+                name: clientName,
+                company: clientCompany,
+                email: clientEmail,
+                phone: clientPhone,
+                address: clientAddress
+            },
+            company: {
+                name: companyName,
+                logoUrl: companyLogo,
+                email: companyEmail,
+                phone: companyPhone,
+                address: companyAddress,
+                taxId: companyTaxId
+            },
+            quotation: {
+                title,
+                issueDate,
+                validUntil,
+                currency,
+                dealId: selectedDealId
+            },
+            items,
+            summary,
+            notes,
+            terms
+        }
+    }), [
+        initialData,
+        quotationNumber,
+        clientName,
+        clientCompany,
+        clientEmail,
+        clientPhone,
+        clientAddress,
+        selectedContactId,
+        selectedAccountId,
+        selectedDealId,
+        companyName,
+        companyLogo,
+        companyEmail,
+        companyPhone,
+        companyAddress,
+        companyTaxId,
+        title,
+        issueDate,
+        validUntil,
+        currency,
+        items,
+        summary,
+        notes,
+        terms,
+        status
+    ]);
+
+    const handleSave = async (saveStatus = status) => {
+        if (!clientName?.trim() && !clientCompany?.trim()) {
+            toast.error("Please enter a client name or company");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            const res = await saveCrmQuotationAction(workspaceId, {
+                id: initialData?.id,
+                quotationNumber,
+                clientName: clientName.trim() || clientCompany.trim(),
+                total: summary.grandTotal,
+                status: saveStatus,
+                data: previewData.data
+            });
+
+            if (res.success) {
+                toast.success(isEdit ? "Quotation updated successfully!" : "Quotation created successfully!");
+                if (onSaved) onSaved(res.data);
+                else router.push(`/workspace/${workspaceId}/crm/quotations`);
+            } else {
+                toast.error(res.error || "Failed to save quotation");
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            toast.error("An error occurred while saving quotation");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col h-full space-y-4">
+            {/* Top Toolbar */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-card rounded-2xl border border-border/80 shadow-xs">
+                <div className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg"
+                        onClick={() => router.push(`/workspace/${workspaceId}/crm/quotations`)}
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-sm font-bold text-foreground">
+                            {isEdit ? `Edit Quotation (${quotationNumber})` : 'New Quotation'}
+                        </h1>
+                        <p className="text-[11px] text-muted-foreground font-mono">
+                            Grand Total: {CURRENCY_SYMBOLS[currency] || '₹'}{summary.grandTotal.toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border text-xs">
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('editor')}
+                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                                viewMode === 'editor' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
+                            } lg:hidden`}
+                        >
+                            Editor
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setViewMode('preview')}
+                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
+                                viewMode === 'preview' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
+                            } lg:hidden`}
+                        >
+                            Preview
+                        </button>
+                    </div>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleSave('draft')}
+                        disabled={isSaving}
+                        className="h-8 text-xs font-semibold"
+                    >
+                        Save Draft
+                    </Button>
+
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => handleSave(status === 'draft' ? 'draft' : status)}
+                        disabled={isSaving}
+                        className="h-8 text-xs font-semibold bg-primary text-primary-foreground gap-1.5"
+                    >
+                        {isSaving ? (
+                            <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Saving...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-3.5 h-3.5" />
+                                <span>{isEdit ? 'Update Quotation' : 'Save Quotation'}</span>
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </div>
+
+            {/* Split Screen Container */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
+                {/* Left Side: Editor Form */}
+                <div className={`lg:col-span-6 space-y-4 overflow-y-auto pr-1 ${
+                    viewMode === 'preview' ? 'hidden lg:block' : 'block'
+                }`}>
+                    {/* Organization Branding & Sender */}
+                    <div className="p-3 bg-card rounded-2xl border border-border/80 shadow-xs flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2.5">
+                            {companyLogo ? (
+                                <div className="h-9 w-16 bg-white rounded-md p-1 border border-border/60 flex items-center justify-center shrink-0">
+                                    <img
+                                        src={typeof companyLogo === 'string' ? companyLogo : (companyLogo?.src || companyLogo)}
+                                        alt="Company Logo"
+                                        className="max-h-full max-w-full object-contain"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                                    <Building2 className="w-4 h-4" />
+                                </div>
+                            )}
+                            <div>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="text-xs font-bold text-foreground">{companyName}</span>
+                                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-semibold text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
+                                        Settings Logo
+                                    </Badge>
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">Branding pulled from Workspace Settings</p>
+                            </div>
+                        </div>
+                        <Link
+                            href={`/workspace/${workspaceId}/system/setting`}
+                            className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 shrink-0"
+                            target="_blank"
+                        >
+                            <span>Settings</span>
+                            <ExternalLink className="w-3 h-3" />
+                        </Link>
+                    </div>
+
+                    {/* Section 1: Client & Recipient */}
+                    <div className="p-4 bg-card rounded-2xl border border-border/80 shadow-xs space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-primary" />
+                                Client & Recipient Information
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">Pick CRM Contact to autofill</span>
+                        </div>
+
+                        {/* CRM Contact Selector */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold text-muted-foreground">Select CRM Contact</Label>
+                                <Select value={selectedContactId} onValueChange={handleSelectContact}>
+                                    <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue placeholder="Link CRM Contact..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="MANUAL">Manual Entry (No CRM Link)</SelectItem>
+                                        {contacts.map(c => (
+                                            <SelectItem key={c.id} value={c.id}>
+                                                {c.name} {c.account?.name ? `(${c.account.name})` : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold text-muted-foreground">Select Company / Account</Label>
+                                <Select value={selectedAccountId} onValueChange={handleSelectAccount}>
+                                    <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue placeholder="Link Account..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="NONE">None / Independent</SelectItem>
+                                        {accounts.map(a => (
+                                            <SelectItem key={a.id} value={a.id}>
+                                                {a.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Client Name *</Label>
+                                <Input
+                                    value={clientName}
+                                    onChange={(e) => setClientName(e.target.value)}
+                                    placeholder="e.g. Acme Corporation or John Doe"
+                                    className="h-8 text-xs"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Company / Organization</Label>
+                                <Input
+                                    value={clientCompany}
+                                    onChange={(e) => setClientCompany(e.target.value)}
+                                    placeholder="e.g. Acme Technologies"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Email Address</Label>
+                                <Input
+                                    type="email"
+                                    value={clientEmail}
+                                    onChange={(e) => setClientEmail(e.target.value)}
+                                    placeholder="client@example.com"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Phone (for WhatsApp Dispatch)</Label>
+                                <Input
+                                    value={clientPhone}
+                                    onChange={(e) => setClientPhone(e.target.value)}
+                                    placeholder="+919876543210"
+                                    className="h-8 text-xs font-mono"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-2 space-y-1">
+                                <Label className="text-[11px] font-semibold">Billing Address</Label>
+                                <Input
+                                    value={clientAddress}
+                                    onChange={(e) => setClientAddress(e.target.value)}
+                                    placeholder="Street, City, State, Pincode"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 2: Quotation Metadata */}
+                    <div className="p-4 bg-card rounded-2xl border border-border/80 shadow-xs space-y-3">
+                        <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            Quotation Details
+                        </span>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Quotation Number</Label>
+                                <Input
+                                    value={quotationNumber}
+                                    onChange={(e) => setQuotationNumber(e.target.value)}
+                                    className="h-8 text-xs font-mono font-bold"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Issue Date</Label>
+                                <Input
+                                    type="date"
+                                    value={issueDate}
+                                    onChange={(e) => setIssueDate(e.target.value)}
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Valid Until</Label>
+                                <Input
+                                    type="date"
+                                    value={validUntil}
+                                    onChange={(e) => setValidUntil(e.target.value)}
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-2 space-y-1">
+                                <Label className="text-[11px] font-semibold">Proposal Title</Label>
+                                <Input
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="e.g. Website Redesign & SEO Project"
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold">Currency</Label>
+                                <Select value={currency} onValueChange={setCurrency}>
+                                    <SelectTrigger className="h-8 text-xs font-semibold">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="INR">INR (₹) - Indian Rupee</SelectItem>
+                                        <SelectItem value="USD">USD ($) - US Dollar</SelectItem>
+                                        <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
+                                        <SelectItem value="AED">AED (د.إ) - UAE Dirham</SelectItem>
+                                        <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Line Items */}
+                    <div className="p-4 bg-card rounded-2xl border border-border/80 shadow-xs space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">
+                                Line Items ({items.length})
+                            </span>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addItem}
+                                className="h-7 text-xs font-semibold text-primary"
+                            >
+                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                Add Item
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                            {items.map((item, index) => (
+                                <div
+                                    key={item.id || index}
+                                    className="p-3 bg-muted/20 rounded-xl border border-border/70 space-y-2 relative group"
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex-1 space-y-1">
+                                            <Label className="text-[10px] font-semibold text-muted-foreground">
+                                                Item #{index + 1} Name
+                                            </Label>
+                                            <Input
+                                                value={item.name}
+                                                onChange={(e) => updateItem(index, 'name', e.target.value)}
+                                                placeholder="e.g. Software License, Consulting, Hardware"
+                                                className="h-7 text-xs font-bold"
+                                            />
+                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => removeItem(index)}
+                                            className="h-7 w-7 text-muted-foreground hover:text-red-500 mt-4"
+                                            title="Delete item"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <Input
+                                            value={item.description}
+                                            onChange={(e) => updateItem(index, 'description', e.target.value)}
+                                            placeholder="Optional description, scope, or deliverables..."
+                                            className="h-7 text-[11px] text-muted-foreground"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-4 gap-2 pt-1">
+                                        <div>
+                                            <Label className="text-[10px] text-muted-foreground">Qty</Label>
+                                            <Input
+                                                type="number"
+                                                min="1"
+                                                value={item.quantity}
+                                                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                className="h-7 text-xs text-center"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] text-muted-foreground">Unit Price</Label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                value={item.unitPrice}
+                                                onChange={(e) => updateItem(index, 'unitPrice', e.target.value)}
+                                                className="h-7 text-xs text-right font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] text-muted-foreground">Tax %</Label>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                value={item.taxPercent}
+                                                onChange={(e) => updateItem(index, 'taxPercent', e.target.value)}
+                                                className="h-7 text-xs text-center font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-[10px] text-muted-foreground text-right block">Total</Label>
+                                            <div className="h-7 flex items-center justify-end font-mono font-bold text-xs text-foreground">
+                                                {CURRENCY_SYMBOLS[currency] || '₹'}{Number(item.total || 0).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Section 4: Terms & Notes */}
+                    <div className="p-4 bg-card rounded-2xl border border-border/80 shadow-xs space-y-3">
+                        <span className="text-xs font-bold text-foreground">
+                            Terms & Payment Notes
+                        </span>
+
+                        <div className="space-y-3">
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold text-muted-foreground">Terms & Conditions</Label>
+                                <Textarea
+                                    value={terms}
+                                    onChange={(e) => setTerms(e.target.value)}
+                                    rows={3}
+                                    className="text-xs font-sans leading-relaxed resize-none"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label className="text-[11px] font-semibold text-muted-foreground">Overview & Client Notes</Label>
+                                <Textarea
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    rows={2}
+                                    className="text-xs font-sans leading-relaxed resize-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Side: Live Document Preview */}
+                <div className={`lg:col-span-6 flex flex-col h-full overflow-y-auto ${
+                    viewMode === 'editor' ? 'hidden lg:flex' : 'flex'
+                }`}>
+                    <QuotationDocumentPreview
+                        data={previewData}
+                        theme={previewTheme}
+                        showActions={true}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}

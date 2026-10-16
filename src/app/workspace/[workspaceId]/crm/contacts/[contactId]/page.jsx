@@ -328,6 +328,16 @@ export default function ContactDossierPage() {
                             <Plus className="w-4 h-4" />
                             <span>Create Deal</span>
                         </Button>
+                        <Link href={`/workspace/${workspaceId}/crm/quotations/new?contactId=${contact.id}`}>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="font-semibold gap-1.5 text-xs border-border/80 hover:bg-muted/60"
+                            >
+                                <FileText className="w-4 h-4 text-primary" />
+                                <span>Create Quotation</span>
+                            </Button>
+                        </Link>
                     </div>
                 </div>
 
