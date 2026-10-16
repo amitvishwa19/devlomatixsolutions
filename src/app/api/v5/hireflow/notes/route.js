@@ -16,7 +16,7 @@ export async function POST(request) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { applicationId, candidateId, text, isPrivate } = body;
+    const { applicationId, candidateId, text, isPrivate, metadata } = body;
 
     if ((!applicationId && !candidateId) || !text) {
       return NextResponse.json({ error: "text and either applicationId or candidateId are required" }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(request) {
         userId,
         text,
         isPrivate: isPrivate || false,
+        metadata: metadata || null,
       },
       include: { user: true, candidate: true, application: { include: { job: true } } },
     });

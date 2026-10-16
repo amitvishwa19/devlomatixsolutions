@@ -17,6 +17,7 @@ import {
  Sparkles,
  CheckCircle2,
  Clock,
+ DollarSign,
  Briefcase,
  GraduationCap,
  ExternalLink,
@@ -36,6 +37,7 @@ import {
  Trash2
 } from 'lucide-react';
 import Scorecards from '../../_components/Scorecards';
+import CandidateNotesTab from '../../_components/CandidateNotesTab';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -73,7 +75,6 @@ export default function CandidateDetailPage() {
     const [isOfferGenerating, setIsOfferGenerating] = useState(false);
     const [isParsing, setIsParsing] = useState(false);
     const [isScoring, setIsScoring] = useState(false);
-    const [noteText, setNoteText] = useState("");
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -187,22 +188,6 @@ export default function CandidateDetailPage() {
         }
     };
 
-    const handlePostNote = async () => {
-        if (!noteText.trim()) return;
-        try {
-            const res = await createCandidateNoteAction(workspaceId, {
-                candidateId,
-                text: noteText
-            });
-            if (!res.success) throw new Error(res.error);
-            setNoteText("");
-            toast.success("Note posted!");
-            mutate();
-        } catch (error) {
-            toast.error(error.message || "Failed to post note");
-        }
-    };
-
  return (
  <div className="flex flex-col gap-8 p-8 max-w-[1400px] mx-auto animate-in fade-in duration-700">
  {/* Header / Breadcrumbs */}
@@ -224,12 +209,22 @@ export default function CandidateDetailPage() {
  </Avatar>
  <div>
  <h1 className="text-4xl tracking-tighter">{candidate.name}</h1>
- <div className="flex items-center gap-2 mt-1">
+ <div className="flex items-center gap-2 mt-1 flex-wrap">
  <p className="text-xs font-bold text-muted-foreground">{candidate.role}</p>
  <span className="w-1 h-1 rounded-full bg-border"/>
  <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[9px]">
  {candidate.status}
  </Badge>
+ {candidateData.parsedData?.noticePeriod && (
+     <Badge variant="outline" className="text-[10px] bg-cyan-500/10 text-cyan-400 border-cyan-500/30 py-0 h-5 font-semibold">
+         <Clock size={10} className="mr-1" /> Notice: {candidateData.parsedData.noticePeriod}
+     </Badge>
+ )}
+ {candidateData.parsedData?.expectedSalary && (
+     <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30 py-0 h-5 font-semibold">
+         <DollarSign size={10} className="mr-1" /> Exp CTC: {candidateData.parsedData.expectedSalary}
+     </Badge>
+ )}
  </div>
  </div>
  </div>
@@ -611,50 +606,13 @@ export default function CandidateDetailPage() {
  </div>
  </TabsContent>
 
- <TabsContent value="notes"className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
- <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
- <CardContent className="p-8 space-y-8">
- <div className="space-y-4">
- <h3 className="text-lg tracking-tighter opacity-40 text-[10px]">Collaborative Discussion</h3>
- <div className="space-y-4">
- {candidate.notes.map((note, i) => (
- <div key={i} className="flex gap-4 p-6 rounded-md bg-muted/20 border border-border/10 items-start">
- <Avatar className="w-10">
- <AvatarFallback className="text-[10px] bg-primary/10 text-primary">AM</AvatarFallback>
- </Avatar>
- <div className="space-y-1">
- <div className="flex items-center gap-2">
- <span className="text-xs">{note.user?.name || note.author ||"Team Member"}</span>
- <span className="text-[10px] font-bold opacity-30">{new Date(note.createdAt || Date.now()).toLocaleDateString()}</span>
- </div>
- <p className="text-xs font-medium leading-relaxed opacity-70 italic">
-"{note.content || note.text}"
- </p>
- </div>
- </div>
- ))}
- </div>
- </div>
- 
- <div className="space-y-4 pt-4 border-t border-border/10">
- <Textarea 
- placeholder="Type a team note... Use @ to mention colleagues"
- className="min-h-[120px] rounded-md bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium text-sm p-6"
- value={noteText}
- onChange={(e) => setNoteText(e.target.value)}
- />
- <div className="flex items-center justify-between">
- <p className="text-[10px] font-bold text-muted-foreground opacity-40 italic">Notes are only visible to the hiring team.</p>
- <Button 
- onClick={handlePostNote}
- className="h-12 px-8 rounded-md bg-primary text-[10px] shadow-lg shadow-primary/20"
- >
- Post Note <Send size={12} className="ml-2"/>
- </Button>
- </div>
- </div>
- </CardContent>
- </Card>
+ <TabsContent value="notes" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
+     <CandidateNotesTab
+         candidate={candidateData}
+         workspaceId={workspaceId}
+         onNoteAdded={mutate}
+         getInitials={getInitials}
+     />
  </TabsContent>
 
  <TabsContent value="timeline"className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">

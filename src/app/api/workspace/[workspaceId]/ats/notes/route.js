@@ -34,7 +34,7 @@ export async function POST(req, { params }) {
         if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
-        const { candidateId, applicationId, text, isPrivate } = body;
+        const { candidateId, applicationId, text, isPrivate, metadata } = body;
 
         const note = await prisma.atsNote.create({
             data: {
@@ -42,6 +42,7 @@ export async function POST(req, { params }) {
                 applicationId,
                 text,
                 isPrivate: isPrivate || false,
+                metadata: metadata || null,
                 userId: session.user.userId
             }
         });

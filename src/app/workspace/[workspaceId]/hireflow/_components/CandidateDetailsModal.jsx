@@ -16,6 +16,7 @@ import {
     Sparkles,
     CheckCircle2,
     Clock,
+    DollarSign,
     AlertCircle,
     Star,
     Send,
@@ -40,6 +41,7 @@ import {
 } from 'lucide-react';
 import Scorecards from './Scorecards';
 import InterviewKitTab from './InterviewKitTab';
+import CandidateNotesTab from './CandidateNotesTab';
 import { generateOfferLetter } from '@/lib/ats/pdf-generator';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -438,8 +440,6 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
         }
     };
 
-    const [noteText, setNoteText] = useState("");
-
     const handleSubmitScorecard = async (data) => {
         try {
             const res = await createCandidateScorecardAction(workspaceId, {
@@ -456,22 +456,6 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
             mutate();
         } catch (error) {
             toast.error(error.message || "Failed to submit scorecard");
-        }
-    };
-
-    const handlePostNote = async () => {
-        if (!noteText.trim()) return;
-        try {
-            const res = await createCandidateNoteAction(workspaceId, {
-                candidateId,
-                text: noteText
-            });
-            if (!res.success) throw new Error(res.error);
-            setNoteText("");
-            toast.success("Note posted!");
-            mutate();
-        } catch (error) {
-            toast.error(error.message || "Failed to post note");
         }
     };
 
@@ -526,7 +510,7 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                                         </Select>
                                                     </div>
                                                 </div>
-                                                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
                                                     <span className="font-semibold text-foreground/80">{candidateData.applications?.[0]?.job?.title || "Candidate"}</span>
                                                     <span>•</span>
                                                     <span>{candidateData.email}</span>
@@ -534,6 +518,22 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                                         <>
                                                             <span>•</span>
                                                             <span>{candidateData.phone}</span>
+                                                        </>
+                                                    )}
+                                                    {candidateData.parsedData?.noticePeriod && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <Badge variant="outline" className="text-[10px] bg-cyan-500/10 text-cyan-400 border-cyan-500/30 py-0 h-5 font-semibold">
+                                                                <Clock size={10} className="mr-1" /> Notice: {candidateData.parsedData.noticePeriod}
+                                                            </Badge>
+                                                        </>
+                                                    )}
+                                                    {candidateData.parsedData?.expectedSalary && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-400 border-emerald-500/30 py-0 h-5 font-semibold">
+                                                                <DollarSign size={10} className="mr-1" /> Exp CTC: {candidateData.parsedData.expectedSalary}
+                                                            </Badge>
                                                         </>
                                                     )}
                                                 </div>
@@ -1193,57 +1193,12 @@ export const CandidateDetailsModal = ({ isOpen, onClose, candidateId, workspaceI
                                     </TabsContent>
 
                                     <TabsContent value="notes" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">
-                                        <Card className="border-border/40 bg-card/30 backdrop-blur-xl rounded-md overflow-hidden shadow-2xl shadow-black/5">
-                                            <CardContent className="p-8 space-y-8">
-                                                <div className="space-y-4">
-                                                    <h3 className="text-lg tracking-tighter opacity-40 text-[10px]">Collaborative Discussion</h3>
-                                                    <div className="space-y-4">
-                                                        {(candidateData.notes || []).map((note, i) => (
-                                                            <div key={i} className="flex gap-4 p-6 rounded-md bg-muted/20 border border-border/10 items-start">
-                                                                <Avatar className="w-10">
-                                                                    <AvatarImage src={note.user?.avatar || note.user?.image} alt={note.user?.displayName || note.user?.username || "User"} />
-                                                                    <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
-                                                                        {getInitials(note.user?.displayName || note.user?.username || note.user?.name || note.author) || "TM"}
-                                                                    </AvatarFallback>
-                                                                </Avatar>
-                                                                <div className="space-y-1">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <span className="text-xs">{note.user?.displayName || note.user?.username || note.user?.name || note.author || "Team Member"}</span>
-                                                                        <span className="text-[10px] font-bold opacity-30">{new Date(note.createdAt || Date.now()).toLocaleDateString()}</span>
-                                                                    </div>
-                                                                    <p className="text-xs font-medium leading-relaxed opacity-70 italic">
-                                                                        "{note.content || note.text}"
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                        {(!candidateData.notes || candidateData.notes.length === 0) && (
-                                                            <div className="p-6 text-center text-muted-foreground text-sm border-dashed border border-border/40 rounded-xl">
-                                                                No notes submitted yet.
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="space-y-4 pt-4 border-t border-border/10">
-                                                    <Textarea
-                                                        placeholder="Type a team note... Use @ to mention colleagues"
-                                                        className="min-h-[120px] rounded-md bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary font-medium text-sm p-6"
-                                                        value={noteText}
-                                                        onChange={(e) => setNoteText(e.target.value)}
-                                                    />
-                                                    <div className="flex items-center justify-between">
-                                                        <p className="text-[10px] font-bold text-muted-foreground opacity-40 italic">Notes are only visible to the hiring team.</p>
-                                                        <Button
-                                                            onClick={handlePostNote}
-                                                            className="h-12 px-8 rounded-md bg-primary text-[10px] shadow-lg shadow-primary/20"
-                                                        >
-                                                            Post Note <Send size={12} className="ml-2" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                        <CandidateNotesTab
+                                            candidate={candidateData}
+                                            workspaceId={workspaceId}
+                                            onNoteAdded={mutate}
+                                            getInitials={getInitials}
+                                        />
                                     </TabsContent>
 
                                     <TabsContent value="timeline" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-2 duration-500">

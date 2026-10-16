@@ -188,7 +188,7 @@ export async function createCandidateNoteAction(workspaceId, data) {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = session.user.userId || session.user.id;
 
-        const { candidateId, applicationId, text, isPrivate } = data;
+        const { candidateId, applicationId, text, isPrivate, metadata } = data;
 
         const note = await prisma.atsNote.create({
             data: {
@@ -196,10 +196,36 @@ export async function createCandidateNoteAction(workspaceId, data) {
                 applicationId,
                 text,
                 isPrivate: isPrivate || false,
+                metadata: metadata || null,
                 userId
             },
             include: { user: true }
         });
+
+        // If interview metadata includes notice period / salary info, optionally enrich candidate parsedData
+        if (candidateId && metadata && (metadata.noticePeriod || metadata.expectedSalary || metadata.currentSalary || metadata.totalExperience || metadata.workMode)) {
+            try {
+                const candidateRecord = await prisma.candidate.findUnique({
+                    where: { id: candidateId },
+                    select: { parsedData: true }
+                });
+                const currentParsed = (candidateRecord?.parsedData && typeof candidateRecord.parsedData === 'object') ? candidateRecord.parsedData : {};
+                const updatedParsed = {
+                    ...currentParsed,
+                    ...(metadata.noticePeriod ? { noticePeriod: metadata.noticePeriod } : {}),
+                    ...(metadata.expectedSalary ? { expectedSalary: metadata.expectedSalary } : {}),
+                    ...(metadata.currentSalary ? { currentSalary: metadata.currentSalary } : {}),
+                    ...(metadata.totalExperience ? { totalExperience: metadata.totalExperience } : {}),
+                    ...(metadata.workMode ? { workModePreference: metadata.workMode } : {})
+                };
+                await prisma.candidate.update({
+                    where: { id: candidateId },
+                    data: { parsedData: updatedParsed }
+                });
+            } catch (syncErr) {
+                console.warn("[SYNC_CANDIDATE_NOTE_METADATA_WARN]", syncErr);
+            }
+        }
 
         return { success: true, data: note };
     } catch (error) {
