@@ -428,6 +428,33 @@ export default function QuotationDocumentPreview({
 
             <style dangerouslySetInnerHTML={{
                 __html: `
+                    #quotation-print-area {
+                        background-color: #ffffff !important;
+                        color: #0f172a !important;
+                    }
+                    #quotation-print-area p,
+                    #quotation-print-area span,
+                    #quotation-print-area td,
+                    #quotation-print-area th,
+                    #quotation-print-area li,
+                    #quotation-print-area div,
+                    #quotation-print-area table {
+                        color: inherit;
+                    }
+                    #quotation-print-area .text-slate-900, #quotation-print-area [class*="text-[#0f172a]"] { color: #0f172a !important; }
+                    #quotation-print-area .text-slate-800, #quotation-print-area [class*="text-[#1e293b]"] { color: #1e293b !important; }
+                    #quotation-print-area .text-slate-700, #quotation-print-area [class*="text-[#334155]"] { color: #334155 !important; }
+                    #quotation-print-area .text-slate-600, #quotation-print-area [class*="text-[#475569]"] { color: #475569 !important; }
+                    #quotation-print-area .text-slate-500, #quotation-print-area [class*="text-[#64748b]"] { color: #64748b !important; }
+                    #quotation-print-area .text-slate-400, #quotation-print-area [class*="text-[#94a3b8]"] { color: #94a3b8 !important; }
+                    #quotation-print-area .text-emerald-600, #quotation-print-area [class*="text-[#059669]"] { color: #059669 !important; }
+                    #quotation-print-area .text-white { color: #ffffff !important; }
+                    #quotation-print-area .bg-white { background-color: #ffffff !important; }
+                    #quotation-print-area .border-slate-300, #quotation-print-area [class*="border-[#cbd5e1]"] { border-color: #cbd5e1 !important; }
+                    #quotation-print-area .border-slate-200, #quotation-print-area [class*="border-[#e2e8f0]"] { border-color: #e2e8f0 !important; }
+                    #quotation-print-area .border-slate-400, #quotation-print-area [class*="border-[#94a3b8]"] { border-color: #94a3b8 !important; }
+                    #quotation-print-area .bg-slate-50, #quotation-print-area [class*="bg-[#f8fafc]"] { background-color: #f8fafc !important; }
+
                     @media print {
                         body {
                             background: white !important;
