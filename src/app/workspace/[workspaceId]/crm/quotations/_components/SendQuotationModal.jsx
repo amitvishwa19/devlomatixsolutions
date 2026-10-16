@@ -29,52 +29,96 @@ export default function SendQuotationModal({
     const [recipientPhone, setRecipientPhone] = useState('');
     const [recipientName, setRecipientName] = useState('');
     const [messageText, setMessageText] = useState('');
+    const [selectedTemplate, setSelectedTemplate] = useState('proposal');
     const [isSending, setIsSending] = useState(false);
 
-    useEffect(() => {
-        if (!quotation) return;
-
+    const generateTemplateText = (tplKey, name = recipientName) => {
+        if (!quotation) return '';
         const details = quotation.data || {};
         const client = details.client || {};
         const qInfo = details.quotation || {};
         const items = details.items || [];
         const currency = qInfo.currency || 'INR';
         const symbol = CURRENCY_SYMBOLS[currency] || '₹';
+        const publicUrl = typeof window !== 'undefined' ? `${window.location.origin}/quotations/view/${quotation.id}` : '';
+        const clientDisplayName = name || client.contactPerson || client.name || quotation.clientName || 'Valued Client';
+        const companyName = details.company?.name || 'Devlomatix Solutions';
 
-        const phone = client.phone || '';
-        const name = client.contactPerson || client.name || quotation.clientName || 'Valued Client';
+        if (tplKey === 'reminder') {
+            return `Hello ${clientDisplayName},
 
-        setRecipientPhone(phone);
-        setRecipientName(name);
+We are following up on commercial proposal *#${quotation.quotationNumber}* (*${symbol}${Number(quotation.total || 0).toLocaleString('en-IN')}*) sent to your desk.
 
-        // Build itemized bullet list
+Please let us know if you have any questions or require modifications to the scope.
+
+👉 *Review & Authorize Online:*
+${publicUrl}
+
+You can review the itemized breakdown and authorize with an e-signature anytime.
+
+Best regards,
+${companyName}`;
+        }
+
+        if (tplKey === 'urgent') {
+            return `Hi ${clientDisplayName},
+
+Friendly reminder that quotation *#${quotation.quotationNumber}* for *${qInfo.title || 'Commercial Project'}* is scheduled to expire on *${qInfo.validUntil || 'soon'}*.
+
+💰 Total: *${symbol}${Number(quotation.total || 0).toLocaleString('en-IN')}*
+
+To lock in this pricing and milestone schedule, please review and e-sign online:
+👉 ${publicUrl}
+
+Best regards,
+${companyName}`;
+        }
+
+        // Default 'proposal'
         const itemsSummary = items
             .slice(0, 4)
             .map(i => `• ${i.name} (Qty: ${i.quantity || 1}) - ${symbol}${Number(i.total || i.unitPrice || 0).toLocaleString()}`)
             .join('\n');
-
         const moreItems = items.length > 4 ? `\n...and ${items.length - 4} more item(s)` : '';
 
-        // Formulate professional message text
-        const defaultMessage = `Hello ${name},
+        return `Hello ${clientDisplayName},
 
 Please find our proposal details below:
 
 📄 *${qInfo.title || 'Official Quotation'}*
 🔢 Quotation No: *${quotation.quotationNumber}*
-💰 Total Amount: *${symbol}${Number(quotation.total || 0).toLocaleString()}*
+💰 Total Amount: *${symbol}${Number(quotation.total || 0).toLocaleString('en-IN')}*
 📅 Valid Until: ${qInfo.validUntil || '30 days from issue'}
 
 *Scope of Items:*
 ${itemsSummary}${moreItems}
 
-Please review the proposal and let us know if you have any questions or are ready to proceed.
+👉 *Review & Authorize Online:*
+${publicUrl}
+
+You can review the full itemized scope, download official PDF, and authorize the quotation with digital e-signature directly through the link above.
 
 Best regards,
-${details.company?.name || 'Sales Team'}`;
+${companyName}`;
+    };
 
-        setMessageText(defaultMessage);
+    useEffect(() => {
+        if (!quotation) return;
+
+        const details = quotation.data || {};
+        const client = details.client || {};
+        const phone = client.phone || '';
+        const name = client.contactPerson || client.name || quotation.clientName || 'Valued Client';
+
+        setRecipientPhone(phone);
+        setRecipientName(name);
+        setMessageText(generateTemplateText(selectedTemplate, name));
     }, [quotation, isOpen]);
+
+    const handleSwitchTemplate = (tplKey) => {
+        setSelectedTemplate(tplKey);
+        setMessageText(generateTemplateText(tplKey, recipientName));
+    };
 
     if (!quotation) return null;
 
@@ -166,17 +210,40 @@ ${details.company?.name || 'Sales Team'}`;
 
                     <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                            <Label className="text-xs font-semibold">WhatsApp Message Body</Label>
+                            <Label className="text-xs font-semibold">Message Template</Label>
                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                                 <Sparkles className="w-3 h-3 text-emerald-500" />
-                                Auto-formatted summary
+                                Auto-embeds E-Sign Portal Link
                             </span>
                         </div>
+
+                        {/* Template Switcher Pills */}
+                        <div className="flex items-center gap-1.5 p-1 bg-muted/40 rounded-xl border border-border/60">
+                            {[
+                                { id: 'proposal', label: '1. Official Proposal' },
+                                { id: 'reminder', label: '2. Follow-up Nudge' },
+                                { id: 'urgent', label: '3. Expiring Notice' }
+                            ].map((tpl) => (
+                                <button
+                                    key={tpl.id}
+                                    type="button"
+                                    onClick={() => handleSwitchTemplate(tpl.id)}
+                                    className={`flex-1 py-1 px-2 text-[11px] font-semibold rounded-lg transition-all ${
+                                        selectedTemplate === tpl.id
+                                            ? 'bg-card text-foreground shadow-xs border border-border/80'
+                                            : 'text-muted-foreground hover:text-foreground'
+                                    }`}
+                                >
+                                    {tpl.label}
+                                </button>
+                            ))}
+                        </div>
+
                         <Textarea
                             value={messageText}
                             onChange={(e) => setMessageText(e.target.value)}
                             rows={8}
-                            className="text-xs font-mono leading-relaxed resize-none bg-muted/20"
+                            className="text-xs font-mono leading-relaxed resize-none bg-muted/20 mt-1"
                         />
                     </div>
 

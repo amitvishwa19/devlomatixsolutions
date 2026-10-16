@@ -15,7 +15,8 @@ import {
     Loader2,
     ExternalLink,
     Zap,
-    ShieldCheck
+    ShieldCheck,
+    Link2
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -239,11 +240,35 @@ export default function PayFlowDealBillingCard({ workspaceId, deal, onUpdated })
                                         </div>
 
                                         <div className="flex items-center gap-1 shrink-0">
+                                            {quo.quotationId && (
+                                                <Button
+                                                    type="button"
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        const url = `${window.location.origin}/quotations/view/${quo.quotationId}`;
+                                                        navigator.clipboard.writeText(url);
+                                                        toast.success(`Copied client approval link for ${quo.id}!`);
+                                                    }}
+                                                    className="h-7 text-[11px] gap-1 px-2 font-semibold text-muted-foreground hover:text-primary"
+                                                    title="Copy Client E-Sign Link"
+                                                >
+                                                    <Link2 className="w-3 h-3 text-primary" />
+                                                    <span>Link</span>
+                                                </Button>
+                                            )}
+
                                             <Button
                                                 type="button"
                                                 size="sm"
                                                 variant="ghost"
-                                                onClick={() => setPreviewDoc(quo)}
+                                                onClick={() => {
+                                                    if (quo.quotationId) {
+                                                        window.open(`/quotations/view/${quo.quotationId}`, '_blank');
+                                                    } else {
+                                                        setPreviewDoc(quo);
+                                                    }
+                                                }}
                                                 className="h-7 text-[11px] gap-1 px-2 font-semibold"
                                             >
                                                 <Eye className="w-3 h-3 text-primary" />

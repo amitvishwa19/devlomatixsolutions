@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download, Printer, FileText } from 'lucide-react';
+import { Download, Printer, FileText, Share2, Link2, CreditCard, ShieldCheck } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
 import { useSettings } from '@/providers/WorkspaceProvider';
+import { convertQuotationToPayFlowInvoiceAction } from '../../_actions/quotation-actions';
 import lightLogo from '@/assets/logo/light_logo.png';
 
 export const CURRENCY_SYMBOLS = {
@@ -387,22 +388,89 @@ export default function QuotationDocumentPreview({
         }
     };
 
+    const [isConvertingInvoice, setIsConvertingInvoice] = useState(false);
+
+    const handleCopyPublicLink = () => {
+        if (!data?.id) {
+            toast.info("Please save the quotation first to generate a public link");
+            return;
+        }
+        const url = `${window.location.origin}/quotations/view/${data.id}`;
+        navigator.clipboard.writeText(url);
+        toast.success("Client link copied to clipboard!");
+    };
+
+    const handleConvertToInvoice = async () => {
+        const workspaceId = data?.workspaceId;
+        if (!data?.id || !workspaceId) {
+            toast.error("Unable to identify quotation workspace");
+            return;
+        }
+        setIsConvertingInvoice(true);
+        const toastId = toast.loading("Converting quotation to PayFlow invoice...");
+        try {
+            const res = await convertQuotationToPayFlowInvoiceAction(workspaceId, data.id);
+            if (res.success && res.data) {
+                toast.success(`Invoice #${res.data.invoice.id} created successfully!`, { id: toastId });
+                if (onStatusChange) onStatusChange('invoiced', res.data.quotation);
+            } else {
+                toast.error(res.error || "Failed to convert to invoice", { id: toastId });
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error("An error occurred during invoice conversion", { id: toastId });
+        } finally {
+            setIsConvertingInvoice(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-3 w-full">
             {showActions && (
-                <div className="flex items-center justify-between gap-2 p-2.5 bg-muted/40 rounded-xl border border-border/80 text-xs print:hidden">
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-muted/40 rounded-xl border border-border/80 text-xs print:hidden">
                     <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-primary" />
                         <span className="font-bold text-foreground">Preview: {quotationNumber}</span>
                         <Badge variant="outline" className={`text-[10px] font-bold uppercase ${status === 'accepted' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                status === 'invoiced' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
                                 status === 'sent' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                                    status === 'declined' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
-                                        'bg-muted text-muted-foreground'
+                                status === 'declined' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                'bg-muted text-muted-foreground'
                             }`}>
                             {status}
                         </Badge>
+                        {details.invoice && (
+                            <Badge className="bg-purple-500/10 text-purple-400 border-purple-500/30 text-[10px] font-mono">
+                                #{details.invoice.id}
+                            </Badge>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
+                        {data?.id && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCopyPublicLink}
+                                className="h-8 text-xs font-semibold"
+                                title="Copy public link to send to client"
+                            >
+                                <Share2 className="w-3.5 h-3.5 mr-1 text-cyan-500" />
+                                Share Link
+                            </Button>
+                        )}
+                        {status === 'accepted' && !details.invoice && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleConvertToInvoice}
+                                disabled={isConvertingInvoice}
+                                className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white"
+                            >
+                                <CreditCard className="w-3.5 h-3.5 mr-1" />
+                                {isConvertingInvoice ? "Converting..." : "Create Invoice"}
+                            </Button>
+                        )}
                         <Button
                             type="button"
                             variant="outline"
@@ -844,6 +912,22 @@ export default function QuotationDocumentPreview({
                                     </tbody>
                                 </table>
                             </div>
+
+                            {details.clientSignature && (
+                                <div className="mt-4 p-2.5 rounded-lg border border-emerald-300 bg-emerald-50/70 text-[10px]">
+                                    <div className="flex items-center gap-1 font-bold text-emerald-800 mb-1">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                        <span>CLIENT E-SIGNATURE & AUTHORIZATION</span>
+                                    </div>
+                                    {details.clientSignature.signatureDataUrl && (
+                                        <div className="bg-white p-1 rounded border border-emerald-200 my-1 inline-block">
+                                            <img src={details.clientSignature.signatureDataUrl} alt="Client Signature" className="h-8 max-w-[140px] object-contain" />
+                                        </div>
+                                    )}
+                                    <p className="font-bold text-[#0f172a]">{details.clientSignature.signatoryName}</p>
+                                    <p className="text-[#475569]">{details.clientSignature.signatoryDesignation} • {formatDateLong(details.clientSignature.acceptedAt)}</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

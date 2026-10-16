@@ -212,18 +212,38 @@ export async function getDealBillingRecordsAction(workspaceId, dealId) {
     try {
         await ensureWorkspaceAccess(workspaceId);
 
-        const quotes = getWorkspaceQuotations(workspaceId);
-        const dealQuotes = quotes.filter(q => q.dealId === dealId);
-
-        const invoicesRes = await getInvoices(workspaceId);
-        const allInvoices = invoicesRes.success ? invoicesRes.data : [];
-
-        // Filter invoices matching deal title, quote references, or client
         const deal = await prisma.deal.findUnique({
             where: { id: dealId },
             include: { contact: true, account: true }
         });
 
+        // 1. Fetch real DB quotations
+        const dbQuotations = await prisma.quotation.findMany({
+            where: { workspaceId },
+            orderBy: { createdAt: 'desc' }
+        });
+        const matchedDbQuotes = dbQuotations
+            .filter(q => q.data?.quotation?.dealId === dealId)
+            .map(q => ({
+                id: q.quotationNumber,
+                quotationId: q.id,
+                dealId: q.data?.quotation?.dealId,
+                dealTitle: q.data?.quotation?.title || deal?.title,
+                clientName: q.clientName,
+                total: q.total,
+                status: q.status.toUpperCase(),
+                createdAt: q.createdAt.toISOString(),
+                data: q.data
+            }));
+
+        const quotes = getWorkspaceQuotations(workspaceId);
+        const dealQuotes = quotes.filter(q => q.dealId === dealId);
+        const combinedQuotes = [...matchedDbQuotes, ...dealQuotes];
+
+        const invoicesRes = await getInvoices(workspaceId);
+        const allInvoices = invoicesRes.success ? invoicesRes.data : [];
+
+        // Filter invoices matching deal title, quote references, or client
         const dealInvoices = allInvoices.filter(inv => {
             if (deal?.title && inv.items?.some(i => i.desc?.toLowerCase().includes(deal.title.toLowerCase()))) return true;
             if (deal?.account?.name && inv.client?.toLowerCase() === deal.account.name.toLowerCase()) return true;
@@ -234,7 +254,7 @@ export async function getDealBillingRecordsAction(workspaceId, dealId) {
         return {
             success: true,
             data: {
-                quotations: dealQuotes,
+                quotations: combinedQuotes,
                 invoices: dealInvoices
             }
         };

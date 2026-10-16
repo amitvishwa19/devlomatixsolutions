@@ -189,7 +189,7 @@ export async function createDealAction(workspaceId, data) {
 /**
  * Update Deal stage (Kanban drag-and-drop) & log stage transition
  */
-export async function updateDealStageAction(workspaceId, dealId, stageId) {
+export async function updateDealStageAction(workspaceId, dealId, stageId, lossReason = null) {
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
         const userId = await getValidUserId(workspaceId, session);
@@ -217,7 +217,8 @@ export async function updateDealStageAction(workspaceId, dealId, stageId) {
             where: { id: dealId },
             data: {
                 stageId,
-                closedAt: isNowClosed ? new Date() : null
+                closedAt: isNowClosed ? new Date() : null,
+                ...(targetStage.isLost ? { lossReason: lossReason || currentDeal.lossReason || 'Closed Lost' } : { lossReason: null })
             },
             include: {
                 stage: true,
@@ -240,12 +241,15 @@ export async function updateDealStageAction(workspaceId, dealId, stageId) {
                     accountId: updatedDeal.accountId || null,
                     type: "DEAL_STAGE_CHANGE",
                     title: `Stage Changed: ${targetStage.name}`,
-                    description: `Moved deal from "${currentDeal.stage.name}" to "${targetStage.name}".`,
+                    description: targetStage.isLost && lossReason
+                        ? `Moved deal from "${currentDeal.stage.name}" to "${targetStage.name}". Reason: ${lossReason}`
+                        : `Moved deal from "${currentDeal.stage.name}" to "${targetStage.name}".`,
                     metadata: {
                         previousStageId: currentDeal.stageId,
                         newStageId: stageId,
                         isWon: targetStage.isWon,
-                        isLost: targetStage.isLost
+                        isLost: targetStage.isLost,
+                        lossReason: targetStage.isLost ? lossReason : null
                     }
                 }
             });

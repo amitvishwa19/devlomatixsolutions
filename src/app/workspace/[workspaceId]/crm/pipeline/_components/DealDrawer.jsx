@@ -14,7 +14,8 @@ import {
     Send,
     Loader2,
     Clock,
-    Phone
+    Phone,
+    AlertCircle
 } from 'lucide-react';
 import {
     Sheet,
@@ -23,6 +24,14 @@ import {
     SheetTitle,
     SheetDescription
 } from "@/components/ui/sheet";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +57,12 @@ export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stage
     const [waMessage, setWaMessage] = useState('');
     const [isSendingWA, setIsSendingWA] = useState(false);
 
+    // Loss Reason Prompt State
+    const [isLossModalOpen, setIsLossModalOpen] = useState(false);
+    const [pendingLossStageId, setPendingLossStageId] = useState(null);
+    const [selectedLossReason, setSelectedLossReason] = useState('Pricing too high');
+    const [customLossReason, setCustomLossReason] = useState('');
+
     useEffect(() => {
         if (!isOpen || !dealId) return;
 
@@ -72,16 +87,48 @@ export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stage
 
     const handleStageChange = async (newStageId) => {
         if (!deal) return;
+        const targetStage = stages.find(s => s.id === newStageId);
+        if (targetStage?.isLost) {
+            setPendingLossStageId(newStageId);
+            setIsLossModalOpen(true);
+            return;
+        }
+
         try {
             const res = await updateDealStageAction(workspaceId, deal.id, newStageId);
             if (res.success) {
-                setDeal(prev => ({ ...prev, stageId: newStageId, stage: res.data.stage }));
+                setDeal(prev => ({ ...prev, stageId: newStageId, stage: res.data.stage, lossReason: null }));
                 toast.success(`Stage updated to ${res.data.stage.name}`);
                 onDealUpdated && onDealUpdated(res.data);
             } else {
                 toast.error(res.error || "Failed to update stage");
             }
         } catch (error) {
+            toast.error("Error updating stage");
+        }
+    };
+
+    const handleConfirmLoss = async () => {
+        if (!deal || !pendingLossStageId) return;
+        const reason = selectedLossReason === 'Other' ? (customLossReason.trim() || 'Other reason') : selectedLossReason;
+
+        try {
+            const res = await updateDealStageAction(workspaceId, deal.id, pendingLossStageId, reason);
+            if (res.success) {
+                setDeal(prev => ({
+                    ...prev,
+                    stageId: pendingLossStageId,
+                    stage: res.data.stage,
+                    lossReason: reason
+                }));
+                toast.success(`Deal marked as Lost: ${reason}`);
+                setIsLossModalOpen(false);
+                setPendingLossStageId(null);
+                onDealUpdated && onDealUpdated(res.data);
+            } else {
+                toast.error(res.error || "Failed to update stage");
+            }
+        } catch (e) {
             toast.error("Error updating stage");
         }
     };
@@ -238,6 +285,27 @@ export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stage
                                     );
                                 })}
                             </div>
+
+                            {/* Closed Lost Reason Banner */}
+                            {deal.lossReason && (
+                                <div className="mt-3 p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center justify-between text-xs text-red-600 dark:text-red-400">
+                                    <div className="flex items-center gap-2 font-semibold">
+                                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                        <span>Loss Reason: {deal.lossReason}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="text-[10px] underline hover:no-underline font-medium"
+                                        onClick={() => {
+                                            setPendingLossStageId(deal.stageId);
+                                            setSelectedLossReason(deal.lossReason);
+                                            setIsLossModalOpen(true);
+                                        }}
+                                    >
+                                        Edit Reason
+                                    </button>
+                                </div>
+                            )}
                         </SheetHeader>
 
                         {/* Body Details & Timeline */}
@@ -432,6 +500,83 @@ export default function DealDrawer({ isOpen, onClose, dealId, workspaceId, stage
                     </>
                 )}
             </SheetContent>
+
+            {/* Prompt for Closed Lost Reason Dialog */}
+            <Dialog open={isLossModalOpen} onOpenChange={setIsLossModalOpen}>
+                <DialogContent className="max-w-md p-5">
+                    <DialogHeader className="pb-3 border-b border-border text-left">
+                        <DialogTitle className="flex items-center gap-2 text-base font-bold text-destructive">
+                            <AlertCircle className="w-5 h-5" />
+                            <span>Record Deal Loss Reason</span>
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground mt-1">
+                            Capturing win/loss telemetry helps analyze pipeline bottlenecks and improve closing rates.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-3 py-2">
+                        <label className="text-xs font-semibold text-foreground">Select Primary Loss Reason:</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {[
+                                'Pricing too high',
+                                'Competitor selected',
+                                'Project postponed / budget cut',
+                                'Feature / scope mismatch',
+                                'Client unresponsive',
+                                'Other'
+                            ].map((r) => (
+                                <button
+                                    key={r}
+                                    type="button"
+                                    onClick={() => setSelectedLossReason(r)}
+                                    className={`p-2.5 text-left text-xs font-medium rounded-xl border transition-all ${
+                                        selectedLossReason === r
+                                            ? 'border-destructive bg-destructive/10 text-destructive font-bold'
+                                            : 'border-border/80 hover:bg-muted/50 text-foreground'
+                                    }`}
+                                >
+                                    {r}
+                                </button>
+                            ))}
+                        </div>
+
+                        {selectedLossReason === 'Other' && (
+                            <div className="space-y-1 pt-1">
+                                <label className="text-[11px] font-semibold text-muted-foreground">Specify Custom Reason:</label>
+                                <Input
+                                    placeholder="Brief explanation..."
+                                    value={customLossReason}
+                                    onChange={(e) => setCustomLossReason(e.target.value)}
+                                    className="h-8 text-xs"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <DialogFooter className="pt-2 flex items-center justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                                setIsLossModalOpen(false);
+                                setPendingLossStageId(null);
+                            }}
+                            className="text-xs"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            onClick={handleConfirmLoss}
+                            className="text-xs font-bold bg-destructive hover:bg-destructive/90 text-white"
+                        >
+                            Mark Deal as Lost
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Sheet>
     );
 }

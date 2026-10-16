@@ -23,7 +23,10 @@ import {
     TrendingUp,
     FileText,
     Share2,
-    MessageCircle
+    MessageCircle,
+    Link2,
+    Receipt,
+    ExternalLink
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +50,8 @@ import { toast } from "sonner";
 import {
     getCrmQuotationsAction,
     deleteCrmQuotationAction,
-    updateCrmQuotationStatusAction
+    updateCrmQuotationStatusAction,
+    convertQuotationToPayFlowInvoiceAction
 } from '../_actions/quotation-actions';
 import QuotationDocumentPreview, { CURRENCY_SYMBOLS } from './_components/QuotationDocumentPreview';
 import SendQuotationModal from './_components/SendQuotationModal';
@@ -152,8 +156,46 @@ export default function CrmQuotationsDirectoryPage() {
         }
     };
 
+    const handleCopyClientLink = (e, q) => {
+        e.stopPropagation();
+        if (!q?.id) return;
+        const url = `${window.location.origin}/quotations/view/${q.id}`;
+        navigator.clipboard.writeText(url);
+        toast.success(`Copied client approval link for ${q.quotationNumber}!`);
+    };
+
+    const handleConvertToInvoice = async (e, q) => {
+        e.stopPropagation();
+        if (!q?.id || !workspaceId) return;
+        const toastId = toast.loading(`Converting ${q.quotationNumber} to PayFlow invoice...`);
+        try {
+            const res = await convertQuotationToPayFlowInvoiceAction(workspaceId, q.id);
+            if (res.success && res.data) {
+                toast.success(`Invoice #${res.data.invoice.id} created!`, {
+                    id: toastId,
+                    action: {
+                        label: "Open PayFlow",
+                        onClick: () => router.push(`/workspace/${workspaceId}/payflow`)
+                    }
+                });
+                loadQuotations();
+            } else {
+                toast.error(res.error || "Failed to convert to invoice", { id: toastId });
+            }
+        } catch (err) {
+            toast.error("Error creating invoice", { id: toastId });
+        }
+    };
+
     const getStatusBadge = (status) => {
         switch (status) {
+            case 'invoiced':
+                return (
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
+                        <Receipt className="w-2.5 h-2.5" />
+                        Invoiced
+                    </Badge>
+                );
             case 'accepted':
                 return (
                     <Badge variant="outline" className="text-[10px] font-bold uppercase bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1">
@@ -423,6 +465,18 @@ export default function CrmQuotationsDirectoryPage() {
                                             {/* Actions */}
                                             <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
                                                 <div className="flex items-center justify-end gap-1.5">
+                                                    {/* Copy Client Link */}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                        title="Copy Client Approval Link"
+                                                        onClick={(e) => handleCopyClientLink(e, q)}
+                                                    >
+                                                        <Link2 className="w-3.5 h-3.5" />
+                                                    </Button>
+
                                                     {/* WhatsApp Outreach */}
                                                     <Button
                                                         type="button"
@@ -447,7 +501,7 @@ export default function CrmQuotationsDirectoryPage() {
                                                         <Eye className="w-3.5 h-3.5" />
                                                     </Button>
 
-                                                    {/* Status Dropdown */}
+                                                    {/* Options Dropdown */}
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button
@@ -459,7 +513,32 @@ export default function CrmQuotationsDirectoryPage() {
                                                                 <MoreVertical className="w-3.5 h-3.5" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className="text-xs">
+                                                        <DropdownMenuContent align="end" className="text-xs w-52">
+                                                            <DropdownMenuLabel>Client & Document</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={(e) => handleCopyClientLink(e, q)}>
+                                                                <Link2 className="w-3.5 h-3.5 mr-2 text-primary" />
+                                                                Copy Client E-Sign Link
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => window.open(`/quotations/view/${q.id}`, '_blank')}>
+                                                                <ExternalLink className="w-3.5 h-3.5 mr-2 text-primary" />
+                                                                Open Client Portal View
+                                                            </DropdownMenuItem>
+
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuLabel>PayFlow Finance</DropdownMenuLabel>
+                                                            {q.status === 'invoiced' ? (
+                                                                <DropdownMenuItem onClick={() => router.push(`/workspace/${workspaceId}/payflow`)}>
+                                                                    <Receipt className="w-3.5 h-3.5 mr-2 text-purple-600" />
+                                                                    View Invoice in PayFlow
+                                                                </DropdownMenuItem>
+                                                            ) : (
+                                                                <DropdownMenuItem onClick={(e) => handleConvertToInvoice(e, q)}>
+                                                                    <Receipt className="w-3.5 h-3.5 mr-2 text-emerald-600" />
+                                                                    Convert to PayFlow Invoice
+                                                                </DropdownMenuItem>
+                                                            )}
+
+                                                            <DropdownMenuSeparator />
                                                             <DropdownMenuLabel>Change Status</DropdownMenuLabel>
                                                             <DropdownMenuItem onClick={() => handleUpdateStatus(q.id, 'draft')}>
                                                                 Mark as Draft

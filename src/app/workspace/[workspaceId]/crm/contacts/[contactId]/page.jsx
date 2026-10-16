@@ -29,7 +29,9 @@ import {
     Layers,
     Tag,
     Share2,
-    Award
+    Award,
+    Link2,
+    Receipt
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +44,7 @@ import { get360ContactDossierAction } from '../../_actions/crm-dossier-actions';
 import { createActivityAction } from '../../_actions/activity-actions';
 import { sendWhatsAppFromCrmAction, convertCandidateToLeadAction } from '../../_actions/crm-bridge-actions';
 import { deleteCrmContactAction } from '../../_actions/contact-actions';
+import { getContactQuotationsAction } from '../../_actions/quotation-actions';
 
 import QuickWhatsAppModal from '../_components/QuickWhatsAppModal';
 import EditContactModal from '../_components/EditContactModal';
@@ -74,21 +77,31 @@ export default function ContactDossierPage() {
     const [isWaModalOpen, setIsWaModalOpen] = useState(false);
     const [isCreateDealModalOpen, setIsCreateDealModalOpen] = useState(false);
     const [pipelines, setPipelines] = useState([]);
+    const [contactQuotations, setContactQuotations] = useState([]);
 
     const loadDossier = async () => {
         if (!workspaceId || !contactId) return;
         try {
             setIsLoading(true);
-            const res = await get360ContactDossierAction(workspaceId, contactId);
-            if (res.success) {
-                setDossier(res.data);
+            const [dossierRes, quotesRes, pipeRes] = await Promise.all([
+                get360ContactDossierAction(workspaceId, contactId),
+                getContactQuotationsAction(workspaceId, contactId).catch(() => ({ success: false })),
+                getPipelinesAction(workspaceId).catch(() => ({ success: false }))
+            ]);
+
+            if (dossierRes.success) {
+                setDossier(dossierRes.data);
             } else {
-                toast.error(res.error || "Failed to load contact dossier");
+                toast.error(dossierRes.error || "Failed to load contact dossier");
             }
 
-            // Fetch pipelines for deal creation
-            const pipeRes = await getPipelinesAction(workspaceId);
-            if (pipeRes.success) setPipelines(pipeRes.data);
+            if (quotesRes.success) {
+                setContactQuotations(quotesRes.data || []);
+            }
+
+            if (pipeRes.success) {
+                setPipelines(pipeRes.data || []);
+            }
         } catch (error) {
             console.error("Dossier load error:", error);
             toast.error("Error loading dossier data");
@@ -379,6 +392,10 @@ export default function ContactDossierPage() {
                         <TrendingUp className="w-3.5 h-3.5" />
                         Deals ({contact.deals?.length || 0})
                     </TabsTrigger>
+                    <TabsTrigger value="quotations" className="text-xs font-semibold gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-primary" />
+                        Quotations ({contactQuotations.length})
+                    </TabsTrigger>
                     {candidateProfile && (
                         <TabsTrigger value="ats" className="text-xs font-semibold gap-1.5 text-indigo-500">
                             <Briefcase className="w-3.5 h-3.5" />
@@ -607,6 +624,106 @@ export default function ContactDossierPage() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </TabsContent>
+
+                {/* Tab: Commercial Quotations */}
+                <TabsContent value="quotations" className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-xs font-bold text-foreground">Quotations & Proposals for {contact.name}</h3>
+                            <p className="text-[11px] text-muted-foreground">Branded executive estimates with digital e-signature authorization</p>
+                        </div>
+                        <Link href={`/workspace/${workspaceId}/crm/quotations/new?contactId=${contact.id}${contact.accountId ? `&accountId=${contact.accountId}` : ''}`}>
+                            <Button size="sm" className="h-8 text-xs font-semibold gap-1.5">
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Create Quotation</span>
+                            </Button>
+                        </Link>
+                    </div>
+
+                    {contactQuotations.length === 0 ? (
+                        <div className="p-12 text-center text-xs text-muted-foreground border border-dashed border-border rounded-2xl flex flex-col items-center gap-2">
+                            <FileText className="w-8 h-8 text-muted-foreground/60" />
+                            <p className="font-semibold text-foreground">No quotations generated yet</p>
+                            <p className="max-w-xs text-muted-foreground">Draft your first commercial proposal for this contact with tax calculation and WhatsApp dispatch.</p>
+                            <Link href={`/workspace/${workspaceId}/crm/quotations/new?contactId=${contact.id}${contact.accountId ? `&accountId=${contact.accountId}` : ''}`}>
+                                <Button size="sm" className="mt-2 text-xs font-semibold">
+                                    <Plus className="w-3.5 h-3.5 mr-1" />
+                                    Draft Quotation
+                                </Button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {contactQuotations.map((q) => {
+                                const details = q.data || {};
+                                return (
+                                    <div
+                                        key={q.id}
+                                        className="p-4 rounded-2xl bg-card border border-border/70 hover:border-primary/50 transition-colors space-y-3 cursor-pointer group"
+                                        onClick={() => router.push(`/workspace/${workspaceId}/crm/quotations/${q.id}`)}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="font-mono font-bold text-xs text-primary">{q.quotationNumber}</span>
+                                            <Badge
+                                                variant="outline"
+                                                className={`text-[9px] uppercase font-bold ${
+                                                    q.status === 'accepted' ? 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20' :
+                                                    q.status === 'invoiced' ? 'text-purple-600 bg-purple-500/10 border-purple-500/20' :
+                                                    q.status === 'sent' ? 'text-blue-600 bg-blue-500/10 border-blue-500/20' :
+                                                    q.status === 'declined' ? 'text-red-600 bg-red-500/10 border-red-500/20' :
+                                                    'text-muted-foreground bg-muted'
+                                                }`}
+                                            >
+                                                {q.status}
+                                            </Badge>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-xs font-bold text-foreground truncate">
+                                                {details.quotation?.title || 'Commercial Proposal'}
+                                            </h4>
+                                            <p className="text-sm font-black text-foreground mt-0.5">
+                                                ₹{Number(q.total || 0).toLocaleString('en-IN')}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center justify-between pt-2 border-t border-border/60 text-[10px]" onClick={(e) => e.stopPropagation()}>
+                                            <span className="text-muted-foreground">
+                                                {details.quotation?.validUntil ? `Valid: ${details.quotation.validUntil}` : '30 days validity'}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-6 w-6 text-muted-foreground hover:text-primary"
+                                                    title="Copy Client E-Sign Link"
+                                                    onClick={() => {
+                                                        const url = `${window.location.origin}/quotations/view/${q.id}`;
+                                                        navigator.clipboard.writeText(url);
+                                                        toast.success("Client approval link copied!");
+                                                    }}
+                                                >
+                                                    <Link2 className="w-3 h-3" />
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                                    title="Open Client View"
+                                                    onClick={() => window.open(`/quotations/view/${q.id}`, '_blank')}
+                                                >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </TabsContent>

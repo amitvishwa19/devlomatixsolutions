@@ -49,6 +49,9 @@ export default function QuotationBuilder({
     const searchParams = useSearchParams();
     const paramContactId = searchParams?.get('contactId');
     const paramAccountId = searchParams?.get('accountId');
+    const paramDealId = searchParams?.get('dealId');
+    const paramTitle = searchParams?.get('title');
+    const paramAmount = searchParams?.get('amount');
 
     const isEdit = !!initialData?.id;
 
@@ -206,6 +209,37 @@ export default function QuotationBuilder({
         }
     };
 
+    // Handle Pipeline Deal Selection
+    const handleSelectDeal = (dealId) => {
+        const dId = dealId === 'NONE' ? '' : dealId;
+        setSelectedDealId(dId);
+        if (!dId) return;
+
+        const deal = deals.find(d => d.id === dId);
+        if (deal) {
+            if (!title || title === 'Commercial & Technical Proposal') {
+                setTitle(`Proposal: ${deal.title}`);
+            }
+            if (deal.contactId) {
+                handleSelectContact(deal.contactId);
+            } else if (deal.accountId) {
+                handleSelectAccount(deal.accountId);
+            }
+            if (deal.value && items.length === 1 && items[0].unitPrice === 75000) {
+                const qty = Number(items[0].quantity) || 1;
+                const price = Number(deal.value);
+                const tax = Number(items[0].taxPercent) || 18;
+                const total = Math.round((qty * price) + ((qty * price * tax) / 100));
+                setItems([{
+                    ...items[0],
+                    name: deal.title,
+                    unitPrice: price,
+                    total
+                }]);
+            }
+        }
+    };
+
     // Auto-select contact from query param if provided
     useEffect(() => {
         if (paramContactId && contacts.length > 0 && !selectedContactId) {
@@ -219,6 +253,32 @@ export default function QuotationBuilder({
             handleSelectAccount(paramAccountId);
         }
     }, [paramAccountId, accounts]);
+
+    // Auto-select deal from query param if provided
+    useEffect(() => {
+        if (paramDealId && deals.length > 0 && !selectedDealId) {
+            handleSelectDeal(paramDealId);
+        }
+    }, [paramDealId, deals]);
+
+    // Pre-fill title and amount if passed
+    useEffect(() => {
+        if (paramTitle && (!title || title === 'Commercial & Technical Proposal')) {
+            setTitle(decodeURIComponent(paramTitle));
+        }
+        if (paramAmount && items.length === 1 && items[0].unitPrice === 75000) {
+            const amt = Number(paramAmount);
+            if (!isNaN(amt) && amt > 0) {
+                const tax = Number(items[0].taxPercent) || 18;
+                const total = Math.round(amt + ((amt * tax) / 100));
+                setItems([{
+                    ...items[0],
+                    unitPrice: amt,
+                    total
+                }]);
+            }
+        }
+    }, [paramTitle, paramAmount]);
 
     // Recalculate Item Line Total
     const updateItem = (index, field, value) => {
@@ -676,6 +736,30 @@ export default function QuotationBuilder({
                                         <SelectItem value="EUR">EUR (€) - Euro</SelectItem>
                                         <SelectItem value="AED">AED (د.إ) - UAE Dirham</SelectItem>
                                         <SelectItem value="GBP">GBP (£) - British Pound</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="sm:col-span-3 space-y-1 pt-1 border-t border-border/60">
+                                <Label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+                                    <span>Link to Pipeline Deal (Optional)</span>
+                                    {selectedDealId && (
+                                        <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/20 bg-emerald-500/10 font-bold">
+                                            Auto-wins deal on client e-signature
+                                        </Badge>
+                                    )}
+                                </Label>
+                                <Select value={selectedDealId || 'NONE'} onValueChange={handleSelectDeal}>
+                                    <SelectTrigger className="h-8 text-xs bg-background">
+                                        <SelectValue placeholder="Associate with an active deal..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="NONE">No Deal Linked (Standalone Quotation)</SelectItem>
+                                        {deals.map(d => (
+                                            <SelectItem key={d.id} value={d.id}>
+                                                {d.title} (₹{Number(d.value || 0).toLocaleString()} • {d.stage?.name || 'Stage'})
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
