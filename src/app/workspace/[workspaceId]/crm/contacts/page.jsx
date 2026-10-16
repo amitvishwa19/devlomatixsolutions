@@ -23,7 +23,9 @@ import {
     RefreshCw,
     Sparkles,
     CheckCircle2,
-    UploadCloud
+    UploadCloud,
+    Share2,
+    ShieldCheck
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,8 +34,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 
 import CreateContactModal from './_components/CreateContactModal';
-import QuickWhatsAppModal from './_components/QuickWhatsAppModal';
+import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
 import BulkImportModal from '../_components/BulkImportModal';
+import CrmShareContactModal from './_components/CrmShareContactModal';
 import { getCrmContactsAction, deleteCrmContactAction } from '../_actions/contact-actions';
 
 export default function ContactsDirectoryPage() {
@@ -42,6 +45,7 @@ export default function ContactsDirectoryPage() {
     const workspaceId = params?.workspaceId;
 
     const [contacts, setContacts] = useState([]);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -49,12 +53,16 @@ export default function ContactsDirectoryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('ALL');
     const [atsFilter, setAtsFilter] = useState('ALL');
+    const [moduleFilter, setModuleFilter] = useState('ALL'); // 'ALL' | 'crm' | 'ats' | 'konnectx'
+    const [scopeFilter, setScopeFilter] = useState('ALL'); // 'ALL' | 'OWNED' | 'SHARED'
 
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
     const [waContact, setWaContact] = useState(null);
     const [isWaModalOpen, setIsWaModalOpen] = useState(false);
+    const [shareModalContact, setShareModalContact] = useState(null);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
     const loadContacts = async (showToast = false) => {
         if (!workspaceId) return;
@@ -65,11 +73,14 @@ export default function ContactsDirectoryPage() {
             const res = await getCrmContactsAction(workspaceId, {
                 type: typeFilter,
                 hasAtsCandidate: atsFilter === 'ATS' ? true : undefined,
-                search: searchQuery || undefined
+                search: searchQuery || undefined,
+                scope: scopeFilter,
+                moduleFilter: moduleFilter !== 'ALL' ? moduleFilter : undefined
             });
 
             if (res.success) {
                 setContacts(res.data);
+                if (res.currentUserId) setCurrentUserId(res.currentUserId);
             } else {
                 toast.error(res.error || "Failed to load contacts");
             }
@@ -85,7 +96,7 @@ export default function ContactsDirectoryPage() {
 
     useEffect(() => {
         loadContacts();
-    }, [workspaceId, typeFilter, atsFilter]);
+    }, [workspaceId, typeFilter, atsFilter, scopeFilter, moduleFilter]);
 
     // Filtered Contacts for instant search filtering
     const filteredContacts = useMemo(() => {
@@ -103,13 +114,15 @@ export default function ContactsDirectoryPage() {
     // Metrics summary
     const metrics = useMemo(() => {
         const total = contacts.length;
+        const myContacts = contacts.filter(c => c.userId === currentUserId).length;
+        const sharedWithMe = contacts.filter(c => c.userId !== currentUserId).length;
         const leads = contacts.filter(c => c.type === 'LEAD').length;
         const clients = contacts.filter(c => c.type === 'CLIENT').length;
         const atsSynced = contacts.filter(c => !!c.candidateId).length;
         const totalDeals = contacts.reduce((sum, c) => sum + (c.deals?.length || 0), 0);
 
-        return { total, leads, clients, atsSynced, totalDeals };
-    }, [contacts]);
+        return { total, myContacts, sharedWithMe, leads, clients, atsSynced, totalDeals };
+    }, [contacts, currentUserId]);
 
     const handleDeleteContact = async (e, contactId, contactName) => {
         e.stopPropagation();
@@ -134,12 +147,18 @@ export default function ContactsDirectoryPage() {
         setIsWaModalOpen(true);
     };
 
+    const handleOpenShare = (e, contact) => {
+        e.stopPropagation();
+        setShareModalContact(contact);
+        setIsShareModalOpen(true);
+    };
+
     const formatCurrency = (val) => {
         return `₹ ${Number(val || 0).toLocaleString('en-IN')}`;
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 lg:p-8 space-y-6">
+        <div className="flex flex-col bg-background space-y-2">
             {/* Header Strip */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -148,11 +167,11 @@ export default function ContactsDirectoryPage() {
                             <Users className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-xl lg:text-2xl font-black tracking-tight text-foreground">
+                            <h1 className="text-xl lg:text-xl font-bold  text-foreground">
                                 360° Contacts Directory
                             </h1>
                             <p className="text-xs text-muted-foreground">
-                                Unified address book bridging CRM Leads, KonnectX WhatsApp contacts, and Hireflow Candidates.
+                                CRM contacts owned by you and records securely shared across your sales team.
                             </p>
                         </div>
                     </div>
@@ -192,37 +211,73 @@ export default function ContactsDirectoryPage() {
             {/* KPI Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                 <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Contacts</p>
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Accessible</p>
                     <p className="text-2xl font-black text-foreground">{metrics.total}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">All synchronized records</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">CRM contacts for your profile</p>
+                </div>
+                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                    <p className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">My Contacts</p>
+                    <p className="text-2xl font-black text-foreground">{metrics.myContacts}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">Created / owned by you</p>
+                </div>
+                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                    <p className="text-[11px] font-semibold text-violet-500 uppercase tracking-wider">Shared with Me</p>
+                    <p className="text-2xl font-black text-foreground">{metrics.sharedWithMe}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">Granted access by team</p>
                 </div>
                 <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wider">Active Leads</p>
                     <p className="text-2xl font-black text-foreground">{metrics.leads}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Inbound & outbound prospects</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
-                    <p className="text-[11px] font-semibold text-emerald-500 uppercase tracking-wider">Converted Clients</p>
-                    <p className="text-2xl font-black text-foreground">{metrics.clients}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Active paying customers</p>
-                </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
-                    <p className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider">Hireflow ATS Synced</p>
-                    <p className="text-2xl font-black text-foreground">{metrics.atsSynced}</p>
-                    <p className="text-[10px] text-muted-foreground font-medium">Candidates linked to CRM</p>
-                </div>
             </div>
 
-            {/* Filters and Search Bar */}
+            {/* Filters, Scope Tabs, and Search Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-card border border-border/70">
-                <div className="relative w-full sm:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by name, phone, email, company..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-9 h-9 text-xs bg-background border-border/80"
-                    />
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by name, phone, email, company..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-9 h-9 text-xs bg-background border-border/80"
+                        />
+                    </div>
+
+                    {/* Scope Switcher Tabs */}
+                    <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border/60 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => setScopeFilter('ALL')}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${scopeFilter === 'ALL'
+                                ? 'bg-card text-foreground shadow-xs'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            All ({metrics.total})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setScopeFilter('OWNED')}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${scopeFilter === 'OWNED'
+                                ? 'bg-card text-foreground shadow-xs'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            My Contacts ({metrics.myContacts})
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setScopeFilter('SHARED')}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all ${scopeFilter === 'SHARED'
+                                ? 'bg-card text-foreground shadow-xs'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            Shared with Me ({metrics.sharedWithMe})
+                        </button>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -239,12 +294,24 @@ export default function ContactsDirectoryPage() {
                     </Select>
 
                     <Select value={atsFilter} onValueChange={setAtsFilter}>
-                        <SelectTrigger className="h-9 w-[150px] text-xs bg-background border-border/80">
+                        <SelectTrigger className="h-9 w-[130px] text-xs bg-background border-border/80">
                             <SelectValue placeholder="ATS Link" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="ALL">All Sources</SelectItem>
-                            <SelectItem value="ATS">ATS Candidates</SelectItem>
+                            <SelectItem value="ATS">ATS Linked</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={moduleFilter} onValueChange={setModuleFilter}>
+                        <SelectTrigger className="h-9 w-[135px] text-xs bg-background border-border/80">
+                            <SelectValue placeholder="Module" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="ALL">All Modules</SelectItem>
+                            <SelectItem value="crm">CRM (DevX)</SelectItem>
+                            <SelectItem value="ats">HireFlow ATS</SelectItem>
+                            <SelectItem value="konnectx">KonnectX WA</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -264,7 +331,7 @@ export default function ContactsDirectoryPage() {
                         </div>
                         <h3 className="text-sm font-bold text-foreground">No contacts found</h3>
                         <p className="text-xs text-muted-foreground max-w-sm mt-1">
-                            {searchQuery ? "No contacts match your filter criteria." : "Start by creating your first CRM contact or syncing WhatsApp conversations."}
+                            {searchQuery ? "No contacts match your filter criteria." : "Create your first CRM contact or have team members share contacts with you."}
                         </p>
                         <Button
                             size="sm"
@@ -283,15 +350,19 @@ export default function ContactsDirectoryPage() {
                                     <th className="py-3 px-4">Contact</th>
                                     <th className="py-3 px-4">Phone / WhatsApp</th>
                                     <th className="py-3 px-4">Associated Company</th>
-                                    <th className="py-3 px-4">Type & Bridges</th>
+                                    <th className="py-3 px-4">Type & Access</th>
                                     <th className="py-3 px-4">Open Deals</th>
                                     <th className="py-3 px-4">Last Activity</th>
                                     <th className="py-3 px-4 text-right">Actions</th>
                                 </tr>
                             </thead>
+
                             <tbody className="divide-y divide-border/60">
                                 {filteredContacts.map((contact) => {
                                     const totalDealValue = (contact.deals || []).reduce((sum, d) => sum + (d.value || 0), 0);
+                                    const isOwner = contact.userId === currentUserId;
+                                    const sharedCount = contact.sharedWith?.length || contact._count?.sharedWith || 0;
+
                                     return (
                                         <tr
                                             key={contact.id}
@@ -343,29 +414,58 @@ export default function ContactsDirectoryPage() {
                                                     <span className="text-muted-foreground/50 italic">Independent</span>
                                                 )}
                                             </td>
-
-                                            {/* Type & ATS Badges */}
+                                            {/* Type, ATS & Sharing Badges */}
                                             <td className="py-3.5 px-4">
                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                     <Badge
                                                         variant="secondary"
-                                                        className={`text-[10px] font-bold uppercase ${
-                                                            contact.type === 'LEAD' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
+                                                        className={`text-[10px] font-bold uppercase ${contact.type === 'LEAD' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
                                                             contact.type === 'CLIENT' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' :
-                                                            'bg-muted text-muted-foreground'
-                                                        }`}
+                                                                'bg-muted text-muted-foreground'
+                                                            }`}
                                                     >
                                                         {contact.type || 'CONTACT'}
                                                     </Badge>
-                                                    {contact.candidateId && (
+                                                    {(contact.candidateId || (contact.moduleAccess?.modules || []).includes('ats')) && (
                                                         <Badge
                                                             variant="outline"
                                                             className="text-[10px] font-bold bg-indigo-500/10 text-indigo-500 border-indigo-500/20 gap-1"
+                                                            title="Linked to HireFlow ATS"
                                                         >
                                                             <Briefcase className="w-2.5 h-2.5" />
                                                             ATS
                                                         </Badge>
                                                     )}
+                                                    {(contact.moduleAccess?.modules || []).includes('konnectx') && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1"
+                                                            title="Linked to KonnectX WhatsApp"
+                                                        >
+                                                            <MessageCircle className="w-2.5 h-2.5" />
+                                                            KonnectX
+                                                        </Badge>
+                                                    )}
+                                                    {!isOwner ? (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] font-semibold bg-violet-500/10 text-violet-600 border-violet-500/20 gap-1"
+                                                            title={`Shared with you by ${contact.user?.displayName || contact.user?.email || 'Team member'}`}
+                                                        >
+                                                            <Share2 className="w-2.5 h-2.5" />
+                                                            Shared with you
+                                                        </Badge>
+                                                    ) : sharedCount > 0 ? (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] font-semibold bg-blue-500/10 text-blue-600 border-blue-500/20 gap-1 cursor-pointer hover:bg-blue-500/20"
+                                                            onClick={(e) => handleOpenShare(e, contact)}
+                                                            title="Click to manage shared access"
+                                                        >
+                                                            <Users className="w-2.5 h-2.5" />
+                                                            Shared ({sharedCount})
+                                                        </Badge>
+                                                    ) : null}
                                                 </div>
                                             </td>
 
@@ -407,14 +507,21 @@ export default function ContactsDirectoryPage() {
                                                             size="icon"
                                                             className="h-7 w-7 text-[#25D366] hover:bg-[#25D366]/10"
                                                             title={`Send WhatsApp message to ${contact.name}`}
-                                                            onClick={() => {
-                                                                setWaContact(contact);
-                                                                setIsWaModalOpen(true);
-                                                            }}
+                                                            onClick={(e) => handleOpenWhatsApp(e, contact)}
                                                         >
                                                             <MessageCircle className="w-3.5 h-3.5" />
                                                         </Button>
                                                     )}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                        title={isOwner ? `Share ${contact.name}` : `View shared team members`}
+                                                        onClick={(e) => handleOpenShare(e, contact)}
+                                                    >
+                                                        <Share2 className="w-3.5 h-3.5" />
+                                                    </Button>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -425,16 +532,18 @@ export default function ContactsDirectoryPage() {
                                                         360° Dossier
                                                         <ChevronRight className="w-3.5 h-3.5" />
                                                     </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                                        title="Delete Contact"
-                                                        onClick={(e) => handleDeleteContact(e, contact.id, contact.name)}
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </Button>
+                                                    {isOwner && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                            title="Delete Contact"
+                                                            onClick={(e) => handleDeleteContact(e, contact.id, contact.name)}
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -454,13 +563,29 @@ export default function ContactsDirectoryPage() {
                 onContactCreated={() => loadContacts(true)}
             />
 
-            {/* Quick WhatsApp Outreach Modal */}
-            <QuickWhatsAppModal
+            {/* Share Contact Access Modal */}
+            <CrmShareContactModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                contact={shareModalContact}
+                workspaceId={workspaceId}
+                currentUserId={currentUserId}
+                onShareUpdated={() => loadContacts()}
+            />
+
+            {/* KonnectX WhatsApp Outreach Sheet */}
+            <CrmWhatsAppOutreachSheet
                 isOpen={isWaModalOpen}
                 onClose={() => setIsWaModalOpen(false)}
-                contact={waContact}
+                recipient={waContact ? {
+                    name: waContact.name,
+                    phone: waContact.phone,
+                    email: waContact.email,
+                    company: waContact.account?.name,
+                    contactId: waContact.id
+                } : null}
                 workspaceId={workspaceId}
-                onMessageSent={() => loadContacts()}
+                onSuccess={() => loadContacts()}
             />
 
             {/* Bulk Lead Importer & WhatsApp Chat Sync Modal */}

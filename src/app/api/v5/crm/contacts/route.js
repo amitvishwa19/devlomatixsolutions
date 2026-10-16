@@ -21,31 +21,85 @@ export async function GET(request) {
         const page = parseInt(searchParams.get("page") || "1", 10);
         const limit = parseInt(searchParams.get("limit") || "50", 10);
         const skip = (page - 1) * limit;
+        const scope = searchParams.get("scope") || "ALL";
 
-        const where = {
-            workspaceId: auth.workspaceId,
-            ...(type && type !== 'ALL' ? { type } : {}),
-            ...(tag && tag !== 'ALL' ? { tags: { has: tag } } : {}),
-            ...(hasAtsCandidate ? { candidateId: { not: null } } : {}),
-            ...(search ? {
+        // Definition of a CRM Contact (excludes raw non-CRM data like GOOGLE_PLACE scrapes)
+        const crmDefinition = {
+            type: { not: 'GOOGLE_PLACE' },
+            OR: [
+                { type: { in: ['LEAD', 'CLIENT'] } },
+                { accountId: { not: null } },
+                { deals: { some: {} } },
+                { crmActivities: { some: {} } },
+                { candidateId: { not: null } }
+            ]
+        };
+
+        let accessCondition;
+        if (scope === 'OWNED') {
+            accessCondition = {
+                userId: auth.userId,
+                ...crmDefinition
+            };
+        } else if (scope === 'SHARED') {
+            accessCondition = {
+                sharedWith: {
+                    some: { sharedWithUserId: auth.userId }
+                }
+            };
+        } else {
+            accessCondition = {
+                OR: [
+                    {
+                        userId: auth.userId,
+                        ...crmDefinition
+                    },
+                    {
+                        sharedWith: {
+                            some: { sharedWithUserId: auth.userId }
+                        }
+                    }
+                ]
+            };
+        }
+
+        const andConditions = [
+            { workspaceId: auth.workspaceId },
+            accessCondition
+        ];
+
+        if (type && type !== 'ALL') andConditions.push({ type });
+        if (tag && tag !== 'ALL') andConditions.push({ tags: { has: tag } });
+        if (hasAtsCandidate) andConditions.push({ candidateId: { not: null } });
+        if (search) {
+            andConditions.push({
                 OR: [
                     { name: { contains: search, mode: 'insensitive' } },
                     { phone: { contains: search } },
                     { email: { contains: search, mode: 'insensitive' } }
                 ]
-            } : {})
-        };
+            });
+        }
+
+        const where = { AND: andConditions };
 
         const [contacts, total] = await Promise.all([
             prisma.contact.findMany({
                 where,
                 include: {
+                    user: { select: { id: true, displayName: true, email: true, avatar: true } },
+                    sharedWith: {
+                        include: {
+                            sharedWith: { select: { id: true, displayName: true, email: true, avatar: true } }
+                        }
+                    },
                     account: true,
                     deals: { select: { id: true, title: true, value: true, stageId: true } },
                     _count: {
                         select: {
                             deals: true,
-                            crmActivities: true
+                            crmActivities: true,
+                            sharedWith: true
                         }
                     }
                 },

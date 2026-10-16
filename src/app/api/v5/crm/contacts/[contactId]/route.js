@@ -13,7 +13,14 @@ export async function GET(request, { params }) {
         const { contactId } = await params;
 
         const contact = await prisma.contact.findFirst({
-            where: { id: contactId, workspaceId: auth.workspaceId },
+            where: {
+                id: contactId,
+                workspaceId: auth.workspaceId,
+                OR: [
+                    { userId: auth.userId },
+                    { sharedWith: { some: { sharedWithUserId: auth.userId } } }
+                ]
+            },
             include: {
                 account: true,
                 deals: {
@@ -29,7 +36,7 @@ export async function GET(request, { params }) {
             }
         });
 
-        if (!contact) return apiError("Contact not found", 404);
+        if (!contact) return apiError("Contact not found or access denied", 404);
 
         return apiSuccess(contact);
     } catch (error) {
@@ -50,10 +57,17 @@ export async function PATCH(request, { params }) {
         const body = await request.json();
 
         const existing = await prisma.contact.findFirst({
-            where: { id: contactId, workspaceId: auth.workspaceId }
+            where: {
+                id: contactId,
+                workspaceId: auth.workspaceId,
+                OR: [
+                    { userId: auth.userId },
+                    { sharedWith: { some: { sharedWithUserId: auth.userId } } }
+                ]
+            }
         });
 
-        if (!existing) return apiError("Contact not found", 404);
+        if (!existing) return apiError("Contact not found or access denied", 404);
 
         const updateData = {};
         if (body.name !== undefined) updateData.name = body.name.trim();
@@ -93,6 +107,11 @@ export async function DELETE(request, { params }) {
         });
 
         if (!existing) return apiError("Contact not found", 404);
+
+        // Only owner or admin can permanently delete
+        if (existing.userId !== auth.userId && auth.role !== 'ADMIN' && auth.role !== 'SUPER_ADMIN') {
+            return apiError("Only the owner can delete this contact", 403);
+        }
 
         await prisma.contact.delete({ where: { id: contactId } });
 

@@ -51,6 +51,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "AI Copilot", icon: "sparkles", url: `${baseCRMPath}/copilot` },
                 { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
                 { title: "360° Contacts", icon: "users", url: `${baseCRMPath}/contacts` },
+                { title: "Candidates", icon: "user-check", url: `${baseCRMPath}/candidates` },
                 { title: "Companies", icon: "building", url: `${baseCRMPath}/accounts` },
                 { title: "Tasks", icon: "check-square", url: `${baseCRMPath}/tasks` },
                 { title: "Forecast & Leaderboard", icon: "trending-up", url: `${baseCRMPath}/analytics` },

@@ -25,6 +25,7 @@ import {
     Building2,
     Truck,
     PhoneCall,
+    UserCheck,
 } from 'lucide-react';
 import {
     Popover,
@@ -49,6 +50,7 @@ import { toast } from 'sonner';
 const ROUTE_LABELS = {
     crm: { label: 'CRM', icon: Building2 },
     dcr: { label: 'DCR (Daily Call Record)', icon: PhoneCall },
+    candidates: { label: 'Candidates', icon: UserCheck },
     flowgenix: { label: 'FlowGenix AI', icon: Bot },
     konnectx: { label: 'WhatsApp Hub', icon: MessageSquare },
     fleetx: { label: 'FleetX Logistics', icon: Truck },

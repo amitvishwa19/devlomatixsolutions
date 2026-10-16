@@ -60,6 +60,7 @@ import { toast } from 'sonner';
 import { getDcrRecordsAction, deleteDcrRecordAction } from '../_actions/dcr-actions';
 import DcrSheet from './_components/DcrSheet';
 import AiFollowupModal from './_components/AiFollowupModal';
+import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
 
 const OUTCOME_CONFIG = {
     HOT_LEAD: { label: '🔥 Hot Lead', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/30' },
@@ -109,6 +110,9 @@ export default function DcrPage() {
 
     const [aiRecord, setAiRecord] = useState(null);
     const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+    const [isWaSheetOpen, setIsWaSheetOpen] = useState(false);
+    const [selectedWaRecipient, setSelectedWaRecipient] = useState(null);
 
     const fetchRecords = useCallback(async () => {
         if (!workspaceId) return;
@@ -582,15 +586,22 @@ export default function DcrPage() {
                                                 >
                                                     <PhoneCall className="w-3.5 h-3.5" />
                                                 </a>
-                                                <a
-                                                    href={`https://wa.me/${cleanPhone}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedWaRecipient({
+                                                            name: record.contactPerson || record.clientName,
+                                                            phone: record.phone,
+                                                            company: record.clientName,
+                                                            contactId: record.contactId
+                                                        });
+                                                        setIsWaSheetOpen(true);
+                                                    }}
                                                     className="p-1.5 rounded-lg border border-border bg-background hover:bg-muted text-emerald-600 hover:text-emerald-700 transition-colors"
-                                                    title="Chat on WhatsApp"
+                                                    title="Send WhatsApp via KonnectX Templates"
                                                 >
                                                     <MessageCircle className="w-3.5 h-3.5" />
-                                                </a>
+                                                </button>
                                             </>
                                         )}
 
@@ -702,6 +713,15 @@ export default function DcrPage() {
                 onClose={() => setIsAiModalOpen(false)}
                 workspaceId={workspaceId}
                 record={aiRecord}
+            />
+
+            {/* KonnectX WhatsApp Outreach Drawer */}
+            <CrmWhatsAppOutreachSheet
+                isOpen={isWaSheetOpen}
+                onClose={() => setIsWaSheetOpen(false)}
+                workspaceId={workspaceId}
+                recipient={selectedWaRecipient}
+                onSuccess={() => fetchRecords()}
             />
         </div>
     );

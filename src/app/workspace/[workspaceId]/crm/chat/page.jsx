@@ -26,7 +26,9 @@ import {
     PhoneOff,
     PhoneIncoming,
     PhoneOutgoing,
-    Loader2
+    Loader2,
+    MessageCircle,
+    UserCheck
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +40,8 @@ import { toast } from 'sonner';
 import { useCrmSocket } from '@/providers/CrmSocketProvider';
 import { getCrmContactsAction } from '../_actions/contact-actions';
 import { getCrmTeamMembersAction } from '../_actions/team-actions';
+import { getCrmCandidatesAction } from '../_actions/candidate-query-actions';
+import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const parseCallLog = (text, attachments) => {
@@ -95,11 +99,14 @@ export default function CrmChatPage() {
         startCall
     } = useCrmSocket();
 
-    const [activeTab, setActiveTab] = useState('team'); // 'team' | 'contacts'
+    const [activeTab, setActiveTab] = useState('team'); // 'team' | 'contacts' | 'candidates'
     const [teamMembers, setTeamMembers] = useState([]);
     const [loadingTeam, setLoadingTeam] = useState(true);
     const [contacts, setContacts] = useState([]);
     const [loadingContacts, setLoadingContacts] = useState(true);
+    const [candidates, setCandidates] = useState([]);
+    const [loadingCandidates, setLoadingCandidates] = useState(true);
+    const [isWaSheetOpen, setIsWaSheetOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeChatUser, setActiveChatUser] = useState(null);
 
@@ -150,6 +157,25 @@ export default function CrmChatPage() {
         loadContacts();
     }, [workspaceId]);
 
+    // 3. Fetch Applied Candidates from HireFlow (read-only query)
+    useEffect(() => {
+        async function loadCandidates() {
+            if (!workspaceId) return;
+            setLoadingCandidates(true);
+            try {
+                const res = await getCrmCandidatesAction(workspaceId);
+                if (res.success && res.data?.candidates) {
+                    setCandidates(res.data.candidates);
+                }
+            } catch (err) {
+                console.warn('Failed to load candidates for chat:', err);
+            } finally {
+                setLoadingCandidates(false);
+            }
+        }
+        loadCandidates();
+    }, [workspaceId]);
+
     // Team members excluding current user's own id and email
     const otherTeamMembers = React.useMemo(() => {
         return teamMembers.filter((member) => {
@@ -190,6 +216,17 @@ export default function CrmChatPage() {
             c.email?.toLowerCase().includes(q) ||
             c.title?.toLowerCase().includes(q) ||
             c.account?.name?.toLowerCase().includes(q) ||
+            c.phone?.includes(q)
+        );
+    });
+
+    const filteredCandidates = candidates.filter((c) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+            c.name?.toLowerCase().includes(q) ||
+            c.email?.toLowerCase().includes(q) ||
+            c.jobTitle?.toLowerCase().includes(q) ||
             c.phone?.includes(q)
         );
     });
@@ -416,12 +453,15 @@ export default function CrmChatPage() {
                     </div>
 
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid grid-cols-2 h-8">
+                        <TabsList className="grid grid-cols-3 h-8">
                             <TabsTrigger value="team" className="text-xs">
-                                Sales Team ({otherTeamMembers.length})
+                                Team ({otherTeamMembers.length})
                             </TabsTrigger>
                             <TabsTrigger value="contacts" className="text-xs">
-                                CRM Contacts ({contacts.length})
+                                Contacts ({contacts.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="candidates" className="text-xs">
+                                Candidates ({candidates.length})
                             </TabsTrigger>
                         </TabsList>
                     </Tabs>
@@ -437,7 +477,7 @@ export default function CrmChatPage() {
                     </div>
                 </div>
 
-                {/* User / Contact List */}
+                {/* User / Contact / Candidate List */}
                 <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
                     {activeTab === 'team' ? (
                         loadingTeam ? (
@@ -487,7 +527,7 @@ export default function CrmChatPage() {
                                 );
                             })
                         )
-                    ) : (
+                    ) : activeTab === 'contacts' ? (
                         loadingContacts ? (
                             <div className="flex flex-col items-center justify-center p-6 text-muted-foreground gap-2">
                                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -533,6 +573,67 @@ export default function CrmChatPage() {
                                             </div>
                                             <p className={`text-[11px] truncate ${active ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                                 {c.account?.name || c.phone || 'Direct Client'}
+                                            </p>
+                                        </div>
+                                    </button>
+                                );
+                            })
+                        )
+                    ) : (
+                        loadingCandidates ? (
+                            <div className="flex flex-col items-center justify-center p-6 text-muted-foreground gap-2">
+                                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                <span className="text-xs">Loading candidates...</span>
+                            </div>
+                        ) : filteredCandidates.length === 0 ? (
+                            <div className="p-6 text-center text-xs text-muted-foreground">
+                                No candidates found
+                            </div>
+                        ) : (
+                            filteredCandidates.map((cand) => {
+                                const active = activeChatUser?.id === cand.id;
+
+                                return (
+                                    <button
+                                        key={cand.id}
+                                        onClick={() =>
+                                            setActiveChatUser({
+                                                id: cand.id,
+                                                name: cand.name,
+                                                avatar: cand.avatarUrl,
+                                                title: cand.jobTitle || 'Applicant',
+                                                company: cand.stage ? `Stage: ${cand.stage}` : 'HireFlow Candidate',
+                                                phone: cand.phone,
+                                                email: cand.email,
+                                                jobTitle: cand.jobTitle,
+                                                candidateId: cand.id,
+                                                type: 'candidate'
+                                            })
+                                        }
+                                        className={`w-full p-2.5 rounded-xl text-left flex items-center gap-3 transition-all cursor-pointer ${active
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : 'hover:bg-muted/80 text-foreground'
+                                            }`}
+                                    >
+                                        <div className="relative">
+                                            <Avatar className="w-9 h-9">
+                                                <AvatarImage src={cand.avatarUrl} />
+                                                <AvatarFallback className={`text-xs font-bold ${active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-indigo-600 text-white'}`}>
+                                                    {cand.name.charAt(0)?.toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between gap-1">
+                                                <h4 className="text-xs font-bold truncate">{cand.name}</h4>
+                                                {cand.stage && (
+                                                    <span className={`text-[9px] px-1.5 py-0.2 rounded font-semibold ${active ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                                        {cand.stage}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className={`text-[11px] truncate ${active ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
+                                                {cand.jobTitle || cand.phone || 'HireFlow Candidate'}
                                             </p>
                                         </div>
                                     </button>
@@ -596,6 +697,18 @@ export default function CrmChatPage() {
                                 </Badge>
                             ) : (
                                 <>
+                                    {activeChatUser.phone && (
+                                        <Button
+                                            size="sm"
+                                            onClick={() => setIsWaSheetOpen(true)}
+                                            className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs font-semibold"
+                                            title="Send WhatsApp via KonnectX"
+                                        >
+                                            <MessageCircle className="w-3.5 h-3.5" />
+                                            <span className="hidden sm:inline">WhatsApp</span>
+                                        </Button>
+                                    )}
+
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -787,6 +900,18 @@ export default function CrmChatPage() {
 
                     {/* Message Input Bar */}
                     <form onSubmit={handleSendMessage} className="p-3 border-t border-border bg-card flex items-center gap-2 shrink-0">
+                        {activeChatUser.phone && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsWaSheetOpen(true)}
+                                className="h-10 w-10 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 shrink-0"
+                                title="Send WhatsApp Template via KonnectX"
+                            >
+                                <MessageCircle className="w-4 h-4" />
+                            </Button>
+                        )}
                         <Input
                             value={inputMessage}
                             onChange={handleInputChange}
@@ -811,6 +936,22 @@ export default function CrmChatPage() {
                     </p>
                 </div>
             )}
+
+            <CrmWhatsAppOutreachSheet
+                isOpen={isWaSheetOpen}
+                onClose={() => setIsWaSheetOpen(false)}
+                workspaceId={workspaceId}
+                recipient={activeChatUser ? {
+                    name: activeChatUser.name,
+                    phone: activeChatUser.phone,
+                    email: activeChatUser.email,
+                    jobTitle: activeChatUser.jobTitle || activeChatUser.title,
+                    company: activeChatUser.company,
+                    candidateId: activeChatUser.candidateId || null,
+                    contactId: activeChatUser.type === 'contact' ? activeChatUser.id : null
+                } : null}
+                onSuccess={() => toast.success("WhatsApp message dispatched!")}
+            />
         </div>
     );
 }

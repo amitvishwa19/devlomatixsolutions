@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, User, Building2, Phone, Mail, Tag, MapPin, Briefcase } from 'lucide-react';
+import { Loader2, User, Building2, Phone, Mail, Tag, MapPin, Briefcase, Layers } from 'lucide-react';
 import { toast } from "sonner";
 import { createCrmContactAction } from "../../_actions/contact-actions";
 import { getAccountsAction } from "../../_actions/account-actions";
@@ -28,6 +28,7 @@ export default function CreateContactModal({ isOpen, onClose, workspaceId, onCon
     const [address, setAddress] = useState('');
     const [tagInput, setTagInput] = useState('');
     const [tags, setTags] = useState([]);
+    const [modules, setModules] = useState(['crm']);
 
     const [accounts, setAccounts] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,7 +83,8 @@ export default function CreateContactModal({ isOpen, onClose, workspaceId, onCon
                 type,
                 accountId: accountId && accountId !== 'NONE' ? accountId : undefined,
                 address: address.trim() || undefined,
-                tags
+                tags,
+                modules
             });
 
             if (res.success) {
@@ -96,6 +98,7 @@ export default function CreateContactModal({ isOpen, onClose, workspaceId, onCon
                 setAccountId('');
                 setAddress('');
                 setTags([]);
+                setModules(['crm']);
                 onClose();
                 if (onContactCreated) onContactCreated(res.data);
             } else {
@@ -210,6 +213,58 @@ export default function CreateContactModal({ isOpen, onClose, workspaceId, onCon
                                     <SelectItem value="CONTACT">General Contact</SelectItem>
                                 </SelectContent>
                             </Select>
+                        </div>
+                    </div>
+
+                    {/* Module Visibility Checkboxes */}
+                    <div className="space-y-1.5 p-3 rounded-xl bg-muted/40 border border-border/60">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                            <Layers className="w-3.5 h-3.5 text-primary" />
+                            <span>Module Visibility</span>
+                        </Label>
+                        <p className="text-[11px] text-muted-foreground">
+                            Select which modules this contact should be accessible in:
+                        </p>
+                        <div className="flex items-center gap-4 pt-1 flex-wrap">
+                            <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={modules.includes('crm')}
+                                    onChange={(e) => {
+                                        if (e.target.checked) setModules([...modules, 'crm']);
+                                        else if (modules.length > 1) setModules(modules.filter(m => m !== 'crm'));
+                                        else toast.error("Must select at least one module");
+                                    }}
+                                    className="rounded border-border text-primary"
+                                />
+                                <span>CRM</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={modules.includes('ats')}
+                                    onChange={(e) => {
+                                        if (e.target.checked) setModules([...modules, 'ats']);
+                                        else if (modules.length > 1) setModules(modules.filter(m => m !== 'ats'));
+                                        else toast.error("Must select at least one module");
+                                    }}
+                                    className="rounded border-border text-primary"
+                                />
+                                <span>HireFlow (ATS)</span>
+                            </label>
+                            <label className="flex items-center gap-1.5 text-xs font-semibold cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={modules.includes('konnectx')}
+                                    onChange={(e) => {
+                                        if (e.target.checked) setModules([...modules, 'konnectx']);
+                                        else if (modules.length > 1) setModules(modules.filter(m => m !== 'konnectx'));
+                                        else toast.error("Must select at least one module");
+                                    }}
+                                    className="rounded border-border text-primary"
+                                />
+                                <span>KonnectX</span>
+                            </label>
                         </div>
                     </div>
 

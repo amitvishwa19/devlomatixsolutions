@@ -482,6 +482,7 @@ model Contact {
   deals           Deal[]
   crmActivities   CrmActivity[]
   candidateId     String?
+  moduleAccess    Json?            @default("{\"modules\":[\"crm\"]}")
 
   @@unique([workspaceId, credentialId, phone])
   @@index([userId])

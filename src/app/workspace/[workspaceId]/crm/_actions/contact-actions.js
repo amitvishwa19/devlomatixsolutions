@@ -7,33 +7,95 @@ import { triggerCrmWorkflowAction } from "./crm-automation-actions";
 
 /**
  * Get all Contacts for CRM with search, filters, and relationship stats
+ * RESTRICTION: Only contacts of CRM owned by current user AND contacts shared to that user are returned.
  */
 export async function getCrmContactsAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const currentUserId = await getValidUserId(workspaceId, session);
 
-        const { search, type, accountId, tag, hasAtsCandidate } = filters;
+        const { search, type, accountId, tag, hasAtsCandidate, scope = 'ALL', moduleFilter = 'ALL' } = filters;
 
-        const where = {
-            workspaceId,
-            type: type && type !== 'ALL' ? type : undefined,
-            accountId: accountId || undefined,
-            ...(tag && tag !== 'ALL' ? { tags: { has: tag } } : {}),
-            ...(hasAtsCandidate === 'true' || hasAtsCandidate === true ? { candidateId: { not: null } } : {}),
-            ...(search ? {
-                OR: [
-                    { name: { contains: search, mode: 'insensitive' } },
-                    { phone: { contains: search } },
-                    { email: { contains: search, mode: 'insensitive' } },
-                    { title: { contains: search, mode: 'insensitive' } },
-                    { account: { name: { contains: search, mode: 'insensitive' } } }
-                ]
-            } : {})
+        // In CRM, every contact MUST belong to the CRM module
+        const crmModuleCondition = {
+            type: { not: 'GOOGLE_PLACE' },
+            moduleAccess: { path: ['modules'], array_contains: 'crm' }
         };
 
+        // Access scope condition:
+        // - OWNED: created/owned by user
+        // - SHARED: explicitly shared with user by someone else
+        // - ALL: owned by user OR shared with user
+        let accessCondition;
+        if (scope === 'OWNED') {
+            accessCondition = {
+                userId: currentUserId
+            };
+        } else if (scope === 'SHARED') {
+            accessCondition = {
+                sharedWith: { some: { sharedWithUserId: currentUserId } },
+                userId: { not: currentUserId }
+            };
+        } else {
+            accessCondition = {
+                OR: [
+                    { userId: currentUserId },
+                    { sharedWith: { some: { sharedWithUserId: currentUserId } } }
+                ]
+            };
+        }
+
+        const andConditions = [
+            { workspaceId },
+            crmModuleCondition,
+            accessCondition
+        ];
+
+        if (moduleFilter && moduleFilter !== 'ALL') {
+            andConditions.push({
+                moduleAccess: { path: ['modules'], array_contains: moduleFilter.toLowerCase() }
+            });
+        }
+        if (type && type !== 'ALL') {
+            andConditions.push({ type });
+        }
+        if (accountId) {
+            andConditions.push({ accountId });
+        }
+        if (tag && tag !== 'ALL') {
+            andConditions.push({ tags: { has: tag } });
+        }
+        if (hasAtsCandidate === 'true' || hasAtsCandidate === true) {
+            andConditions.push({ candidateId: { not: null } });
+        }
+        if (search?.trim()) {
+            const s = search.trim();
+            andConditions.push({
+                OR: [
+                    { name: { contains: s, mode: 'insensitive' } },
+                    { phone: { contains: s } },
+                    { email: { contains: s, mode: 'insensitive' } },
+                    { title: { contains: s, mode: 'insensitive' } },
+                    { account: { name: { contains: s, mode: 'insensitive' } } }
+                ]
+            });
+        }
+
         const contacts = await prisma.contact.findMany({
-            where,
+            where: {
+                AND: andConditions
+            },
             include: {
+                user: {
+                    select: { id: true, displayName: true, email: true, avatar: true }
+                },
+                sharedWith: {
+                    include: {
+                        sharedWith: {
+                            select: { id: true, displayName: true, email: true, avatar: true }
+                        }
+                    }
+                },
                 account: {
                     select: { id: true, name: true, industry: true, domain: true }
                 },
@@ -49,14 +111,20 @@ export async function getCrmContactsAction(workspaceId, filters = {}) {
                 _count: {
                     select: {
                         crmActivities: true,
-                        ecommerceOrders: true
+                        ecommerceOrders: true,
+                        sharedWith: true,
+                        deals: true
                     }
                 }
             },
             orderBy: { updatedAt: 'desc' }
         });
 
-        return { success: true, data: contacts };
+        return {
+            success: true,
+            data: contacts,
+            currentUserId
+        };
     } catch (error) {
         console.error("[GET_CRM_CONTACTS_ERROR]", error);
         return { success: false, error: error.message || "Failed to fetch CRM contacts" };
@@ -64,15 +132,34 @@ export async function getCrmContactsAction(workspaceId, filters = {}) {
 }
 
 /**
- * Get single contact by ID
+ * Get single contact by ID with ownership/shared access check
  */
 export async function getCrmContactByIdAction(workspaceId, contactId) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const currentUserId = await getValidUserId(workspaceId, session);
 
         const contact = await prisma.contact.findFirst({
-            where: { id: contactId, workspaceId },
+            where: {
+                id: contactId,
+                workspaceId,
+                OR: [
+                    { userId: currentUserId },
+                    { moduleAccess: { path: ['sharedWith'], array_contains: currentUserId } },
+                    { sharedWith: { some: { sharedWithUserId: currentUserId } } }
+                ]
+            },
             include: {
+                user: {
+                    select: { id: true, displayName: true, email: true, avatar: true }
+                },
+                sharedWith: {
+                    include: {
+                        sharedWith: {
+                            select: { id: true, displayName: true, email: true, avatar: true }
+                        }
+                    }
+                },
                 account: true,
                 deals: {
                     include: { stage: true, pipeline: true },
@@ -88,10 +175,10 @@ export async function getCrmContactByIdAction(workspaceId, contactId) {
         });
 
         if (!contact) {
-            return { success: false, error: "Contact not found" };
+            return { success: false, error: "Contact not found or access denied" };
         }
 
-        return { success: true, data: contact };
+        return { success: true, data: contact, currentUserId };
     } catch (error) {
         console.error("[GET_CRM_CONTACT_BY_ID_ERROR]", error);
         return { success: false, error: error.message || "Failed to fetch contact" };
@@ -99,7 +186,7 @@ export async function getCrmContactByIdAction(workspaceId, contactId) {
 }
 
 /**
- * Create a new Contact in CRM
+ * Create a new Contact in CRM with moduleAccess support
  */
 export async function createCrmContactAction(workspaceId, data) {
     try {
@@ -115,7 +202,9 @@ export async function createCrmContactAction(workspaceId, data) {
             accountId,
             address,
             tags = [],
-            candidateId
+            candidateId,
+            modules = ['crm'],
+            sharedWith = []
         } = data;
 
         if (!name?.trim() || !phone?.trim()) {
@@ -139,6 +228,9 @@ export async function createCrmContactAction(workspaceId, data) {
             };
         }
 
+        const assignedModules = Array.isArray(modules) && modules.length > 0 ? modules : ['crm'];
+        const assignedSharedWith = Array.isArray(sharedWith) ? sharedWith : [];
+
         const contact = await prisma.contact.create({
             data: {
                 workspaceId,
@@ -151,12 +243,26 @@ export async function createCrmContactAction(workspaceId, data) {
                 accountId: accountId || null,
                 address: address || null,
                 tags: Array.isArray(tags) ? tags : [],
-                candidateId: candidateId || null
+                candidateId: candidateId || null,
+                moduleAccess: {
+                    modules: assignedModules
+                }
             },
             include: {
                 account: true
             }
         });
+
+        // Insert initial shared users into ContactShare relational table
+        if (assignedSharedWith.length > 0) {
+            await prisma.contactShare.createMany({
+                data: assignedSharedWith.map(sharedWithUserId => ({
+                    contactId: contact.id,
+                    sharedWithUserId
+                })),
+                skipDuplicates: true
+            }).catch(e => console.warn('[CREATE_CONTACT_SHARE_WARN]', e));
+        }
 
         // Log Activity
         await prisma.crmActivity.create({
@@ -240,7 +346,21 @@ export async function updateCrmContactAction(workspaceId, contactId, data) {
  */
 export async function deleteCrmContactAction(workspaceId, contactId) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const currentUserId = await getValidUserId(workspaceId, session);
+
+        const contact = await prisma.contact.findFirst({
+            where: { id: contactId, workspaceId }
+        });
+
+        if (!contact) {
+            return { success: false, error: "Contact not found" };
+        }
+
+        // Only owner or admin can permanently delete
+        if (contact.userId !== currentUserId && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
+            return { success: false, error: "Only the owner can delete this contact" };
+        }
 
         await prisma.contact.delete({
             where: { id: contactId }
