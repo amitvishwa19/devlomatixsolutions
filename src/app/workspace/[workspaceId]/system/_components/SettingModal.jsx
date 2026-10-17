@@ -25,12 +25,14 @@ import {
     Sparkles,
     Tag,
     MessageSquare,
+    DatabaseBackup,
 } from 'lucide-react';
 import { GeneralSettings } from './GeneralSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { NotificationSettings } from './NotificationSettings';
 import { IntegrationSettings } from './IntegrationSettings';
 import { AdvancedSettings } from './AdvancedSettings';
+import { BackupRestoreSettings } from './BackupRestoreSettings';
 import { PrivacySettings } from './PrivacySettings';
 import { DeveloperSettings } from './DeveloperSettings';
 import { WhatsAppCloudSettings } from './WhatsAppCloudSettings';
@@ -46,6 +48,7 @@ const settingTabs = [
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
     { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
     { id: 'connectors', label: 'Connectors', icon: Unplug, color: 'text-primary-500' },
+    { id: 'backup', label: 'Backup & Restore', icon: DatabaseBackup, color: 'text-cyan-500' },
     { id: 'advanced', label: 'Advanced', icon: Cpu, color: 'text-amber-500' },
     { id: 'privacy', label: 'Privacy', icon: ShieldCheck, color: 'text-indigo-500' },
     { id: 'developer', label: 'Developer', icon: Terminal, color: 'text-fuchsia-500' },
@@ -58,7 +61,8 @@ const settingDescriptions = {
     notifications: 'Configure alert channels and notification preferences.',
     integrations: 'Connect external services, webhooks, and APIs.',
     connectors: 'Connect external services, LLMs, and third-party APIs.',
-    advanced: 'System configuration, code injection, and 1-click backups.',
+    backup: 'Create workspace snapshots, export full relational database bundles, and restore data.',
+    advanced: 'System configuration, custom code injection, and runtime parameters.',
     privacy: 'Data governance, GDPR compliance, and audit settings.',
     developer: 'API keys, webhooks, and developer tools.',
     danger: 'Destructive and critical workspace actions.'
@@ -259,6 +263,7 @@ export default function SettingModal({ open, onClose }) {
                                     {activeTab === 'notifications' && <NotificationSettings />}
                                     {activeTab === 'integrations' && <IntegrationSettings />}
                                     {activeTab === 'connectors' && <ConnectorSetting />}
+                                    {activeTab === 'backup' && <BackupRestoreSettings />}
                                     {activeTab === 'advanced' && <AdvancedSettings />}
                                     {activeTab === 'privacy' && <PrivacySettings />}
                                     {activeTab === 'developer' && <DeveloperSettings />}

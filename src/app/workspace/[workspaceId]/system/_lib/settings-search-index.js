@@ -33,11 +33,19 @@ export const SETTINGS_SEARCH_INDEX = [
     { tabId: 'integrations', title: 'Secret API Keys', description: 'REST API tokens with AES-256 encryption', keywords: ['api', 'api key', 'secret', 'token', 'bearer', 'rest', 'access'] },
     { tabId: 'integrations', title: 'App Marketplace', description: '3rd-party plugins and extensions', keywords: ['marketplace', 'plugins', 'apps', 'extensions', 'addons'] },
 
-    // Advanced & Backup
+    // Backup & Restore
+    { tabId: 'backup', title: 'Workspace Backup & Snapshot', description: 'Create complete relational database backups and snapshots', keywords: ['backup', 'snapshot', 'database backup', 'dump', 'save', 'vault', 'archive', 'checkpoint'] },
+    { tabId: 'backup', title: 'KonnectX & WhatsApp Backup', description: 'Backup WhatsApp messages, chats, templates, campaigns, and bot flows', keywords: ['konnectx', 'whatsapp backup', 'messages backup', 'chats', 'templates', 'bot flows', 'wa backup'] },
+    { tabId: 'backup', title: 'Konnect Legacy Store Backup', description: 'Backup isolated Baileys chats, legacy messages, contacts, and chatbot rules', keywords: ['konnect legacy', 'legacy messages', 'baileys', 'legacy backup', 'isolated store', 'legacy contacts'] },
+    { tabId: 'backup', title: 'Restore from Backup', description: 'Restore workspace CRM, Kanban, settings, and workflows from file or vault', keywords: ['restore', 'rollback', 'import', 'recover', 'disaster recovery', 'upload backup', 'clean restore', 'merge restore'] },
+    { tabId: 'backup', title: 'Cloud Snapshot Vault', description: 'Persistent rolling snapshots stored in cloud database', keywords: ['vault', 'history', 'snapshots', 'cloud vault', 'stored backups', 'slots'] },
+    { tabId: 'backup', title: 'Export JSON Backup Bundle', description: 'Download complete offline JSON workspace backup package', keywords: ['export', 'download json', 'bundle', 'offline backup', 'package', 'portable'] },
+
+    // Advanced
     { tabId: 'advanced', title: 'Maintenance Mode', description: 'Temporarily lock workspace to non-administrators', keywords: ['maintenance', 'lock', 'downtime', 'suspend', 'access'] },
     { tabId: 'advanced', title: 'Global CSS Stylesheet', description: 'Inject custom CSS stylesheet overrides', keywords: ['css', 'custom css', 'styles', 'code', 'script', 'injection', 'stylesheet'] },
-    { tabId: 'advanced', title: 'JSON Config Backup & Export', description: 'Export workspace configurations into a portable JSON snapshot', keywords: ['export', 'json', 'backup', 'download', 'config', 'snapshot', 'save'] },
-    { tabId: 'advanced', title: 'Import & Rollback Config', description: 'Restore settings from a saved JSON backup', keywords: ['import', 'restore', 'rollback', 'upload', 'load', 'json config'] },
+    { tabId: 'advanced', title: 'JSON Config Backup & Export', description: 'Export workspace configurations into a portable JSON snapshot', keywords: ['export', 'json', 'config', 'snapshot', 'save'] },
+    { tabId: 'advanced', title: 'Import & Rollback Config', description: 'Restore settings from a saved JSON backup', keywords: ['import', 'rollback', 'upload', 'load', 'json config'] },
     { tabId: 'advanced', title: 'WebSocket Realtime Sync', description: 'Instant live updates across dashboard clients', keywords: ['websocket', 'sync', 'realtime', 'instant', 'live'] },
 
     // Privacy & Governance

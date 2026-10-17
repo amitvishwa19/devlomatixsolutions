@@ -257,7 +257,7 @@ export const AdvancedSettings = () => {
                         </CardContent>
                         <CardFooter className="border-t border-border/40 p-2.5">
                             <p className="text-[9px] text-muted-foreground text-center w-full">
-                                Backups include branding, identity, rules, & security policies.
+                                Backups include branding & security policies. For complete database & CRM disaster recovery, use the <strong>Backup & Restore</strong> tab.
                             </p>
                         </CardFooter>
                     </Card>
