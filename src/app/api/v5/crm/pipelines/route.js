@@ -34,12 +34,12 @@ export async function GET(request) {
                     isDefault: true,
                     stages: {
                         create: [
-                            { workspaceId: auth.workspaceId, name: "Lead In", order: 0, probability: 10, color: "#3b82f6" },
-                            { workspaceId: auth.workspaceId, name: "Contact Made", order: 1, probability: 25, color: "#6366f1" },
-                            { workspaceId: auth.workspaceId, name: "Needs Discovery", order: 2, probability: 50, color: "#8b5cf6" },
-                            { workspaceId: auth.workspaceId, name: "Proposal Sent", order: 3, probability: 75, color: "#eab308" },
-                            { workspaceId: auth.workspaceId, name: "Closed Won", order: 4, probability: 100, isWon: true, color: "#22c55e" },
-                            { workspaceId: auth.workspaceId, name: "Closed Lost", order: 5, probability: 0, isLost: true, color: "#ef4444" }
+                            { name: "Lead In", order: 0, probability: 10, color: "#3b82f6" },
+                            { name: "Contact Made", order: 1, probability: 25, color: "#6366f1" },
+                            { name: "Needs Discovery", order: 2, probability: 50, color: "#8b5cf6" },
+                            { name: "Proposal Sent", order: 3, probability: 75, color: "#eab308" },
+                            { name: "Closed Won", order: 4, probability: 100, isWon: true, color: "#22c55e" },
+                            { name: "Closed Lost", order: 5, probability: 0, isLost: true, color: "#ef4444" }
                         ]
                     }
                 },
@@ -89,7 +89,6 @@ export async function POST(request) {
                 isDefault: false,
                 stages: {
                     create: stageList.map((stg, index) => ({
-                        workspaceId: auth.workspaceId,
                         name: stg.name,
                         order: index,
                         probability: typeof stg.probability === 'number' ? stg.probability : 50,

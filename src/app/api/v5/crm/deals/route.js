@@ -132,10 +132,10 @@ export async function POST(request) {
                         isDefault: true,
                         stages: {
                             create: [
-                                { workspaceId: auth.workspaceId, name: "Lead In", order: 0, probability: 10, color: "#3b82f6" },
-                                { workspaceId: auth.workspaceId, name: "Discovery", order: 1, probability: 30, color: "#8b5cf6" },
-                                { workspaceId: auth.workspaceId, name: "Proposal Sent", order: 2, probability: 60, color: "#eab308" },
-                                { workspaceId: auth.workspaceId, name: "Closed Won", order: 3, probability: 100, isWon: true, color: "#22c55e" }
+                                { name: "Lead In", order: 0, probability: 10, color: "#3b82f6" },
+                                { name: "Discovery", order: 1, probability: 30, color: "#8b5cf6" },
+                                { name: "Proposal Sent", order: 2, probability: 60, color: "#eab308" },
+                                { name: "Closed Won", order: 3, probability: 100, isWon: true, color: "#22c55e" }
                             ]
                         }
                     },
