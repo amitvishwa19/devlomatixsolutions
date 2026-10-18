@@ -71,15 +71,71 @@ export async function POST(request) {
       return NextResponse.json({ error: "quotationNumber is required" }, { status: 400 });
     }
 
+    let enrichedData = { ...(data || {}) };
+    let targetWorkspaceId = workspaceId;
+    if (!targetWorkspaceId) {
+      const userWorkspace = await db.server.findFirst({
+        where: { userId },
+        select: { id: true }
+      }).catch(() => null);
+      if (userWorkspace) targetWorkspaceId = userWorkspace.id;
+    }
+
+    if (targetWorkspaceId && (!enrichedData.company || Object.keys(enrichedData.company).length <= 1)) {
+      const wsSettings = await db.appSettings.findUnique({
+        where: { key: targetWorkspaceId }
+      }).catch(() => null);
+      const business = wsSettings?.general?.business || {};
+
+      if (Object.keys(business).length > 0) {
+        const formattedAddr = [
+          business.addressLine1,
+          business.addressLine2,
+          business.city,
+          business.state,
+          business.pincode,
+          business.country
+        ].filter(Boolean).join(', ');
+
+        enrichedData.company = {
+          name: business.legalName || business.tradeName || enrichedData.company?.name || 'Devlomatix Solutions',
+          tradeName: business.tradeName || '',
+          address: formattedAddr || enrichedData.company?.address || '',
+          email: business.billingEmail || business.email || enrichedData.company?.email || '',
+          phone: business.phone || business.mobile || enrichedData.company?.phone || '',
+          website: business.website || enrichedData.company?.website || '',
+          taxId: business.gstin ? (business.gstin.startsWith('GSTIN:') ? business.gstin : `GSTIN: ${business.gstin}`) : '',
+          pan: business.pan || '',
+          cin: business.cin || '',
+          bankName: business.bankName || '',
+          accountNumber: business.accountNumber || '',
+          accountHolder: business.accountHolder || '',
+          accountType: business.accountType || 'current',
+          ifsc: business.ifsc || '',
+          branch: business.branch || '',
+          upiId: business.upiId || '',
+          signatoryName: business.signatoryName || '',
+          signatoryDesignation: business.signatoryDesignation || 'Director / Authorized Signatory'
+        };
+
+        if (!enrichedData.terms && business.defaultTerms) {
+          enrichedData.terms = business.defaultTerms;
+        }
+        if (!enrichedData.notes && business.defaultNotes) {
+          enrichedData.notes = business.defaultNotes;
+        }
+      }
+    }
+
     const quotation = await db.quotation.create({
       data: {
         userId,
-        workspaceId: workspaceId || null,
+        workspaceId: targetWorkspaceId || null,
         quotationNumber,
         clientName: clientName || null,
         total: total || 0,
         status: status || "draft",
-        data: data || {},
+        data: enrichedData,
       },
     });
 

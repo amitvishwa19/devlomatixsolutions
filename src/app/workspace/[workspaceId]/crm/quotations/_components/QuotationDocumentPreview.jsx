@@ -609,7 +609,10 @@ export default function QuotationDocumentPreview({
                                     {companyName}
                                 </h1>
                             )}
-                            <div className="w-48 h-0.5 bg-[#1e3a5f] my-1.5" />
+                                <div className="w-48 h-0.5 bg-[#1e3a5f] my-1.5" />
+                                {business.tagline && (
+                                    <p className="text-[10px] italic text-[#475569] font-medium">{business.tagline}</p>
+                                )}
 
                             <div className="text-[11px] text-[#334155] leading-relaxed space-y-0.5">
                                 {companyAddress && <p>{companyAddress}</p>}
@@ -643,13 +646,20 @@ export default function QuotationDocumentPreview({
                                                 <td className="font-mono font-medium text-[#0f172a]">{companyTaxId}</td>
                                             </tr>
                                         )}
-                                        {/* {companyCin && (
+                                        {company.pan && (
+                                            <tr>
+                                                <td className="pr-2 text-[#64748b] font-medium">PAN</td>
+                                                <td className="pr-1 text-[#64748b]">:</td>
+                                                <td className="font-mono font-medium text-[#0f172a]">{company.pan}</td>
+                                            </tr>
+                                        )}
+                                        {company.cin && (
                                             <tr>
                                                 <td className="pr-2 text-[#64748b] font-medium">CIN</td>
                                                 <td className="pr-1 text-[#64748b]">:</td>
-                                                <td className="font-mono text-[#1e293b]">{companyCin}</td>
+                                                <td className="font-mono text-[#1e293b]">{company.cin}</td>
                                             </tr>
-                                        )} */}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
@@ -970,7 +980,14 @@ export default function QuotationDocumentPreview({
                         </div>
                     </div>
 
-                    <div className="border-t border-[#cbd5e1] mt-8" />
+                    <div className="border-t border-[#cbd5e1] mt-8 pt-3 flex flex-col sm:flex-row items-center justify-between text-[9px] text-[#64748b]">
+                        <p>{business.defaultNotes || "Thank you for your business. We look forward to an enduring partnership!"}</p>
+                        {business.jurisdictionCity && (
+                            <p className="font-semibold uppercase tracking-wider mt-1 sm:mt-0">
+                                Subject to {business.jurisdictionCity} Jurisdiction
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 

@@ -113,6 +113,21 @@ export default function QuotationBuilder({
         initialData?.data?.company?.address || settings?.branding?.address || 'Vadodara, Gujarat, India'
     );
     const [companyTaxId, setCompanyTaxId] = useState(initialData?.data?.company?.taxId || 'GSTIN: 24AAAAA0000A1Z5');
+    const [companyPan, setCompanyPan] = useState(initialData?.data?.company?.pan || '');
+    const [companyCin, setCompanyCin] = useState(initialData?.data?.company?.cin || '');
+    const [companyBankName, setCompanyBankName] = useState(initialData?.data?.company?.bankName || '');
+    const [companyAccountNumber, setCompanyAccountNumber] = useState(initialData?.data?.company?.accountNumber || '');
+    const [companyAccountHolder, setCompanyAccountHolder] = useState(initialData?.data?.company?.accountHolder || '');
+    const [companyAccountType, setCompanyAccountType] = useState(initialData?.data?.company?.accountType || 'current');
+    const [companyIfsc, setCompanyIfsc] = useState(initialData?.data?.company?.ifsc || '');
+    const [companyBranch, setCompanyBranch] = useState(initialData?.data?.company?.branch || '');
+    const [companyUpiId, setCompanyUpiId] = useState(initialData?.data?.company?.upiId || '');
+    const [companySignatoryName, setCompanySignatoryName] = useState(initialData?.data?.company?.signatoryName || '');
+    const [companySignatoryDesignation, setCompanySignatoryDesignation] = useState(
+        initialData?.data?.company?.signatoryDesignation || 'Director / Authorized Signatory'
+    );
+    const [companyWebsite, setCompanyWebsite] = useState(initialData?.data?.company?.website || '');
+    const [showCompanyDetailsEdit, setShowCompanyDetailsEdit] = useState(false);
 
     // Sync business & branding from workspace settings for new quotations
     useEffect(() => {
@@ -130,7 +145,7 @@ export default function QuotationBuilder({
                 setCompanyLogo(logo);
             }
             if (business.email || settings.branding?.email) {
-                setCompanyEmail(business.email || business.billingEmail || settings.branding?.email);
+                setCompanyEmail(business.billingEmail || business.email || settings.branding?.email);
             }
             if (business.phone || settings.branding?.phone) {
                 setCompanyPhone(business.phone || business.mobile || settings.branding?.phone);
@@ -149,11 +164,31 @@ export default function QuotationBuilder({
             if (business.gstin && (companyTaxId === 'GSTIN: 24AAAAA0000A1Z5' || !companyTaxId)) {
                 setCompanyTaxId(business.gstin.startsWith('GSTIN:') ? business.gstin : `GSTIN: ${business.gstin}`);
             }
+            if (business.pan && !companyPan) setCompanyPan(business.pan);
+            if (business.cin && !companyCin) setCompanyCin(business.cin);
+            if (business.bankName && !companyBankName) setCompanyBankName(business.bankName);
+            if (business.accountNumber && !companyAccountNumber) setCompanyAccountNumber(business.accountNumber);
+            if (business.accountHolder && !companyAccountHolder) setCompanyAccountHolder(business.accountHolder);
+            if (business.accountType && !companyAccountType) setCompanyAccountType(business.accountType);
+            if (business.ifsc && !companyIfsc) setCompanyIfsc(business.ifsc);
+            if (business.branch && !companyBranch) setCompanyBranch(business.branch);
+            if (business.upiId && !companyUpiId) setCompanyUpiId(business.upiId);
+            if (business.signatoryName && !companySignatoryName) setCompanySignatoryName(business.signatoryName);
+            if (business.signatoryDesignation && (!companySignatoryDesignation || companySignatoryDesignation === 'Director / Authorized Signatory')) {
+                setCompanySignatoryDesignation(business.signatoryDesignation);
+            }
+            if (business.website && !companyWebsite) setCompanyWebsite(business.website);
             if (business.defaultTerms && terms === DEFAULT_TERMS) {
                 setTerms(business.defaultTerms);
             }
             if (business.defaultNotes && notes === DEFAULT_NOTES) {
                 setNotes(business.defaultNotes);
+            }
+            if (business.quotationPrefix && (!initialData?.quotationNumber || initialData.quotationNumber.startsWith('QT-'))) {
+                const prefix = business.quotationPrefix;
+                const datePart = new Date().toISOString().slice(0, 7).replace('-', '');
+                const randPart = Math.floor(1000 + Math.random() * 9000);
+                setQuotationNumber(`${prefix}${datePart}-${randPart}`);
             }
         }
     }, [settings, initialData]);
@@ -408,7 +443,19 @@ export default function QuotationBuilder({
                 email: companyEmail,
                 phone: companyPhone,
                 address: companyAddress,
-                taxId: companyTaxId
+                taxId: companyTaxId,
+                pan: companyPan,
+                cin: companyCin,
+                bankName: companyBankName,
+                accountNumber: companyAccountNumber,
+                accountHolder: companyAccountHolder,
+                accountType: companyAccountType,
+                ifsc: companyIfsc,
+                branch: companyBranch,
+                upiId: companyUpiId,
+                signatoryName: companySignatoryName,
+                signatoryDesignation: companySignatoryDesignation,
+                website: companyWebsite
             },
             quotation: {
                 title,
@@ -439,6 +486,18 @@ export default function QuotationBuilder({
         companyPhone,
         companyAddress,
         companyTaxId,
+        companyPan,
+        companyCin,
+        companyBankName,
+        companyAccountNumber,
+        companyAccountHolder,
+        companyAccountType,
+        companyIfsc,
+        companyBranch,
+        companyUpiId,
+        companySignatoryName,
+        companySignatoryDesignation,
+        companyWebsite,
         title,
         issueDate,
         validUntil,
@@ -568,39 +627,153 @@ export default function QuotationBuilder({
                     viewMode === 'preview' ? 'hidden lg:block' : 'block'
                 }`}>
                     {/* Organization Branding & Sender */}
-                    <div className="p-3 bg-card rounded-2xl border border-border/80 shadow-xs flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2.5">
-                            {companyLogo ? (
-                                <div className="h-9 w-16 bg-white rounded-md p-1 border border-border/60 flex items-center justify-center shrink-0">
-                                    <img
-                                        src={typeof companyLogo === 'string' ? companyLogo : (companyLogo?.src || companyLogo)}
-                                        alt="Company Logo"
-                                        className="max-h-full max-w-full object-contain"
-                                    />
+                    {/* Organization Branding & Sender */}
+                    <div className="p-3 bg-card rounded-2xl border border-border/80 shadow-xs space-y-2.5">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                {companyLogo ? (
+                                    <div className="h-9 w-16 bg-white rounded-md p-1 border border-border/60 flex items-center justify-center shrink-0">
+                                        <img
+                                            src={typeof companyLogo === 'string' ? companyLogo : (companyLogo?.src || companyLogo)}
+                                            alt="Company Logo"
+                                            className="max-h-full max-w-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center font-bold text-xs shrink-0">
+                                        <Building2 className="w-4 h-4" />
+                                    </div>
+                                )}
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-xs font-bold text-foreground truncate">{companyName}</span>
+                                        {companyTaxId && (
+                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-mono font-semibold text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
+                                                {companyTaxId}
+                                            </Badge>
+                                        )}
+                                        {companyBankName && (
+                                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 text-sky-600 bg-sky-500/10 border-sky-500/20">
+                                                {companyBankName}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground truncate max-w-[280px]">
+                                        {companyAddress || 'Official Sender Identity & Bank Details active'}
+                                    </p>
                                 </div>
-                            ) : (
-                                <div className="h-9 w-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                                    <Building2 className="w-4 h-4" />
-                                </div>
-                            )}
-                            <div>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="text-xs font-bold text-foreground">{companyName}</span>
-                                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0 h-4 font-semibold text-emerald-600 bg-emerald-500/10 border-emerald-500/20">
-                                        Settings Logo
-                                    </Badge>
-                                </div>
-                                <p className="text-[10px] text-muted-foreground">Branding pulled from Workspace Settings</p>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setShowCompanyDetailsEdit(!showCompanyDetailsEdit)}
+                                    className="h-7 text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+                                >
+                                    {showCompanyDetailsEdit ? 'Hide Details' : 'Edit Sender'}
+                                </Button>
+                                <Link
+                                    href={`/workspace/${workspaceId}/system/setting`}
+                                    className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1"
+                                    target="_blank"
+                                >
+                                    <span>Settings</span>
+                                    <ExternalLink className="w-3 h-3" />
+                                </Link>
                             </div>
                         </div>
-                        <Link
-                            href={`/workspace/${workspaceId}/system/setting`}
-                            className="text-[10px] text-primary hover:underline font-semibold flex items-center gap-1 shrink-0"
-                            target="_blank"
-                        >
-                            <span>Settings</span>
-                            <ExternalLink className="w-3 h-3" />
-                        </Link>
+
+                        {/* Collapsible custom company sender fields */}
+                        {showCompanyDetailsEdit && (
+                            <div className="pt-2.5 border-t border-border/60 space-y-2 text-xs">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Legal / Display Name</Label>
+                                        <Input
+                                            value={companyName}
+                                            onChange={(e) => setCompanyName(e.target.value)}
+                                            className="h-7 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">GSTIN / Tax ID</Label>
+                                        <Input
+                                            value={companyTaxId}
+                                            onChange={(e) => setCompanyTaxId(e.target.value)}
+                                            className="h-7 text-xs font-mono"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Registered Office Address</Label>
+                                        <Input
+                                            value={companyAddress}
+                                            onChange={(e) => setCompanyAddress(e.target.value)}
+                                            className="h-7 text-xs"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Official Email</Label>
+                                        <Input
+                                            value={companyEmail}
+                                            onChange={(e) => setCompanyEmail(e.target.value)}
+                                            className="h-7 text-xs"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Bank Name</Label>
+                                        <Input
+                                            value={companyBankName}
+                                            onChange={(e) => setCompanyBankName(e.target.value)}
+                                            className="h-7 text-xs"
+                                            placeholder="Bank Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">A/C Number</Label>
+                                        <Input
+                                            value={companyAccountNumber}
+                                            onChange={(e) => setCompanyAccountNumber(e.target.value)}
+                                            className="h-7 text-xs font-mono"
+                                            placeholder="Account No."
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">IFSC Code</Label>
+                                        <Input
+                                            value={companyIfsc}
+                                            onChange={(e) => setCompanyIfsc(e.target.value.toUpperCase())}
+                                            className="h-7 text-xs font-mono"
+                                            placeholder="IFSC"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Signatory Name</Label>
+                                        <Input
+                                            value={companySignatoryName}
+                                            onChange={(e) => setCompanySignatoryName(e.target.value)}
+                                            className="h-7 text-xs"
+                                            placeholder="Authorized Signatory Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-[10px] font-medium text-muted-foreground">Signatory Title</Label>
+                                        <Input
+                                            value={companySignatoryDesignation}
+                                            onChange={(e) => setCompanySignatoryDesignation(e.target.value)}
+                                            className="h-7 text-xs"
+                                            placeholder="Director / Authorized Signatory"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Section 1: Client & Recipient */}

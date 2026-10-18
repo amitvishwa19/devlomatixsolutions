@@ -190,12 +190,62 @@ export async function saveCrmQuotationAction(workspaceId, payload) {
             data = {}
         } = payload;
 
+        // Fetch workspace business settings
+        let enrichedData = { ...(data || {}) };
+        const wsSettings = await prisma.appSettings.findUnique({
+            where: { key: workspaceId }
+        }).catch(() => null);
+        const business = wsSettings?.general?.business || {};
+
         // Auto-generate quotation number if creating new and not provided
         let finalNumber = quotationNumber?.trim();
         if (!finalNumber && !id) {
+            const prefix = business.quotationPrefix || 'QT-';
             const count = await prisma.quotation.count({ where: { workspaceId } });
             const dateStr = new Date().toISOString().slice(0, 7).replace('-', '');
-            finalNumber = `QT-${dateStr}-${String(count + 1).padStart(4, '0')}`;
+            finalNumber = `${prefix}${dateStr}-${String(count + 1).padStart(4, '0')}`;
+        }
+
+        // Enrich company details with workspace business profile if missing
+        if (Object.keys(business).length > 0) {
+            const rawCompany = enrichedData.company || {};
+            const formattedAddr = [
+                business.addressLine1,
+                business.addressLine2,
+                business.city,
+                business.state,
+                business.pincode,
+                business.country
+            ].filter(Boolean).join(', ');
+
+            enrichedData.company = {
+                name: rawCompany.name || business.legalName || business.tradeName || 'Devlomatix Solutions',
+                tradeName: rawCompany.tradeName || business.tradeName || '',
+                logoUrl: rawCompany.logoUrl || '',
+                address: rawCompany.address || formattedAddr || '',
+                email: rawCompany.email || business.billingEmail || business.email || '',
+                phone: rawCompany.phone || business.phone || business.mobile || '',
+                website: rawCompany.website || business.website || '',
+                taxId: rawCompany.taxId || (business.gstin ? (business.gstin.startsWith('GSTIN:') ? business.gstin : `GSTIN: ${business.gstin}`) : ''),
+                pan: rawCompany.pan || business.pan || '',
+                cin: rawCompany.cin || business.cin || '',
+                bankName: rawCompany.bankName || business.bankName || '',
+                accountNumber: rawCompany.accountNumber || business.accountNumber || '',
+                accountHolder: rawCompany.accountHolder || business.accountHolder || '',
+                accountType: rawCompany.accountType || business.accountType || 'current',
+                ifsc: rawCompany.ifsc || business.ifsc || '',
+                branch: rawCompany.branch || business.branch || '',
+                upiId: rawCompany.upiId || business.upiId || '',
+                signatoryName: rawCompany.signatoryName || business.signatoryName || '',
+                signatoryDesignation: rawCompany.signatoryDesignation || business.signatoryDesignation || 'Director / Authorized Signatory'
+            };
+
+            if (!enrichedData.terms && business.defaultTerms) {
+                enrichedData.terms = business.defaultTerms;
+            }
+            if (!enrichedData.notes && business.defaultNotes) {
+                enrichedData.notes = business.defaultNotes;
+            }
         }
 
         let quotation;
@@ -207,7 +257,7 @@ export async function saveCrmQuotationAction(workspaceId, payload) {
                     clientName: clientName || null,
                     total: Number(total) || 0,
                     status: status.toLowerCase(),
-                    data: data || {}
+                    data: enrichedData
                 }
             });
         } else {
@@ -219,7 +269,7 @@ export async function saveCrmQuotationAction(workspaceId, payload) {
                     clientName: clientName || null,
                     total: Number(total) || 0,
                     status: status.toLowerCase(),
-                    data: data || {}
+                    data: enrichedData
                 }
             });
 
