@@ -93,6 +93,7 @@ export async function getDcrRecordsAction(workspaceId, filters = {}) {
                 nextFollowUpAction: meta.nextFollowUpAction || '',
                 dealValue: meta.dealValue ? parseFloat(meta.dealValue) : (r.deal?.value ? parseFloat(r.deal.value) : 0),
                 location: meta.location || '',
+                images: Array.isArray(meta.images) ? meta.images : (meta.images ? [meta.images] : []),
                 durationMinutes: meta.durationMinutes ? parseInt(meta.durationMinutes) : 15,
                 objections: meta.objections || '',
                 rawMetadata: meta,
@@ -312,6 +313,7 @@ export async function createDcrRecordAction(workspaceId, data) {
                     geolocation: data.geolocation || null,
                     durationMinutes: parseInt(durationMinutes) || 15,
                     objections: objections?.trim() || '',
+                    images: Array.isArray(data.images) ? data.images : (data.images ? [data.images] : []),
                     loggedAt: new Date().toISOString()
                 }
             },
