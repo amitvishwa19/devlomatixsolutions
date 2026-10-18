@@ -122,21 +122,30 @@ export async function GET(req, { params }) {
             ...glGeneral,
         };
 
+        // Universal business details saved strictly under key: 'global'
+        // If key: 'global' in database has no business details, return empty object (blank)
+        const resolvedBusiness = (glGeneral && typeof glGeneral.business === 'object' && glGeneral.business)
+            ? glGeneral.business
+            : {};
+
+        const resolvedSocialLinks = wsGeneral.socialLinks || glSocial.socialLinks || glGeneral.socialLinks || {};
+
         const settings = {
             general: {
                 name: workspace.name,
                 description: workspace.description || "",
                 imageUrl: workspace.imageUrl || "",
                 inviteCode: workspace.inviteCode,
-                socialLinks: wsGeneral.socialLinks || glGeneral.socialLinks || glSocial.socialLinks || {},
                 ...glGeneral,
                 ...wsGeneral,
+                socialLinks: resolvedSocialLinks,
+                business: resolvedBusiness,
             },
             branding: {
                 ...mergedBranding,
-                socialLinks: wsGeneral.socialLinks || glSocial.socialLinks || {}
+                socialLinks: resolvedSocialLinks
             },
-            business: wsGeneral.business || glGeneral.business || {},
+            business: resolvedBusiness,
             security: {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
@@ -224,17 +233,41 @@ export async function PATCH(req, { params }) {
             });
         }
 
-        // 2. Update Global Branding (Row 1: key = 'global')
-        if (branding) {
+        // 2. Update Global Settings (Row 1: key = 'global') - Branding & Universal Business Details
+        if (branding || business !== undefined) {
+            const currentGlobalSettings = await prisma.appSettings.findUnique({
+                where: { key: 'global' }
+            }).catch(() => null);
+
+            const existingGlSocial = (currentGlobalSettings?.social && typeof currentGlobalSettings.social === 'object')
+                ? currentGlobalSettings.social
+                : {};
+            const existingGlGeneral = (currentGlobalSettings?.general && typeof currentGlobalSettings.general === 'object')
+                ? currentGlobalSettings.general
+                : {};
+
+            const globalUpdateData = {};
+            if (branding) {
+                globalUpdateData.social = {
+                    ...existingGlSocial,
+                    ...branding
+                };
+            }
+            if (business !== undefined) {
+                globalUpdateData.general = {
+                    ...existingGlGeneral,
+                    business: business
+                };
+            }
+
             await prisma.appSettings.upsert({
                 where: { key: 'global' },
                 create: {
                     key: 'global',
-                    social: branding
+                    social: globalUpdateData.social || existingGlSocial || {},
+                    general: globalUpdateData.general || (business !== undefined ? { business } : {})
                 },
-                update: {
-                    social: branding
-                }
+                update: globalUpdateData
             });
         }
 
@@ -246,12 +279,17 @@ export async function PATCH(req, { params }) {
         const existingGeneral = (currentWsSettings?.general && typeof currentWsSettings.general === 'object') ? currentWsSettings.general : {};
 
         let updatedGeneral = undefined;
-        if (general !== undefined || business !== undefined) {
+        if (general !== undefined) {
             updatedGeneral = {
                 ...existingGeneral,
-                ...(general || {}),
-                ...(business !== undefined ? { business } : {})
+                ...(general || {})
             };
+            // Ensure workspace row does not store business details; business is strictly under key: 'global'
+            delete updatedGeneral.business;
+        } else if (business !== undefined && existingGeneral.business) {
+            // Clean up legacy business from workspace row if present
+            updatedGeneral = { ...existingGeneral };
+            delete updatedGeneral.business;
         }
 
         const workspaceUpdateData = {

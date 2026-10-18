@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { convertQuotationToPayFlowInvoiceAction } from '../../_actions/quotation-actions';
 import SendQuotationEmailModal from './SendQuotationEmailModal';
-import lightLogo from '@/assets/logo/light_logo.png';
 
 export const CURRENCY_SYMBOLS = {
     INR: '₹',
@@ -113,7 +112,7 @@ export default function QuotationDocumentPreview({
         settings?.branding?.lightLogoUrl ||
         settings?.branding?.logoUrl ||
         settings?.general?.imageUrl ||
-        lightLogo;
+        null;
     const companyEmail = rawCompany.email || business.billingEmail || business.email || settings?.branding?.email || "sales@devlomatix.com";
     const companyPhone = rawCompany.phone || business.phone || business.mobile || settings?.branding?.phone || "+91 98765 43210";
     const companyWebsite = rawCompany.website || business.website || "www.devlomatix.com";

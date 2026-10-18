@@ -57,7 +57,7 @@ const INITIAL_BUSINESS_STATE = {
     // 1. Legal Entity
     legalName: '',
     tradeName: '',
-    businessType: 'pvt_ltd',
+    businessType: '',
     cin: '',
     incorporationDate: '',
     tagline: '',
@@ -76,7 +76,7 @@ const INITIAL_BUSINESS_STATE = {
     city: '',
     state: '',
     pincode: '',
-    country: 'India',
+    country: '',
 
     // Operating / Dispatch Address
     isSameAsRegistered: true,
@@ -85,7 +85,7 @@ const INITIAL_BUSINESS_STATE = {
     branchCity: '',
     branchState: '',
     branchPincode: '',
-    branchCountry: 'India',
+    branchCountry: '',
 
     // 4. Official Contacts
     email: '',
@@ -99,23 +99,20 @@ const INITIAL_BUSINESS_STATE = {
     bankName: '',
     accountHolder: '',
     accountNumber: '',
-    accountType: 'current',
+    accountType: '',
     ifsc: '',
     branch: '',
     upiId: '',
 
     // 6. Invoicing & Document Presets
-    quotationPrefix: 'QTN-',
-    invoicePrefix: 'INV-',
-    defaultPaymentTerms: '50% Advance upon order confirmation, 50% on delivery / milestone completion.',
+    quotationPrefix: '',
+    invoicePrefix: '',
+    defaultPaymentTerms: '',
     jurisdictionCity: '',
     signatoryName: '',
-    signatoryDesignation: 'Director / Authorized Signatory',
-    defaultTerms: `1. Validity: This quotation is valid for 30 calendar days from the date of issue.
-2. Payment Terms: Payment as per agreed milestones or advance terms.
-3. Taxes: Goods and Services Tax (GST) is charged extra as applicable.
-4. Jurisdiction: Disputes are subject to the exclusive jurisdiction of the registered city courts.`,
-    defaultNotes: 'Thank you for your business. We look forward to an enduring partnership!'
+    signatoryDesignation: '',
+    defaultTerms: '',
+    defaultNotes: ''
 };
 
 export function BusinessDetailsSettings() {
@@ -125,29 +122,17 @@ export function BusinessDetailsSettings() {
     const [showLivePreview, setShowLivePreview] = useState(false);
     const [copiedField, setCopiedField] = useState(null);
 
-    // Sync from settings context
     useEffect(() => {
-        if (settings?.business) {
-            setLocalBusiness(prev => ({
+        if (settings?.business && Object.keys(settings.business).length > 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLocalBusiness({
                 ...INITIAL_BUSINESS_STATE,
-                ...settings.business,
-                // Fallbacks from general/branding if empty
-                legalName: settings.business.legalName || settings?.general?.name || settings?.branding?.appName || '',
-                tradeName: settings.business.tradeName || settings?.branding?.appName || '',
-                email: settings.business.email || settings?.branding?.email || '',
-                phone: settings.business.phone || settings?.branding?.phone || '',
-                website: settings.business.website || settings?.branding?.workspaceUrl || ''
-            }));
-        } else if (settings) {
-            // Pre-seed from existing branding/general if business was never saved
-            setLocalBusiness(prev => ({
-                ...prev,
-                legalName: settings?.general?.name || settings?.branding?.appName || '',
-                tradeName: settings?.branding?.appName || '',
-                email: settings?.branding?.email || '',
-                phone: settings?.branding?.phone || '',
-                website: settings?.branding?.workspaceUrl || ''
-            }));
+                ...settings.business
+            });
+        } else {
+            // Strictly blank if database key: 'global' is empty
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setLocalBusiness(INITIAL_BUSINESS_STATE);
         }
     }, [settings]);
 
@@ -204,11 +189,11 @@ export function BusinessDetailsSettings() {
         updateSettings({
             business: localBusiness
         });
-        toast.success("Business details saved and updated globally!");
+        toast.success("Business details saved to universal global key across all users!");
     };
 
     const handleReset = () => {
-        if (settings?.business) {
+        if (settings?.business && Object.keys(settings.business).length > 0) {
             setLocalBusiness({
                 ...INITIAL_BUSINESS_STATE,
                 ...settings.business
@@ -250,10 +235,14 @@ export function BusinessDetailsSettings() {
                                 <Building2 className="w-5 h-5" />
                             </div>
                             <div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2">
                                     <h2 className="text-sm sm:text-base font-bold text-foreground">
                                         {localBusiness.legalName || 'Registered Business Profile'}
                                     </h2>
+                                    <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 font-medium flex items-center gap-1">
+                                        <Globe className="w-3 h-3" />
+                                        Universal Global Key
+                                    </Badge>
                                     {localBusiness.gstin && (
                                         <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-mono">
                                             GST Registered
@@ -261,7 +250,7 @@ export function BusinessDetailsSettings() {
                                     )}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-0.5">
-                                    Official legal entity identity, tax registrations, office addresses, and payout coordinates.
+                                    Universal platform configuration (saved to global key): Legal entity identity, GSTIN, office addresses, and banking coordinates apply across all users, workspaces, and generated documents.
                                 </p>
                             </div>
                         </div>

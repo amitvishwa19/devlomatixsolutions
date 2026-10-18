@@ -59,7 +59,7 @@ const settingTabs = [
 
 const settingDescriptions = {
     general: 'Configure workspace identity, branding, and social presence.',
-    business: 'Manage registered legal identity, GSTIN, PAN, office addresses, bank coordinates, and quotation presets.',
+    business: 'Manage universal legal identity, GSTIN, PAN, office addresses, bank coordinates, and quotation presets (Universal Global).',
     whatsapp: 'Configure Meta WhatsApp Cloud API credentials, default production sender, and webhooks.',
     security: 'Manage authentication policies and access controls.',
     notifications: 'Configure alert channels and notification preferences.',

@@ -29,7 +29,9 @@ import {
     RotateCcw,
     Sun,
     Moon,
-    Trash2
+    Trash2,
+    Save,
+    ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -122,6 +124,26 @@ export const GeneralSettings = () => {
 
         return generalChanged || brandingChanged;
     }, [localGeneral, localBranding, settings]);
+
+    // Track specifically if social presence links have unsaved modifications
+    const isSocialDirty = useMemo(() => {
+        const savedSocial = settings?.branding?.socialLinks || settings?.general?.socialLinks || {};
+        return JSON.stringify(localBranding.socialLinks || {}) !== JSON.stringify(savedSocial);
+    }, [localBranding.socialLinks, settings]);
+
+    const handleSaveSocial = () => {
+        updateSettings({
+            branding: {
+                ...localBranding,
+                socialLinks: localBranding.socialLinks
+            },
+            general: {
+                ...localGeneral,
+                socialLinks: localBranding.socialLinks
+            }
+        });
+        toast.success("Social presence handles updated successfully!");
+    };
 
     const handleSaveAll = () => {
         updateSettings({
@@ -588,46 +610,121 @@ export const GeneralSettings = () => {
 
                 {/* Social Presence */}
                 <Card className="bg-card border-border/80 transition-colors shadow-xs">
-                    <CardHeader className="py-0 px-3 border-b border-border/40 space-y-0">
-                        <div className="flex items-center gap-2">
-                            <div className="p-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">
-                                <Share2 className="w-3.5 h-3.5 text-indigo-500" />
+                    <CardHeader className="py-2 px-3 border-b border-border/40 space-y-0">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="p-1 bg-indigo-500/10 rounded-md border border-indigo-500/20">
+                                    <Share2 className="w-3.5 h-3.5 text-indigo-500" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <CardTitle className="text-xs font-bold text-foreground leading-tight">Social Presence</CardTitle>
+                                        {isSocialDirty && (
+                                            <Badge variant="outline" className="text-[9px] px-1.5 py-0 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30">
+                                                Unsaved Changes
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <CardDescription className="text-[10px] text-muted-foreground leading-none">
+                                        Public profile handles & footer links.
+                                    </CardDescription>
+                                </div>
                             </div>
-                            <div>
-                                <CardTitle className="text-xs font-bold text-foreground leading-tight">Social Presence</CardTitle>
-                                <CardDescription className="text-[10px] text-muted-foreground leading-none">
-                                    Public profile links.
-                                </CardDescription>
-                            </div>
+                            <Button
+                                size="sm"
+                                type="button"
+                                onClick={handleSaveSocial}
+                                disabled={saving || !isSocialDirty}
+                                className={`h-7 text-xs font-semibold gap-1.5 transition-all ${
+                                    isSocialDirty
+                                        ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
+                                        : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                                }`}
+                            >
+                                {saving ? (
+                                    <>
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                        <span>Saving...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="w-3 h-3" />
+                                        <span>Save Links</span>
+                                    </>
+                                )}
+                            </Button>
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-1.5 p-3 pt-2.5">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                            {socialPlatforms.map((platform) => (
-                                <div
-                                    key={platform.id}
-                                    className="flex items-center gap-2 p-1.5 px-2 rounded-md bg-secondary/30 border border-border/40 hover:border-border transition-colors"
-                                >
-                                    <div className={`w-6 h-6 bg-background rounded-sm flex items-center justify-center border border-border/80 shrink-0 ${platform.color}`}>
-                                        <platform.icon className="w-3 h-3" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <Input
-                                            value={localBranding.socialLinks?.[platform.id]?.url || ''}
-                                            onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
-                                            placeholder={`${platform.label}`}
-                                            className="h-6 bg-transparent border-none text-[11px] px-1 py-0"
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {socialPlatforms.map((platform) => {
+                                const currentSocial = localBranding.socialLinks?.[platform.id] || { url: '', active: false };
+                                const isFilled = Boolean(currentSocial.url?.trim());
+
+                                return (
+                                    <div
+                                        key={platform.id}
+                                        className={`flex items-center gap-2 p-1.5 px-2 rounded-md border transition-all ${
+                                            currentSocial.active
+                                                ? 'bg-secondary/40 border-indigo-500/30'
+                                                : 'bg-secondary/20 border-border/40 opacity-80 hover:opacity-100'
+                                        }`}
+                                    >
+                                        <div className={`w-7 h-7 bg-background rounded-sm flex items-center justify-center border border-border/80 shrink-0 ${platform.color}`}>
+                                            <platform.icon className="w-3.5 h-3.5" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <Input
+                                                value={currentSocial.url || ''}
+                                                onChange={(e) => handleSocialChange(platform.id, 'url', e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSaveSocial();
+                                                }}
+                                                placeholder={`https://${platform.id}.com/yourhandle`}
+                                                className="h-7 bg-background/80 border border-border/70 text-foreground text-xs px-2 py-0.5 rounded placeholder:text-muted-foreground/60 focus:border-indigo-500"
+                                            />
+                                        </div>
+                                        {isFilled && (
+                                            <a
+                                                href={currentSocial.url.startsWith('http') ? currentSocial.url : `https://${currentSocial.url}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+                                                title={`Test ${platform.label} URL`}
+                                            >
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                        )}
+                                        <Switch
+                                            checked={currentSocial.active || false}
+                                            onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
+                                            className="scale-75 origin-right data-[state=checked]:bg-indigo-600 shrink-0"
+                                            title={currentSocial.active ? "Enabled - click to disable" : "Disabled - click to enable"}
                                         />
                                     </div>
-                                    <Switch
-                                        checked={localBranding.socialLinks?.[platform.id]?.active || false}
-                                        onCheckedChange={(checked) => handleSocialChange(platform.id, 'active', checked)}
-                                        className="scale-75 origin-right data-[state=checked]:bg-indigo-500"
-                                    />
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </CardContent>
+                    <CardFooter className="py-2 px-3 border-t border-border/40 bg-secondary/15 flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">
+                            {activeSocialList.length} of {socialPlatforms.length} handles active in public branding & footer.
+                        </span>
+                        <Button
+                            size="sm"
+                            type="button"
+                            onClick={handleSaveSocial}
+                            disabled={saving || !isSocialDirty}
+                            className={`h-7 text-xs font-semibold gap-1.5 ${
+                                isSocialDirty
+                                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs'
+                                    : 'bg-secondary text-muted-foreground'
+                            }`}
+                        >
+                            <Save className="w-3 h-3" />
+                            <span>Save Social Links</span>
+                        </Button>
+                    </CardFooter>
                 </Card>
             </motion.div>
 

@@ -1,84 +1,87 @@
 'use client'
-import Image from 'next/image'
+
+import React, { useContext, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import React, { useContext, useEffect, useState } from 'react'
-import lightLogo from '@/assets/logo/light_logo.png'
-import darkLogo from '@/assets/logo/dark_logo.png'
 import { cn } from '@/lib/utils'
 import { AppContext } from '@/providers/AppProvider'
 import { useSettings } from '@/providers/WorkspaceProvider'
 
-
 export function AppLogo({ size = 130, width, height, link = '/', className, border = true }) {
-
     const { theme } = useContext(AppContext)
     const { settings } = useSettings()
-    const [logo, setLogo] = useState(lightLogo)
+    const [hasError, setHasError] = useState(false)
 
-    useEffect(() => {
-        // Priority 1: Theme-specific custom logo from settings
-        if (theme === 'dark' && (settings?.branding?.logoDarkUrl || settings?.branding?.darkLogoUrl)) {
-            setLogo(settings.branding.logoDarkUrl || settings.branding.darkLogoUrl)
-            return
+    // Resolve custom logo URL from DB settings
+    const logoUrl = useMemo(() => {
+        const branding = settings?.branding || {}
+
+        // Priority 1: Theme-specific logo from DB
+        if (theme === 'dark') {
+            const dark = branding.logoDarkUrl || branding.darkLogoUrl
+            if (dark && typeof dark === 'string' && dark.trim() !== '') {
+                return dark.trim()
+            }
+        } else {
+            const light = branding.logoLightUrl || branding.lightLogoUrl
+            if (light && typeof light === 'string' && light.trim() !== '') {
+                return light.trim()
+            }
         }
-        if (theme === 'light' && (settings?.branding?.logoLightUrl || settings?.branding?.lightLogoUrl)) {
-            setLogo(settings.branding.logoLightUrl || settings.branding.lightLogoUrl)
-            return
+
+        // Priority 2: Generic logo from DB
+        if (branding.logoUrl && typeof branding.logoUrl === 'string' && branding.logoUrl.trim() !== '') {
+            return branding.logoUrl.trim()
         }
 
-        // Priority 2: Generic custom logo from settings
-        if (settings?.branding?.logoUrl) {
-            setLogo(settings.branding.logoUrl)
-            return
-        }
-
-        // Priority 3: Hardcoded theme-based logo
-        theme === 'dark' ? setLogo(darkLogo) : setLogo(lightLogo)
-
+        // No logo configured in DB
+        return null
     }, [theme, settings])
+
+    // Reset error state when logoUrl changes
+    useEffect(() => {
+        setHasError(false)
+    }, [logoUrl])
 
     const logoWidth = Number(width || size || 130)
     const logoHeight = Number(height || size || 130)
-    const isRemote = typeof logo === 'string' && (logo.startsWith('http') || logo.startsWith('//'))
 
     const content = (
         <div
-            className={cn("transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md shrink-0", className)}
+            className={cn(
+                "transition-all duration-300 ease-in-out overflow-hidden flex items-center justify-center p-1 rounded-md shrink-0 select-none",
+                className
+            )}
         >
-            {isRemote ? (
+            {logoUrl && !hasError ? (
                 <img
-                    src={logo}
-                    alt='logo'
+                    src={logoUrl}
+                    alt="Devlomatix"
                     className="object-contain"
                     style={{
                         maxWidth: `${logoWidth}px`,
                         maxHeight: `${logoHeight}px`,
-                        width: `${logoWidth}px`,
+                        width: width ? `${width}px` : 'auto',
                         height: height ? `${height}px` : 'auto'
                     }}
-                    onError={() => setLogo(theme === 'dark' ? darkLogo : lightLogo)}
+                    onError={() => setHasError(true)}
                 />
             ) : (
-                <Image
-                    src={logo}
-                    alt='logo'
-                    width={logoWidth}
-                    height={logoHeight}
-                    className="object-contain"
+                <span
+                    className="font-black tracking-tight text-foreground whitespace-nowrap text-lg sm:text-xl"
                     style={{
-                        width: `${logoWidth}px`,
-                        height: height ? `${height}px` : 'auto',
-                        maxHeight: `${logoHeight}px`
+                        fontSize: height ? `${Math.max(16, Math.min(Math.round(height * 0.52), 24))}px` : undefined,
+                        lineHeight: 1.2
                     }}
-                    priority={false}
-                />
+                >
+                    Devlomatix
+                </span>
             )}
         </div>
     )
 
     if (link) {
         return (
-            <Link href={link} className="inline-flex shrink-0">
+            <Link href={link} className="inline-flex shrink-0 items-center">
                 {content}
             </Link>
         )

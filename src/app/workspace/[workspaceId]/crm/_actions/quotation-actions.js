@@ -190,12 +190,12 @@ export async function saveCrmQuotationAction(workspaceId, payload) {
             data = {}
         } = payload;
 
-        // Fetch workspace business settings
+        // Fetch universal business settings strictly from global key
         let enrichedData = { ...(data || {}) };
-        const wsSettings = await prisma.appSettings.findUnique({
-            where: { key: workspaceId }
-        }).catch(() => null);
-        const business = wsSettings?.general?.business || {};
+        const globalSettings = await prisma.appSettings.findUnique({ where: { key: 'global' } }).catch(() => null);
+        const business = (globalSettings?.general && typeof globalSettings.general === 'object')
+            ? (globalSettings.general.business || {})
+            : {};
 
         // Auto-generate quotation number if creating new and not provided
         let finalNumber = quotationNumber?.trim();

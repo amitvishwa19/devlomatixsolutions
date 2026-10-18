@@ -81,11 +81,11 @@ export async function POST(request) {
       if (userWorkspace) targetWorkspaceId = userWorkspace.id;
     }
 
-    if (targetWorkspaceId && (!enrichedData.company || Object.keys(enrichedData.company).length <= 1)) {
-      const wsSettings = await db.appSettings.findUnique({
-        where: { key: targetWorkspaceId }
-      }).catch(() => null);
-      const business = wsSettings?.general?.business || {};
+    if (!enrichedData.company || Object.keys(enrichedData.company).length <= 1) {
+      const globalSettings = await db.appSettings.findUnique({ where: { key: 'global' } }).catch(() => null);
+      const business = (globalSettings?.general && typeof globalSettings.general === 'object')
+        ? (globalSettings.general.business || {})
+        : {};
 
       if (Object.keys(business).length > 0) {
         const formattedAddr = [
