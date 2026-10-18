@@ -23,6 +23,46 @@ export async function GET(request) {
         const skip = (page - 1) * limit;
         const scope = searchParams.get("scope") || "ALL";
 
+        // Auto-heal missing ContactShare relational entries for contacts previously shared via moduleAccess
+        try {
+            const unhealedContacts = await prisma.contact.findMany({
+                where: {
+                    moduleAccess: { not: null },
+                    sharedWith: { none: {} }
+                },
+                select: { id: true, moduleAccess: true },
+                take: 25
+            });
+
+            for (const c of unhealedContacts) {
+                let ma = c.moduleAccess;
+                if (typeof ma === 'string') {
+                    try { ma = JSON.parse(ma); } catch (e) {}
+                }
+                if (Array.isArray(ma?.sharedWith) && ma.sharedWith.length > 0) {
+                    for (const target of ma.sharedWith) {
+                        let uid = target;
+                        if (typeof target === 'string' && target.includes('@')) {
+                            const u = await prisma.user.findFirst({
+                                where: { email: { equals: target.trim(), mode: 'insensitive' } },
+                                select: { id: true }
+                            });
+                            uid = u?.id;
+                        }
+                        if (uid) {
+                            await prisma.contactShare.upsert({
+                                where: { contactId_sharedWithUserId: { contactId: c.id, sharedWithUserId: uid } },
+                                create: { contactId: c.id, sharedWithUserId: uid },
+                                update: {}
+                            }).catch(() => {});
+                        }
+                    }
+                }
+            }
+        } catch (healErr) {
+            // Silently continue
+        }
+
         // Definition of a CRM Contact (excludes raw non-CRM data like GOOGLE_PLACE scrapes)
         const crmDefinition = {
             type: { not: 'GOOGLE_PLACE' },
@@ -38,35 +78,44 @@ export async function GET(request) {
         let accessCondition;
         if (scope === 'OWNED') {
             accessCondition = {
+                workspaceId: auth.workspaceId,
                 userId: auth.userId,
                 ...crmDefinition
             };
         } else if (scope === 'SHARED') {
             accessCondition = {
                 sharedWith: {
-                    some: { sharedWithUserId: auth.userId }
+                    some: {
+                        OR: [
+                            { sharedWithUserId: auth.userId },
+                            { sharedWith: { email: auth.user.email } }
+                        ]
+                    }
                 }
             };
         } else {
             accessCondition = {
                 OR: [
                     {
-                        userId: auth.userId,
+                        workspaceId: auth.workspaceId,
+                        ...(auth.user?.role === 'ADMIN' || auth.user?.role === 'SUPER_ADMIN' ? {} : { userId: auth.userId }),
                         ...crmDefinition
                     },
                     {
                         sharedWith: {
-                            some: { sharedWithUserId: auth.userId }
+                            some: {
+                                OR: [
+                                    { sharedWithUserId: auth.userId },
+                                    { sharedWith: { email: auth.user.email } }
+                                ]
+                            }
                         }
                     }
                 ]
             };
         }
 
-        const andConditions = [
-            { workspaceId: auth.workspaceId },
-            accessCondition
-        ];
+        const andConditions = [accessCondition];
 
         if (type && type !== 'ALL') andConditions.push({ type });
         if (tag && tag !== 'ALL') andConditions.push({ tags: { has: tag } });
@@ -121,7 +170,7 @@ export async function GET(request) {
 
 /**
  * POST /api/v5/crm/contacts
- * Body: { name, phone, email, title, type, accountId, address, tags, autoTriggerWorkflow }
+ * Body: { name, phone, email, title, type, accountId, address, tags, autoTriggerWorkflow, moduleAccess, sharedWith }
  */
 export async function POST(request) {
     try {
@@ -138,7 +187,9 @@ export async function POST(request) {
             accountId,
             address,
             tags = [],
-            autoTriggerWorkflow = true
+            autoTriggerWorkflow = true,
+            moduleAccess,
+            sharedWith
         } = body;
 
         if (!name?.trim() || !phone?.trim()) {
@@ -159,6 +210,22 @@ export async function POST(request) {
             return apiError(`A contact with phone number ${cleanPhone} already exists (${existing.name}).`, 409, { existingContactId: existing.id });
         }
 
+        let normalizedModuleAccess = moduleAccess;
+        if (typeof normalizedModuleAccess === 'string') {
+            try { normalizedModuleAccess = JSON.parse(normalizedModuleAccess); } catch (e) {}
+        }
+        if (!normalizedModuleAccess || typeof normalizedModuleAccess !== 'object') {
+            normalizedModuleAccess = { modules: ['crm'], sharedWith: [] };
+        }
+
+        const sharedList = Array.isArray(sharedWith)
+            ? sharedWith
+            : Array.isArray(normalizedModuleAccess.sharedWith)
+                ? normalizedModuleAccess.sharedWith
+                : [];
+
+        normalizedModuleAccess.sharedWith = sharedList;
+
         const contact = await prisma.contact.create({
             data: {
                 workspaceId: auth.workspaceId,
@@ -170,10 +237,41 @@ export async function POST(request) {
                 type,
                 accountId: accountId || null,
                 address: address || null,
-                tags: Array.isArray(tags) ? tags : []
+                tags: Array.isArray(tags) ? tags : [],
+                moduleAccess: normalizedModuleAccess
             },
             include: { account: true }
         });
+
+        // Sync initial sharedWith users
+        if (sharedList.length > 0) {
+            for (const item of sharedList) {
+                if (!item || typeof item !== 'string') continue;
+                let uid = item;
+                if (item.includes('@')) {
+                    const u = await prisma.user.findFirst({
+                        where: { email: { equals: item.trim(), mode: 'insensitive' } },
+                        select: { id: true }
+                    });
+                    uid = u?.id;
+                }
+                if (uid) {
+                    await prisma.contactShare.upsert({
+                        where: {
+                            contactId_sharedWithUserId: {
+                                contactId: contact.id,
+                                sharedWithUserId: uid
+                            }
+                        },
+                        update: {},
+                        create: {
+                            contactId: contact.id,
+                            sharedWithUserId: uid
+                        }
+                    }).catch(() => {});
+                }
+            }
+        }
 
         // Record Activity Timeline
         await prisma.crmActivity.create({

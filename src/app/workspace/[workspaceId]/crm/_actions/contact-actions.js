@@ -16,19 +16,23 @@ export async function getCrmContactsAction(workspaceId, filters = {}) {
 
         const { search, type, accountId, tag, hasAtsCandidate, scope = 'ALL', moduleFilter = 'ALL' } = filters;
 
-        // In CRM, every contact MUST belong to the CRM module
+        // In CRM, every contact MUST belong to the CRM module (or be a default LEAD/CLIENT)
         const crmModuleCondition = {
             type: { not: 'GOOGLE_PLACE' },
-            moduleAccess: { path: ['modules'], array_contains: 'crm' }
+            OR: [
+                { moduleAccess: { path: ['modules'], array_contains: 'crm' } },
+                { type: { in: ['LEAD', 'CLIENT'] } }
+            ]
         };
 
         // Access scope condition:
-        // - OWNED: created/owned by user
-        // - SHARED: explicitly shared with user by someone else
-        // - ALL: owned by user OR shared with user
+        // - OWNED: created/owned by user in this workspace
+        // - SHARED: explicitly shared with user across workspaces
+        // - ALL: owned by user in workspace OR shared with user across workspaces
         let accessCondition;
         if (scope === 'OWNED') {
             accessCondition = {
+                workspaceId,
                 userId: currentUserId
             };
         } else if (scope === 'SHARED') {
@@ -39,14 +43,13 @@ export async function getCrmContactsAction(workspaceId, filters = {}) {
         } else {
             accessCondition = {
                 OR: [
-                    { userId: currentUserId },
+                    { workspaceId, userId: currentUserId },
                     { sharedWith: { some: { sharedWithUserId: currentUserId } } }
                 ]
             };
         }
 
         const andConditions = [
-            { workspaceId },
             crmModuleCondition,
             accessCondition
         ];

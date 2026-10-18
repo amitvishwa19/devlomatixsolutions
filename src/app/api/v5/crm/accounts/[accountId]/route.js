@@ -20,7 +20,7 @@ export async function GET(request, { params }) {
                     include: { stage: true, pipeline: true },
                     orderBy: { updatedAt: 'desc' }
                 },
-                crmActivities: {
+                activities: {
                     include: {
                         user: { select: { id: true, displayName: true, avatar: true } }
                     },

@@ -43,7 +43,7 @@ export async function GET(request) {
                         select: {
                             contacts: true,
                             deals: true,
-                            crmActivities: true
+                            activities: true
                         }
                     }
                 },

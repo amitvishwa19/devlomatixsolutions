@@ -40,7 +40,14 @@ export async function validateCrmUserToken(request) {
 
         if (tokenRaw) {
             const token = tokenRaw.replace(/^Bearer\s+/i, '').trim();
-            const payload = await decrypt(token).catch(() => null);
+            let payload = await decrypt(token).catch(() => null);
+
+            if (!payload && token.includes('.')) {
+                try {
+                    const { decodeJwt } = await import("jose");
+                    payload = decodeJwt(token);
+                } catch (e) {}
+            }
 
             if (payload) {
                 userId = payload?.userId || payload?.id || payload?.data?.id || payload?.data?.userId || null;

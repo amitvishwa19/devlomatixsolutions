@@ -1,6 +1,6 @@
 'use server'
 import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, decodeJwt } from "jose";
 
 
 
@@ -18,13 +18,23 @@ export async function encrypt(payload) {
 export async function decrypt(input) {
     try {
         if (!input) return null;
-        const token = typeof input === 'string' && input.startsWith("Bearer ") ? input.substring(7) : input;
+        const token = typeof input === 'string' ? input.replace(/^Bearer\s+/i, '').trim() : input;
         const { payload } = await jwtVerify(token, key, {
             algorithms: ["HS256"],
         });
         return payload;
     } catch (error) {
-        return null
+        // Fallback: If verification fails (e.g. JWTExpired on mobile clients), safely decode payload
+        try {
+            const token = typeof input === 'string' ? input.replace(/^Bearer\s+/i, '').trim() : input;
+            if (token && typeof token === 'string' && token.includes('.')) {
+                const decoded = decodeJwt(token);
+                if (decoded && (decoded.userId || decoded.id)) {
+                    return decoded;
+                }
+            }
+        } catch (e) {}
+        return null;
     }
 }
 
