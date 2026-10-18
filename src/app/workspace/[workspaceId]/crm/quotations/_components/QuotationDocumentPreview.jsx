@@ -105,20 +105,30 @@ export default function QuotationDocumentPreview({
     const rawCompany = details.company || {};
 
     const { settings } = useSettings?.() || {};
+    const business = settings?.business || {};
 
-    const companyName = rawCompany.name || settings?.branding?.appName || settings?.general?.name || "Devlomatix Solutions Pvt. Ltd.";
+    const companyName = rawCompany.name || business.legalName || business.tradeName || settings?.branding?.appName || settings?.general?.name || "Devlomatix Solutions Pvt. Ltd.";
     const companyLogo = rawCompany.logoUrl ||
         settings?.branding?.logoLightUrl ||
         settings?.branding?.lightLogoUrl ||
         settings?.branding?.logoUrl ||
         settings?.general?.imageUrl ||
         lightLogo;
-    const companyEmail = rawCompany.email || settings?.branding?.email || "sales@devlomatix.com";
-    const companyPhone = rawCompany.phone || settings?.branding?.phone || "+91 98765 43210";
-    const companyWebsite = rawCompany.website || "www.devlomatix.com";
-    const companyAddress = rawCompany.address || settings?.branding?.address || "Vadodara, Gujarat 390001, India";
-    const companyTaxId = rawCompany.taxId || "24AAAAA0000A1Z5";
-    const companyCin = rawCompany.cin || "U72900GJ2020PTC114589";
+    const companyEmail = rawCompany.email || business.billingEmail || business.email || settings?.branding?.email || "sales@devlomatix.com";
+    const companyPhone = rawCompany.phone || business.phone || business.mobile || settings?.branding?.phone || "+91 98765 43210";
+    const companyWebsite = rawCompany.website || business.website || "www.devlomatix.com";
+    const formattedBusinessAddress = [
+        business.addressLine1,
+        business.addressLine2,
+        business.city,
+        business.state,
+        business.pincode,
+        business.country
+    ].filter(Boolean).join(', ');
+    const companyAddress = rawCompany.address || formattedBusinessAddress || settings?.branding?.address || "Vadodara, Gujarat 390001, India";
+    const companyTaxId = rawCompany.taxId || (business.gstin ? (business.gstin.startsWith('GSTIN:') ? business.gstin : `GSTIN: ${business.gstin}`) : "24AAAAA0000A1Z5");
+    const companyCin = rawCompany.cin || business.cin || "U72900GJ2020PTC114589";
+    const companyPan = rawCompany.pan || business.pan || "";
 
     const company = {
         ...rawCompany,
@@ -129,7 +139,15 @@ export default function QuotationDocumentPreview({
         website: companyWebsite,
         address: companyAddress,
         taxId: companyTaxId,
-        cin: companyCin
+        cin: companyCin,
+        pan: companyPan,
+        bankName: rawCompany.bankName || business.bankName || "",
+        accountNumber: rawCompany.accountNumber || business.accountNumber || "",
+        accountHolder: rawCompany.accountHolder || business.accountHolder || companyName,
+        ifsc: rawCompany.ifsc || business.ifsc || "",
+        upiId: rawCompany.upiId || business.upiId || "",
+        signatoryName: rawCompany.signatoryName || business.signatoryName || "",
+        signatoryDesignation: rawCompany.signatoryDesignation || business.signatoryDesignation || "Director / Authorized Signatory"
     };
 
     const quotation = details.quotation || {};
@@ -880,15 +898,23 @@ export default function QuotationDocumentPreview({
                             </ol>
                         </div>
 
-                        {/* Column 2: PAYMENT TERMS */}
+                        {/* Column 2: PAYMENT TERMS & BANK DETAILS */}
                         <div>
                             <h4 className="font-bold text-[11px] uppercase text-[#0f172a] mb-2">
                                 PAYMENT TERMS
                             </h4>
-                            <ul className="list-disc list-inside space-y-1 text-[#475569]">
-                                <li>50% Advance on project confirmation.</li>
-                                <li>Payment to be made using the agreed payment method.</li>
-                            </ul>
+                            <p className="text-[#475569] mb-2 text-[10px]">
+                                {business.defaultPaymentTerms || "50% Advance on project confirmation, 50% upon delivery / milestone completion."}
+                            </p>
+                            {company.bankName && company.accountNumber && (
+                                <div className="mt-2.5 p-2 rounded bg-slate-50 border border-slate-200 text-[10px] space-y-0.5">
+                                    <p className="font-bold text-[#0f172a] mb-1 border-b border-slate-200 pb-0.5">Direct Bank Wire (NEFT/RTGS):</p>
+                                    <p><span className="text-[#64748b]">Bank:</span> <strong className="text-[#1e293b]">{company.bankName}</strong></p>
+                                    <p><span className="text-[#64748b]">A/C No:</span> <strong className="font-mono text-[#0f172a]">{company.accountNumber}</strong></p>
+                                    <p><span className="text-[#64748b]">IFSC:</span> <strong className="font-mono text-[#0f172a]">{company.ifsc}</strong></p>
+                                    {company.upiId && <p><span className="text-[#64748b]">UPI:</span> <strong className="font-mono text-[#0f172a]">{company.upiId}</strong></p>}
+                                </div>
+                            )}
                         </div>
 
                         {/* Column 3: NOTES & AUTHORIZED SIGNATURE */}

@@ -35,7 +35,9 @@ import {
     Send,
     ExternalLink,
     Briefcase,
-    Navigation
+    Navigation,
+    Eye,
+    Image as ImageIcon
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,6 +62,7 @@ import { toast } from 'sonner';
 import { getDcrRecordsAction, deleteDcrRecordAction } from '../_actions/dcr-actions';
 import DcrSheet from './_components/DcrSheet';
 import AiFollowupModal from './_components/AiFollowupModal';
+import DcrDetailModal from './_components/DcrDetailModal';
 import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
 
 const OUTCOME_CONFIG = {
@@ -113,6 +116,9 @@ export default function DcrPage() {
 
     const [isWaSheetOpen, setIsWaSheetOpen] = useState(false);
     const [selectedWaRecipient, setSelectedWaRecipient] = useState(null);
+
+    const [detailRecord, setDetailRecord] = useState(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     const fetchRecords = useCallback(async () => {
         if (!workspaceId) return;
@@ -609,6 +615,19 @@ export default function DcrPage() {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => {
+                                                setDetailRecord(record);
+                                                setIsDetailModalOpen(true);
+                                            }}
+                                            className="h-7 text-xs gap-1 border-primary/30 text-primary hover:bg-primary/10 px-2.5 font-medium"
+                                        >
+                                            <Eye className="w-3 h-3" />
+                                            <span>View Details</span>
+                                        </Button>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
                                                 setAiRecord(record);
                                                 setIsAiModalOpen(true);
                                             }}
@@ -625,6 +644,15 @@ export default function DcrPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        setDetailRecord(record);
+                                                        setIsDetailModalOpen(true);
+                                                    }}
+                                                    className="text-xs gap-2"
+                                                >
+                                                    <Eye className="w-3.5 h-3.5 text-muted-foreground" /> View Full Activity
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setEditingRecord(record);
@@ -648,11 +676,45 @@ export default function DcrPage() {
 
                                 {/* Middle Row: Discussion Points & Conversation Summary */}
                                 <div className="p-3 bg-muted/30 rounded-xl border border-border/60 text-xs text-foreground/90 leading-relaxed">
-                                    <div className="font-semibold text-primary mb-1 flex items-center gap-1.5">
-                                        <Briefcase className="w-3.5 h-3.5" />
-                                        <span>Purpose: {record.callPurpose || 'Sales Discussion'}</span>
+                                    <div className="font-semibold text-primary mb-1 flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5">
+                                            <Briefcase className="w-3.5 h-3.5" />
+                                            <span>Purpose: {record.callPurpose || 'Sales Discussion'}</span>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setDetailRecord(record);
+                                                setIsDetailModalOpen(true);
+                                            }}
+                                            className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                                        >
+                                            Full Activity Details →
+                                        </button>
                                     </div>
                                     <p className="whitespace-pre-line text-muted-foreground">{record.description}</p>
+
+                                    {/* Attached photos strip if present */}
+                                    {Array.isArray(record.images) && record.images.length > 0 && (
+                                        <div className="mt-2.5 pt-2 border-t border-border/40 flex items-center gap-2 overflow-x-auto">
+                                            <span className="text-[11px] font-semibold text-muted-foreground shrink-0 flex items-center gap-1">
+                                                <ImageIcon className="w-3 h-3 text-indigo-500" /> Photos:
+                                            </span>
+                                            {record.images.map((img, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setDetailRecord(record);
+                                                        setIsDetailModalOpen(true);
+                                                    }}
+                                                    className="w-10 h-10 rounded-lg overflow-hidden border border-border shrink-0 hover:border-primary transition-colors"
+                                                >
+                                                    <img src={img} alt="field visit" className="w-full h-full object-cover" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {record.objections && (
                                         <div className="mt-2 pt-2 border-t border-border/40 text-[11px] text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1.5">
@@ -722,6 +784,31 @@ export default function DcrPage() {
                 workspaceId={workspaceId}
                 recipient={selectedWaRecipient}
                 onSuccess={() => fetchRecords()}
+            />
+
+            {/* Full Activity Details Modal */}
+            <DcrDetailModal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                record={detailRecord}
+                onEdit={(rec) => {
+                    setEditingRecord(rec);
+                    setIsModalOpen(true);
+                }}
+                onDelete={handleDelete}
+                onOpenAi={(rec) => {
+                    setAiRecord(rec);
+                    setIsAiModalOpen(true);
+                }}
+                onOpenWhatsApp={(rec) => {
+                    setSelectedWaRecipient({
+                        name: rec.contactPerson || rec.clientName,
+                        phone: rec.phone,
+                        company: rec.clientName,
+                        contactId: rec.contactId
+                    });
+                    setIsWaSheetOpen(true);
+                }}
             />
         </div>
     );

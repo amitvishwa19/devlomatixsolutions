@@ -136,6 +136,7 @@ export async function GET(req, { params }) {
                 ...mergedBranding,
                 socialLinks: wsGeneral.socialLinks || glSocial.socialLinks || {}
             },
+            business: wsGeneral.business || glGeneral.business || {},
             security: {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
@@ -205,7 +206,7 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        const { general, branding, security, notifications, integrations, developer, advanced, privacy } = body;
+        const { general, branding, security, notifications, integrations, developer, advanced, privacy, business } = body;
 
         // Sync developer with integrations if provided
         const finalIntegrations = developer || integrations;
@@ -238,8 +239,23 @@ export async function PATCH(req, { params }) {
         }
 
         // 3. Update Workspace-Specific Settings (Row 2: key = workspaceId)
+        const currentWsSettings = await prisma.appSettings.findUnique({
+            where: { key: workspaceId }
+        }).catch(() => null);
+
+        const existingGeneral = (currentWsSettings?.general && typeof currentWsSettings.general === 'object') ? currentWsSettings.general : {};
+
+        let updatedGeneral = undefined;
+        if (general !== undefined || business !== undefined) {
+            updatedGeneral = {
+                ...existingGeneral,
+                ...(general || {}),
+                ...(business !== undefined ? { business } : {})
+            };
+        }
+
         const workspaceUpdateData = {
-            general: general || undefined,
+            general: updatedGeneral,
             security: security || undefined,
             notifications: notifications || undefined,
             integrations: finalIntegrations || undefined,
@@ -256,7 +272,7 @@ export async function PATCH(req, { params }) {
             where: { key: workspaceId },
             create: {
                 key: workspaceId,
-                general: general || {},
+                general: updatedGeneral || {},
                 security: security || {},
                 notifications: notifications || {},
                 integrations: finalIntegrations || {},

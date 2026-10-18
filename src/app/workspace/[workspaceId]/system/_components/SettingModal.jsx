@@ -26,8 +26,10 @@ import {
     Tag,
     MessageSquare,
     DatabaseBackup,
+    Building2,
 } from 'lucide-react';
 import { GeneralSettings } from './GeneralSettings';
+import { BusinessDetailsSettings } from './BusinessDetailsSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { NotificationSettings } from './NotificationSettings';
 import { IntegrationSettings } from './IntegrationSettings';
@@ -43,6 +45,7 @@ import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
     { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
+    { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
     { id: 'whatsapp', label: 'WhatsApp Cloud API', icon: MessageSquare, color: 'text-emerald-500' },
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
@@ -56,6 +59,7 @@ const settingTabs = [
 
 const settingDescriptions = {
     general: 'Configure workspace identity, branding, and social presence.',
+    business: 'Manage registered legal identity, GSTIN, PAN, office addresses, bank coordinates, and quotation presets.',
     whatsapp: 'Configure Meta WhatsApp Cloud API credentials, default production sender, and webhooks.',
     security: 'Manage authentication policies and access controls.',
     notifications: 'Configure alert channels and notification preferences.',
@@ -258,6 +262,7 @@ export default function SettingModal({ open, onClose }) {
                                     className="space-y-3 pb-8"
                                 >
                                     {activeTab === 'general' && <GeneralSettings />}
+                                    {activeTab === 'business' && <BusinessDetailsSettings />}
                                     {activeTab === 'whatsapp' && <WhatsAppCloudSettings />}
                                     {activeTab === 'security' && <SecuritySettings />}
                                     {activeTab === 'notifications' && <NotificationSettings />}

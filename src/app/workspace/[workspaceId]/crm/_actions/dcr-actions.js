@@ -405,14 +405,20 @@ export async function updateDcrRecordAction(workspaceId, dcrId, data) {
             nextFollowUpAction: data.nextFollowUpAction !== undefined ? data.nextFollowUpAction : existingMeta.nextFollowUpAction,
             dealValue: data.dealValue !== undefined ? parseFloat(data.dealValue) : existingMeta.dealValue,
             location: data.location !== undefined ? data.location : existingMeta.location,
+            geolocation: data.geolocation !== undefined ? data.geolocation : existingMeta.geolocation,
+            images: data.images !== undefined ? (Array.isArray(data.images) ? data.images : (data.images ? [data.images] : [])) : (existingMeta.images || []),
             durationMinutes: data.durationMinutes !== undefined ? parseInt(data.durationMinutes) : existingMeta.durationMinutes,
-            objections: data.objections !== undefined ? data.objections : existingMeta.objections
+            objections: data.objections !== undefined ? data.objections : existingMeta.objections,
+            updatedAt: new Date().toISOString()
         };
+
+        const effectiveCallType = data.callType || existingMeta.callType || 'PHONE_CALL';
 
         const updated = await prisma.crmActivity.update({
             where: { id: dcrId },
             data: {
-                title: data.clientName || data.callPurpose ? `${data.callType === 'FIELD_VISIT' ? '🚗 Field Visit' : '📞 Call'}: ${data.clientName || existingMeta.clientName} - ${data.callPurpose || existingMeta.callPurpose}` : undefined,
+                type: effectiveCallType === 'FIELD_VISIT' ? 'FIELD_VISIT' : (effectiveCallType === 'WHATSAPP' ? 'WHATSAPP_MSG' : 'CALL'),
+                title: data.clientName || data.callPurpose || data.callType ? `${effectiveCallType === 'FIELD_VISIT' ? '🚗 Field Visit' : (effectiveCallType === 'WHATSAPP' ? '💬 WhatsApp' : '📞 Call')}: ${data.clientName || existingMeta.clientName || 'Client'} - ${data.callPurpose || existingMeta.callPurpose || 'Discussion'}` : undefined,
                 description: data.conversation !== undefined ? data.conversation.trim() : undefined,
                 metadata: updatedMeta
             }

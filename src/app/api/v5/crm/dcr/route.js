@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { validateCrmUserToken } from "../_lib/auth";
 import { apiSuccess, apiError } from "../_lib/response";
-import { getDcrRecordsAction, createDcrRecordAction } from "@/app/workspace/[workspaceId]/crm/_actions/dcr-actions";
+import {
+    getDcrRecordsAction,
+    createDcrRecordAction,
+    updateDcrRecordAction,
+    deleteDcrRecordAction
+} from "@/app/workspace/[workspaceId]/crm/_actions/dcr-actions";
 
 /**
  * GET /api/v5/crm/dcr
@@ -59,6 +64,16 @@ export async function POST(request) {
         }
 
         const body = await request.json();
+
+        // Normalize latitude / longitude to geolocation object if passed flat
+        if ((body.latitude !== undefined || body.longitude !== undefined) && !body.geolocation) {
+            body.geolocation = {
+                latitude: body.latitude,
+                longitude: body.longitude,
+                capturedAt: new Date().toISOString()
+            };
+        }
+
         const result = await createDcrRecordAction(auth.workspaceId, body);
 
         if (!result.success) {
@@ -68,5 +83,68 @@ export async function POST(request) {
         return apiSuccess(result.data, 201);
     } catch (err) {
         return apiError(err.message || "Failed to create DCR record", 500);
+    }
+}
+
+/**
+ * PATCH /api/v5/crm/dcr
+ * Update a DCR record (pass id in body or query param ?id=...)
+ */
+export async function PATCH(request) {
+    try {
+        const auth = await validateCrmUserToken(request);
+        if (!auth.authenticated) return apiError(auth.error, auth.status || 401);
+
+        const { searchParams } = new URL(request.url);
+        const body = await request.json();
+        const dcrId = body.id || body.dcrId || searchParams.get("id");
+
+        if (!dcrId) return apiError("Record ID is required for update", 400);
+
+        if ((body.latitude !== undefined || body.longitude !== undefined) && !body.geolocation) {
+            body.geolocation = {
+                latitude: body.latitude,
+                longitude: body.longitude,
+                capturedAt: new Date().toISOString()
+            };
+        }
+
+        const result = await updateDcrRecordAction(auth.workspaceId, dcrId, body);
+        if (!result.success) {
+            return apiError(result.error || "Failed to update DCR record", 400);
+        }
+
+        return apiSuccess(result.data, { message: "DCR record updated successfully" });
+    } catch (err) {
+        return apiError(err.message || "Failed to update DCR record", 500);
+    }
+}
+
+/**
+ * DELETE /api/v5/crm/dcr
+ * Delete a DCR record (pass id in body or query param ?id=...)
+ */
+export async function DELETE(request) {
+    try {
+        const auth = await validateCrmUserToken(request);
+        if (!auth.authenticated) return apiError(auth.error, auth.status || 401);
+
+        const { searchParams } = new URL(request.url);
+        let dcrId = searchParams.get("id");
+        if (!dcrId) {
+            const body = await request.json().catch(() => ({}));
+            dcrId = body?.id || body?.dcrId;
+        }
+
+        if (!dcrId) return apiError("Record ID is required for deletion", 400);
+
+        const result = await deleteDcrRecordAction(auth.workspaceId, dcrId);
+        if (!result.success) {
+            return apiError(result.error || "Failed to delete DCR record", 400);
+        }
+
+        return apiSuccess({ id: dcrId }, { message: "DCR record deleted successfully" });
+    } catch (err) {
+        return apiError(err.message || "Failed to delete DCR record", 500);
     }
 }

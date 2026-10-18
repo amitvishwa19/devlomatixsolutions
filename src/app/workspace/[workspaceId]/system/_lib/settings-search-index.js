@@ -12,6 +12,15 @@ export const SETTINGS_SEARCH_INDEX = [
     { tabId: 'general', title: 'Workspace Logo', description: 'Upload company logo or icon', keywords: ['logo', 'icon', 'image', 'avatar', 'upload', 'photo'] },
     { tabId: 'general', title: 'Social Media Links', description: 'Facebook, Twitter/X, Instagram, LinkedIn, YouTube, GitHub', keywords: ['social', 'facebook', 'twitter', 'x', 'instagram', 'linkedin', 'youtube', 'github', 'links'] },
 
+    // Business Details
+    { tabId: 'business', title: 'Legal Entity & Trade Name', description: 'Registered company name, trade name, and entity constitution', keywords: ['business', 'company', 'legal name', 'trade name', 'entity', 'cin', 'registration number', 'company name', 'business details', 'profile'] },
+    { tabId: 'business', title: 'GST Number (GSTIN) & Tax IDs', description: '15-digit GSTIN, PAN, TAN, MSME Udyam, and LUT reference', keywords: ['gst', 'gstin', 'gst number', 'tax', 'tax id', 'pan', 'pan number', 'tan', 'msme', 'udyam', 'lut', 'state code'] },
+    { tabId: 'business', title: 'Registered Office Address', description: 'Headquarters street address, city, state, postal PIN code, and country', keywords: ['address', 'office address', 'office', 'location', 'registered office', 'city', 'state', 'pincode', 'pin code', 'zip', 'country', 'headquarters'] },
+    { tabId: 'business', title: 'Operating & Dispatch Address', description: 'Branch, facility, or warehouse operating address', keywords: ['operating address', 'dispatch address', 'branch address', 'warehouse', 'facility', 'secondary address'] },
+    { tabId: 'business', title: 'Official Email & Billing Contacts', description: 'Corporate email, accounts email, phone desk, mobile, and website', keywords: ['email', 'billing email', 'official email', 'phone', 'telephone', 'mobile', 'whatsapp', 'website', 'contact', 'communication'] },
+    { tabId: 'business', title: 'Bank Account & Payout Coordinates', description: 'Bank name, account number, beneficiary, IFSC code, and UPI ID', keywords: ['bank', 'bank account', 'account number', 'ifsc', 'ifsc code', 'upi', 'upi id', 'beneficiary', 'payout', 'wire', 'neft', 'rtgs', 'payment method'] },
+    { tabId: 'business', title: 'Quotation & Invoice Document Presets', description: 'Quotation/Invoice prefix, payment terms, jurisdiction, and authorized signature', keywords: ['quotation prefix', 'invoice prefix', 'payment terms', 'terms', 'conditions', 'signatory', 'authorized signature', 'jurisdiction', 'preset'] },
+
     // WhatsApp Cloud API
     { tabId: 'whatsapp', title: 'WhatsApp Cloud API', description: 'Configure Meta WhatsApp Cloud API credentials and default production sender', keywords: ['whatsapp', 'meta cloud', 'cloud api', 'waba', 'phone number id', 'access token', 'meta', 'whatsapp credentials', 'default whatsapp'] },
     { tabId: 'whatsapp', title: 'Phone Number ID & WABA ID', description: 'Meta WhatsApp Business Account identifiers', keywords: ['phone number id', 'waba id', 'waba', 'phone id', 'meta id', 'business account'] },

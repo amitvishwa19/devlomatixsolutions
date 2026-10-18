@@ -173,6 +173,7 @@ export default function DcrSheet({
                 geolocation: editRecord.metadata?.geolocation || null,
                 durationMinutes: editRecord.durationMinutes || 15,
                 objections: editRecord.objections || '',
+                images: Array.isArray(editRecord.images) ? editRecord.images : (editRecord.rawMetadata?.images || []),
                 createTask: false,
                 callDate: editRecord.createdAt ? getLocalDateTimeString(editRecord.createdAt) : getLocalDateTimeString()
             });

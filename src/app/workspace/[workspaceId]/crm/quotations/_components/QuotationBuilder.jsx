@@ -114,11 +114,13 @@ export default function QuotationBuilder({
     );
     const [companyTaxId, setCompanyTaxId] = useState(initialData?.data?.company?.taxId || 'GSTIN: 24AAAAA0000A1Z5');
 
-    // Sync branding from workspace settings for new quotations
+    // Sync business & branding from workspace settings for new quotations
     useEffect(() => {
         if (!initialData?.id && settings) {
-            if (settings.branding?.appName && companyName === 'Devlomatix Solutions') {
-                setCompanyName(settings.branding.appName);
+            const business = settings.business || {};
+            const resolvedName = business.legalName || business.tradeName || settings.branding?.appName;
+            if (resolvedName && (companyName === 'Devlomatix Solutions' || !companyName)) {
+                setCompanyName(resolvedName);
             }
             const logo = settings.branding?.logoLightUrl ||
                 settings.branding?.lightLogoUrl ||
@@ -126,6 +128,32 @@ export default function QuotationBuilder({
                 settings.general?.imageUrl;
             if (logo && !companyLogo) {
                 setCompanyLogo(logo);
+            }
+            if (business.email || settings.branding?.email) {
+                setCompanyEmail(business.email || business.billingEmail || settings.branding?.email);
+            }
+            if (business.phone || settings.branding?.phone) {
+                setCompanyPhone(business.phone || business.mobile || settings.branding?.phone);
+            }
+            const formattedAddr = [
+                business.addressLine1,
+                business.addressLine2,
+                business.city,
+                business.state,
+                business.pincode,
+                business.country
+            ].filter(Boolean).join(', ');
+            if (formattedAddr && (companyAddress === 'Vadodara, Gujarat, India' || !companyAddress)) {
+                setCompanyAddress(formattedAddr);
+            }
+            if (business.gstin && (companyTaxId === 'GSTIN: 24AAAAA0000A1Z5' || !companyTaxId)) {
+                setCompanyTaxId(business.gstin.startsWith('GSTIN:') ? business.gstin : `GSTIN: ${business.gstin}`);
+            }
+            if (business.defaultTerms && terms === DEFAULT_TERMS) {
+                setTerms(business.defaultTerms);
+            }
+            if (business.defaultNotes && notes === DEFAULT_NOTES) {
+                setNotes(business.defaultNotes);
             }
         }
     }, [settings, initialData]);

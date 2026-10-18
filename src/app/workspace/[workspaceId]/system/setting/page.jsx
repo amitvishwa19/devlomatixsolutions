@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { WorkspaceProvider, useSettings } from '@/providers/WorkspaceProvider';
 import { GeneralSettings } from './_components/GeneralSettings';
+import { BusinessDetailsSettings } from './_components/BusinessDetailsSettings';
 import { SecuritySettings } from './_components/SecuritySettings';
 import { NotificationSettings } from './_components/NotificationSettings';
 import { IntegrationSettings } from './_components/IntegrationSettings';
@@ -14,6 +15,7 @@ import { SettingContentSkeleton } from './_components/SettingSkeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings,
+  Building2,
   Shield,
   Bell,
   AlertTriangle,
@@ -29,6 +31,7 @@ import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
   { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
+  { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
   { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
   { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
   { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
@@ -39,6 +42,7 @@ const settingTabs = [
 
 const settingDescriptions = {
   general: 'Workspace identity, branding, and social presence.',
+  business: 'Registered corporate identity, GSTIN, PAN, office address, and banking coordinates.',
   security: 'Authentication policies and access controls.',
   notifications: 'Alert channels and notification preferences.',
   integrations: 'External services, webhooks, and APIs.',
@@ -237,6 +241,7 @@ function SettingPageContent() {
                 {/* Content */}
                 <div>
                   {activeTab === 'general' && <GeneralSettings />}
+                  {activeTab === 'business' && <BusinessDetailsSettings />}
                   {activeTab === 'security' && <SecuritySettings />}
                   {activeTab === 'notifications' && <NotificationSettings />}
                   {activeTab === 'integrations' && <IntegrationSettings />}
