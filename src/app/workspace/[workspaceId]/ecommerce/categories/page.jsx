@@ -22,8 +22,10 @@ import {
     ChevronDown,
     FolderTree,
     CornerDownRight,
-    MoreVertical
+    MoreVertical,
+    Network
 } from 'lucide-react';
+import { CategoryFlowCanvas } from './_components/CategoryFlowCanvas';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +46,7 @@ export default function EcommerceCategoryPage() {
     const [stores, setStores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const [viewMode, setViewMode] = useState('table'); // 'table' | 'flow'
     const [expandedCategories, setExpandedCategories] = useState({});
 
     // Modals state
@@ -247,12 +250,40 @@ export default function EcommerceCategoryPage() {
                         Define multi-level organizational structures for your workspace assets.
                     </p>
                 </div>
-                <div className="flex gap-3 relative z-10">
+                <div className="flex flex-wrap items-center gap-3 relative z-10">
+                    {/* View Switcher Toggle */}
+                    <div className="flex items-center p-1 rounded-lg bg-card/60 border border-border/50 shadow-inner">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={viewMode === 'table' ? 'default' : 'ghost'}
+                            onClick={() => setViewMode('table')}
+                            className={`h-8 text-xs font-semibold gap-1.5 rounded-md transition-all ${
+                                viewMode === 'table' ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <LayoutGrid className="w-3.5 h-3.5" />
+                            Table View
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant={viewMode === 'flow' ? 'default' : 'ghost'}
+                            onClick={() => setViewMode('flow')}
+                            className={`h-8 text-xs font-semibold gap-1.5 rounded-md transition-all ${
+                                viewMode === 'flow' ? 'shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            <Network className="w-3.5 h-3.5 text-primary" />
+                            Flow View
+                        </Button>
+                    </div>
+
                     <Button
                         onClick={() => { setSelectedCategory(null); setDefaultParentId(null); setModalOpen(true); }}
-                        className='bg-primary hover:bg-primary/90  rounded-md  px-8 shadow-lg  transition-all active:scale-95'
+                        className='bg-primary hover:bg-primary/90 rounded-md px-6 shadow-lg transition-all active:scale-95 text-xs font-semibold'
                     >
-                        <Plus className="w-5 h-5 " /> New Hierarchy
+                        <Plus className="w-4 h-4 mr-1.5" /> New Hierarchy
                     </Button>
                 </div>
             </div>
@@ -276,58 +307,81 @@ export default function EcommerceCategoryPage() {
                 </div>
             </div>
 
-            {/* Categories List */}
-            <div className="bg-card/30 backdrop-blur-xl rounded-md border border-border/40 shadow-2xl shadow-black/10 overflow-hidden mt-6">
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center py-40 space-y-6">
+            {/* Categories Content: Flow View or Table View */}
+            {viewMode === 'flow' ? (
+                loading ? (
+                    <div className="flex flex-col items-center justify-center py-40 space-y-6 bg-card/30 rounded-xl border border-border/40">
                         <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin shadow-lg shadow-primary/20" />
-                        <p className="text-[10px]     text-muted-foreground   animate-pulse">Syncing Hierarchy...</p>
-                    </div>
-                ) : filteredTree.length === 0 ? (
-                    <div className="text-center py-32 px-6 flex flex-col items-center justify-center space-y-6">
-                        <div className="w-20 h-20 bg-muted/20 rounded-md flex items-center justify-center border border-border/20 shadow-inner group">
-                            <Tags className="w-10 h-10 text-muted-foreground/30 group-hover:scale-110 transition-transform" />
-                        </div>
-                        <div className="space-y-2">
-                            <h3 className="text-xl font-bold text-foreground">
-                                {search ? `No matches for "${search}"` : "Hierarchy is Empty"}
-                            </h3>
-                            <p className="text-[10px]          text-muted-foreground opacity-40">
-                                {search ? "Adjust your search parameters and try again." : "Start by creating your first primary category."}
-                            </p>
-                        </div>
+                        <p className="text-[10px] text-muted-foreground animate-pulse font-mono">Assembling Flow Canvas...</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-border/20 bg-muted/10">
-                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Meta Identity</th>
-                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Identifier</th>
-                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Registry Schema</th>
-                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-center">Products</th>
-                                    <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-right pr-12">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border/10 text-xs">
-                                {filteredTree.map((category) => (
-                                    <Fragment key={category.id}>
-                                        {renderCategoryRow(category)}
-                                        {expandedCategories[category.id] && category.children?.map(child =>
-                                            <Fragment key={child.id}>
-                                                {renderCategoryRow(child, true)}
-                                                {expandedCategories[child.id] && child.children?.map(grandChild =>
-                                                    renderCategoryRow(grandChild, true, true)
-                                                )}
-                                            </Fragment>
-                                        )}
-                                    </Fragment>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                    <CategoryFlowCanvas
+                        categories={categories}
+                        stores={stores}
+                        searchQuery={search}
+                        onAddCategory={(storeId) => {
+                            setSelectedCategory(null);
+                            setDefaultParentId(null);
+                            setModalOpen(true);
+                        }}
+                        onAddSubcategory={handleCreateSubCategory}
+                        onEditCategory={handleEdit}
+                        onDeleteCategory={handleDeleteClick}
+                    />
+                )
+            ) : (
+                <div className="bg-card/30 backdrop-blur-xl rounded-md border border-border/40 shadow-2xl shadow-black/10 overflow-hidden mt-6">
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center py-40 space-y-6">
+                            <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin shadow-lg shadow-primary/20" />
+                            <p className="text-[10px]     text-muted-foreground   animate-pulse">Syncing Hierarchy...</p>
+                        </div>
+                    ) : filteredTree.length === 0 ? (
+                        <div className="text-center py-32 px-6 flex flex-col items-center justify-center space-y-6">
+                            <div className="w-20 h-20 bg-muted/20 rounded-md flex items-center justify-center border border-border/20 shadow-inner group">
+                                <Tags className="w-10 h-10 text-muted-foreground/30 group-hover:scale-110 transition-transform" />
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-foreground">
+                                    {search ? `No matches for "${search}"` : "Hierarchy is Empty"}
+                                </h3>
+                                <p className="text-[10px]          text-muted-foreground opacity-40">
+                                    {search ? "Adjust your search parameters and try again." : "Start by creating your first primary category."}
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-border/20 bg-muted/10">
+                                        <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Meta Identity</th>
+                                        <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Identifier</th>
+                                        <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap">Registry Schema</th>
+                                        <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-center">Products</th>
+                                        <th className="px-8 py-6 text-sm text-muted-foreground  whitespace-nowrap text-right pr-12">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/10 text-xs">
+                                    {filteredTree.map((category) => (
+                                        <Fragment key={category.id}>
+                                            {renderCategoryRow(category)}
+                                            {expandedCategories[category.id] && category.children?.map(child =>
+                                                <Fragment key={child.id}>
+                                                    {renderCategoryRow(child, true)}
+                                                    {expandedCategories[child.id] && child.children?.map(grandChild =>
+                                                        renderCategoryRow(grandChild, true, true)
+                                                    )}
+                                                </Fragment>
+                                            )}
+                                        </Fragment>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            )}
 
             <CategoryModal
                 isOpen={modalOpen}
