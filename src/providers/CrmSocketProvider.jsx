@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import { useSession } from 'next-auth/react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 
+import { useSettings } from '@/providers/WorkspaceProvider';
 import { WebRtcClient } from '@/lib/webrtc/webrtc-client';
 import IncomingCallDialog from '@/app/workspace/[workspaceId]/crm/_components/call/IncomingCallDialog';
 import ActiveCallModal from '@/app/workspace/[workspaceId]/crm/_components/call/ActiveCallModal';
@@ -13,7 +14,31 @@ import PostCallSummaryDialog from '@/app/workspace/[workspaceId]/crm/_components
 
 const CrmSocketContext = createContext(null);
 
-const getSocketUrl = () => {
+export const resolveSocketUrl = (customConfig) => {
+  let config = customConfig;
+  if (!config && typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('devlomatix_socket_config');
+      if (cached) config = JSON.parse(cached);
+    } catch (_) {}
+  }
+
+  if (config) {
+    const devUrl = config.devUrl ? String(config.devUrl).trim().replace(/\/+$/, '') : '';
+    const prodUrl = config.prodUrl ? String(config.prodUrl).trim().replace(/\/+$/, '') : '';
+    const mode = config.environmentMode || 'auto';
+
+    if (mode === 'development' && devUrl) return devUrl;
+    if (mode === 'production' && prodUrl) return prodUrl;
+
+    if (mode === 'auto') {
+      const isLocalHost = typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (isLocalHost && devUrl) return devUrl;
+      if (!isLocalHost && prodUrl) return prodUrl;
+    }
+  }
+
   const envUrl =
     process.env.NEXT_PUBLIC_SOCKET_SERVER ||
     process.env.NEXT_PUBLIC_SOCKET_SERVER_URL ||
@@ -21,13 +46,15 @@ const getSocketUrl = () => {
     process.env.NEXT_PUBLIC_SOCKET_URL;
 
   if (envUrl) {
-    return envUrl.replace(/\/+$/, '');
+    return envUrl.trim().replace(/\/+$/, '');
   }
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:5001';
   }
   return 'https://socket.devlomatix.in';
 };
+
+export const getSocketUrl = (customConfig) => resolveSocketUrl(customConfig);
 
 // Pure Web Audio tone synthesizer for ringback and incoming call melodies
 function playWebAudioTone(type) {
@@ -116,6 +143,7 @@ export function CrmSocketProvider({ children }) {
   const { data: session } = useSession();
   const params = useParams();
   const workspaceId = params?.workspaceId;
+  const { settings } = useSettings() || {};
 
   const currentUserId = session?.user?.userId || session?.user?.id;
   const currentUserName = session?.user?.displayName || session?.user?.name || 'Sales Rep';
@@ -128,6 +156,38 @@ export function CrmSocketProvider({ children }) {
   const [socketUrl, setSocketUrl] = useState('');
   const [latency, setLatency] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [customSocketConfig, setCustomSocketConfig] = useState(null);
+
+  // Synchronize socket server config from WorkspaceProvider settings or localStorage
+  useEffect(() => {
+    if (settings?.socketServer) {
+      setCustomSocketConfig(settings.socketServer);
+      try {
+        localStorage.setItem('devlomatix_socket_config', JSON.stringify(settings.socketServer));
+      } catch (_) {}
+    } else if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('devlomatix_socket_config');
+        if (cached) setCustomSocketConfig(JSON.parse(cached));
+      } catch (_) {}
+    }
+  }, [settings?.socketServer]);
+
+  // Listen for immediate dynamic updates from Settings Modal or tests
+  useEffect(() => {
+    const handleConfigEvent = (e) => {
+      if (e.detail) {
+        setCustomSocketConfig(e.detail);
+      }
+    };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('devlomatix-socket-config-changed', handleConfigEvent);
+      return () => window.removeEventListener('devlomatix-socket-config-changed', handleConfigEvent);
+    }
+  }, []);
+
+  const activeConfig = customSocketConfig || settings?.socketServer;
+  const resolvedUrl = useMemo(() => resolveSocketUrl(activeConfig), [activeConfig]);
 
   // Call State Management
   // callStatus: 'idle' | 'calling' | 'incoming' | 'connected' | 'ended'
@@ -270,7 +330,6 @@ export function CrmSocketProvider({ children }) {
       return;
     }
 
-    const resolvedUrl = getSocketUrl();
     setSocketUrl(resolvedUrl);
     setConnectionStatus('connecting');
 
@@ -347,7 +406,7 @@ export function CrmSocketProvider({ children }) {
     return () => {
       s.disconnect();
     };
-  }, [currentUserId, workspaceId, currentUserName, currentUserAvatar]);
+  }, [currentUserId, workspaceId, currentUserName, currentUserAvatar, resolvedUrl]);
 
   const checkLatency = useCallback(() => {
     if (!socketRef.current || !socketRef.current.connected) return;
@@ -873,6 +932,7 @@ export function CrmSocketProvider({ children }) {
     connectionStatus,
     transport,
     socketUrl,
+    socketConfig: activeConfig,
     latency,
     onlineUsers,
     callStatus,

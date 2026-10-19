@@ -19,7 +19,8 @@ import {
   Copy,
   Check,
   Activity,
-  AlertCircle
+  AlertCircle,
+  Settings
 } from 'lucide-react';
 import { useCrmSocket } from '@/providers/CrmSocketProvider';
 import { toast } from 'sonner';
@@ -331,6 +332,22 @@ export default function SocketStatusIndicator() {
           >
             <RefreshCw className={`w-3 h-3 ${isReconnecting ? 'animate-spin' : ''}`} />
             {isReconnecting ? 'Reconnecting...' : effectiveStatus === 'connected' ? 'Reconnect' : 'Retry Connection'}
+          </Button>
+        </div>
+
+        {/* Global Settings Shortcut */}
+        <div className="pt-1.5 border-t border-border/40">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('open-settings-modal', { detail: { tab: 'socket' } }));
+            }}
+            className="w-full h-7 text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 gap-1.5 cursor-pointer justify-center"
+          >
+            <Settings className="w-3 h-3 text-cyan-500" />
+            <span>Configure Socket Server</span>
           </Button>
         </div>
       </PopoverContent>

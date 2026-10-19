@@ -733,7 +733,7 @@ export default function TemplatePage() {
                     <Button
                         variant={selectedGroupFilter === 'ALL' ? 'default' : 'ghost'}
                         size="sm"
-                        className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                        className="h-8 text-xs font-semibold gap-2 rounded-lg border"
                         onClick={() => setSelectedGroupFilter('ALL')}
                     >
                         <Layers className="w-3.5 h-3.5" />
@@ -749,7 +749,7 @@ export default function TemplatePage() {
                     <Button
                         variant={selectedGroupFilter === 'UNGROUPED' ? 'default' : 'ghost'}
                         size="sm"
-                        className="h-8 text-xs font-semibold gap-2 rounded-lg"
+                        className="h-8 text-xs font-semibold gap-2 rounded-lg border"
                         onClick={() => setSelectedGroupFilter('UNGROUPED')}
                     >
                         <Tag className="w-3.5 h-3.5 text-muted-foreground" />
@@ -774,7 +774,7 @@ export default function TemplatePage() {
                                 key={group.id}
                                 variant={isSelected ? 'default' : 'ghost'}
                                 size="sm"
-                                className={`h-8 text-xs font-semibold gap-2 rounded-lg transition-all ${isSelected ? '' : 'hover:bg-muted/40'}`}
+                                className={`h-8 text-xs font-semibold gap-2 rounded-lg transition-all border ${isSelected ? '' : ''}`}
                                 onClick={() => setSelectedGroupFilter(group.id)}
                             >
                                 <span

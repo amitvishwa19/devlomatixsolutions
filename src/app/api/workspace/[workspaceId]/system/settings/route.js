@@ -130,6 +130,24 @@ export async function GET(req, { params }) {
 
         const resolvedSocialLinks = wsGeneral.socialLinks || glSocial.socialLinks || glGeneral.socialLinks || {};
 
+        // Global Socket Server configuration (saved strictly under key: 'global')
+        const defaultDevSocket = process.env.NEXT_PUBLIC_SOCKET_SERVER || process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:5001';
+        const defaultProdSocket = 'https://socket.devlomatix.in';
+        const glSocketServer = (glTechnical && typeof glTechnical.socketServer === 'object' && glTechnical.socketServer)
+            ? glTechnical.socketServer
+            : (glGeneral && typeof glGeneral.socketServer === 'object' && glGeneral.socketServer)
+            ? glGeneral.socketServer
+            : null;
+
+        const resolvedSocketServer = {
+            devUrl: glSocketServer?.devUrl || defaultDevSocket,
+            prodUrl: glSocketServer?.prodUrl || defaultProdSocket,
+            environmentMode: glSocketServer?.environmentMode || 'auto',
+            internalSecret: glSocketServer?.internalSecret || process.env.INTERNAL_SERVICE_SECRET || 'devlomatix_internal_secret_key_2026',
+            enableLocalFallback: glSocketServer?.enableLocalFallback ?? true,
+            updatedAt: glSocketServer?.updatedAt || null,
+        };
+
         const settings = {
             general: {
                 name: workspace.name,
@@ -146,6 +164,7 @@ export async function GET(req, { params }) {
                 socialLinks: resolvedSocialLinks
             },
             business: resolvedBusiness,
+            socketServer: resolvedSocketServer,
             security: {
                 mfaEnabled: false,
                 sessionTimeout: 3600,
@@ -215,7 +234,7 @@ export async function PATCH(req, { params }) {
             return NextResponse.json({ message: "Forbidden" }, { status: 403 });
         }
 
-        const { general, branding, security, notifications, integrations, developer, advanced, privacy, business } = body;
+        const { general, branding, security, notifications, integrations, developer, advanced, privacy, business, socketServer } = body;
 
         // Sync developer with integrations if provided
         const finalIntegrations = developer || integrations;
@@ -233,8 +252,8 @@ export async function PATCH(req, { params }) {
             });
         }
 
-        // 2. Update Global Settings (Row 1: key = 'global') - Branding & Universal Business Details
-        if (branding || business !== undefined) {
+        // 2. Update Global Settings (Row 1: key = 'global') - Branding, Universal Business Details & Socket Server
+        if (branding || business !== undefined || socketServer !== undefined) {
             const currentGlobalSettings = await prisma.appSettings.findUnique({
                 where: { key: 'global' }
             }).catch(() => null);
@@ -244,6 +263,9 @@ export async function PATCH(req, { params }) {
                 : {};
             const existingGlGeneral = (currentGlobalSettings?.general && typeof currentGlobalSettings.general === 'object')
                 ? currentGlobalSettings.general
+                : {};
+            const existingGlTechnical = (currentGlobalSettings?.technical && typeof currentGlobalSettings.technical === 'object')
+                ? currentGlobalSettings.technical
                 : {};
 
             const globalUpdateData = {};
@@ -259,13 +281,24 @@ export async function PATCH(req, { params }) {
                     business: business
                 };
             }
+            if (socketServer !== undefined) {
+                globalUpdateData.technical = {
+                    ...existingGlTechnical,
+                    socketServer: {
+                        ...((existingGlTechnical.socketServer && typeof existingGlTechnical.socketServer === 'object') ? existingGlTechnical.socketServer : {}),
+                        ...socketServer,
+                        updatedAt: new Date().toISOString()
+                    }
+                };
+            }
 
             await prisma.appSettings.upsert({
                 where: { key: 'global' },
                 create: {
                     key: 'global',
                     social: globalUpdateData.social || existingGlSocial || {},
-                    general: globalUpdateData.general || (business !== undefined ? { business } : {})
+                    general: globalUpdateData.general || (business !== undefined ? { business } : {}),
+                    technical: globalUpdateData.technical || (socketServer !== undefined ? { socketServer } : {})
                 },
                 update: globalUpdateData
             });

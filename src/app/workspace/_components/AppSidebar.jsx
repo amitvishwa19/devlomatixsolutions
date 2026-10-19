@@ -45,6 +45,15 @@ export default function AppSidebar() {
     });
 
     useEffect(() => {
+        const handleOpenSettings = (e) => {
+            const tab = e?.detail?.tab || 'general';
+            setSettingModal({ open: true, defaultTab: tab });
+        };
+        window.addEventListener('open-settings-modal', handleOpenSettings);
+        return () => window.removeEventListener('open-settings-modal', handleOpenSettings);
+    }, []);
+
+    useEffect(() => {
         const stored = localStorage.getItem("workspace-sidebar");
         if (stored) {
             try {
@@ -379,6 +388,7 @@ export default function AppSidebar() {
 
             <SettingModal
                 open={settingModal.open}
+                defaultTab={settingModal.defaultTab}
                 onClose={() => {
                     setSettingModal({ ...settingModal, open: false });
                 }}

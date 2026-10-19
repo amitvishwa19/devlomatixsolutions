@@ -27,6 +27,7 @@ import {
     MessageSquare,
     DatabaseBackup,
     Building2,
+    Radio,
 } from 'lucide-react';
 import { GeneralSettings } from './GeneralSettings';
 import { BusinessDetailsSettings } from './BusinessDetailsSettings';
@@ -38,6 +39,7 @@ import { BackupRestoreSettings } from './BackupRestoreSettings';
 import { PrivacySettings } from './PrivacySettings';
 import { DeveloperSettings } from './DeveloperSettings';
 import { WhatsAppCloudSettings } from './WhatsAppCloudSettings';
+import { SocketServerSettings } from './SocketServerSettings';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ConnectorSetting from './ConnectorSetting';
 import { DangerZone } from './DangerZone';
@@ -46,6 +48,7 @@ import { searchSettings } from '../_lib/settings-search-index';
 const settingTabs = [
     { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
     { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
+    { id: 'socket', label: 'Socket Server', icon: Radio, color: 'text-cyan-500' },
     { id: 'whatsapp', label: 'WhatsApp Cloud API', icon: MessageSquare, color: 'text-emerald-500' },
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
     { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
@@ -60,6 +63,7 @@ const settingTabs = [
 const settingDescriptions = {
     general: 'Configure workspace identity, branding, and social presence.',
     business: 'Manage universal legal identity, GSTIN, PAN, office addresses, bank coordinates, and quotation presets (Universal Global).',
+    socket: 'Configure real-time WebSocket & WebRTC signaling server endpoints for Development and Production (saved globally).',
     whatsapp: 'Configure Meta WhatsApp Cloud API credentials, default production sender, and webhooks.',
     security: 'Manage authentication policies and access controls.',
     notifications: 'Configure alert channels and notification preferences.',
@@ -72,9 +76,15 @@ const settingDescriptions = {
     danger: 'Destructive and critical workspace actions.'
 };
 
-export default function SettingModal({ open, onClose }) {
-    const [activeTab, setActiveTab] = useState('general');
+export default function SettingModal({ open, onClose, defaultTab = 'general' }) {
+    const [activeTab, setActiveTab] = useState(defaultTab || 'general');
     const [searchQuery, setSearchQuery] = useState('');
+
+    React.useEffect(() => {
+        if (open && defaultTab) {
+            setActiveTab(defaultTab);
+        }
+    }, [open, defaultTab]);
 
     // Deep search results
     const deepMatches = useMemo(() => {
@@ -263,6 +273,7 @@ export default function SettingModal({ open, onClose }) {
                                 >
                                     {activeTab === 'general' && <GeneralSettings />}
                                     {activeTab === 'business' && <BusinessDetailsSettings />}
+                                    {activeTab === 'socket' && <SocketServerSettings />}
                                     {activeTab === 'whatsapp' && <WhatsAppCloudSettings />}
                                     {activeTab === 'security' && <SecuritySettings />}
                                     {activeTab === 'notifications' && <NotificationSettings />}

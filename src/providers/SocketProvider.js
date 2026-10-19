@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { io } from "socket.io-client";
 import { toast } from 'sonner';
+import { resolveSocketUrl } from './CrmSocketProvider';
 
 export const SocketContext = createContext()
 
@@ -23,9 +24,10 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         try {
-            setSocket(io('https://socket.devlomatix.in'))
+            const targetUrl = resolveSocketUrl();
+            setSocket(io(targetUrl))
         } catch (error) {
-            console.log('Error connecting to socket server')
+            console.log('Error connecting to socket server', error)
         }
     }, [])
 

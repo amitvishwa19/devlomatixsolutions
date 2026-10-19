@@ -26,12 +26,15 @@ import {
   ChevronRight,
   Search,
   Tag,
+  Radio,
 } from 'lucide-react';
+import { SocketServerSettings } from '../_components/SocketServerSettings';
 import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
   { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
   { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
+  { id: 'socket', label: 'Socket Server', icon: Radio, color: 'text-cyan-500' },
   { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
   { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
   { id: 'integrations', label: 'Integrations', icon: Puzzle, color: 'text-emerald-500' },
@@ -43,6 +46,7 @@ const settingTabs = [
 const settingDescriptions = {
   general: 'Workspace identity, branding, and social presence.',
   business: 'Registered corporate identity, GSTIN, PAN, office address, and banking coordinates.',
+  socket: 'Configure real-time WebSocket & WebRTC signaling server endpoints for Development and Production (saved globally).',
   security: 'Authentication policies and access controls.',
   notifications: 'Alert channels and notification preferences.',
   integrations: 'External services, webhooks, and APIs.',
@@ -242,6 +246,7 @@ function SettingPageContent() {
                 <div>
                   {activeTab === 'general' && <GeneralSettings />}
                   {activeTab === 'business' && <BusinessDetailsSettings />}
+                  {activeTab === 'socket' && <SocketServerSettings />}
                   {activeTab === 'security' && <SecuritySettings />}
                   {activeTab === 'notifications' && <NotificationSettings />}
                   {activeTab === 'integrations' && <IntegrationSettings />}

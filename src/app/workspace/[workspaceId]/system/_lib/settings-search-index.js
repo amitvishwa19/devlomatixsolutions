@@ -21,6 +21,12 @@ export const SETTINGS_SEARCH_INDEX = [
     { tabId: 'business', title: 'Bank Account & Payout Coordinates', description: 'Bank name, account number, beneficiary, IFSC code, and UPI ID', keywords: ['bank', 'bank account', 'account number', 'ifsc', 'ifsc code', 'upi', 'upi id', 'beneficiary', 'payout', 'wire', 'neft', 'rtgs', 'payment method'] },
     { tabId: 'business', title: 'Quotation & Invoice Document Presets', description: 'Quotation/Invoice prefix, payment terms, jurisdiction, and authorized signature', keywords: ['quotation prefix', 'invoice prefix', 'payment terms', 'terms', 'conditions', 'signatory', 'authorized signature', 'jurisdiction', 'preset'] },
 
+    // Socket Server
+    { tabId: 'socket', title: 'Socket Server Configuration', description: 'Real-time WebSocket and WebRTC signaling server paths for development and production', keywords: ['socket', 'socket server', 'websocket', 'webrtc', 'signaling', 'port', '5001', '5000', 'dev socket', 'production socket', 'localhost', 'socket.devlomatix.in'] },
+    { tabId: 'socket', title: 'Development Socket Server URL', description: 'Target path for local development (e.g. http://localhost:5001)', keywords: ['dev socket', 'development server', 'local socket', 'localhost:5001', '5001', 'local dev'] },
+    { tabId: 'socket', title: 'Production Socket Server URL', description: 'Cloud socket server endpoint (e.g. https://socket.devlomatix.in)', keywords: ['production socket', 'prod socket', 'cloud socket', 'socket.devlomatix.in', 'render socket'] },
+    { tabId: 'socket', title: 'Internal Service Secret & Failover', description: 'Internal token for server-side socket event dispatching', keywords: ['socket secret', 'internal secret', 'socket bridge', 'failover', 'port fallback'] },
+
     // WhatsApp Cloud API
     { tabId: 'whatsapp', title: 'WhatsApp Cloud API', description: 'Configure Meta WhatsApp Cloud API credentials and default production sender', keywords: ['whatsapp', 'meta cloud', 'cloud api', 'waba', 'phone number id', 'access token', 'meta', 'whatsapp credentials', 'default whatsapp'] },
     { tabId: 'whatsapp', title: 'Phone Number ID & WABA ID', description: 'Meta WhatsApp Business Account identifiers', keywords: ['phone number id', 'waba id', 'waba', 'phone id', 'meta id', 'business account'] },
