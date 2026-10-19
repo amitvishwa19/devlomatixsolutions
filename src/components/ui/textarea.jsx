@@ -2,11 +2,12 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-const Textarea = React.forwardRef(({ className, rows = 5, ...props }, ref) => {
+const Textarea = React.forwardRef(({ className, rows = 5, value, ...props }, ref) => {
 
   return (
     (<textarea
       rows={rows}
+      value={value === null ? "" : value}
       className={cn(
         "flex min-h-[40px] w-full ring-[0px] focus:ring-[0.8px] rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
         className

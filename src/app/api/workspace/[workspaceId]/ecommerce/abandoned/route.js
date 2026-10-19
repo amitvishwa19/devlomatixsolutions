@@ -12,14 +12,27 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        const currentUserId = session.user.userId || session.user.id;
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "100");
+        const storeIdParam = searchParams.get("storeId");
+
+        let where = {
+            OR: [
+                { userId: currentUserId },
+                { userId: workspaceId }
+            ]
+        };
+
+        if (storeIdParam && storeIdParam !== 'all') {
+            where.storeId = storeIdParam;
+        }
 
         const abandonedCarts = await db.eCommerceAbandonedCart.findMany({
-            where: { userId: session.user.userId },
+            where,
             include: {
                 store: {
-                    select: { name: true, platform: true }
+                    select: { id: true, name: true, platform: true, currency: true }
                 }
             },
             orderBy: { createdAt: 'desc' },

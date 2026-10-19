@@ -111,8 +111,11 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                 category: existingCategories,
                 variants: product.variants ? product.variants.map(v => ({
                     ...v,
-                    price: v.price?.toString() || '',
-                    quantity: v.inventoryCount?.toString() || '0'
+                    name: v.name || '',
+                    sku: v.sku || '',
+                    price: v.price != null ? v.price.toString() : '',
+                    quantity: (v.quantity ?? v.inventoryCount)?.toString() || '0',
+                    weight: v.weight != null ? v.weight.toString() : '',
                 })) : [],
                 imageUrl: product.imageUrls?.cover || product.imageUrl || '',
                 images: existingImages,
@@ -138,7 +141,7 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
     const handleChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
-            [field]: value === undefined ? '' : value
+            [field]: value === undefined || value === null ? '' : value
         }))
     }
 
@@ -292,7 +295,7 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
     const handleUpdateVariant = (index, field, value) => {
         setFormData(prev => {
             const newVariants = [...prev.variants]
-            newVariants[index] = { ...newVariants[index], [field]: value }
+            newVariants[index] = { ...newVariants[index], [field]: value === undefined || value === null ? '' : value }
             return { ...prev, variants: newVariants }
         })
     }
@@ -531,23 +534,23 @@ export function AddProductModal({ open, onClose, product, onSuccess, workspaceId
                                                     <div className="grid grid-cols-2 gap-2">
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px] text-muted-foreground">Name (e.g. Small / Red) *</Label>
-                                                            <Input className="h-7 text-xs" value={variant.name} onChange={(e) => handleUpdateVariant(idx, 'name', e.target.value)} placeholder="Variant Name" required />
+                                                            <Input className="h-7 text-xs" value={variant.name ?? ''} onChange={(e) => handleUpdateVariant(idx, 'name', e.target.value)} placeholder="Variant Name" required />
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px] text-muted-foreground">SKU</Label>
-                                                            <Input className="h-7 text-xs font-mono" value={variant.sku} onChange={(e) => handleUpdateVariant(idx, 'sku', e.target.value)} placeholder="SKU" />
+                                                            <Input className="h-7 text-xs font-mono" value={variant.sku ?? ''} onChange={(e) => handleUpdateVariant(idx, 'sku', e.target.value)} placeholder="SKU" />
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px] text-muted-foreground">Price (Leave blank for default)</Label>
-                                                            <Input type="number" className="h-7 text-xs" value={variant.price} onChange={(e) => handleUpdateVariant(idx, 'price', e.target.value)} placeholder="Base Price" />
+                                                            <Input type="number" className="h-7 text-xs" value={variant.price ?? ''} onChange={(e) => handleUpdateVariant(idx, 'price', e.target.value)} placeholder="Base Price" />
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px] text-muted-foreground">Inventory</Label>
-                                                            <Input type="number" className="h-7 text-xs" value={variant.quantity} onChange={(e) => handleUpdateVariant(idx, 'quantity', e.target.value)} placeholder="0" />
+                                                            <Input type="number" className="h-7 text-xs" value={variant.quantity ?? ''} onChange={(e) => handleUpdateVariant(idx, 'quantity', e.target.value)} placeholder="0" />
                                                         </div>
                                                         <div className="space-y-1">
                                                             <Label className="text-[10px] text-muted-foreground">Weight (kg)</Label>
-                                                            <Input type="number" step="0.01" className="h-7 text-xs" value={variant.weight} onChange={(e) => handleUpdateVariant(idx, 'weight', e.target.value)} placeholder="0.00" />
+                                                            <Input type="number" step="0.01" className="h-7 text-xs" value={variant.weight ?? ''} onChange={(e) => handleUpdateVariant(idx, 'weight', e.target.value)} placeholder="0.00" />
                                                         </div>
                                                     </div>
                                                 </div>

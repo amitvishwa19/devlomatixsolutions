@@ -12,11 +12,23 @@ export async function GET(req, { params }) {
             return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
         }
 
+        const currentUserId = session.user.userId || session.user.id;
         const { searchParams } = new URL(req.url);
         const limit = parseInt(searchParams.get("limit") || "10");
         const status = searchParams.get("status");
+        const storeIdParam = searchParams.get("storeId");
 
-        let where = { userId: session.user.userId };
+        let where = {
+            OR: [
+                { userId: currentUserId },
+                { userId: workspaceId }
+            ]
+        };
+
+        if (storeIdParam && storeIdParam !== 'all') {
+            where.storeId = storeIdParam;
+        }
+
         if (status && status !== 'ALL') {
             where.status = status;
         }
@@ -25,7 +37,7 @@ export async function GET(req, { params }) {
             where,
             include: {
                 store: {
-                    select: { name: true, platform: true }
+                    select: { id: true, name: true, platform: true, currency: true }
                 }
             },
             orderBy: { createdAt: 'desc' },
