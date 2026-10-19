@@ -13,6 +13,7 @@ import WhatsAppDefaultSync from '@/components/WhatsAppDefaultSync';
 import { OfflineBanner } from '@/components/global/OfflineBanner';
 import { KeyboardShortcutsModal, useKeyboardShortcuts } from '@/components/global/KeyboardShortcutsModal';
 import { CrmSocketProvider } from '@/providers/CrmSocketProvider';
+import { NotificationProvider } from '@/providers/NotificationProvider';
 import WorkspaceMessageNotifier from '../_components/WorkspaceMessageNotifier';
 
 const font = Inter({ subsets: ["latin"] });
@@ -79,9 +80,11 @@ export default function WorkspaceLayout({ children }) {
             <WhatsAppDefaultSync />
             <WorkspaceProvider>
                 <CrmSocketProvider>
-                    <WorkspaceLayoutInner>
-                        {children}
-                    </WorkspaceLayoutInner>
+                    <NotificationProvider>
+                        <WorkspaceLayoutInner>
+                            {children}
+                        </WorkspaceLayoutInner>
+                    </NotificationProvider>
                 </CrmSocketProvider>
             </WorkspaceProvider>
         </>

@@ -46,6 +46,7 @@ import { useSettings } from '@/providers/WorkspaceProvider';
 import { AuthSelector } from '@/components/global/AuthSelector';
 import WorkspaceCommandPalette from './WorkspaceCommandPalette';
 import SocketStatusIndicator from './SocketStatusIndicator';
+import NotificationCenter from './NotificationCenter';
 import { toast } from 'sonner';
 
 const ROUTE_LABELS = {
@@ -78,18 +79,6 @@ export default function AppTopNav() {
     const workspaceId = params?.workspaceId || 'default';
 
     const [commandOpen, setCommandOpen] = useState(false);
-    const [notifications, setNotifications] = useState([
-        { id: 1, title: 'FlowGenix AI Router Online', desc: 'Omni-route telemetry actively aggregating latency.', time: '5m ago', read: false },
-        { id: 2, title: 'WhatsApp Webhook Synchronized', desc: 'Inbound message webhook listening at 200 OK.', time: '1h ago', read: false },
-        { id: 3, title: 'System Security Config Verified', desc: 'AES-256 encryption active across all API keys.', time: '3h ago', read: true },
-    ]);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const handleMarkAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        toast.success("All notifications marked as read");
-    };
 
     // Construct Breadcrumb Trail
     const breadcrumbs = useMemo(() => {
@@ -206,53 +195,8 @@ export default function AppTopNav() {
                     {/* Real-Time Socket Connection Status */}
                     <SocketStatusIndicator />
 
-                    {/* Notifications Center Popover */}
-                    <Popover>
-                        <PopoverTrigger asChild>
-                            <Button variant="ghost" size="icon" className="relative h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-secondary/50 rounded-lg cursor-pointer">
-                                <Bell className="w-4 h-4" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border-2 border-card"></span>
-                                )}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent align="end" className="w-80 p-0 bg-card border-border/50 shadow-2xl rounded-xl">
-                            <div className="p-3 border-b border-border/40 flex items-center justify-between bg-secondary/10">
-                                <div className="flex items-center gap-2">
-                                    <h4 className="text-xs font-bold text-foreground">Notifications</h4>
-                                    {unreadCount > 0 && (
-                                        <Badge variant="secondary" className="text-[9px] bg-rose-500/10 text-rose-500 border-rose-500/20 px-1.5">
-                                            {unreadCount} new
-                                        </Badge>
-                                    )}
-                                </div>
-                                {unreadCount > 0 && (
-                                    <button
-                                        onClick={handleMarkAllRead}
-                                        className="text-[10px] text-primary hover:underline font-semibold cursor-pointer"
-                                    >
-                                        Mark all read
-                                    </button>
-                                )}
-                            </div>
-                            <ScrollArea className="max-h-[280px]">
-                                <div className="p-1 space-y-1">
-                                    {notifications.map((n) => (
-                                        <div
-                                            key={n.id}
-                                            className={`p-2.5 rounded-lg text-xs space-y-0.5 transition-colors ${n.read ? 'opacity-60 bg-transparent' : 'bg-secondary/30 border border-border/40'}`}
-                                        >
-                                            <div className="flex items-center justify-between font-semibold text-foreground">
-                                                <span className="truncate">{n.title}</span>
-                                                <span className="text-[9px] text-muted-foreground font-mono">{n.time}</span>
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground leading-snug">{n.desc}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </ScrollArea>
-                        </PopoverContent>
-                    </Popover>
+                    {/* Interactive Real-Time Notification Center */}
+                    <NotificationCenter />
 
                     {/* Theme Switcher */}
                     <ThemeSwitcher className="h-8 w-8" />

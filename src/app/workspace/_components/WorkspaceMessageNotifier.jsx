@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { X, MessageSquare } from "lucide-react";
 import { useCrmSocket } from "@/providers/CrmSocketProvider";
+import { useNotifications } from "@/providers/NotificationProvider";
 
 // Singleton Web Audio Context for zero-lag bell chime
 let sharedAudioCtx = null;
@@ -75,6 +76,7 @@ export default function WorkspaceMessageNotifier() {
     const router = useRouter();
     const workspaceId = params?.workspaceId;
     const { socket, isConnected } = useCrmSocket() || {};
+    const { addNotification } = useNotifications();
 
     const workspaceIdRef = useRef(workspaceId);
     workspaceIdRef.current = workspaceId;
@@ -119,6 +121,18 @@ export default function WorkspaceMessageNotifier() {
             const messagePreview = incomingMsg.text || incomingMsg.metadata?.caption || (incomingMsg.metadata?.type ? `[${incomingMsg.metadata.type.toUpperCase()}]` : 'New WhatsApp message');
 
             const currentWsId = workspaceIdRef.current || data.workspaceId;
+
+            // Also record in top navbar notification center
+            if (addNotification) {
+                addNotification({
+                    id: `wa_msg_${incomingMsg.id || incomingMsg.waId || targetPhone10}_${Date.now()}`,
+                    type: 'WHATSAPP',
+                    title: `WhatsApp: ${senderDisplayName}`,
+                    message: messagePreview,
+                    link: currentWsId ? `/workspace/${currentWsId}/konnectx/chats?jid=${encodeURIComponent(targetJid)}` : null,
+                    metadata: { jid: targetJid, phone: targetPhone10 }
+                }, { silent: true });
+            }
 
             // Trigger Sonner Rich Floating Toast Banner across the entire workspace
             toast.custom((t) => (
