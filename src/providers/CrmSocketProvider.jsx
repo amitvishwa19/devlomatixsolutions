@@ -123,6 +123,10 @@ export function CrmSocketProvider({ children }) {
 
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connected' | 'connecting' | 'reconnecting' | 'disconnected' | 'error'
+  const [transport, setTransport] = useState(null); // 'websocket' | 'polling'
+  const [socketUrl, setSocketUrl] = useState('');
+  const [latency, setLatency] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   // Call State Management
@@ -261,18 +265,41 @@ export function CrmSocketProvider({ children }) {
 
   // 1. Connect Socket
   useEffect(() => {
-    if (!currentUserId || !workspaceId) return;
+    if (!currentUserId || !workspaceId) {
+      setConnectionStatus('disconnected');
+      return;
+    }
 
-    const socketUrl = getSocketUrl();
-    const s = io(socketUrl, {
+    const resolvedUrl = getSocketUrl();
+    setSocketUrl(resolvedUrl);
+    setConnectionStatus('connecting');
+
+    const s = io(resolvedUrl, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
-      reconnectionDelay: 2000
+      reconnectionAttempts: 15,
+      reconnectionDelay: 2000,
+      timeout: 10000
     });
 
     s.on('connect', () => {
       setIsConnected(true);
-      console.log(`[CRM_SOCKET] Connected to ${socketUrl} (ID: ${s.id})`);
+      setConnectionStatus('connected');
+      const currentTransport = s.io?.engine?.transport?.name || 'websocket';
+      setTransport(currentTransport);
+      console.log(`[CRM_SOCKET] Connected to ${resolvedUrl} (ID: ${s.id}, Transport: ${currentTransport})`);
+
+      // Monitor transport upgrades (e.g., polling -> websocket)
+      s.io?.engine?.on('upgrade', (rawTransport) => {
+        setTransport(rawTransport?.name || 'websocket');
+      });
+
+      // Quick latency calculation
+      const start = Date.now();
+      try {
+        s.timeout(2000).emit('client:ping', () => {
+          setLatency(Date.now() - start);
+        });
+      } catch (_) {}
 
       // Register presence in workspace
       s.emit('user:join', {
@@ -283,9 +310,31 @@ export function CrmSocketProvider({ children }) {
       });
     });
 
-    s.on('disconnect', () => {
+    s.on('disconnect', (reason) => {
       setIsConnected(false);
-      console.log('[CRM_SOCKET] Disconnected from server');
+      setConnectionStatus('disconnected');
+      console.log('[CRM_SOCKET] Disconnected from server. Reason:', reason);
+    });
+
+    s.on('connect_error', (error) => {
+      setIsConnected(false);
+      setConnectionStatus('error');
+      console.warn('[CRM_SOCKET] Connection error:', error?.message);
+    });
+
+    s.io?.on('reconnect_attempt', () => {
+      setConnectionStatus('reconnecting');
+    });
+
+    s.io?.on('reconnect', () => {
+      setIsConnected(true);
+      setConnectionStatus('connected');
+      setTransport(s.io?.engine?.transport?.name || 'websocket');
+    });
+
+    s.io?.on('reconnect_failed', () => {
+      setIsConnected(false);
+      setConnectionStatus('disconnected');
     });
 
     s.on('presence:sync', (users) => {
@@ -299,6 +348,28 @@ export function CrmSocketProvider({ children }) {
       s.disconnect();
     };
   }, [currentUserId, workspaceId, currentUserName, currentUserAvatar]);
+
+  const checkLatency = useCallback(() => {
+    if (!socketRef.current || !socketRef.current.connected) return;
+    const start = Date.now();
+    try {
+      socketRef.current.timeout(2500).emit('client:ping', () => {
+        setLatency(Date.now() - start);
+      });
+    } catch (_) {}
+  }, []);
+
+  const reconnect = useCallback(() => {
+    if (socketRef.current) {
+      setConnectionStatus('connecting');
+      try {
+        socketRef.current.disconnect();
+        socketRef.current.connect();
+      } catch (err) {
+        console.error('[CRM_SOCKET] Reconnect failed:', err);
+      }
+    }
+  }, []);
 
   // Helper to cleanup WebRTC
   const cleanupCall = useCallback(() => {
@@ -799,6 +870,10 @@ export function CrmSocketProvider({ children }) {
   const value = {
     socket,
     isConnected,
+    connectionStatus,
+    transport,
+    socketUrl,
+    latency,
     onlineUsers,
     callStatus,
     activeCallSession,
@@ -814,7 +889,9 @@ export function CrmSocketProvider({ children }) {
     endCall,
     toggleMute,
     toggleCamera,
-    toggleScreenShare
+    toggleScreenShare,
+    reconnect,
+    checkLatency
   };
 
   return (
@@ -870,8 +947,5 @@ export function CrmSocketProvider({ children }) {
 
 export function useCrmSocket() {
   const context = useContext(CrmSocketContext);
-  if (!context) {
-    throw new Error('useCrmSocket must be used within CrmSocketProvider');
-  }
-  return context;
+  return context || {};
 }

@@ -45,6 +45,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSettings } from '@/providers/WorkspaceProvider';
 import { AuthSelector } from '@/components/global/AuthSelector';
 import WorkspaceCommandPalette from './WorkspaceCommandPalette';
+import SocketStatusIndicator from './SocketStatusIndicator';
 import { toast } from 'sonner';
 
 const ROUTE_LABELS = {
@@ -202,14 +203,8 @@ export default function AppTopNav() {
                         </kbd>
                     </button>
 
-                    {/* Real-Time Connection Pulse */}
-                    <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold">
-                        <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                        </span>
-                        <span>Sync</span>
-                    </div>
+                    {/* Real-Time Socket Connection Status */}
+                    <SocketStatusIndicator />
 
                     {/* Notifications Center Popover */}
                     <Popover>
