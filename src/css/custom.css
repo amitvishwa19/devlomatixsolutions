@@ -283,31 +283,68 @@
     height: auto;
 }
 
-/* Custom scrollbar styling */
+/* =========================================================
+   Shadcn-style System Default Scrollbar
+   Matches Radix / Shadcn ScrollArea (transparent track + floating rounded pill thumb)
+   ========================================================= */
+
+/* Webkit (Chrome, Safari, Edge, Opera) */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 4px;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
+    background-color: rgba(15, 23, 42, 0.35); /* Slate-900 in light mode */
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background-color: rgba(15, 23, 42, 0.6);
 }
 
-/* Firefox scrollbar */
+::-webkit-scrollbar-thumb:active {
+    background-color: rgba(15, 23, 42, 0.85);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* Dark mode thumb matching shadcn ScrollArea (dark:bg-white/60) */
+.dark ::-webkit-scrollbar-thumb,
+:root.dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.35);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover,
+:root.dark ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.65);
+}
+
+.dark ::-webkit-scrollbar-thumb:active,
+:root.dark ::-webkit-scrollbar-thumb:active {
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+/* Firefox & Standard Browsers */
 * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) hsl(var(--muted));
+    scrollbar-color: rgba(15, 23, 42, 0.35) transparent;
 }
+
+.dark *,
+:root.dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
 /* FlowByte Custom Edge Animations */
 @keyframes edge-flow {
     from {
