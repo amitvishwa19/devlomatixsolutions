@@ -164,24 +164,93 @@ const handler = async (data) => {
             }
         });
 
-        let category = null;
+        let ecommerceCategory = null;
+        let storeCategory = null;
+
         try {
-            category = await db.category.create({
-                data: {
-                    name: formData.name,
-                    slug: `${formData.slug.toLowerCase().trim()}`,
-                    type: "STORE",
-                    color: "#3b82f6",
+            // 1. Check if the parent "Ecommerce" category already exists in this workspace
+            ecommerceCategory = await db.category.findFirst({
+                where: {
                     workspaceId,
-                    storeId: store.id
+                    OR: [
+                        { name: { equals: "Ecommerce", mode: "insensitive" } },
+                        { slug: "ecommerce" }
+                    ]
                 }
             });
+
+            // 2. If no "Ecommerce" category exists, create it
+            if (!ecommerceCategory) {
+                ecommerceCategory = await db.category.create({
+                    data: {
+                        name: "Ecommerce",
+                        slug: "ecommerce",
+                        type: "ECOMMERCE",
+                        color: "#3b82f6",
+                        workspaceId,
+                        parentId: null
+                    }
+                });
+            }
+
+            // 3. Prepare unique slug for the store sub-category
+            let storeSlug = formData.slug 
+                ? formData.slug.toLowerCase().trim() 
+                : formData.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+
+            const existingCatByName = await db.category.findUnique({
+                where: {
+                    workspaceId_name: {
+                        workspaceId,
+                        name: formData.name
+                    }
+                }
+            });
+
+            if (existingCatByName) {
+                // Attach existing category with same name under Ecommerce parent
+                storeCategory = await db.category.update({
+                    where: { id: existingCatByName.id },
+                    data: {
+                        parentId: ecommerceCategory.id,
+                        storeId: store.id,
+                        type: "STORE"
+                    }
+                });
+            } else {
+                // Ensure unique slug within the workspace
+                const existingSlug = await db.category.findUnique({
+                    where: {
+                        workspaceId_slug: {
+                            workspaceId,
+                            slug: storeSlug
+                        }
+                    }
+                });
+
+                if (existingSlug) {
+                    storeSlug = `${storeSlug}-${store.id.slice(-4)}`;
+                }
+
+                storeCategory = await db.category.create({
+                    data: {
+                        name: formData.name,
+                        slug: storeSlug,
+                        type: "STORE",
+                        color: "#10b981",
+                        parentId: ecommerceCategory.id,
+                        workspaceId,
+                        storeId: store.id
+                    }
+                });
+            }
         } catch (catError) {
-            console.error("[CREATE_CATEGORY_ERROR]", catError);
+            console.error("[CREATE_ECOMMERCE_CATEGORY_ERROR]", catError);
         }
 
         revalidatePath(`/workspace/${workspaceId}/ecommerce/settings`);
-        return { data: { store, category, apiKey } };
+        revalidatePath(`/workspace/${workspaceId}/ecommerce/categories`);
+        return { data: { store, category: storeCategory, ecommerceCategory, apiKey } };
     } catch (error) {
         console.error("[CREATE_STORE_ERROR]", error);
         return { error: error.message || "Failed to create store" };

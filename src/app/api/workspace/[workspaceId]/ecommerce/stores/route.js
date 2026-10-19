@@ -62,7 +62,82 @@ export async function POST(request, { params }) {
       }
     });
 
-    return NextResponse.json({ success: true, store });
+    // Create or find Ecommerce category hierarchy
+    let storeCategory = null;
+    try {
+      let ecommerceCategory = await db.category.findFirst({
+        where: {
+          workspaceId,
+          OR: [
+            { name: { equals: "Ecommerce", mode: "insensitive" } },
+            { slug: "ecommerce" }
+          ]
+        }
+      });
+
+      if (!ecommerceCategory) {
+        ecommerceCategory = await db.category.create({
+          data: {
+            name: "Ecommerce",
+            slug: "ecommerce",
+            type: "ECOMMERCE",
+            color: "#3b82f6",
+            workspaceId,
+            parentId: null
+          }
+        });
+      }
+
+      let storeSlug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-');
+      const existingCatByName = await db.category.findUnique({
+        where: {
+          workspaceId_name: {
+            workspaceId,
+            name
+          }
+        }
+      });
+
+      if (existingCatByName) {
+        storeCategory = await db.category.update({
+          where: { id: existingCatByName.id },
+          data: {
+            parentId: ecommerceCategory.id,
+            storeId: store.id,
+            type: "STORE"
+          }
+        });
+      } else {
+        const existingSlug = await db.category.findUnique({
+          where: {
+            workspaceId_slug: {
+              workspaceId,
+              slug: storeSlug
+            }
+          }
+        });
+
+        if (existingSlug) {
+          storeSlug = `${storeSlug}-${store.id.slice(-4)}`;
+        }
+
+        storeCategory = await db.category.create({
+          data: {
+            name,
+            slug: storeSlug,
+            type: "STORE",
+            color: "#10b981",
+            parentId: ecommerceCategory.id,
+            workspaceId,
+            storeId: store.id
+          }
+        });
+      }
+    } catch (catError) {
+      console.error("[CREATE_ECOMMERCE_CATEGORY_ERROR]", catError);
+    }
+
+    return NextResponse.json({ success: true, store, category: storeCategory });
   } catch (error) {
     console.error("[CREATE_STORE_ERROR]", error);
     return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });

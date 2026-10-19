@@ -120,7 +120,7 @@ export default function CategoryManagementPage() {
                     {isGrandChild && (
                         <CornerDownRight size={14} className="ml-8 text-red-700" />
                     )}
-                    {!isChild && category.children?.length > 0 ? (
+                    {category.children?.length > 0 ? (
                         <button
                             onClick={() => toggleExpand(category.id)}
                             className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors bg-background border border-border/40 shadow-sm"
@@ -183,14 +183,12 @@ export default function CategoryManagementPage() {
                         >
                             <Edit2 className="w-4 h-4 text-primary" /> Edit Properties
                         </DropdownMenuItem>
-                        {!isChild && (
-                            <DropdownMenuItem
-                                onClick={() => onOpen('addCategory', { workspaceId, parentCategories: categories, parentId: category.id, onApply: fetchData })}
-                                className="cursor-pointer px-3 py-3 rounded-md gap-3 text-xs"
-                            >
-                                <Plus className="w-4 h-4 text-emerald-500" /> Create Sub-Category
-                            </DropdownMenuItem>
-                        )}
+                        <DropdownMenuItem
+                            onClick={() => onOpen('addCategory', { workspaceId, parentCategories: categories, parentId: category.id, onApply: fetchData })}
+                            className="cursor-pointer px-3 py-3 rounded-md gap-3 text-xs"
+                        >
+                            <Plus className="w-4 h-4 text-emerald-500" /> Add Subcategory
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-border/10 my-2" />
                         <DropdownMenuItem
                             onClick={() => confirmDelete(category)}
@@ -291,7 +289,7 @@ export default function CategoryManagementPage() {
                                         {expandedCategories[category.id] && category.children?.map(child =>
                                             <Fragment key={child.id}>
                                                 {renderCategoryRow(child, true)}
-                                                {child.children?.map(grandChild =>
+                                                {expandedCategories[child.id] && child.children?.map(grandChild =>
                                                     renderCategoryRow(grandChild, true, true)
                                                 )}
                                             </Fragment>

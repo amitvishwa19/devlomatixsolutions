@@ -296,12 +296,22 @@ export function CategoryModal({
                                                     </div>
                                                 </SelectItem>
                                                 {parent.children?.map(child => (
-                                                    <SelectItem key={child.id} value={child.id} disabled={child.id === initialData?.id || parent.id === initialData?.id} className="font-bold text-xs rounded-md pl-8">
-                                                        <div className="flex items-center gap-2 opacity-60">
-                                                            <CornerDownRight size={10} />
-                                                            {child.name}
-                                                        </div>
-                                                    </SelectItem>
+                                                    <Fragment key={child.id}>
+                                                        <SelectItem key={child.id} value={child.id} disabled={child.id === initialData?.id || parent.id === initialData?.id} className="font-bold text-xs rounded-md pl-8">
+                                                            <div className="flex items-center gap-2 opacity-60">
+                                                                <CornerDownRight size={10} />
+                                                                {child.name}
+                                                            </div>
+                                                        </SelectItem>
+                                                        {child.children?.map(grandChild => (
+                                                            <SelectItem key={grandChild.id} value={grandChild.id} disabled={grandChild.id === initialData?.id || child.id === initialData?.id || parent.id === initialData?.id} className="font-bold text-xs rounded-md pl-12">
+                                                                <div className="flex items-center gap-2 opacity-40">
+                                                                    <CornerDownRight size={10} />
+                                                                    {grandChild.name}
+                                                                </div>
+                                                            </SelectItem>
+                                                        ))}
+                                                    </Fragment>
                                                 ))}
                                             </Fragment>
                                         ))}

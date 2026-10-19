@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 import crypto from "crypto";
+import { invalidateStoreAuthCache } from "@/lib/ecommerce/storefront-auth";
 
 function generateApiKey() {
     return 'eco_' + crypto.randomBytes(24).toString('hex');
@@ -51,6 +52,7 @@ const handler = async (data) => {
             }
         });
 
+        invalidateStoreAuthCache(storeId);
         revalidatePath(`/workspace/${workspaceId}/ecommerce/settings`);
         return { data: { apiKey: newApiKey } };
     } catch (error) {

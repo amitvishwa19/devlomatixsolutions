@@ -37,18 +37,43 @@ const handler = async (data) => {
         if (formData.parentCategoryId) {
             assignedParentId = formData.parentCategoryId;
         } else {
-            // Find the main category for this store (the one with parentId: null)
-            const mainCategory = await db.category.findFirst({
+            // Find the store subcategory under Ecommerce
+            let storeSubCategory = await db.category.findFirst({
                 where: { 
                     storeId: formData.storeId, 
-                    parentId: null 
+                    workspaceId,
+                    parent: {
+                        OR: [
+                            { name: { equals: "Ecommerce", mode: "insensitive" } },
+                            { slug: "ecommerce" }
+                        ]
+                    }
                 }
             });
 
-            if (!mainCategory) {
-                return { error: "Main category for this store not found. Please ensure the store was created correctly." };
+            if (!storeSubCategory) {
+                storeSubCategory = await db.category.findFirst({
+                    where: { 
+                        storeId: formData.storeId, 
+                        workspaceId 
+                    }
+                });
             }
-            assignedParentId = mainCategory.id;
+
+            if (!storeSubCategory) {
+                const ecommerceRoot = await db.category.findFirst({
+                    where: {
+                        workspaceId,
+                        OR: [
+                            { name: { equals: "Ecommerce", mode: "insensitive" } },
+                            { slug: "ecommerce" }
+                        ]
+                    }
+                });
+                assignedParentId = ecommerceRoot?.id || null;
+            } else {
+                assignedParentId = storeSubCategory.id;
+            }
         }
 
         // Check unique constraints: workspaceId + name

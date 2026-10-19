@@ -18,16 +18,26 @@ const handler = async (data) => {
 
         const { workspaceId, storeId } = data;
 
-        const whereClause = { 
-            workspaceId,
-            parentId: { not: null }
-        };
-        if (storeId) {
-            whereClause.storeId = storeId;
+        // 1. Locate the root "Ecommerce" category in this workspace
+        const ecommerceCategory = await db.category.findFirst({
+            where: {
+                workspaceId,
+                OR: [
+                    { name: { equals: "Ecommerce", mode: "insensitive" } },
+                    { slug: "ecommerce" }
+                ]
+            }
+        });
+
+        if (!ecommerceCategory) {
+            return { data: { categories: [] } };
         }
 
-        const categories = await db.category.findMany({
-            where: whereClause,
+        // 2. Query all categories in this workspace
+        const allWorkspaceCats = await db.category.findMany({
+            where: {
+                workspaceId
+            },
             include: {
                 store: {
                     select: {
@@ -44,6 +54,34 @@ const handler = async (data) => {
             },
             orderBy: { createdAt: 'desc' }
         });
+
+        // 3. Collect only the subcategories that descend from the "Ecommerce" category
+        const childrenMap = new Map();
+        for (const cat of allWorkspaceCats) {
+            if (cat.parentId) {
+                if (!childrenMap.has(cat.parentId)) {
+                    childrenMap.set(cat.parentId, []);
+                }
+                childrenMap.get(cat.parentId).push(cat);
+            }
+        }
+
+        const descendantIds = new Set();
+        function collectDescendants(parentId) {
+            const children = childrenMap.get(parentId) || [];
+            for (const child of children) {
+                descendantIds.add(child.id);
+                collectDescendants(child.id);
+            }
+        }
+        collectDescendants(ecommerceCategory.id);
+
+        let subCategories = allWorkspaceCats.filter(c => descendantIds.has(c.id));
+        if (storeId) {
+            subCategories = subCategories.filter(c => c.storeId === storeId);
+        }
+
+        const categories = subCategories;
 
         // Compute product count for each category
         const products = await db.eCommerceProduct.findMany({

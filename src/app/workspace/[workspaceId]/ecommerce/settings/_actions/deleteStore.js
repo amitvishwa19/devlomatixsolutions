@@ -6,6 +6,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
+import { invalidateStoreAuthCache } from "@/lib/ecommerce/storefront-auth";
 
 const DeleteStore = z.object({
     workspaceId: z.string(),
@@ -35,6 +36,7 @@ const handler = async (data) => {
             where: { id: storeId }
         });
 
+        invalidateStoreAuthCache(storeId);
         revalidatePath(`/workspace/${workspaceId}/ecommerce/settings`);
         return { data: { message: "Store deleted" } };
     } catch (error) {

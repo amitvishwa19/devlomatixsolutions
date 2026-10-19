@@ -12,7 +12,21 @@ const handler = async (data) => {
     try {
         const { workspaceId } = data;
 
-        const categories = await db.category.findMany({
+        const ecommerceCategory = await db.category.findFirst({
+            where: {
+                workspaceId,
+                OR: [
+                    { name: { equals: "Ecommerce", mode: "insensitive" } },
+                    { slug: "ecommerce" }
+                ]
+            }
+        });
+
+        if (!ecommerceCategory) {
+            return { data: { categories: [] } };
+        }
+
+        const allCategories = await db.category.findMany({
             where: {
                 workspaceId,
                 parentId: { not: null },
@@ -20,6 +34,28 @@ const handler = async (data) => {
             },
             orderBy: { name: 'asc' },
         });
+
+        const childrenMap = new Map();
+        for (const cat of allCategories) {
+            if (cat.parentId) {
+                if (!childrenMap.has(cat.parentId)) {
+                    childrenMap.set(cat.parentId, []);
+                }
+                childrenMap.get(cat.parentId).push(cat);
+            }
+        }
+
+        const descendantIds = new Set();
+        function collectDescendants(parentId) {
+            const children = childrenMap.get(parentId) || [];
+            for (const child of children) {
+                descendantIds.add(child.id);
+                collectDescendants(child.id);
+            }
+        }
+        collectDescendants(ecommerceCategory.id);
+
+        const categories = allCategories.filter(c => descendantIds.has(c.id));
 
         // Build hierarchical tree
         const catIds = new Set(categories.map(c => c.id));
