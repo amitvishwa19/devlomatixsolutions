@@ -570,18 +570,16 @@ export default function QuotationBuilder({
                         <button
                             type="button"
                             onClick={() => setViewMode('editor')}
-                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
-                                viewMode === 'editor' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
-                            } lg:hidden`}
+                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${viewMode === 'editor' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
+                                } lg:hidden`}
                         >
                             Editor
                         </button>
                         <button
                             type="button"
                             onClick={() => setViewMode('preview')}
-                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${
-                                viewMode === 'preview' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
-                            } lg:hidden`}
+                            className={`px-2.5 py-1 font-semibold rounded-md transition-all ${viewMode === 'preview' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground'
+                                } lg:hidden`}
                         >
                             Preview
                         </button>
@@ -623,9 +621,8 @@ export default function QuotationBuilder({
             {/* Split Screen Container */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
                 {/* Left Side: Editor Form */}
-                <div className={`lg:col-span-6 space-y-4 overflow-y-auto pr-1 ${
-                    viewMode === 'preview' ? 'hidden lg:block' : 'block'
-                }`}>
+                <div className={`lg:col-span-6 space-y-4 overflow-y-auto pr-1 ${viewMode === 'preview' ? 'hidden lg:block' : 'block'
+                    }`}>
                     {/* Organization Branding & Sender */}
                     {/* Organization Branding & Sender */}
                     <div className="p-3 bg-card rounded-2xl border border-border/80 shadow-xs space-y-2.5">
@@ -841,7 +838,7 @@ export default function QuotationBuilder({
                                     value={clientCompany}
                                     onChange={(e) => setClientCompany(e.target.value)}
                                     placeholder="e.g. Acme Technologies"
-                                    className="h-8 text-xs"
+                                    className="h-14 text-xs"
                                 />
                             </div>
 
@@ -1099,9 +1096,8 @@ export default function QuotationBuilder({
                 </div>
 
                 {/* Right Side: Live Document Preview */}
-                <div className={`lg:col-span-6 flex flex-col h-full overflow-y-auto ${
-                    viewMode === 'editor' ? 'hidden lg:flex' : 'flex'
-                }`}>
+                <div className={`lg:col-span-6 flex flex-col h-full overflow-y-auto ${viewMode === 'editor' ? 'hidden lg:flex' : 'flex'
+                    }`}>
                     <QuotationDocumentPreview
                         data={previewData}
                         theme={previewTheme}
