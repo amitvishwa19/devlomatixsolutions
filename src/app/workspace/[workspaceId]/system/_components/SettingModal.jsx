@@ -28,9 +28,12 @@ import {
     DatabaseBackup,
     Building2,
     Radio,
+    Network,
 } from 'lucide-react';
+import { useParams } from 'next/navigation';
 import { GeneralSettings } from './GeneralSettings';
 import { BusinessDetailsSettings } from './BusinessDetailsSettings';
+import { OrgBuilderSettings } from './OrgBuilderSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { NotificationSettings } from './NotificationSettings';
 import { IntegrationSettings } from './IntegrationSettings';
@@ -48,6 +51,7 @@ import { searchSettings } from '../_lib/settings-search-index';
 const settingTabs = [
     { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
     { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
+    { id: 'org_builder', label: 'Org Builder', icon: Network, color: 'text-violet-500' },
     { id: 'socket', label: 'Socket Server', icon: Radio, color: 'text-cyan-500' },
     { id: 'whatsapp', label: 'WhatsApp Cloud API', icon: MessageSquare, color: 'text-emerald-500' },
     { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
@@ -63,6 +67,7 @@ const settingTabs = [
 const settingDescriptions = {
     general: 'Configure workspace identity, branding, and social presence.',
     business: 'Manage universal legal identity, GSTIN, PAN, office addresses, bank coordinates, and quotation presets (Universal Global).',
+    org_builder: 'Design your corporate organization hierarchy, roles (CEO, HR, CTO, Sales), and assign team members (Universal Global).',
     socket: 'Configure real-time WebSocket & WebRTC signaling server endpoints for Development and Production (saved globally).',
     whatsapp: 'Configure Meta WhatsApp Cloud API credentials, default production sender, and webhooks.',
     security: 'Manage authentication policies and access controls.',
@@ -77,6 +82,8 @@ const settingDescriptions = {
 };
 
 export default function SettingModal({ open, onClose, defaultTab = 'general' }) {
+    const params = useParams();
+    const workspaceId = params?.workspaceId || 'default';
     const [activeTab, setActiveTab] = useState(defaultTab || 'general');
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -165,6 +172,7 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                                 {filteredTabs.map((tab, index) => {
                                     const isSelected = activeTab === tab.id;
                                     const tabMatches = deepMatches.filter(m => m.tabId === tab.id);
+                                    const TabIcon = tab.icon || Settings;
 
                                     return (
                                         <div key={tab.id} className="space-y-1">
@@ -179,7 +187,7 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                                                 transition={{ delay: index * 0.02 }}
                                                 whileHover={{ x: 2 }}
                                             >
-                                                <tab.icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? tab.color : ''}`} />
+                                                <TabIcon className={`w-4 h-4 flex-shrink-0 ${isSelected ? tab.color : ''}`} />
                                                 <span className="font-medium text-xs truncate">{tab.label}</span>
                                                 {tabMatches.length > 0 && searchQuery && (
                                                     <span className="ml-auto px-1.5 py-0.2 rounded-full text-[9px] bg-primary/20 text-primary font-bold">
@@ -261,7 +269,7 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                         </div>
 
                         {/* Content Scroll Area */}
-                        <ScrollArea className="flex-1 h-full p-4 overflow-y-auto bg-card">
+                        <ScrollArea className="flex-1 h-full p-4 bg-card">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={activeTab}
@@ -269,10 +277,11 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
                                     transition={{ duration: 0.15 }}
-                                    className="space-y-3 pb-8"
+                                    className="space-y-3 pb-8 min-w-0 w-full"
                                 >
                                     {activeTab === 'general' && <GeneralSettings />}
                                     {activeTab === 'business' && <BusinessDetailsSettings />}
+                                    {activeTab === 'org_builder' && <OrgBuilderSettings workspaceId="global" />}
                                     {activeTab === 'socket' && <SocketServerSettings />}
                                     {activeTab === 'whatsapp' && <WhatsAppCloudSettings />}
                                     {activeTab === 'security' && <SecuritySettings />}

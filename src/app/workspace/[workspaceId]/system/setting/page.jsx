@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { WorkspaceProvider, useSettings } from '@/providers/WorkspaceProvider';
 import { GeneralSettings } from './_components/GeneralSettings';
 import { BusinessDetailsSettings } from './_components/BusinessDetailsSettings';
@@ -27,13 +28,16 @@ import {
   Search,
   Tag,
   Radio,
+  Network,
 } from 'lucide-react';
 import { SocketServerSettings } from '../_components/SocketServerSettings';
+import { OrgBuilderSettings } from '../_components/OrgBuilderSettings';
 import { searchSettings } from '../_lib/settings-search-index';
 
 const settingTabs = [
   { id: 'general', label: 'General', icon: Settings, color: 'text-primary' },
   { id: 'business', label: 'Business Details', icon: Building2, color: 'text-amber-500' },
+  { id: 'org_builder', label: 'Org Builder', icon: Network, color: 'text-violet-500' },
   { id: 'socket', label: 'Socket Server', icon: Radio, color: 'text-cyan-500' },
   { id: 'security', label: 'Security', icon: Shield, color: 'text-sky-500' },
   { id: 'notifications', label: 'Notifications', icon: Bell, color: 'text-rose-500' },
@@ -45,7 +49,8 @@ const settingTabs = [
 
 const settingDescriptions = {
   general: 'Workspace identity, branding, and social presence.',
-  business: 'Registered corporate identity, GSTIN, PAN, office address, and banking coordinates.',
+  business: 'Registered corporate identity, GSTIN, PAN, office address, and banking coordinates (Universal Global).',
+  org_builder: 'Design your corporate organization hierarchy, roles (CEO, HR, CTO, Sales), and assign team members (Universal Global).',
   socket: 'Configure real-time WebSocket & WebRTC signaling server endpoints for Development and Production (saved globally).',
   security: 'Authentication policies and access controls.',
   notifications: 'Alert channels and notification preferences.',
@@ -57,9 +62,19 @@ const settingDescriptions = {
 };
 
 function SettingPageContent() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const workspaceId = params?.workspaceId || 'default';
+  const requestedTab = searchParams?.get('tab');
   const { settings, settingsLoading, loading } = useSettings();
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState(requestedTab || 'general');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    if (requestedTab && settingTabs.some(t => t.id === requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [requestedTab]);
 
   const isDataLoading = settingsLoading || (loading && !settings);
 
@@ -246,6 +261,7 @@ function SettingPageContent() {
                 <div>
                   {activeTab === 'general' && <GeneralSettings />}
                   {activeTab === 'business' && <BusinessDetailsSettings />}
+                  {activeTab === 'org_builder' && <OrgBuilderSettings workspaceId="global" />}
                   {activeTab === 'socket' && <SocketServerSettings />}
                   {activeTab === 'security' && <SecuritySettings />}
                   {activeTab === 'notifications' && <NotificationSettings />}

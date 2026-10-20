@@ -282,6 +282,8 @@ export const getSidebarNavItems = (workspaceId) => {
         {
             parent: { title: "System", icon: "monitor-cog", url: basePath },
             child: [
+                { title: "Settings", icon: "settings", url: `${systemPath}/setting` },
+                { title: "Org Builder", icon: "network", url: `${systemPath}/org-builder` },
                 { title: "Access Control", icon: "shield-check", url: `${systemPath}/access` },
                 { title: "Credentials", icon: "key-square", url: `${systemPath}/credential` },
                 { title: "Logs", icon: "scroll-text", url: `${systemPath}/log` },

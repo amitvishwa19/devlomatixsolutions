@@ -2,7 +2,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSubTrigger, DropdownMenuTrigger, } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage, } from "@/components/ui/avatar"
-import { Captions, CircleQuestionMark, CircleUserRound, EllipsisVertical, LogOut, Megaphone, Moon, RefreshCcw, ScanEye, Settings, ShieldUser, Sun } from 'lucide-react'
+import { Captions, CircleQuestionMark, CircleUserRound, EllipsisVertical, LogOut, Megaphone, Moon, RefreshCcw, ScanEye, Settings, ShieldUser, Sun, Network } from 'lucide-react'
 import { useModal } from '@/hooks/useModal'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -28,6 +28,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
 
     const [settingModalOpen, setSettingModalOpen] = useState(false)
+    const [settingModalTab, setSettingModalTab] = useState('general')
 
     const [documentModal, setDocumentModal] = useState({
         isOpen: false,
@@ -104,6 +105,15 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
 
 
                             <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                                setSettingModalTab('org_builder')
+                                setSettingModalOpen(true)
+                            }}>
+                                <Network size={15} className='text-muted-foreground' />
+                                Org Builder
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem className='flex flex-row gap-2' onClick={() => {
+                                setSettingModalTab('general')
                                 setSettingModalOpen(true)
                             }}>
                                 <Settings size={15} className='text-muted-foreground' />
@@ -159,6 +169,7 @@ export default function OrgAuthBlock({ side = 'right', align = 'start', sideOffs
             </DropdownMenu>
             <SettingModal
                 open={settingModalOpen}
+                defaultTab={settingModalTab}
                 onClose={() => setSettingModalOpen(false)}
             />
         </div>
