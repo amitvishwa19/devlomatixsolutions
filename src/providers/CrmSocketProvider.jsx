@@ -330,81 +330,108 @@ export function CrmSocketProvider({ children }) {
       return;
     }
 
-    setSocketUrl(resolvedUrl);
-    setConnectionStatus('connecting');
+    let isCancelled = false;
+    let s = null;
 
-    const s = io(resolvedUrl, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 15,
-      reconnectionDelay: 2000,
-      timeout: 10000
-    });
+    async function initializeSocket() {
+      setSocketUrl(resolvedUrl);
+      setConnectionStatus('connecting');
 
-    s.on('connect', () => {
-      setIsConnected(true);
-      setConnectionStatus('connected');
-      const currentTransport = s.io?.engine?.transport?.name || 'websocket';
-      setTransport(currentTransport);
-      console.log(`[CRM_SOCKET] Connected to ${resolvedUrl} (ID: ${s.id}, Transport: ${currentTransport})`);
-
-      // Monitor transport upgrades (e.g., polling -> websocket)
-      s.io?.engine?.on('upgrade', (rawTransport) => {
-        setTransport(rawTransport?.name || 'websocket');
-      });
-
-      // Quick latency calculation
-      const start = Date.now();
+      // 🔐 Fetch signed JWT socket auth token
+      let authToken = null;
       try {
-        s.timeout(2000).emit('client:ping', () => {
-          setLatency(Date.now() - start);
-        });
-      } catch (_) {}
+        const tokenRes = await fetch('/api/auth/socket-token');
+        if (tokenRes.ok) {
+          const tokenData = await tokenRes.json();
+          authToken = tokenData?.token || null;
+        }
+      } catch (err) {
+        console.warn('[CRM_SOCKET] Failed to fetch socket auth token:', err);
+      }
 
-      // Register presence in workspace
-      s.emit('user:join', {
-        userId: currentUserId,
-        workspaceId,
-        userName: currentUserName,
-        avatar: currentUserAvatar
+      if (isCancelled) return;
+
+      s = io(resolvedUrl, {
+        auth: {
+          token: authToken
+        },
+        transports: ['websocket', 'polling'],
+        reconnectionAttempts: 15,
+        reconnectionDelay: 2000,
+        timeout: 10000
       });
-    });
 
-    s.on('disconnect', (reason) => {
-      setIsConnected(false);
-      setConnectionStatus('disconnected');
-      console.log('[CRM_SOCKET] Disconnected from server. Reason:', reason);
-    });
+      s.on('connect', () => {
+        setIsConnected(true);
+        setConnectionStatus('connected');
+        const currentTransport = s.io?.engine?.transport?.name || 'websocket';
+        setTransport(currentTransport);
+        console.log(`[CRM_SOCKET] Authenticated connection established to ${resolvedUrl} (ID: ${s.id}, Transport: ${currentTransport})`);
 
-    s.on('connect_error', (error) => {
-      setIsConnected(false);
-      setConnectionStatus('error');
-      console.warn('[CRM_SOCKET] Connection error:', error?.message);
-    });
+        // Monitor transport upgrades (e.g., polling -> websocket)
+        s.io?.engine?.on('upgrade', (rawTransport) => {
+          setTransport(rawTransport?.name || 'websocket');
+        });
 
-    s.io?.on('reconnect_attempt', () => {
-      setConnectionStatus('reconnecting');
-    });
+        // Quick latency calculation
+        const start = Date.now();
+        try {
+          s.timeout(2000).emit('client:ping', () => {
+            setLatency(Date.now() - start);
+          });
+        } catch (_) {}
 
-    s.io?.on('reconnect', () => {
-      setIsConnected(true);
-      setConnectionStatus('connected');
-      setTransport(s.io?.engine?.transport?.name || 'websocket');
-    });
+        // Register presence in workspace
+        s.emit('user:join', {
+          workspaceId,
+          userId: currentUserId,
+          userName: currentUserName,
+          avatar: currentUserAvatar
+        });
+      });
 
-    s.io?.on('reconnect_failed', () => {
-      setIsConnected(false);
-      setConnectionStatus('disconnected');
-    });
+      s.on('disconnect', (reason) => {
+        setIsConnected(false);
+        setConnectionStatus('disconnected');
+        console.log('[CRM_SOCKET] Disconnected from server. Reason:', reason);
+      });
 
-    s.on('presence:sync', (users) => {
-      setOnlineUsers(users.filter((u) => u.userId !== currentUserId));
-    });
+      s.on('connect_error', (error) => {
+        setIsConnected(false);
+        setConnectionStatus('error');
+        console.warn('[CRM_SOCKET] Connection error:', error?.message);
+      });
 
-    socketRef.current = s;
-    setSocket(s);
+      s.io?.on('reconnect_attempt', () => {
+        setConnectionStatus('reconnecting');
+      });
+
+      s.io?.on('reconnect', () => {
+        setIsConnected(true);
+        setConnectionStatus('connected');
+        setTransport(s.io?.engine?.transport?.name || 'websocket');
+      });
+
+      s.io?.on('reconnect_failed', () => {
+        setIsConnected(false);
+        setConnectionStatus('disconnected');
+      });
+
+      s.on('presence:sync', (users) => {
+        setOnlineUsers(users.filter((u) => u.userId !== currentUserId));
+      });
+
+      socketRef.current = s;
+      setSocket(s);
+    }
+
+    initializeSocket();
 
     return () => {
-      s.disconnect();
+      isCancelled = true;
+      if (s) {
+        s.disconnect();
+      }
     };
   }, [currentUserId, workspaceId, currentUserName, currentUserAvatar, resolvedUrl]);
 

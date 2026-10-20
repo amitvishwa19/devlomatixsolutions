@@ -23,13 +23,40 @@ export const SocketProvider = ({ children }) => {
     //console.log(session)
 
     useEffect(() => {
-        try {
-            const targetUrl = resolveSocketUrl();
-            setSocket(io(targetUrl))
-        } catch (error) {
-            console.log('Error connecting to socket server', error)
+        let isCancelled = false;
+        let s = null;
+
+        async function initSocket() {
+            try {
+                let token = null;
+                try {
+                    const res = await fetch('/api/auth/socket-token');
+                    if (res.ok) {
+                        const data = await res.json();
+                        token = data?.token || null;
+                    }
+                } catch (_) {}
+
+                if (isCancelled) return;
+                const targetUrl = resolveSocketUrl();
+                s = io(targetUrl, {
+                    auth: { token }
+                });
+                setSocket(s);
+            } catch (error) {
+                console.log('Error connecting to socket server', error);
+            }
         }
-    }, [])
+
+        if (userId) {
+            initSocket();
+        }
+
+        return () => {
+            isCancelled = true;
+            if (s) s.disconnect();
+        };
+    }, [userId])
 
     useEffect(() => {
         if (session) {
