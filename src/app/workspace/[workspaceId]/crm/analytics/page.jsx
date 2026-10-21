@@ -111,9 +111,9 @@ export default function CrmAnalyticsPage() {
     const topThree = leaderboardData.slice(0, 3);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="space-y-4 p-4  mx-auto pb-12">
             {/* Header Telemetry Hero */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-card via-card to-background border border-border/80 shadow-sm relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-xl bg-gradient-to-r from-card via-card to-background border border-border/80 shadow-sm relative overflow-hidden">
                 <div className="space-y-1.5 z-10">
                     <div className="flex items-center gap-2">
                         <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-semibold px-2.5 py-0.5">
@@ -125,7 +125,7 @@ export default function CrmAnalyticsPage() {
                             FlowGenix AI Powered
                         </Badge>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                    <h1 className="text-xl font-bold  text-foreground">
                         Revenue Forecasting & Team Leaderboard
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
@@ -183,7 +183,7 @@ export default function CrmAnalyticsPage() {
             {/* 4-Tier Scenario KPI Strip */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
                 {/* 1. Weighted Expected Revenue */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 via-card to-card border border-blue-500/30 shadow-xs space-y-1">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 via-card to-card border border-blue-500/30 shadow-xs space-y-1">
                     <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-bold uppercase tracking-wider text-blue-500">Weighted Forecast</span>
                         <Zap className="w-4 h-4 text-blue-500" />
@@ -197,7 +197,7 @@ export default function CrmAnalyticsPage() {
                 </div>
 
                 {/* 2. Committed Revenue */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-card to-card border border-emerald-500/30 shadow-xs space-y-1">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-card to-card border border-emerald-500/30 shadow-xs space-y-1">
                     <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-bold uppercase tracking-wider text-emerald-500">Committed Floor</span>
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
@@ -211,7 +211,7 @@ export default function CrmAnalyticsPage() {
                 </div>
 
                 {/* 3. Best-Case Max */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/10 via-card to-card border border-purple-500/30 shadow-xs space-y-1">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-purple-500/10 via-card to-card border border-purple-500/30 shadow-xs space-y-1">
                     <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-bold uppercase tracking-wider text-purple-500">Best-Case Ceiling</span>
                         <TrendingUp className="w-4 h-4 text-purple-500" />
@@ -225,7 +225,7 @@ export default function CrmAnalyticsPage() {
                 </div>
 
                 {/* 4. Closed Won Actuals */}
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-xs space-y-1">
+                <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-xs space-y-1">
                     <div className="flex items-center justify-between text-muted-foreground">
                         <span className="text-xs font-bold uppercase tracking-wider text-amber-500">Closed Won (Actuals)</span>
                         <Trophy className="w-4 h-4 text-amber-500" />
@@ -242,7 +242,7 @@ export default function CrmAnalyticsPage() {
 
             {/* Main Tabs */}
             <Tabs defaultValue="forecast" className="space-y-4">
-                <TabsList className="bg-muted/50 p-1 rounded-2xl border border-border/60">
+                <TabsList className="bg-muted/50 p-1 rounded-xl border border-border/60">
                     <TabsTrigger value="forecast" className="rounded-xl text-xs font-bold gap-1.5 px-3 py-1.5">
                         <BarChart3 className="w-3.5 h-3.5" />
                         <span>Revenue Forecasting & Funnel</span>
@@ -267,7 +267,7 @@ export default function CrmAnalyticsPage() {
                     ) : (
                         <>
                             {/* Monthly Trajectory Projections Chart */}
-                            <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-xs space-y-4">
+                            <div className="p-6 rounded-xl bg-card border border-border/80 shadow-xs space-y-4">
                                 <div className="flex items-center justify-between pb-3 border-b border-border/60">
                                     <div>
                                         <h3 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -304,9 +304,8 @@ export default function CrmAnalyticsPage() {
                                                     <div className="flex items-center gap-3 font-mono">
                                                         <span className="text-muted-foreground">Target: {formatINR(m.quota)}</span>
                                                         <span className="font-bold text-foreground">{formatINR(displayVal)}</span>
-                                                        <Badge variant="outline" className={`text-[10px] ${
-                                                            percentage >= 100 ? 'text-emerald-500 border-emerald-500/30' : 'text-blue-500 border-blue-500/30'
-                                                        }`}>
+                                                        <Badge variant="outline" className={`text-[10px] ${percentage >= 100 ? 'text-emerald-500 border-emerald-500/30' : 'text-blue-500 border-blue-500/30'
+                                                            }`}>
                                                             {percentage}%
                                                         </Badge>
                                                     </div>
@@ -314,9 +313,8 @@ export default function CrmAnalyticsPage() {
 
                                                 <div className="h-3 w-full rounded-full bg-muted/60 overflow-hidden flex">
                                                     <div
-                                                        className={`h-full transition-all duration-500 ${
-                                                            isPast ? 'bg-emerald-500' : isCurrent ? 'bg-gradient-to-r from-emerald-500 to-blue-500' : 'bg-blue-500/80'
-                                                        }`}
+                                                        className={`h-full transition-all duration-500 ${isPast ? 'bg-emerald-500' : isCurrent ? 'bg-gradient-to-r from-emerald-500 to-blue-500' : 'bg-blue-500/80'
+                                                            }`}
                                                         style={{ width: `${percentage}%` }}
                                                     />
                                                 </div>
@@ -327,7 +325,7 @@ export default function CrmAnalyticsPage() {
                             </div>
 
                             {/* Pipeline Funnel & Stage Drop-off Velocity */}
-                            <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-xs space-y-4">
+                            <div className="p-6 rounded-xl bg-card border border-border/80 shadow-xs space-y-4">
                                 <div className="flex items-center justify-between pb-3 border-b border-border/60">
                                     <div>
                                         <h3 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -350,7 +348,7 @@ export default function CrmAnalyticsPage() {
                                         return (
                                             <div
                                                 key={stage.id}
-                                                className="p-3.5 rounded-2xl bg-muted/20 border border-border/70 space-y-2 hover:border-primary/40 transition-all"
+                                                className="p-3.5 rounded-xl bg-muted/20 border border-border/70 space-y-2 hover:border-primary/40 transition-all"
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
@@ -403,20 +401,18 @@ export default function CrmAnalyticsPage() {
                             return (
                                 <div
                                     key={rep.repId}
-                                    className={`p-5 rounded-3xl bg-card border relative overflow-hidden flex flex-col justify-between shadow-xs transition-all ${
-                                        isFirst
-                                            ? 'border-amber-500/50 bg-gradient-to-b from-amber-500/10 via-card to-card shadow-amber-500/5'
-                                            : isSecond
+                                    className={`p-5 rounded-xl bg-card border relative overflow-hidden flex flex-col justify-between shadow-xs transition-all ${isFirst
+                                        ? 'border-amber-500/50 bg-gradient-to-b from-amber-500/10 via-card to-card shadow-amber-500/5'
+                                        : isSecond
                                             ? 'border-zinc-400/40'
                                             : 'border-amber-700/30'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <div className={`w-9 h-9 rounded-2xl flex items-center justify-center font-black text-sm text-white shadow-sm ${
-                                                    isFirst ? 'bg-gradient-to-tr from-amber-400 to-yellow-600' : isSecond ? 'bg-gradient-to-tr from-zinc-400 to-zinc-600' : 'bg-gradient-to-tr from-amber-700 to-amber-900'
-                                                }`}>
+                                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm text-white shadow-sm ${isFirst ? 'bg-gradient-to-tr from-amber-400 to-yellow-600' : isSecond ? 'bg-gradient-to-tr from-zinc-400 to-zinc-600' : 'bg-gradient-to-tr from-amber-700 to-amber-900'
+                                                    }`}>
                                                     {isFirst ? <Crown className="w-5 h-5 text-yellow-100" /> : `#${rep.rank}`}
                                                 </div>
                                                 <div>
@@ -431,7 +427,7 @@ export default function CrmAnalyticsPage() {
                                         </div>
 
                                         {/* Revenue & Quota */}
-                                        <div className="p-3 rounded-2xl bg-muted/20 border border-border/60 space-y-1.5">
+                                        <div className="p-3 rounded-xl bg-muted/20 border border-border/60 space-y-1.5">
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-muted-foreground">Closed Revenue:</span>
                                                 <span className="text-sm font-black text-foreground font-mono">{formatINR(rep.wonValue)}</span>
@@ -499,9 +495,8 @@ export default function CrmAnalyticsPage() {
                                         <tr key={rep.repId} className="hover:bg-muted/30 transition-colors">
                                             <td className="py-3.5 px-4 font-bold text-foreground">
                                                 <div className="flex items-center gap-2.5">
-                                                    <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${
-                                                        rep.rank === 1 ? 'bg-amber-500 text-white' : rep.rank === 2 ? 'bg-zinc-400 text-white' : rep.rank === 3 ? 'bg-amber-800 text-white' : 'bg-muted text-muted-foreground'
-                                                    }`}>
+                                                    <span className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center ${rep.rank === 1 ? 'bg-amber-500 text-white' : rep.rank === 2 ? 'bg-zinc-400 text-white' : rep.rank === 3 ? 'bg-amber-800 text-white' : 'bg-muted text-muted-foreground'
+                                                        }`}>
                                                         {rep.rank}
                                                     </span>
                                                     <div>
@@ -553,7 +548,7 @@ export default function CrmAnalyticsPage() {
 
                 {/* Tab 3: Deal Slippage Radar */}
                 <TabsContent value="slippage" className="space-y-4 outline-none">
-                    <div className="p-6 rounded-3xl bg-card border border-border/80 space-y-4">
+                    <div className="p-6 rounded-xl bg-card border border-border/80 space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border/60">
                             <div>
                                 <h3 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -578,7 +573,7 @@ export default function CrmAnalyticsPage() {
                                 {forecastData?.dealsAtRiskOfSlipping?.map((deal) => (
                                     <div
                                         key={deal.id}
-                                        className="p-4 rounded-2xl bg-muted/20 border border-rose-500/30 space-y-3 relative overflow-hidden"
+                                        className="p-4 rounded-xl bg-muted/20 border border-rose-500/30 space-y-3 relative overflow-hidden"
                                     >
                                         <div className="flex items-start justify-between gap-2">
                                             <div>

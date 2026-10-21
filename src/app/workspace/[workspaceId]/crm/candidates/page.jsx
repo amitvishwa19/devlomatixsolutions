@@ -146,7 +146,7 @@ export default function CrmCandidatesPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-16">
+        <div className="space-y-4 p-4 mx-auto pb-16">
             {/* Top Header Banner */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-5">
                 <div>
@@ -155,7 +155,7 @@ export default function CrmCandidatesPage() {
                             <UserCheck className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+                            <h1 className="text-xl font-bold  text-foreground flex items-center gap-2">
                                 Applied Candidates
                                 <Badge variant="outline" className="text-xs bg-indigo-500/10 text-indigo-600 border-indigo-500/20 font-medium">
                                     HireFlow ATS Stream
@@ -223,7 +223,7 @@ export default function CrmCandidatesPage() {
             </div>
 
             {/* Filter Bar & Stage Selectors */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-2xl border border-border">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border">
                 {/* Stage Filters */}
                 <div className="flex items-center overflow-x-auto gap-1.5 pb-1 sm:pb-0">
                     {['ALL', 'APPLIED', 'SCREENING', 'INTERVIEW', 'OFFER', 'HIRED', 'REJECTED'].map((stg) => {
@@ -232,11 +232,10 @@ export default function CrmCandidatesPage() {
                             <button
                                 key={stg}
                                 onClick={() => setStageFilter(stg)}
-                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
-                                    active
-                                        ? 'bg-primary text-primary-foreground shadow-xs'
-                                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                }`}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${active
+                                    ? 'bg-primary text-primary-foreground shadow-xs'
+                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                    }`}
                             >
                                 {stg === 'ALL' ? 'All Stages' : STAGE_CONFIG[stg]?.label || stg}
                             </button>
@@ -263,8 +262,8 @@ export default function CrmCandidatesPage() {
                     <p className="text-xs font-medium">Loading candidate applications from HireFlow...</p>
                 </div>
             ) : candidates.length === 0 ? (
-                <div className="p-16 text-center bg-card border border-dashed border-border rounded-2xl flex flex-col items-center justify-center">
-                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mb-3">
+                <div className="p-16 text-center bg-card border border-dashed border-border rounded-xl flex flex-col items-center justify-center">
+                    <div className="w-14 h-14 rounded-xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mb-3">
                         <UserCheck className="w-7 h-7" />
                     </div>
                     <h3 className="text-base font-bold text-foreground">No Candidates Found</h3>
@@ -289,7 +288,7 @@ export default function CrmCandidatesPage() {
                         return (
                             <div
                                 key={candidate.id}
-                                className="p-4 sm:p-5 rounded-2xl bg-card border border-border hover:border-primary/40 transition-all duration-200 shadow-xs hover:shadow-md flex flex-col justify-between space-y-4"
+                                className="p-4 sm:p-5 rounded-xl bg-card border border-border hover:border-primary/40 transition-all duration-200 shadow-xs hover:shadow-md flex flex-col justify-between space-y-4"
                             >
                                 <div className="space-y-3">
                                     {/* Top Row: Name, Stage & Applied Date */}

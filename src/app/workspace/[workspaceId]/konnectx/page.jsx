@@ -246,7 +246,7 @@ export default function DashboardPage() {
                             </span>
                         </div>
 
-                        <h1 className="text-xl md:text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+                        <h1 className="text-xl md:text-2xl text-foreground flex items-center gap-2">
                             KonnectX Command Hub
                         </h1>
                         <p className="text-xs text-muted-foreground leading-relaxed">

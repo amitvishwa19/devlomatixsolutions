@@ -233,7 +233,7 @@ export function AnalyticsTab({ workspaceId }) {
                         </div>
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-black tracking-tight">{summary.totalRequests}</span>
+                        <span className="text-2xl">{summary.totalRequests}</span>
                         <Badge className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400">
                             {summary.successRate}% Success
                         </Badge>
@@ -252,7 +252,7 @@ export function AnalyticsTab({ workspaceId }) {
                         </div>
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-black tracking-tight font-mono">
+                        <span className="text-2xl font-mono">
                             {summary.totalTokens > 1000 ? `${(summary.totalTokens / 1000).toFixed(1)}k` : summary.totalTokens}
                         </span>
                         <span className="text-xs text-muted-foreground font-mono">tokens</span>
@@ -273,7 +273,7 @@ export function AnalyticsTab({ workspaceId }) {
                         </div>
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-black tracking-tight font-mono text-foreground">${summary.totalCostUsd}</span>
+                        <span className="text-2xl font-mono text-foreground">${summary.totalCostUsd}</span>
                         <Badge className="text-[10px] font-mono bg-purple-500/15 text-purple-400">
                             USD
                         </Badge>
@@ -292,7 +292,7 @@ export function AnalyticsTab({ workspaceId }) {
                         </div>
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-2xl font-black tracking-tight font-mono">{summary.avgLatencyMs}ms</span>
+                        <span className="text-2xl font-mono">{summary.avgLatencyMs}ms</span>
                         <Badge className="text-[10px] font-mono bg-emerald-500/15 text-emerald-400">
                             {summary.avgCompressionRate} Saved
                         </Badge>

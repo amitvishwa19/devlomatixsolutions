@@ -359,7 +359,7 @@ export function BusinessDetailsSettings() {
                             <CardContent className="p-4 sm:p-6 bg-white text-slate-900 rounded-b-xl font-sans">
                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4 border-b border-slate-200">
                                     <div>
-                                        <h3 className="text-lg font-black tracking-tight text-slate-900 uppercase">
+                                        <h3 className="text-lg text-slate-900 uppercase">
                                             {localBusiness.legalName || 'YOUR BUSINESS NAME'}
                                         </h3>
                                         {localBusiness.tradeName && localBusiness.tradeName !== localBusiness.legalName && (

@@ -199,16 +199,16 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 lg:p-8 space-y-6">
+        <div className="flex flex-col min-h-screen bg-background p-4  space-y-4">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-primary text-white shadow-md">
+                    <div className="p-2.5 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-primary text-white shadow-md">
                         <BrainCircuit className="w-6 h-6" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl lg:text-2xl font-black tracking-tight text-foreground">
+                            <h1 className="text-xl font-bold text-foreground">
                                 FlowGenix Sales Copilot
                             </h1>
                             <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] font-bold">
@@ -237,22 +237,22 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
 
             {/* Radar Telemetry KPI Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Deals Evaluated</p>
                     <p className="text-2xl font-black text-foreground">{radarData?.totalOpenDeals || 0}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Real-time pipeline scan</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-red-500 uppercase tracking-wider">⚠️ At-Risk / Stalled</p>
                     <p className="text-2xl font-black text-red-500">{radarData?.atRiskCount || 0}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Require immediate outreach</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-emerald-500 uppercase tracking-wider">Healthy Momentum</p>
                     <p className="text-2xl font-black text-emerald-500">{radarData?.healthyCount || 0}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Active touchpoint frequency</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-purple-500 uppercase tracking-wider">FlowGenix AI Agent</p>
                     <div className="flex items-center gap-1.5 mt-1">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -281,7 +281,7 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
 
                 {/* Tab 1: AI Risk Radar */}
                 <TabsContent value="radar" className="space-y-4">
-                    <div className="p-5 rounded-3xl bg-card border border-border/80 space-y-4">
+                    <div className="p-5 rounded-xl bg-card border border-border/80 space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-border/60">
                             <div>
                                 <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
@@ -309,7 +309,7 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
                                 <p className="text-xs font-semibold text-muted-foreground">Evaluating pipeline risks...</p>
                             </div>
                         ) : radarData?.atRiskDeals?.length === 0 ? (
-                            <div className="p-12 text-center text-xs text-muted-foreground border border-dashed border-border rounded-2xl">
+                            <div className="p-12 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
                                 🎉 Outstanding! No deals are currently flagged as stalled or at-risk. All opportunities have healthy momentum.
                             </div>
                         ) : (
@@ -317,16 +317,15 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
                                 {radarData.atRiskDeals.map((deal) => (
                                     <div
                                         key={deal.id}
-                                        className="p-4 rounded-2xl bg-muted/20 border border-border/70 hover:border-border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs group"
+                                        className="p-4 rounded-xl bg-muted/20 border border-border/70 hover:border-border transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs group"
                                     >
                                         <div className="space-y-1.5 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 <h4 className="font-bold text-foreground text-sm">{deal.title}</h4>
                                                 <Badge
                                                     variant="secondary"
-                                                    className={`text-[9px] font-bold uppercase ${
-                                                        deal.riskLevel === 'HIGH' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
-                                                    }`}
+                                                    className={`text-[9px] font-bold uppercase ${deal.riskLevel === 'HIGH' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                                                        }`}
                                                 >
                                                     {deal.riskLevel === 'HIGH' ? '🚨 High Risk' : '⚠️ Stalled'}
                                                 </Badge>
@@ -405,7 +404,7 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
 
                 {/* Tab 2: Interactive FlowGenix Copilot Chat */}
                 <TabsContent value="chat" className="space-y-4">
-                    <div className="p-5 rounded-3xl bg-card border border-border/80 flex flex-col h-[580px] shadow-xs">
+                    <div className="p-5 rounded-xl bg-card border border-border/80 flex flex-col h-[580px] shadow-xs">
                         <div className="flex items-center justify-between pb-3 border-b border-border/60">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 rounded-xl bg-purple-500/10 text-purple-500">
@@ -441,11 +440,10 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
                                     )}
 
                                     <div
-                                        className={`p-3.5 rounded-2xl text-xs max-w-[80%] leading-relaxed ${
-                                            msg.role === 'user'
-                                                ? 'bg-primary text-primary-foreground font-medium rounded-br-xs'
-                                                : 'bg-muted/40 border border-border/70 text-foreground rounded-bl-xs'
-                                        }`}
+                                        className={`p-3.5 rounded-xl text-xs max-w-[80%] leading-relaxed ${msg.role === 'user'
+                                            ? 'bg-primary text-primary-foreground font-medium rounded-br-xs'
+                                            : 'bg-muted/40 border border-border/70 text-foreground rounded-bl-xs'
+                                            }`}
                                     >
                                         <div className="whitespace-pre-wrap">{msg.content}</div>
                                     </div>
@@ -528,7 +526,7 @@ ${(summarizedNote.nextSteps || []).map(s => `• ${s}`).join('\n')}
 
                 {/* Tab 3: Smart Meeting Summarizer */}
                 <TabsContent value="summarizer" className="space-y-4">
-                    <div className="p-5 rounded-3xl bg-card border border-border/80 space-y-4">
+                    <div className="p-5 rounded-xl bg-card border border-border/80 space-y-4">
                         <div className="pb-3 border-b border-border/60">
                             <h3 className="text-xs font-bold text-foreground flex items-center gap-1.5">
                                 <FileText className="w-4 h-4 text-blue-500" />
@@ -565,7 +563,7 @@ e.g. Call with Vikram at Tata Tech. He loves the KonnectX WhatsApp integration. 
                             </div>
 
                             {/* Output Column */}
-                            <div className="p-4 rounded-2xl bg-muted/30 border border-border/70 text-xs space-y-3 min-h-[250px] flex flex-col justify-between">
+                            <div className="p-4 rounded-xl bg-muted/30 border border-border/70 text-xs space-y-3 min-h-[250px] flex flex-col justify-between">
                                 {!summarizedNote ? (
                                     <div className="flex-1 flex flex-col items-center justify-center text-center text-muted-foreground py-10">
                                         <FileText className="w-8 h-8 text-muted-foreground/50 mb-2" />

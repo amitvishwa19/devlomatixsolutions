@@ -128,7 +128,7 @@ export default function AccountsDirectoryPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 lg:p-8 space-y-6">
+        <div className="flex flex-col min-h-screen bg-background p-4 space-y-4">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ export default function AccountsDirectoryPage() {
                         <Building2 className="w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl lg:text-2xl font-black tracking-tight text-foreground">
+                        <h1 className="text-xl font-bold text-foreground">
                             B2B Organizations & Companies
                         </h1>
                         <p className="text-xs text-muted-foreground">
@@ -174,22 +174,22 @@ export default function AccountsDirectoryPage() {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Companies</p>
                     <p className="text-2xl font-black text-foreground">{metrics.total}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">B2B client accounts</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-emerald-500 uppercase tracking-wider">Total Pipeline Value</p>
                     <p className="text-2xl font-black text-emerald-500">{formatCurrency(metrics.totalPipelineValue)}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Across all company deals</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wider">🔥 Hot Tier Accounts</p>
                     <p className="text-2xl font-black text-foreground">{metrics.hotAccounts}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">High-priority enterprise clients</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-primary uppercase tracking-wider">Linked Stakeholders</p>
                     <p className="text-2xl font-black text-foreground">{metrics.totalContacts}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Mapped contacts & decision-makers</p>
@@ -197,7 +197,7 @@ export default function AccountsDirectoryPage() {
             </div>
 
             {/* Filter Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-card border border-border/70">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border/70">
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -239,7 +239,7 @@ export default function AccountsDirectoryPage() {
             </div>
 
             {/* Accounts Table */}
-            <div className="border border-border/70 rounded-2xl bg-card overflow-hidden shadow-xs">
+            <div className="border border-border/70 rounded-xl bg-card overflow-hidden shadow-xs">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -247,7 +247,7 @@ export default function AccountsDirectoryPage() {
                     </div>
                 ) : filteredAccounts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-                        <div className="p-3 rounded-2xl bg-muted text-muted-foreground mb-3">
+                        <div className="p-3 rounded-xl bg-muted text-muted-foreground mb-3">
                             <Building2 className="w-8 h-8" />
                         </div>
                         <h3 className="text-sm font-bold text-foreground">No companies registered</h3>
@@ -316,11 +316,10 @@ export default function AccountsDirectoryPage() {
                                             <td className="py-3.5 px-4">
                                                 <Badge
                                                     variant="secondary"
-                                                    className={`text-[10px] font-bold uppercase ${
-                                                        account.rating === 'HOT' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                                                    className={`text-[10px] font-bold uppercase ${account.rating === 'HOT' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
                                                         account.rating === 'WARM' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' :
-                                                        'bg-blue-500/10 text-blue-500 border border-blue-500/20'
-                                                    }`}
+                                                            'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                                        }`}
                                                 >
                                                     {account.rating === 'HOT' ? '🔥 Hot' : account.rating === 'WARM' ? '⚡ Warm' : '❄️ Cold'}
                                                 </Badge>

@@ -111,7 +111,7 @@ export default function QuotationPreviewModal({ isOpen, onClose, documentData, w
                                 <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
                                     D
                                 </div>
-                                <h2 className="text-lg font-black tracking-tight text-blue-600 dark:text-blue-400">
+                                <h2 className="text-lg text-blue-600 dark:text-blue-400">
                                     DEVLOMATIX SOLUTIONS
                                 </h2>
                             </div>

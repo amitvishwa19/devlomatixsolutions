@@ -230,7 +230,7 @@ export default function DcrPage() {
     };
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-16">
+        <div className="space-y-4 mx-auto pb-16 p-4">
             {/* Top Title & Header Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/80 pb-5">
                 <div>
@@ -264,41 +264,37 @@ export default function DcrPage() {
                     <div className="flex items-center bg-muted/60 p-1 rounded-lg border border-border">
                         <button
                             onClick={() => setDateRangeFilter('TODAY')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                dateRangeFilter === 'TODAY'
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${dateRangeFilter === 'TODAY'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             Today
                         </button>
                         <button
                             onClick={() => setDateRangeFilter('YESTERDAY')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                dateRangeFilter === 'YESTERDAY'
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${dateRangeFilter === 'YESTERDAY'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             Yesterday
                         </button>
                         <button
                             onClick={() => setDateRangeFilter('WEEK')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                dateRangeFilter === 'WEEK'
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${dateRangeFilter === 'WEEK'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             This Week
                         </button>
                         <button
                             onClick={() => setDateRangeFilter('ALL')}
-                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${
-                                dateRangeFilter === 'ALL'
-                                    ? 'bg-background text-foreground shadow-sm'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${dateRangeFilter === 'ALL'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             All Logs
                         </button>
@@ -358,7 +354,7 @@ export default function DcrPage() {
                         </div>
                     </div>
                     <div className="mt-2">
-                        <div className="text-2xl font-black tracking-tight text-foreground">
+                        <div className="text-2xl text-foreground">
                             {metrics.totalCalls}
                             <span className="text-xs font-normal text-muted-foreground ml-1">/ {metrics.dailyTarget} target</span>
                         </div>
@@ -400,7 +396,7 @@ export default function DcrPage() {
                         </div>
                     </div>
                     <div className="mt-2">
-                        <div className="text-2xl font-black tracking-tight text-emerald-600">
+                        <div className="text-2xl text-emerald-600">
                             {metrics.positiveOutcomesCount}
                             <span className="text-xs font-semibold text-muted-foreground ml-1.5">({metrics.conversionRate}%)</span>
                         </div>
@@ -419,7 +415,7 @@ export default function DcrPage() {
                         </div>
                     </div>
                     <div className="mt-2">
-                        <div className="text-2xl font-black tracking-tight text-indigo-600">
+                        <div className="text-2xl text-indigo-600">
                             ₹{metrics.totalDealPotential.toLocaleString('en-IN')}
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-1.5">
@@ -437,7 +433,7 @@ export default function DcrPage() {
                         </div>
                     </div>
                     <div className="mt-2">
-                        <div className="text-2xl font-black tracking-tight text-violet-600">
+                        <div className="text-2xl text-violet-600">
                             {metrics.followUpsScheduledCount}
                         </div>
                         <p className="text-[11px] text-muted-foreground mt-1.5">

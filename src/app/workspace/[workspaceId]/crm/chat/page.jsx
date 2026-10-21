@@ -48,8 +48,8 @@ const parseCallLog = (text, attachments) => {
     const fromAttachment = Array.isArray(attachments)
         ? attachments.find((a) => a?.type === 'call_log')
         : attachments?.type === 'call_log'
-        ? attachments
-        : null;
+            ? attachments
+            : null;
 
     if (fromAttachment) return fromAttachment;
 
@@ -428,11 +428,11 @@ export default function CrmChatPage() {
     const currentChatMessages = messages[currentRoomId] || [];
 
     return (
-        <div className="flex h-[86vh] w-full  border border-border bg-card overflow-hidden shadow-xs  rounded-lg p-0">
+        <div className="flex h-[91vh] w-full  overflow-hidden ">
 
 
             {/* LEFT COLUMN: CONTACTS & TEAM SIDEBAR */}
-            <div className="w-80 border-r border-border flex flex-col h-full bg-muted/20 shrink-0 overflow-hidden min-h-0">
+            <div className="w-80 border-r border-border flex flex-col h-full bg-muted/20 shrink-0 overflow-hidden min-h-0 p-2">
                 {/* Header & Status */}
                 <div className="p-3.5 border-b border-border shrink-0">
                     <div className="flex items-center justify-between mb-3">
@@ -774,21 +774,19 @@ export default function CrmChatPage() {
 
                                             {callLog ? (
                                                 <div
-                                                    className={`max-w-xs sm:max-w-sm p-3.5 rounded-2xl text-xs shadow-xs space-y-2.5 border transition-all ${
-                                                        isMe
-                                                            ? 'bg-card border-primary/30 text-foreground rounded-br-xs'
-                                                            : 'bg-muted/60 border-border text-foreground rounded-bl-xs'
-                                                    }`}
+                                                    className={`max-w-xs sm:max-w-sm p-3.5 rounded-2xl text-xs shadow-xs space-y-2.5 border transition-all ${isMe
+                                                        ? 'bg-card border-primary/30 text-foreground rounded-br-xs'
+                                                        : 'bg-muted/60 border-border text-foreground rounded-bl-xs'
+                                                        }`}
                                                 >
                                                     <div className="flex items-center gap-3">
                                                         <div
-                                                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${
-                                                                callLog.callStatus === 'completed'
-                                                                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                                                                    : callLog.callStatus === 'missed'
+                                                            className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${callLog.callStatus === 'completed'
+                                                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                                                : callLog.callStatus === 'missed'
                                                                     ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
                                                                     : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                                                            }`}
+                                                                }`}
                                                         >
                                                             {callLog.callType === 'video' ? (
                                                                 <Video className="w-4 h-4" />
@@ -808,21 +806,20 @@ export default function CrmChatPage() {
                                                                 </h5>
                                                                 <Badge
                                                                     variant="outline"
-                                                                    className={`text-[9px] px-1.5 py-0 font-medium ${
-                                                                        callLog.callStatus === 'completed'
-                                                                            ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
-                                                                            : callLog.callStatus === 'missed'
+                                                                    className={`text-[9px] px-1.5 py-0 font-medium ${callLog.callStatus === 'completed'
+                                                                        ? 'border-emerald-500/30 text-emerald-600 bg-emerald-500/10'
+                                                                        : callLog.callStatus === 'missed'
                                                                             ? 'border-rose-500/30 text-rose-600 bg-rose-500/10'
                                                                             : 'border-amber-500/30 text-amber-600 bg-amber-500/10'
-                                                                    }`}
+                                                                        }`}
                                                                 >
                                                                     {callLog.callStatus === 'completed'
                                                                         ? 'Completed'
                                                                         : callLog.callStatus === 'missed'
-                                                                        ? 'Missed'
-                                                                        : callLog.callStatus === 'busy'
-                                                                        ? 'Busy'
-                                                                        : 'Declined'}
+                                                                            ? 'Missed'
+                                                                            : callLog.callStatus === 'busy'
+                                                                                ? 'Busy'
+                                                                                : 'Declined'}
                                                                 </Badge>
                                                             </div>
 

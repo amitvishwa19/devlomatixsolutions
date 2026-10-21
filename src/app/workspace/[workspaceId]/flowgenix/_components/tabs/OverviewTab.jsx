@@ -294,7 +294,7 @@ print(response.choices[0].message.content)`;
                                 </div>
                             </CardHeader>
                             <CardContent className="p-4 pt-0">
-                                <div className="text-2xl font-black tracking-tight">{metric.value}</div>
+                                <div className="text-2xl">{metric.value}</div>
                                 <p className="text-[11px] font-medium text-emerald-500 mt-1 flex items-center gap-1">
                                     <Sparkles className="w-3 h-3" /> {metric.change}
                                 </p>

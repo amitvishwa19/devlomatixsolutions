@@ -161,7 +161,7 @@ export default function ContactsDirectoryPage() {
     };
 
     return (
-        <div className="flex flex-col bg-background space-y-2">
+        <div className="flex flex-col bg-background space-y-2 p-4">
             {/* Header Strip */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -218,22 +218,22 @@ export default function ContactsDirectoryPage() {
 
             {/* KPI Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Accessible</p>
                     <p className="text-2xl font-black text-foreground">{metrics.total}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">CRM contacts for your profile</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-blue-500 uppercase tracking-wider">My Contacts</p>
                     <p className="text-2xl font-black text-foreground">{metrics.myContacts}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Created / owned by you</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-violet-500 uppercase tracking-wider">Shared with Me</p>
                     <p className="text-2xl font-black text-foreground">{metrics.sharedWithMe}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Granted access by team</p>
                 </div>
-                <div className="p-4 rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
+                <div className="p-4 rounded-xl border border-border/70 bg-card/60 backdrop-blur-sm space-y-1">
                     <p className="text-[11px] font-semibold text-amber-500 uppercase tracking-wider">Active Leads</p>
                     <p className="text-2xl font-black text-foreground">{metrics.leads}</p>
                     <p className="text-[10px] text-muted-foreground font-medium">Inbound & outbound prospects</p>
@@ -241,7 +241,7 @@ export default function ContactsDirectoryPage() {
             </div>
 
             {/* Filters, Scope Tabs, and Search Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-2xl bg-card border border-border/70">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3 rounded-xl bg-card border border-border/70">
                 <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                     <div className="relative w-full sm:w-72">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -326,7 +326,7 @@ export default function ContactsDirectoryPage() {
             </div>
 
             {/* Contacts Table */}
-            <div className="border border-border/70 rounded-2xl bg-card overflow-hidden shadow-xs">
+            <div className="border border-border/70 rounded-xl bg-card overflow-hidden shadow-xs">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-20 gap-3">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -334,7 +334,7 @@ export default function ContactsDirectoryPage() {
                     </div>
                 ) : filteredContacts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-                        <div className="p-3 rounded-2xl bg-muted text-muted-foreground mb-3">
+                        <div className="p-3 rounded-xl bg-muted text-muted-foreground mb-3">
                             <Users className="w-8 h-8" />
                         </div>
                         <h3 className="text-sm font-bold text-foreground">No contacts found</h3>

@@ -144,7 +144,7 @@ export default function CrmAutomationsPage() {
     const totalRuns24h = rules.reduce((acc, r) => acc + (r.stats?.totalRuns || 0), 0);
 
     return (
-        <div className="space-y-6 max-w-7xl mx-auto pb-12">
+        <div className="space-y-4 p-4  mx-auto pb-12">
             {/* Header Telemetry Hero */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-card via-card to-background border border-border/80 shadow-sm relative overflow-hidden">
                 <div className="space-y-1.5 z-10">
@@ -158,10 +158,10 @@ export default function CrmAutomationsPage() {
                             Live Event Bus
                         </Badge>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                    <h1 className="text-xl sm:text-xl font-bold text-foreground">
                         Cross-Module Workflow Automations
                     </h1>
-                    <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
+                    <p className="text-xs text-muted-foreground ">
                         Autonomous event pipelines orchestrating actions seamlessly across CRM Deals, KonnectX WhatsApp, PayFlow Invoicing, and Hireflow ATS.
                     </p>
                 </div>
@@ -282,9 +282,8 @@ export default function CrmAutomationsPage() {
                                 variant={selectedCategory === cat ? 'secondary' : 'ghost'}
                                 size="sm"
                                 onClick={() => setSelectedCategory(cat)}
-                                className={`h-7 text-[11px] rounded-lg px-2.5 font-medium shrink-0 ${
-                                    selectedCategory === cat ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground'
-                                }`}
+                                className={`h-7 text-[11px] rounded-lg px-2.5 font-medium shrink-0 ${selectedCategory === cat ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground'
+                                    }`}
                             >
                                 {cat === 'ALL' ? 'All Categories' : cat}
                             </Button>
@@ -319,11 +318,10 @@ export default function CrmAutomationsPage() {
                                 return (
                                     <div
                                         key={rule.id}
-                                        className={`p-5 rounded-3xl bg-card border transition-all duration-200 hover:shadow-md space-y-4 ${
-                                            rule.isActive
-                                                ? 'border-border/80'
-                                                : 'border-border/40 opacity-70 bg-muted/10'
-                                        }`}
+                                        className={`p-5 rounded-3xl bg-card border transition-all duration-200 hover:shadow-md space-y-4 ${rule.isActive
+                                            ? 'border-border/80'
+                                            : 'border-border/40 opacity-70 bg-muted/10'
+                                            }`}
                                     >
                                         {/* Top Bar: Trigger Badge, Title, Category, Toggle */}
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -484,13 +482,12 @@ export default function CrmAutomationsPage() {
                                         {logs.map((log) => (
                                             <tr key={log.id} className="hover:bg-muted/30 transition-colors">
                                                 <td className="py-3 px-4">
-                                                    <Badge className={`text-[10px] font-bold ${
-                                                        log.status === 'SUCCESS'
-                                                            ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                                            : log.status === 'PARTIAL'
+                                                    <Badge className={`text-[10px] font-bold ${log.status === 'SUCCESS'
+                                                        ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                        : log.status === 'PARTIAL'
                                                             ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                                             : 'bg-rose-500/10 text-rose-500 border-rose-500/20'
-                                                    }`}>
+                                                        }`}>
                                                         {log.status === 'SUCCESS' && <CheckCircle2 className="w-2.5 h-2.5 mr-1" />}
                                                         {log.status}
                                                     </Badge>

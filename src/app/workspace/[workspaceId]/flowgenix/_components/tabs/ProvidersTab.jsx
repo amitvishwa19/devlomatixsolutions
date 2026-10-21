@@ -432,7 +432,7 @@ export function ProvidersTab({ workspaceId }) {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-black tracking-tight">{activeDetailProvider.name}</h1>
+                            <h1 className="text-xl">{activeDetailProvider.name}</h1>
                             <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
                         </div>
                         <span className="text-xs text-muted-foreground font-mono">{configuredConnections.length} connections</span>

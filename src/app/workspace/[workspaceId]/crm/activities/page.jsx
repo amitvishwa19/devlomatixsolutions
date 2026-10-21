@@ -184,7 +184,7 @@ export default function UniversalActivitiesPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen bg-background p-4 lg:p-8 space-y-6">
+        <div className="flex flex-col min-h-screen bg-background p-4 space-y-4">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export default function UniversalActivitiesPage() {
                         <Activity className="w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl lg:text-2xl font-black tracking-tight text-foreground">
+                        <h1 className="text-xl lg:text-xl font-bold text-foreground">
                             Universal Activity Stream
                         </h1>
                         <p className="text-xs text-muted-foreground">
@@ -378,11 +378,11 @@ export default function UniversalActivitiesPage() {
                             <div className="flex items-start gap-3 min-w-0">
                                 <div className="p-2.5 rounded-xl bg-muted text-muted-foreground shrink-0 mt-0.5">
                                     {act.type === 'WHATSAPP_MSG' ? <MessageCircle className="w-4 h-4 text-emerald-500" /> :
-                                     act.type === 'CALL' ? <Phone className="w-4 h-4 text-blue-500" /> :
-                                     act.type === 'MEETING' ? <Calendar className="w-4 h-4 text-purple-500" /> :
-                                     act.type === 'DEAL_STAGE_CHANGE' ? <TrendingUp className="w-4 h-4 text-amber-500" /> :
-                                     act.type === 'ATS_INTERVIEW' ? <Briefcase className="w-4 h-4 text-indigo-500" /> :
-                                     <FileText className="w-4 h-4 text-primary" />}
+                                        act.type === 'CALL' ? <Phone className="w-4 h-4 text-blue-500" /> :
+                                            act.type === 'MEETING' ? <Calendar className="w-4 h-4 text-purple-500" /> :
+                                                act.type === 'DEAL_STAGE_CHANGE' ? <TrendingUp className="w-4 h-4 text-amber-500" /> :
+                                                    act.type === 'ATS_INTERVIEW' ? <Briefcase className="w-4 h-4 text-indigo-500" /> :
+                                                        <FileText className="w-4 h-4 text-primary" />}
                                 </div>
 
                                 <div className="space-y-1.5 min-w-0">

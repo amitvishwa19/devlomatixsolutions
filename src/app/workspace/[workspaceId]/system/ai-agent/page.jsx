@@ -89,7 +89,7 @@ export default function AIAgentDashboard({ params: paramsPromise }) {
                             </div>
                             <div className="h-10 w-[1px] bg-white/10 mx-2 hidden md:block" />
                             <div>
-                                <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent italic">
+                                <h1 className="text-4xl bg-gradient-to-r from-white via-white/90 to-white/60 bg-clip-text text-transparent italic">
                                     AI AGENT ENGINE
                                 </h1>
                                 <div className="flex items-center gap-3 mt-1">
@@ -232,7 +232,7 @@ export default function AIAgentDashboard({ params: paramsPromise }) {
                     ].map((feature, i) => (
                         <div key={i} className="bg-white/5 backdrop-blur-2xl border border-white/5 rounded-3xl p-6 transition-all hover:bg-white/10 hover:-translate-y-1">
                             <feature.icon className={`w-8 h-8 text-${feature.color}-500/80 mb-4`} />
-                            <h4 className="text-sm font-black tracking-tight mb-2 uppercase italic">{feature.title}</h4>
+                            <h4 className="text-sm mb-2 uppercase italic">{feature.title}</h4>
                             <p className="text-[10px] font-medium text-white/40 leading-relaxed uppercase">
                                 {feature.desc}
                             </p>

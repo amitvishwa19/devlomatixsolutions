@@ -11,6 +11,7 @@
     "postinstall": "prisma generate",
     "email": "email dev --dir src/emails",
     "fast": "next dev --turbo",
+    "clean:typography": "node scripts/remove-font-black-tracking-tight.js",
     "env:setup": "node scripts/manage-env.cjs --install",
     "env:switch": "node scripts/manage-env.cjs --switch"
   },

@@ -85,7 +85,7 @@ export const AddAgentModelModal = () => {
                             <Sparkles className="w-5 h-5 text-indigo-500" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-black tracking-tight text-foreground">Deploy AI Node</DialogTitle>
+                            <DialogTitle className="text-xl text-foreground">Deploy AI Node</DialogTitle>
                             <p className="text-[10px] text-muted-foreground font-black opacity-60 uppercase tracking-widest mt-0.5">Cluster Node Configuration</p>
                         </div>
                     </div>

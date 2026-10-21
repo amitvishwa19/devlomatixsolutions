@@ -89,7 +89,7 @@ export default function DocumentStats({ workspaceId, userId }) {
                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">
                                     {stat.label}
                                 </span>
-                                <div className="text-lg font-black tracking-tight text-foreground mt-0.5">
+                                <div className="text-lg text-foreground mt-0.5">
                                     {loading ? "--" : stat.value}
                                 </div>
                                 <span className="text-[10px] text-muted-foreground/70 truncate block mt-0.5">

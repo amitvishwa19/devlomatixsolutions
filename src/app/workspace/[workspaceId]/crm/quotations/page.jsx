@@ -249,7 +249,7 @@ export default function CrmQuotationsDirectoryPage() {
 
 
     return (
-        <div className="flex flex-col space-y-5 p-2 sm:p-0">
+        <div className="flex flex-col space-y-4 p-4 ">
             {/* Header Banner */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -377,11 +377,10 @@ export default function CrmQuotationsDirectoryPage() {
                             key={tab.id}
                             type="button"
                             onClick={() => setStatusFilter(tab.id)}
-                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${
-                                statusFilter === tab.id
-                                    ? 'bg-card text-foreground shadow-xs'
-                                    : 'text-muted-foreground hover:text-foreground'
-                            }`}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-all whitespace-nowrap ${statusFilter === tab.id
+                                ? 'bg-card text-foreground shadow-xs'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
                         >
                             {tab.label}
                         </button>

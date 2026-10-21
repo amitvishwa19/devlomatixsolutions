@@ -125,7 +125,7 @@ export default function FleetXWorkspaceDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/40">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl text-foreground">
               Fleet<span className="text-sky-500">X</span> Command Hub
             </h1>
             <Badge variant="outline" className="bg-sky-500/10 text-sky-500 border-sky-500/25 text-[10px]">
