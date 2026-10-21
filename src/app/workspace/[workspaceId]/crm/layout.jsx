@@ -55,16 +55,16 @@ export default function CrmLayout({ children }) {
         return pathname.startsWith(item.href);
     };
 
-    const isFullBleedRoute = pathname?.includes('/tasks') || pathname?.includes('/kanban') || pathname?.includes('/pipeline');
+    const isFullBleedRoute = pathname?.includes('/tasks') || pathname?.includes('/kanban') || pathname?.includes('/pipeline') || pathname?.includes('/mailbox');
 
     if (isFullBleedRoute) {
         return children;
     }
 
     return (
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full h-full min-h-0">
             {/* Main CRM Content Area */}
-            <main className="flex-1 w-full min-w-0">
+            <main className="flex-1 w-full min-w-0 h-full">
                 {children}
             </main>
         </div>

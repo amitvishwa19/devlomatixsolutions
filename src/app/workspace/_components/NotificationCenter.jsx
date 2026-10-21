@@ -30,7 +30,8 @@ import {
   ExternalLink,
   Settings,
   Sparkles,
-  Inbox
+  Inbox,
+  Mail
 } from 'lucide-react';
 import { useNotifications } from '@/providers/NotificationProvider';
 
@@ -58,6 +59,15 @@ function formatNotificationTime(dateString) {
 // Icon and color mapper per notification type
 function getNotificationVisuals(type) {
   switch (type?.toUpperCase()) {
+    case 'EMAIL':
+    case 'MAILBOX':
+      return {
+        icon: Mail,
+        label: 'Email',
+        colorClass: 'bg-blue-500/10 text-blue-500 border-blue-500/25',
+        badgeClass: 'bg-blue-500/15 text-blue-500 border-blue-500/30',
+        dotClass: 'bg-blue-500'
+      };
     case 'WHATSAPP':
       return {
         icon: MessageSquare,
@@ -119,13 +129,15 @@ export default function NotificationCenter() {
   } = useNotifications();
 
   const [open, setOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread' | 'whatsapp' | 'chats'
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'unread' | 'emails' | 'whatsapp' | 'chats'
 
   // Filter items based on active pill
   const filteredNotifications = useMemo(() => {
     switch (activeFilter) {
       case 'unread':
         return notifications.filter((n) => !n.read);
+      case 'emails':
+        return notifications.filter((n) => n.type === 'EMAIL' || n.type === 'MAILBOX');
       case 'whatsapp':
         return notifications.filter((n) => n.type === 'WHATSAPP');
       case 'chats':
@@ -361,6 +373,16 @@ export default function NotificationCenter() {
                 }`}
             >
               Unread ({unreadCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilter('emails')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${activeFilter === 'emails'
+                ? 'bg-primary text-primary-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
+                }`}
+            >
+              Emails
             </button>
             <button
               type="button"

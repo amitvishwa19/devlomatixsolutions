@@ -1,5 +1,6 @@
 import "@/css/globals.css";
 import "@/css/custom.css";
+import "@/css/editor-styles.css";
 import { Outfit } from "next/font/google";
 import SessionWrapper from "@/providers/SessionWrapper";
 import { AppProvider } from "@/providers/AppProvider";

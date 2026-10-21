@@ -83,6 +83,8 @@ model User {
   crmAccounts               Account[]
   crmDeals                  Deal[]                   @relation("DealOwner")
   crmActivities             CrmActivity[]
+  crmAssignedEmailThreads   CrmEmailThread[]         @relation("EmailThreadAssignee")
+  crmSentEmails             CrmEmailMessage[]        @relation("EmailSentByUser")
 
   @@index([email])
   @@index([phone])
@@ -481,6 +483,7 @@ model Contact {
   account         Account?         @relation(fields: [accountId], references: [id], onDelete: SetNull)
   deals           Deal[]
   crmActivities   CrmActivity[]
+  crmEmailThreads CrmEmailThread[]
   candidateId     String?
   moduleAccess    Json?            @default("{\"modules\":[\"crm\"]}")
 
@@ -1747,6 +1750,7 @@ model Account {
   contacts        Contact[]
   deals           Deal[]
   activities      CrmActivity[]
+  crmEmailThreads CrmEmailThread[]
 
   @@index([workspaceId])
   @@index([userId])
@@ -1813,6 +1817,7 @@ model Deal {
   contact        Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
   account        Account?      @relation(fields: [accountId], references: [id], onDelete: SetNull)
   activities     CrmActivity[]
+  crmEmailThreads CrmEmailThread[]
 
   @@index([workspaceId])
   @@index([userId])
@@ -1847,6 +1852,112 @@ model CrmActivity {
   @@index([dealId])
   @@index([accountId])
   @@index([createdAt])
+}
+
+// ==========================================
+// 📬 CRM MAILBOX (RESEND INBOUND & OUTBOUND)
+// ==========================================
+
+model CrmEmailThread {
+  id              String             @id @default(cuid())
+  workspaceId     String
+  subject         String
+  snippet         String?            @db.Text
+  lastMessageAt   DateTime           @default(now())
+  
+  // Relations to CRM Entities
+  contactId       String?
+  dealId          String?
+  accountId       String?
+  assignedToId    String?            // Assigned Team Member ID
+  
+  // Status & Organization
+  folder          String             @default("INBOX") // "INBOX", "SENT", "ARCHIVE", "TRASH", "SPAM"
+  unreadCount     Int                @default(0)
+  isStarred       Boolean            @default(false)
+  isArchived      Boolean            @default(false)
+  labels          String[]           @default([])
+  metadata        Json?              @default("{}")
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Foreign Relations
+  contact         Contact?           @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  deal            Deal?              @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  account         Account?           @relation(fields: [accountId], references: [id], onDelete: SetNull)
+  assignedTo      User?              @relation("EmailThreadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  messages        CrmEmailMessage[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, folder])
+  @@index([workspaceId, lastMessageAt(sort: Desc)])
+  @@index([contactId])
+  @@index([dealId])
+  @@index([accountId])
+  @@index([assignedToId])
+}
+
+model CrmEmailMessage {
+  id              String               @id @default(cuid())
+  threadId        String
+  workspaceId     String
+  
+  // RFC 2822 & Resend Identifiers for Threading
+  messageId       String?              // RFC 2822 Message-ID (e.g. <CAD123@mail.gmail.com>)
+  inReplyTo       String?              // RFC 2822 In-Reply-To
+  references      String?              @db.Text // Space-separated Message-IDs
+  resendEmailId   String?              // Resend UUID
+  
+  // Email Routing & Participants
+  direction       String               // "INBOUND" | "OUTBOUND"
+  status          String               @default("RECEIVED") // "RECEIVED", "SENT", "DELIVERED", "BOUNCED", "FAILED"
+  from            String               // "Display Name <sender@example.com>"
+  fromEmail       String               // "sender@example.com"
+  to              String[]             // Recipient email list
+  cc              String[]             @default([])
+  bcc             String[]             @default([])
+  replyTo         String?
+  
+  // Content
+  subject         String
+  bodyText        String?              @db.Text
+  bodyHtml        String?              @db.Text
+  snippet         String?
+  headers         Json?                // Raw email headers
+  isRead          Boolean              @default(false)
+  
+  // Outbound Sender Attribution
+  sentByUserId    String?
+  sentByUser      User?                @relation("EmailSentByUser", fields: [sentByUserId], references: [id], onDelete: SetNull)
+  
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  // Relations
+  thread          CrmEmailThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  attachments     CrmEmailAttachment[]
+
+  @@index([threadId])
+  @@index([workspaceId])
+  @@index([messageId])
+  @@index([fromEmail])
+  @@index([createdAt])
+}
+
+model CrmEmailAttachment {
+  id              String          @id @default(cuid())
+  messageId       String
+  filename        String
+  contentType     String
+  size            Int             // Size in bytes
+  url             String          // S3 / CDN / Resend Storage URL
+  contentId       String?         // Inline CID for embedded images
+  createdAt       DateTime        @default(now())
+
+  message         CrmEmailMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
 }
 
 // =========================================================

@@ -65,10 +65,17 @@ async function getInternalSocketUrlsAndSecret() {
   return { urls: [...new Set(urls)], secret };
 }
 
-export async function emitKonnectxEvent(workspaceId, event, data) {
+export async function emitKonnectxEvent(workspaceId, event, data, options = {}) {
   if (!workspaceId || !event) return;
 
   const { urls: candidateUrls, secret } = await getInternalSocketUrlsAndSecret();
+  const payload = {
+    workspaceId,
+    event,
+    data,
+    ...(options.targetUserId ? { targetUserId: options.targetUserId } : {}),
+    ...(options.targetRoom ? { targetRoom: options.targetRoom } : {})
+  };
 
   for (const baseUrl of candidateUrls) {
     try {
@@ -79,7 +86,7 @@ export async function emitKonnectxEvent(workspaceId, event, data) {
           'Content-Type': 'application/json',
           'x-internal-secret': secret
         },
-        body: JSON.stringify({ workspaceId, event, data }),
+        body: JSON.stringify(payload),
         signal: AbortSignal.timeout(2000)
       });
 

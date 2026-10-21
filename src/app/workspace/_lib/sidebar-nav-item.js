@@ -48,6 +48,7 @@ export const getSidebarNavItems = (workspaceId) => {
                 { title: "Dashboard", icon: "layout-dashboard", url: baseCRMPath },
                 { title: "Daily Call Record", icon: "phone-call", url: `${baseCRMPath}/dcr` },
                 { title: "Chat & Calls", icon: "messages-square", url: `${baseCRMPath}/chat` },
+                { title: "Mailbox", icon: "mail", url: `${baseCRMPath}/mailbox` },
                 { title: "AI Copilot", icon: "sparkles", url: `${baseCRMPath}/copilot` },
                 { title: "Pipelines & Deals", icon: "kanban", url: `${baseCRMPath}/pipeline` },
                 { title: "Quotations", icon: "file-spreadsheet", url: `${baseCRMPath}/quotations` },
@@ -282,8 +283,6 @@ export const getSidebarNavItems = (workspaceId) => {
         {
             parent: { title: "System", icon: "monitor-cog", url: basePath },
             child: [
-                { title: "Settings", icon: "settings", url: `${systemPath}/setting` },
-                { title: "Org Builder", icon: "network", url: `${systemPath}/org-builder` },
                 { title: "Access Control", icon: "shield-check", url: `${systemPath}/access` },
                 { title: "Credentials", icon: "key-square", url: `${systemPath}/credential` },
                 { title: "Logs", icon: "scroll-text", url: `${systemPath}/log` },

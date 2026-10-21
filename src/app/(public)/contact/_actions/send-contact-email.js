@@ -13,9 +13,13 @@ export async function sendContactEmail(formData) {
             return { success: false, error: "Missing required fields" };
         }
 
+        const rawFrom = process.env.RESEND_FROM_EMAIL || 'noreply@devlomatix.com';
+        const fromEmailMatch = rawFrom.match(/<([^>]+)>/);
+        const pureEmail = fromEmailMatch ? fromEmailMatch[1].trim() : rawFrom.replace(/['"]/g, '').trim();
+
         // 1. Send internal inquiry to the team
         const teamInquiry = await resend.emails.send({
-            from: `Devlomatix Contact <${process.env.RESEND_FROM_EMAIL || 'notifications@devlomatix.com'}>`,
+            from: `Devlomatix Contact <${pureEmail || 'notifications@devlomatix.com'}>`,
             to: 'contact@devlomatix.com',
             subject: `New Inquiry from ${name}`,
             reply_to: email,
@@ -30,7 +34,7 @@ export async function sendContactEmail(formData) {
 
         // 2. Send acknowledgment to the sender
         await resend.emails.send({
-            from: `Devlomatix Solutions <${process.env.RESEND_FROM_EMAIL || 'info@devlomatix.com'}>`,
+            from: `Devlomatix Solutions <${pureEmail || 'info@devlomatix.com'}>`,
             to: email,
             subject: `Inquiry Received - Devlomatix Solutions`,
             react: <ContactAcknowledgementTemplate name={name} />,
