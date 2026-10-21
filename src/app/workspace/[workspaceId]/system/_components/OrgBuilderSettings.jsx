@@ -151,6 +151,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
     title: '',
     department: 'Engineering',
     mailboxEmail: '',
+    mailboxEmails: [],
+    mailboxEmailInput: '',
     mailboxDisplayName: '',
     responsibilities: ''
   });
@@ -237,6 +239,21 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
     return map;
   }, [users]);
 
+  // Helper to extract clean array of emails from a node
+  const extractNodeMailboxes = useCallback((node) => {
+    if (!node) return [];
+    if (Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0) {
+      return [...node.mailboxEmails];
+    }
+    if (typeof node.mailboxEmail === 'string' && node.mailboxEmail.trim()) {
+      return node.mailboxEmail
+        .split(/[,;\s]+/)
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => e && e.includes('@'));
+    }
+    return [];
+  }, []);
+
   // Open Add Direct Report Dialog
   const handleOpenAddReport = (parentId) => {
     setRoleModal({
@@ -244,9 +261,12 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       mode: 'create',
       nodeId: null,
       parentId,
+      spliceTargetId: null,
       title: '',
       department: nodes[parentId]?.department || 'Engineering',
       mailboxEmail: '',
+      mailboxEmails: [],
+      mailboxEmailInput: '',
       mailboxDisplayName: '',
       responsibilities: ''
     });
@@ -256,17 +276,55 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
   const handleOpenEditRole = (nodeId) => {
     const node = nodes[nodeId];
     if (!node) return;
+    const initialEmails = extractNodeMailboxes(node);
     setRoleModal({
       open: true,
       mode: 'edit',
       nodeId,
       parentId: node.parentId,
+      spliceTargetId: null,
       title: node.title,
       department: node.department || 'Engineering',
-      mailboxEmail: node.mailboxEmail || '',
+      mailboxEmail: initialEmails[0] || '',
+      mailboxEmails: initialEmails,
+      mailboxEmailInput: '',
       mailboxDisplayName: node.mailboxDisplayName || '',
       responsibilities: node.responsibilities || ''
     });
+  };
+
+  // Add an email to the role's mailbox list
+  const handleAddMailboxEmail = () => {
+    const raw = roleModal.mailboxEmailInput || '';
+    if (!raw.trim()) return;
+
+    const parts = raw
+      .split(/[,;\s]+/)
+      .map((e) => e.trim().toLowerCase())
+      .filter((e) => e && e.includes('@'));
+
+    if (parts.length === 0) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    const merged = Array.from(new Set([...(roleModal.mailboxEmails || []), ...parts]));
+    setRoleModal((prev) => ({
+      ...prev,
+      mailboxEmails: merged,
+      mailboxEmail: merged[0] || '',
+      mailboxEmailInput: ''
+    }));
+  };
+
+  // Remove an email from the role's mailbox list
+  const handleRemoveMailboxEmail = (emailToRemove) => {
+    const filtered = (roleModal.mailboxEmails || []).filter((e) => e !== emailToRemove);
+    setRoleModal((prev) => ({
+      ...prev,
+      mailboxEmails: filtered,
+      mailboxEmail: filtered[0] || ''
+    }));
   };
 
   // Save Role Modal (Create or Edit)
@@ -277,7 +335,17 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       return;
     }
 
-    const cleanMailboxEmail = roleModal.mailboxEmail?.trim().toLowerCase() || null;
+    // Collect any remaining typed email from input
+    let finalEmails = [...(roleModal.mailboxEmails || [])];
+    if (roleModal.mailboxEmailInput?.trim()) {
+      const pending = roleModal.mailboxEmailInput
+        .split(/[,;\s]+/)
+        .map((x) => x.trim().toLowerCase())
+        .filter((x) => x && x.includes('@'));
+      finalEmails = [...finalEmails, ...pending];
+    }
+    finalEmails = Array.from(new Set(finalEmails.map((x) => x.trim().toLowerCase()).filter(Boolean)));
+    const cleanMailboxEmail = finalEmails[0] || null;
     const cleanDisplayName = roleModal.mailboxDisplayName?.trim() || null;
 
     if (roleModal.mode === 'create') {
@@ -289,6 +357,7 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
         parentId: roleModal.parentId || null,
         assignedUserIds: [],
         mailboxEmail: cleanMailboxEmail,
+        mailboxEmails: finalEmails,
         mailboxDisplayName: cleanDisplayName,
         responsibilities: roleModal.responsibilities.trim(),
         order: (childrenMap[roleModal.parentId || 'root']?.length || 0) + 1
@@ -328,6 +397,7 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
             department: roleModal.department,
             parentId: roleModal.parentId,
             mailboxEmail: cleanMailboxEmail,
+            mailboxEmails: finalEmails,
             mailboxDisplayName: cleanDisplayName,
             responsibilities: roleModal.responsibilities.trim()
           }
@@ -346,6 +416,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       title: '',
       department: 'Engineering',
       mailboxEmail: '',
+      mailboxEmails: [],
+      mailboxEmailInput: '',
       mailboxDisplayName: '',
       responsibilities: ''
     });
@@ -362,6 +434,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       title: '',
       department: nodes[targetId]?.department || nodes[sourceId]?.department || 'Engineering',
       mailboxEmail: '',
+      mailboxEmails: [],
+      mailboxEmailInput: '',
       mailboxDisplayName: '',
       responsibilities: ''
     });
@@ -745,22 +819,96 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
               />
             </div>
 
-            {/* Department Mailbox Email Settings */}
-            <div className="pt-2 border-t border-border/60 space-y-2">
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Role / Inbound Mailbox Email</span>
-                </label>
-                <input
-                  type="email"
-                  placeholder="e.g. sales@devlomatix.com, admin@devlomatix.com..."
-                  value={roleModal.mailboxEmail || ''}
-                  onChange={(e) => setRoleModal((p) => ({ ...p, mailboxEmail: e.target.value }))}
-                  className="w-full px-3 py-1.5 text-xs bg-background border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                />
+            {/* Department Mailbox Email Settings (Multiple Inboxes) */}
+            <div className="pt-2.5 border-t border-border/60 space-y-2.5">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Role / Inbound Mailbox Emails</span>
+                  </label>
+                  {roleModal.mailboxEmails?.length > 0 && (
+                    <span className="text-[10px] text-muted-foreground font-medium">
+                      {roleModal.mailboxEmails.length} email{roleModal.mailboxEmails.length > 1 ? 's' : ''} configured
+                    </span>
+                  )}
+                </div>
+
+                {/* Display added email chips */}
+                {roleModal.mailboxEmails?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 p-2 bg-secondary/30 dark:bg-white/5 rounded-lg border border-border/60 max-h-28 overflow-y-auto">
+                    {roleModal.mailboxEmails.map((email, idx) => (
+                      <span
+                        key={email}
+                        className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/25 shrink-0"
+                      >
+                        <Mail className="w-3 h-3 text-blue-500 shrink-0" />
+                        <span className="truncate max-w-[200px]">{email}</span>
+                        {idx === 0 && (
+                          <span className="text-[8px] uppercase font-bold text-blue-500 bg-blue-500/15 px-1 rounded">
+                            Primary
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMailboxEmail(email)}
+                          className="hover:bg-rose-500/20 text-muted-foreground hover:text-rose-500 rounded p-0.5 transition-colors cursor-pointer"
+                          title={`Remove ${email}`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Input row with + Add Email button */}
+                <div className="flex gap-1.5">
+                  <input
+                    type="text"
+                    placeholder="e.g. sales@devlomatix.com, admin@devlomatix.com (press Enter or comma)"
+                    value={roleModal.mailboxEmailInput || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.includes(',') || val.includes(';')) {
+                        const parts = val
+                          .split(/[,;\s]+/)
+                          .map((x) => x.trim().toLowerCase())
+                          .filter((x) => x && x.includes('@'));
+                        if (parts.length > 0) {
+                          const merged = Array.from(new Set([...(roleModal.mailboxEmails || []), ...parts]));
+                          setRoleModal((prev) => ({
+                            ...prev,
+                            mailboxEmails: merged,
+                            mailboxEmail: merged[0] || '',
+                            mailboxEmailInput: ''
+                          }));
+                          return;
+                        }
+                      }
+                      setRoleModal((p) => ({ ...p, mailboxEmailInput: val }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        handleAddMailboxEmail();
+                      }
+                    }}
+                    className="flex-1 px-3 py-1.5 text-xs bg-background border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAddMailboxEmail}
+                    className="h-8 text-xs px-2.5 gap-1 cursor-pointer shrink-0 border-border/70"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add</span>
+                  </Button>
+                </div>
                 <p className="text-[10px] text-muted-foreground">
-                  Team members holding this position will automatically see and send from this inbox in their CRM Mailbox.
+                  Add multiple email addresses. Team members holding this position will automatically see all assigned inboxes in their CRM Mailbox and can send outbound emails using any of these addresses.
                 </p>
               </div>
 
@@ -995,15 +1143,26 @@ function OrgTreeNode({
               {node.responsibilities}
             </p>
           )}
-          {node.mailboxEmail && (
-            <div
-              className="flex items-center gap-1 mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium truncate bg-blue-50/60 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200/50 dark:border-blue-800/50"
-              title={`Assigned Mailbox: ${node.mailboxEmail}`}
-            >
-              <Mail className="w-2.5 h-2.5 shrink-0" />
-              <span className="truncate">{node.mailboxEmail}</span>
-            </div>
-          )}
+          {(() => {
+            const mList = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+              ? node.mailboxEmails
+              : (node.mailboxEmail ? [node.mailboxEmail] : []);
+            if (mList.length === 0) return null;
+            return (
+              <div
+                className="flex items-center gap-1 mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium truncate bg-blue-50/60 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200/50 dark:border-blue-800/50"
+                title={`Assigned Mailbox${mList.length > 1 ? 'es' : ''}:\n${mList.join('\n')}`}
+              >
+                <Mail className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{mList[0]}</span>
+                {mList.length > 1 && (
+                  <span className="text-[9px] bg-blue-500/20 px-1 rounded-full font-bold shrink-0">
+                    +{mList.length - 1}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Assigned Users Section */}
@@ -1156,12 +1315,26 @@ function OrgTreeListView({
           <span className={`text-[9px] px-1.5 py-0.2 rounded-full border ${deptStyle.badge}`}>
             {node.department}
           </span>
-          {node.mailboxEmail && (
-            <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1 shrink-0 font-medium">
-              <Mail className="w-2.5 h-2.5" />
-              <span>{node.mailboxEmail}</span>
-            </span>
-          )}
+          {(() => {
+            const mList = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+              ? node.mailboxEmails
+              : (node.mailboxEmail ? [node.mailboxEmail] : []);
+            if (mList.length === 0) return null;
+            return (
+              <span
+                className="text-[9px] px-1.5 py-0.2 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1 shrink-0 font-medium"
+                title={`Assigned Mailbox${mList.length > 1 ? 'es' : ''}:\n${mList.join('\n')}`}
+              >
+                <Mail className="w-2.5 h-2.5" />
+                <span>{mList[0]}</span>
+                {mList.length > 1 && (
+                  <span className="text-[8px] bg-blue-500/20 px-1 rounded font-bold">
+                    +{mList.length - 1}
+                  </span>
+                )}
+              </span>
+            );
+          })()}
         </div>
 
         <div className="flex items-center gap-3 shrink-0">

@@ -43,7 +43,22 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
             return { user: null, isAdmin: false, mailboxes: [], authorizedEmails: [] };
         }
 
-        const isAdmin = ['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(user.role);
+        let isAdmin = ['ADMIN', 'SUPERADMIN', 'DEVELOPER'].includes(user.role);
+        if (!isAdmin && workspaceId && workspaceId !== 'global') {
+            const isOwner = await prisma.server.findFirst({
+                where: { id: workspaceId, userId: user.id },
+                select: { id: true }
+            });
+            const isAdminMember = !isOwner ? await prisma.member.findFirst({
+                where: { serverId: workspaceId, userId: user.id, role: 'ADMIN' },
+                select: { id: true }
+            }) : null;
+
+            if (isOwner || isAdminMember) {
+                isAdmin = true;
+            }
+        }
+
         const cleanUserEmail = user.email?.trim().toLowerCase() || '';
         const userDisplayName = deriveDisplayName(user.displayName, user.email, 'User');
 
@@ -62,24 +77,39 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
         Object.values(nodes).forEach((node) => {
             if (!node || !node.id) return;
 
-            const postEmail = node.mailboxEmail?.trim().toLowerCase();
-            if (!postEmail) return;
+            // Support both mailboxEmails array and mailboxEmail string (or comma-separated)
+            const rawEmails = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+                ? node.mailboxEmails
+                : (typeof node.mailboxEmail === 'string' ? node.mailboxEmail.split(/[,;\s]+/) : []);
 
-            const postItem = {
-                nodeId: node.id,
-                postTitle: node.title || 'Role Position',
-                department: node.department || 'General',
-                mailboxEmail: postEmail,
-                mailboxDisplayName: node.mailboxDisplayName || node.title || 'Devlomatix',
-                assignedUserIds: node.assignedUserIds || []
-            };
+            const validEmails = Array.from(new Set(
+                rawEmails
+                    .map((e) => (typeof e === 'string' ? e.trim().toLowerCase() : ''))
+                    .filter((e) => e && e.includes('@'))
+            ));
 
-            allOrgPosts.push(postItem);
+            if (validEmails.length === 0) return;
 
-            const isAssigned = Array.isArray(node.assignedUserIds) && node.assignedUserIds.includes(userId);
-            if (isAssigned) {
-                assignedPosts.push(postItem);
-            }
+            const isAssigned = (Array.isArray(node.assignedUserIds) && node.assignedUserIds.includes(userId)) ||
+                (cleanUserEmail && validEmails.includes(cleanUserEmail));
+
+            validEmails.forEach((email) => {
+                const postItem = {
+                    nodeId: `${node.id}_${email}`,
+                    roleId: node.id,
+                    postTitle: node.title || 'Role Position',
+                    department: node.department || 'General',
+                    mailboxEmail: email,
+                    mailboxDisplayName: node.mailboxDisplayName || node.title || 'Devlomatix',
+                    assignedUserIds: node.assignedUserIds || []
+                };
+
+                allOrgPosts.push(postItem);
+
+                if (isAssigned) {
+                    assignedPosts.push(postItem);
+                }
+            });
         });
 
         // Unique email collector

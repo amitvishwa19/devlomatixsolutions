@@ -193,7 +193,50 @@ export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
         }
     }
 
-    // 2. Check if recipient matches a registered User email
+    // 2. Check if recipient matches an Organization Builder Role/Post mailbox
+    try {
+        const globalRecord = await prisma.appSettings.findUnique({
+            where: { key: 'org_structure_global' }
+        }).catch(() => null);
+        const nodes = (globalRecord?.general && typeof globalRecord.general === 'object')
+            ? (globalRecord.general.nodes || {})
+            : {};
+
+        for (const recipient of to) {
+            const { email } = parseEmailAddress(recipient);
+            if (!email) continue;
+            const cleanRecip = email.toLowerCase();
+
+            for (const node of Object.values(nodes)) {
+                if (!node) continue;
+                const rawEmails = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+                    ? node.mailboxEmails
+                    : (typeof node.mailboxEmail === 'string' ? node.mailboxEmail.split(/[,;\s]+/) : []);
+                const cleanNodeEmails = rawEmails.map(e => (typeof e === 'string' ? e.trim().toLowerCase() : '')).filter(Boolean);
+
+                if (cleanNodeEmails.includes(cleanRecip)) {
+                    const assignedUserIds = Array.isArray(node.assignedUserIds) ? node.assignedUserIds : [];
+                    for (const uid of assignedUserIds) {
+                        const member = await prisma.member.findFirst({
+                            where: { userId: uid },
+                            select: { serverId: true }
+                        });
+                        if (member?.serverId) return member.serverId;
+
+                        const server = await prisma.server.findFirst({
+                            where: { userId: uid },
+                            select: { id: true }
+                        });
+                        if (server?.id) return server.id;
+                    }
+                }
+            }
+        }
+    } catch (orgErr) {
+        console.warn('[RESOLVE_WS_ORG_BUILDER_WARN]', orgErr.message);
+    }
+
+    // 3. Check if recipient matches a registered User email
     for (const recipient of to) {
         const { email } = parseEmailAddress(recipient);
         if (!email) continue;
@@ -212,7 +255,7 @@ export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
         }
     }
 
-    // 3. Check if sender email matches an existing Contact
+    // 4. Check if sender email matches an existing Contact
     if (fromEmail) {
         const contact = await prisma.contact.findFirst({
             where: { email: { equals: fromEmail, mode: 'insensitive' } },

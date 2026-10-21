@@ -116,10 +116,15 @@ function FlowCanvasInternal({
         .map((uid) => userMap.get(uid))
         .filter(Boolean);
 
+      const nodeMailboxes = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+        ? node.mailboxEmails
+        : (typeof node.mailboxEmail === 'string' ? node.mailboxEmail.split(/[,;\s]+/) : []);
+
       const isMatch =
         searchQuery.trim() === '' ||
         node.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         node.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        nodeMailboxes.some((m) => m.toLowerCase().includes(searchQuery.toLowerCase())) ||
         assignedUsers.some((u) => u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()));
 
       return {

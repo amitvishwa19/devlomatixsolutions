@@ -80,6 +80,7 @@ export const OrgRoleNode = memo(({ data, selected }) => {
     department = 'Executive',
     responsibilities,
     mailboxEmail,
+    mailboxEmails,
     assignedUsers = [],
     isRoot = false,
     onEditRole,
@@ -90,6 +91,12 @@ export const OrgRoleNode = memo(({ data, selected }) => {
   } = data;
 
   const deptStyle = DEPARTMENT_COLORS[department] || DEPARTMENT_COLORS.Engineering;
+
+  const nodeMailboxes = Array.isArray(mailboxEmails) && mailboxEmails.length > 0
+    ? mailboxEmails
+    : (typeof mailboxEmail === 'string' && mailboxEmail.trim()
+      ? mailboxEmail.split(/[,;\s]+/).map((e) => e.trim().toLowerCase()).filter((e) => e && e.includes('@'))
+      : []);
 
   return (
     <div
@@ -147,14 +154,19 @@ export const OrgRoleNode = memo(({ data, selected }) => {
           </p>
         ) : null}
 
-        {/* Mailbox Badge */}
-        {mailboxEmail && (
+        {/* Mailbox Badge(s) */}
+        {nodeMailboxes.length > 0 && (
           <div
             className="flex items-center gap-1 mt-1 text-[10px] text-blue-600 dark:text-blue-300 font-medium truncate bg-blue-50/70 dark:bg-blue-500/15 px-1.5 py-0.5 rounded border border-blue-200/50 dark:border-blue-500/30"
-            title={`Assigned Mailbox: ${mailboxEmail}`}
+            title={`Assigned Mailbox${nodeMailboxes.length > 1 ? 'es' : ''}:\n${nodeMailboxes.join('\n')}`}
           >
             <Mail className="w-2.5 h-2.5 shrink-0" />
-            <span className="truncate">{mailboxEmail}</span>
+            <span className="truncate">{nodeMailboxes[0]}</span>
+            {nodeMailboxes.length > 1 && (
+              <span className="text-[9px] bg-blue-500/20 text-blue-700 dark:text-blue-200 px-1 rounded-full font-bold shrink-0">
+                +{nodeMailboxes.length - 1}
+              </span>
+            )}
           </div>
         )}
       </div>

@@ -79,6 +79,8 @@ export async function getMailboxThreadsAction(workspaceId, {
                     some: {
                         OR: [
                             { to: { has: cleanMailbox } },
+                            { cc: { has: cleanMailbox } },
+                            { bcc: { has: cleanMailbox } },
                             { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } }
                         ]
                     }
@@ -90,6 +92,8 @@ export async function getMailboxThreadsAction(workspaceId, {
                         some: {
                             OR: [
                                 { to: { hasSome: authorizedEmails } },
+                                { cc: { hasSome: authorizedEmails } },
+                                { bcc: { hasSome: authorizedEmails } },
                                 { fromEmail: { in: authorizedEmails } }
                             ]
                         }
@@ -103,30 +107,9 @@ export async function getMailboxThreadsAction(workspaceId, {
         };
 
         const folderFilter = folder === 'INBOX'
-            ? {
-                folder: 'INBOX',
-                messages: {
-                    some: {
-                        direction: 'INBOUND',
-                        ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
-                    }
-                }
-            }
+            ? { folder: 'INBOX' }
             : folder === 'SENT'
-                ? {
-                    folder: { not: 'TRASH' },
-                    OR: [
-                        { folder: 'SENT' },
-                        {
-                            messages: {
-                                some: {
-                                    direction: 'OUTBOUND',
-                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
-                                }
-                            }
-                        }
-                    ]
-                }
+                ? { folder: 'SENT' }
                 : folder === 'STARRED'
                     ? { isStarred: true, folder: { not: 'TRASH' } }
                     : folder === 'ALL'
@@ -186,36 +169,9 @@ export async function getMailboxThreadsAction(workspaceId, {
             }),
             prisma.crmEmailThread.count({ where }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', unreadCount: { gt: 0 } } }),
-            prisma.crmEmailThread.count({
-                where: {
-                    ...baseWhere,
-                    folder: 'INBOX',
-                    messages: {
-                        some: {
-                            direction: 'INBOUND',
-                            ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
-                        }
-                    }
-                }
-            }),
+            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, isStarred: true, folder: { not: 'TRASH' } } }),
-            prisma.crmEmailThread.count({
-                where: {
-                    ...baseWhere,
-                    folder: { not: 'TRASH' },
-                    OR: [
-                        { folder: 'SENT' },
-                        {
-                            messages: {
-                                some: {
-                                    direction: 'OUTBOUND',
-                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
-                                }
-                            }
-                        }
-                    ]
-                }
-            }),
+            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'SENT' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'ARCHIVE' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'TRASH' } })
         ]);
