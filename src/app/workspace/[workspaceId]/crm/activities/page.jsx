@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { getActivitiesAction, createActivityAction, deleteActivityAction } from '../_actions/activity-actions';
 import { getCrmContactsAction } from '../_actions/contact-actions';
 import { getAccountsAction } from '../_actions/account-actions';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 export default function UniversalActivitiesPage() {
     const params = useParams();
@@ -46,6 +47,7 @@ export default function UniversalActivitiesPage() {
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('ALL');
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     // Quick Activity Logger
     const [activityType, setActivityType] = useState('NOTE');
@@ -67,6 +69,7 @@ export default function UniversalActivitiesPage() {
 
             const res = await getActivitiesAction(workspaceId, {
                 type: typeFilter === 'ALL' ? undefined : typeFilter,
+                targetUserId: targetUserId !== 'ALL' ? targetUserId : undefined,
                 limit: 100
             });
 
@@ -88,7 +91,7 @@ export default function UniversalActivitiesPage() {
 
     useEffect(() => {
         loadActivities();
-    }, [workspaceId, typeFilter]);
+    }, [workspaceId, typeFilter, targetUserId]);
 
     useEffect(() => {
         async function fetchDropdowns() {
@@ -198,16 +201,23 @@ export default function UniversalActivitiesPage() {
                     </div>
                 </div>
 
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 gap-1.5 text-xs font-semibold"
-                    onClick={() => loadActivities(true)}
-                    disabled={isRefreshing}
-                >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                    <span>Refresh Timeline</span>
-                </Button>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 gap-1.5 text-xs font-semibold"
+                        onClick={() => loadActivities(true)}
+                        disabled={isRefreshing}
+                    >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>Refresh Timeline</span>
+                    </Button>
+                </div>
             </div>
 
             {/* KPI Summary Cards */}

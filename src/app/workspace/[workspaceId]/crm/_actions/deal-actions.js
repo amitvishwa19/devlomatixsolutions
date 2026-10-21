@@ -4,24 +4,53 @@ import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
 import { triggerCrmWorkflowAction } from "./crm-automation-actions";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 /**
  * Get Deals with optional filters (pipeline, stage, owner, contact, account)
+ * Filtered by Universal Global Org Hierarchy: Super Admin sees all; higher ladder users see their own deals + subordinate deals.
  */
 export async function getDealsAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
         const { pipelineId, stageId, ownerId, contactId, accountId, priority, search } = filters;
+
+        // Build hierarchy access condition
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (ownerId && ownerId !== 'ALL') {
+                if (allowed.includes(ownerId)) {
+                    hierarchyCondition = {
+                        OR: [{ ownerId }, { userId: ownerId }]
+                    };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = {
+                    OR: [
+                        { userId: { in: allowed } },
+                        { ownerId: { in: allowed } }
+                    ]
+                };
+            }
+        } else if (ownerId && ownerId !== 'ALL') {
+            hierarchyCondition = {
+                OR: [{ ownerId }, { userId: ownerId }]
+            };
+        }
 
         const where = {
             workspaceId,
             pipelineId: pipelineId || undefined,
             stageId: stageId || undefined,
-            ownerId: ownerId || undefined,
             contactId: contactId || undefined,
             accountId: accountId || undefined,
             priority: priority || undefined,
+            ...hierarchyCondition,
             ...(search ? {
                 OR: [
                     { title: { contains: search, mode: 'insensitive' } },
@@ -360,15 +389,42 @@ export async function deleteDealAction(workspaceId, dealId) {
 }
 
 /**
- * Get Deal Analytics & Pipeline Telemetry
+ * Get Deal Analytics & Pipeline Telemetry scoped by Org Hierarchy
  */
-export async function getDealStatsAction(workspaceId, pipelineId = null) {
+export async function getDealStatsAction(workspaceId, pipelineId = null, targetUserId = null) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
+
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowed.includes(targetUserId)) {
+                    hierarchyCondition = {
+                        OR: [{ userId: targetUserId }, { ownerId: targetUserId }]
+                    };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = {
+                    OR: [
+                        { userId: { in: allowed } },
+                        { ownerId: { in: allowed } }
+                    ]
+                };
+            }
+        } else if (targetUserId && targetUserId !== 'ALL') {
+            hierarchyCondition = {
+                OR: [{ userId: targetUserId }, { ownerId: targetUserId }]
+            };
+        }
 
         const where = {
             workspaceId,
-            pipelineId: pipelineId || undefined
+            pipelineId: pipelineId || undefined,
+            ...hierarchyCondition
         };
 
         const deals = await prisma.deal.findMany({

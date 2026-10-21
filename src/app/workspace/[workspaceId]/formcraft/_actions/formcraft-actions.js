@@ -142,3 +142,33 @@ export async function submitFormData(workspaceId, formId, data) {
         return { success: false, error: error.message };
     }
 }
+
+export async function convertSubmissionToCrmDealAction(workspaceId, submissionId) {
+    try {
+        const sub = mockSubmissions.find(s => s.id === submissionId);
+        if (!sub) return { success: false, error: "Submission not found" };
+
+        const { convertFormCraftSubmissionToLeadAction } = await import('@/app/workspace/[workspaceId]/crm/_actions/crm-inbound-lead-actions');
+
+        const answers = sub.answers || {};
+        const submitterName = answers.fullName || answers.name || sub.submitter || "Inbound Lead";
+        const submitterEmail = answers.workEmail || answers.email || null;
+        const submitterPhone = answers.phone || answers.mobile || null;
+        const companyName = answers.companyName || answers.company || null;
+        const budget = parseFloat(answers.budget || answers.estimatedBudget || 0);
+
+        return await convertFormCraftSubmissionToLeadAction(workspaceId, {
+            formTitle: sub.formTitle,
+            submitterName,
+            submitterEmail,
+            submitterPhone,
+            companyName,
+            summary: sub.summary,
+            estimatedBudget: budget
+        });
+    } catch (error) {
+        console.error("[CONVERT_FORMCRAFT_SUBMISSION_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+

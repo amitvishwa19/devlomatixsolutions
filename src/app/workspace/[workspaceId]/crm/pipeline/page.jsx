@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import StageColumn from './_components/StageColumn';
 import DealDrawer from './_components/DealDrawer';
 import CreateDealModal from './_components/CreateDealModal';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 import { getPipelinesAction, ensureDefaultPipeline } from '../_actions/pipeline-actions';
 import { getDealsAction, updateDealStageAction } from '../_actions/deal-actions';
@@ -54,6 +55,7 @@ export default function PipelinePage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [priorityFilter, setPriorityFilter] = useState('ALL');
     const [statusFilter, setStatusFilter] = useState('OPEN'); // 'OPEN' | 'WON' | 'LOST' | 'ALL'
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     // Modals & Drawer State
     const [selectedDealId, setSelectedDealId] = useState(null);
@@ -91,6 +93,7 @@ export default function PipelinePage() {
                 // 2. Fetch deals for this pipeline
                 const dealsRes = await getDealsAction(workspaceId, {
                     pipelineId: activePipe.id,
+                    ownerId: targetUserId !== 'ALL' ? targetUserId : undefined,
                     status: statusFilter === 'ALL' ? undefined : statusFilter,
                     priority: priorityFilter === 'ALL' ? undefined : priorityFilter,
                     search: searchQuery || undefined
@@ -117,7 +120,7 @@ export default function PipelinePage() {
 
     useEffect(() => {
         loadPipelineData();
-    }, [workspaceId, selectedPipelineId, priorityFilter, statusFilter]);
+    }, [workspaceId, selectedPipelineId, priorityFilter, statusFilter, targetUserId]);
 
     const activePipeline = useMemo(() => {
         return pipelines.find(p => p.id === selectedPipelineId) || pipelines[0] || null;
@@ -352,7 +355,14 @@ export default function PipelinePage() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                        {/* Org Hierarchy Filter */}
+                        <CrmHierarchyFilter
+                            workspaceId={workspaceId}
+                            selectedUserId={targetUserId}
+                            onUserChange={setTargetUserId}
+                        />
+
                         {/* Status Filter */}
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="h-8 w-[120px] text-xs bg-background/80 border-border/80">

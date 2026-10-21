@@ -506,3 +506,275 @@ Role:
         return { success: false, error: error.message || "Failed to process Copilot query" };
     }
 }
+
+/**
+ * 6. Stalled Deal Revival & Ghosting Recovery Agent
+ * Analyzes deals inactive for >X days and crafts 3 psychological revival options
+ */
+export async function generateStalledDealRevivalAction(workspaceId, dealId, options = {}) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const deal = await prisma.deal.findFirst({
+            where: { id: dealId, workspaceId },
+            include: {
+                stage: true,
+                contact: true,
+                account: true,
+                activities: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 5
+                }
+            }
+        });
+
+        if (!deal) return { success: false, error: "Deal not found" };
+
+        const now = new Date();
+        const lastActivityDate = deal.activities[0]?.createdAt || deal.updatedAt;
+        const daysInactive = Math.max(1, Math.floor((now - new Date(lastActivityDate)) / (1000 * 60 * 60 * 24)));
+
+        const clientName = deal.contact?.name || "Client";
+        const companyName = deal.account?.name || "";
+
+        const prompt = `
+You are FlowGenix AI Deal Revival Specialist.
+A high-value sales deal is stalled / ghosted.
+Deal: "${deal.title}" (Value: ${deal.currency} ${deal.value})
+Stage: "${deal.stage?.name}"
+Client: ${clientName} (${companyName || 'Independent'})
+Days Inactive: ${daysInactive} days without interaction
+Last Activities: ${deal.activities.map(a => a.title).join(", ") || "None"}
+
+Create 3 distinct revival messages tailored for WhatsApp/Email:
+1. "VALUE_ADD": Shares a recent case study or helpful tip relevant to their industry without pushing a hard sell.
+2. "FRIENDLY_CHECKIN": A warm, low-pressure 2-sentence pulse check.
+3. "POLITE_BREAKUP": A polite "closing the file" note that triggers loss aversion (very effective for reviving ghosted prospects).
+
+Return strictly JSON matching this structure:
+{
+  "daysInactive": ${daysInactive},
+  "recommendedStrategy": "VALUE_ADD" | "FRIENDLY_CHECKIN" | "POLITE_BREAKUP",
+  "strategies": {
+    "valueAdd": "Message text...",
+    "friendlyCheckin": "Message text...",
+    "politeBreakup": "Message text..."
+  },
+  "recommendedChannel": "WHATSAPP" | "CALL",
+  "bestTimeToDispatch": "Morning (10:00 AM - 11:30 AM)"
+}
+`;
+
+        let result = null;
+        try {
+            const gatewayRes = await executeGatewayRequest({
+                workspaceId,
+                model: "auto/smart",
+                messages: [
+                    { role: "system", content: "You are an elite sales psychology expert recovering ghosted enterprise deals. Return JSON only." },
+                    { role: "user", content: prompt }
+                ]
+            });
+            if (gatewayRes?.success && gatewayRes?.content) {
+                const match = gatewayRes.content.match(/\{[\s\S]*\}/);
+                if (match) result = JSON.parse(match[0]);
+            }
+        } catch (e) {
+            console.warn("[STALLED_DEAL_REVIVAL_AI_FALLBACK]", e.message);
+        }
+
+        if (!result) {
+            result = {
+                daysInactive,
+                recommendedStrategy: daysInactive > 14 ? "POLITE_BREAKUP" : "FRIENDLY_CHECKIN",
+                strategies: {
+                    valueAdd: `Hi ${clientName}, we recently published benchmark results for teams optimizing their workflows in ${companyName || 'your sector'}. Thought this might be helpful for your evaluation on ${deal.title}. Would love to share the 1-page summary if you're interested!`,
+                    friendlyCheckin: `Hello ${clientName}, hope you're having a productive week! Just circling back on our discussion regarding ${deal.title}. Are you still looking to move forward this month, or has the timeline shifted?`,
+                    politeBreakup: `Hi ${clientName}, I haven't heard back regarding ${deal.title}, so I assume priorities have shifted or you've decided to put this on hold for now. No worries at all! I'll close our file for now, but feel free to reach out anytime if things change.`
+                },
+                recommendedChannel: "WHATSAPP",
+                bestTimeToDispatch: "Mid-morning (10:30 AM)"
+            };
+        }
+
+        return {
+            success: true,
+            data: {
+                dealId: deal.id,
+                dealTitle: deal.title,
+                dealValue: deal.value,
+                currency: deal.currency,
+                contact: deal.contact,
+                ...result
+            }
+        };
+    } catch (error) {
+        console.error("[GENERATE_STALLED_DEAL_REVIVAL_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * 7. Predictive Lead & Deal Scoring Engine
+ * Computes a multidimensional 0-100 win probability score with actionable drivers
+ */
+export async function computeDealLeadScoreAction(workspaceId, dealId) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const deal = await prisma.deal.findFirst({
+            where: { id: dealId, workspaceId },
+            include: {
+                stage: true,
+                contact: true,
+                account: true,
+                activities: { orderBy: { createdAt: 'desc' }, take: 20 }
+            }
+        });
+
+        if (!deal) return { success: false, error: "Deal not found" };
+
+        const now = new Date();
+        const daysSinceCreated = Math.max(1, Math.floor((now - new Date(deal.createdAt)) / (1000 * 60 * 60 * 24)));
+        const lastActivityDate = deal.activities[0]?.createdAt || deal.createdAt;
+        const daysSinceLastActivity = Math.max(0, Math.floor((now - new Date(lastActivityDate)) / (1000 * 60 * 60 * 24)));
+
+        // Factor 1: Engagement Velocity (Max 35 points)
+        let engagementScore = 15;
+        const recentActivities = deal.activities.filter(a => {
+            const diffDays = (now - new Date(a.createdAt)) / (1000 * 60 * 60 * 24);
+            return diffDays <= 14;
+        });
+        engagementScore += Math.min(20, recentActivities.length * 4);
+        if (daysSinceLastActivity > 10) engagementScore = Math.max(5, engagementScore - 15);
+
+        // Factor 2: Stage & Probability (Max 25 points)
+        const stageProbability = deal.stage?.probability || 50;
+        const stageScore = Math.round((stageProbability / 100) * 25);
+
+        // Factor 3: Firmographics & Budget (Max 25 points)
+        let firmographicScore = 10;
+        if (deal.value > 100000) firmographicScore += 5;
+        if (deal.account) {
+            firmographicScore += 5;
+            if (deal.account.rating === "HOT") firmographicScore += 5;
+        }
+
+        // Factor 4: Contact Profile Completeness (Max 15 points)
+        let completenessScore = 0;
+        if (deal.contact?.phone && deal.contact.phone !== "0000000000") completenessScore += 6;
+        if (deal.contact?.email) completenessScore += 5;
+        if (deal.contact?.name && !deal.contact.name.includes("New Lead")) completenessScore += 4;
+
+        const totalScore = Math.min(100, Math.max(10, engagementScore + stageScore + firmographicScore + completenessScore));
+
+        const grade = totalScore >= 90 ? 'A+' : totalScore >= 80 ? 'A' : totalScore >= 70 ? 'B' : totalScore >= 50 ? 'C' : 'D';
+        const momentum = daysSinceLastActivity <= 3 ? 'RISING' : daysSinceLastActivity <= 7 ? 'STABLE' : 'FALLING';
+
+        const drivers = [];
+        const improvementActions = [];
+
+        if (recentActivities.length >= 3) drivers.push(`High engagement velocity with ${recentActivities.length} interactions in last 14 days`);
+        if (deal.contact?.phone) drivers.push("Verified phone communication channel available");
+        if (deal.stage?.probability >= 60) drivers.push(`Advanced pipeline progression (${deal.stage?.name})`);
+
+        if (daysSinceLastActivity > 5) {
+            improvementActions.push(`No activity recorded in ${daysSinceLastActivity} days. Trigger a WhatsApp pulse check.`);
+        }
+        if (!deal.account) {
+            improvementActions.push("Map company account profile to increase B2B deal intelligence.");
+        }
+        if (!deal.expectedClose) {
+            improvementActions.push("Set a target expected close date to track deal slippage.");
+        }
+
+        return {
+            success: true,
+            data: {
+                dealId: deal.id,
+                totalScore,
+                grade,
+                momentum,
+                breakdown: {
+                    engagementScore,
+                    stageScore,
+                    firmographicScore,
+                    completenessScore
+                },
+                drivers: drivers.length > 0 ? drivers : ["Standard pipeline trajectory"],
+                improvementActions: improvementActions.length > 0 ? improvementActions : ["Maintain current communication cadences"]
+            }
+        };
+    } catch (error) {
+        console.error("[COMPUTE_DEAL_LEAD_SCORE_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * 8. AI Business Card Scanner & OCR Extraction
+ * Extracts contact details from physical business card image or raw text
+ */
+export async function scanBusinessCardAiAction(workspaceId, { rawText, imageDescription }) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const prompt = `
+You are FlowGenix AI Business Card OCR Specialist.
+Extract structured contact information from this scanned business card data:
+"""
+${rawText || imageDescription || "Business card text"}
+"""
+
+Return strictly a valid JSON object matching this schema:
+{
+  "name": "Full Name",
+  "jobTitle": "Job Title or Designation",
+  "company": "Company Name",
+  "email": "Email address or null",
+  "phone": "Phone number or null",
+  "website": "Website URL or null",
+  "address": "Address or city or null",
+  "tags": ["ScannedCard", "EventLead"]
+}
+`;
+
+        let cardData = null;
+        try {
+            const gatewayRes = await executeGatewayRequest({
+                workspaceId,
+                model: "auto/smart",
+                messages: [
+                    { role: "system", content: "Extract business card contact details accurately into JSON." },
+                    { role: "user", content: prompt }
+                ]
+            });
+            if (gatewayRes?.success && gatewayRes?.content) {
+                const match = gatewayRes.content.match(/\{[\s\S]*\}/);
+                if (match) cardData = JSON.parse(match[0]);
+            }
+        } catch (e) {
+            console.warn("[BUSINESS_CARD_OCR_FALLBACK]", e.message);
+        }
+
+        if (!cardData) {
+            const lines = (rawText || "").split('\n').map(l => l.trim()).filter(Boolean);
+            cardData = {
+                name: lines[0] || "Scanned Contact",
+                jobTitle: lines[1] || "Executive",
+                company: lines[2] || "Enterprise",
+                email: lines.find(l => l.includes('@')) || null,
+                phone: lines.find(l => /[0-9]{8,}/.test(l.replace(/[^0-9]/g, ''))) || null,
+                website: lines.find(l => l.includes('http') || l.includes('www.')) || null,
+                address: null,
+                tags: ["SCANNED_CARD"]
+            };
+        }
+
+        return { success: true, data: cardData };
+    } catch (error) {
+        console.error("[SCAN_BUSINESS_CARD_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+

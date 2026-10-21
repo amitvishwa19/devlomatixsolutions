@@ -82,7 +82,23 @@ export async function get360ContactDossierAction(workspaceId, contactId) {
             });
         }
 
-        // 4. Calculate Customer Lifetime Value (LTV)
+        // 4. Fetch linked Deskflow Customer Support Tickets
+        let supportTickets = null;
+        try {
+            const { getContactDeskflowTicketsAction } = await import('./crm-bridge-actions');
+            const deskRes = await getContactDeskflowTicketsAction(workspaceId, {
+                email: contact.email,
+                phone: contact.phone,
+                contactName: contact.name
+            });
+            if (deskRes.success) {
+                supportTickets = deskRes.data;
+            }
+        } catch (e) {
+            console.warn("[DOSSIER_DESKFLOW_BRIDGE_WARN]", e.message);
+        }
+
+        // 5. Calculate Customer Lifetime Value (LTV)
         const totalWonDealValue = (contact.deals || [])
             .filter(d => d.stage?.isWon)
             .reduce((sum, d) => sum + (d.value || 0), 0);
@@ -93,6 +109,7 @@ export async function get360ContactDossierAction(workspaceId, contactId) {
                 contact,
                 whatsappMessages,
                 candidateProfile,
+                supportTickets,
                 analytics: {
                     totalDeals: contact.deals?.length || 0,
                     totalWonValue: totalWonDealValue,

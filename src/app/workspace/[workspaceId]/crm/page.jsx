@@ -19,7 +19,10 @@ import {
     XCircle,
     ChevronRight,
     Loader2,
-    PhoneCall
+    PhoneCall,
+    Headphones,
+    Trophy,
+    Zap
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -27,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { getDealStatsAction, getDealsAction } from "./_actions/deal-actions";
 import { getActivitiesAction } from "./_actions/activity-actions";
 import { getPipelinesAction } from "./_actions/pipeline-actions";
+import CrmHierarchyFilter from "./_components/CrmHierarchyFilter";
 
 export default function CrmDashboardPage() {
     const params = useParams();
@@ -46,6 +50,7 @@ export default function CrmDashboardPage() {
     const [recentDeals, setRecentDeals] = useState([]);
     const [recentActivities, setRecentActivities] = useState([]);
     const [pipelines, setPipelines] = useState([]);
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     useEffect(() => {
         if (!workspaceId) return;
@@ -54,9 +59,9 @@ export default function CrmDashboardPage() {
             setIsLoading(true);
             try {
                 const [statsRes, dealsRes, activitiesRes, pipelinesRes] = await Promise.all([
-                    getDealStatsAction(workspaceId),
-                    getDealsAction(workspaceId),
-                    getActivitiesAction(workspaceId, { limit: 8 }),
+                    getDealStatsAction(workspaceId, null, targetUserId !== 'ALL' ? targetUserId : null),
+                    getDealsAction(workspaceId, { ownerId: targetUserId !== 'ALL' ? targetUserId : undefined }),
+                    getActivitiesAction(workspaceId, { limit: 8, targetUserId: targetUserId !== 'ALL' ? targetUserId : undefined }),
                     getPipelinesAction(workspaceId)
                 ]);
 
@@ -72,7 +77,7 @@ export default function CrmDashboardPage() {
         }
 
         loadDashboardData();
-    }, [workspaceId]);
+    }, [workspaceId, targetUserId]);
 
     const formatCurrency = (val, currency = "INR") => {
         const symbol = currency === "USD" ? "$" : "₹";
@@ -113,7 +118,12 @@ export default function CrmDashboardPage() {
                         Real-time revenue forecast, deal conversion velocity, and cross-channel interactions.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
                     <Link href={`/workspace/${workspaceId}/crm/dcr`}>
                         <Button variant="outline" className="h-8 text-xs font-semibold gap-1.5 shadow-sm bg-background/80 hover:bg-background">
                             <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
@@ -267,12 +277,12 @@ export default function CrmDashboardPage() {
                                 <MessageCircle className="w-5 h-5" />
                             </div>
                             <div className="flex-1 min-w-0">
-                                <h4 className="text-xs font-bold text-foreground">WhatsApp CRM Campaigns</h4>
+                                <h4 className="text-xs font-bold text-foreground">WhatsApp Outreach & DCR</h4>
                                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                                    Trigger automated WhatsApp outreach directly from stage movements.
+                                    1-click WhatsApp messaging and daily call recording logged to CRM timeline.
                                 </p>
-                                <Link href={`/workspace/${workspaceId}/konnectx/campaigns`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-[#25D366] hover:underline">
-                                    Launch WhatsApp Broadcast <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                                <Link href={`/workspace/${workspaceId}/crm/dcr`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-[#25D366] hover:underline">
+                                    Open DCR Call Hub <ArrowUpRight className="w-3 h-3 ml-0.5" />
                                 </Link>
                             </div>
                         </div>
@@ -288,6 +298,36 @@ export default function CrmDashboardPage() {
                                 </p>
                                 <Link href={`/workspace/${workspaceId}/hireflow/candidates`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-indigo-500 hover:underline">
                                     View Candidates <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500 shrink-0">
+                                <Zap className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-xs font-bold text-foreground">Omnichannel Inbound Leads</h4>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    FormCraft web forms & Meta Ads webhooks capture leads into pipeline with instant WhatsApp welcome.
+                                </p>
+                                <Link href={`/workspace/${workspaceId}/formcraft`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-blue-500 hover:underline">
+                                    FormCraft Forms <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-500 shrink-0">
+                                <Headphones className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-xs font-bold text-foreground">Deskflow Support 360°</h4>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    Unified customer ticketing history in 360° dossiers; convert support tickets to expansion deals.
+                                </p>
+                                <Link href={`/workspace/${workspaceId}/deskflow`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-purple-500 hover:underline">
+                                    Deskflow Tickets <ArrowUpRight className="w-3 h-3 ml-0.5" />
                                 </Link>
                             </div>
                         </div>

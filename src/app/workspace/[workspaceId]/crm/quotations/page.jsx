@@ -57,6 +57,7 @@ import {
 import QuotationDocumentPreview, { CURRENCY_SYMBOLS } from './_components/QuotationDocumentPreview';
 import SendQuotationModal from './_components/SendQuotationModal';
 import SendQuotationEmailModal from './_components/SendQuotationEmailModal';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 export default function CrmQuotationsDirectoryPage() {
     const params = useParams();
@@ -78,6 +79,7 @@ export default function CrmQuotationsDirectoryPage() {
     // Filters
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     // Modals
     const [selectedPreviewQuotation, setSelectedPreviewQuotation] = useState(null);
@@ -92,7 +94,8 @@ export default function CrmQuotationsDirectoryPage() {
 
             const res = await getCrmQuotationsAction(workspaceId, {
                 status: statusFilter,
-                search: searchQuery || undefined
+                search: searchQuery || undefined,
+                targetUserId: targetUserId !== 'ALL' ? targetUserId : undefined
             });
 
             if (res.success && res.data) {
@@ -115,7 +118,7 @@ export default function CrmQuotationsDirectoryPage() {
 
     useEffect(() => {
         loadQuotations();
-    }, [workspaceId, statusFilter]);
+    }, [workspaceId, statusFilter, targetUserId]);
 
     // Client-side quick search filter
     const filteredQuotations = useMemo(() => {
@@ -162,9 +165,9 @@ export default function CrmQuotationsDirectoryPage() {
     const handleCopyClientLink = (e, q) => {
         e.stopPropagation();
         if (!q?.id) return;
-        const url = `${window.location.origin}/quotations/view/${q.id}`;
+        const url = `${window.location.origin}/quote/${q.id}`;
         navigator.clipboard.writeText(url);
-        toast.success(`Copied client approval link for ${q.quotationNumber}!`);
+        toast.success(`Copied live tracking link for ${q.quotationNumber}!`);
     };
 
     const handleConvertToInvoice = async (e, q) => {
@@ -190,8 +193,15 @@ export default function CrmQuotationsDirectoryPage() {
         }
     };
 
-    const getStatusBadge = (status) => {
+    const getStatusBadge = (status, viewCount = 0) => {
         switch (status) {
+            case 'viewed':
+                return (
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase bg-amber-500/10 text-amber-500 border-amber-500/30 gap-1 animate-pulse">
+                        <Eye className="w-2.5 h-2.5 text-amber-500" />
+                        Client Opened ({viewCount || 1}x)
+                    </Badge>
+                );
             case 'invoiced':
                 return (
                     <Badge variant="outline" className="text-[10px] font-bold uppercase bg-purple-500/10 text-purple-600 border-purple-500/20 gap-1">
@@ -237,6 +247,7 @@ export default function CrmQuotationsDirectoryPage() {
         }
     };
 
+
     return (
         <div className="flex flex-col space-y-5 p-2 sm:p-0">
             {/* Header Banner */}
@@ -253,7 +264,12 @@ export default function CrmQuotationsDirectoryPage() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
                     <Button
                         type="button"
                         variant="outline"
@@ -462,8 +478,14 @@ export default function CrmQuotationsDirectoryPage() {
 
                                             {/* Status Badge */}
                                             <td className="py-3.5 px-4">
-                                                {getStatusBadge(q.status)}
+                                                {getStatusBadge(q.status, details.viewCount)}
+                                                {details.viewCount > 0 && q.status !== 'viewed' && (
+                                                    <span className="text-[10px] text-amber-500 font-mono font-semibold block mt-0.5">
+                                                        🔥 {details.viewCount} {details.viewCount === 1 ? 'view' : 'views'}
+                                                    </span>
+                                                )}
                                             </td>
+
 
                                             {/* Actions */}
                                             <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>

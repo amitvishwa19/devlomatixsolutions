@@ -4,13 +4,16 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 /**
  * Fetch DCR (Daily Call Record) logs with summary metrics for sales & field reps
+ * Filtered by Universal Global Org Hierarchy: Super Admin sees all; higher ladder users see their own + subordinate DCR logs.
  */
 export async function getDcrRecordsAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
         const {
             date,           // YYYY-MM-DD or undefined (defaults to today if requested)
@@ -23,6 +26,23 @@ export async function getDcrRecordsAction(workspaceId, filters = {}) {
             page = 1,
             limit = 50
         } = filters;
+
+        // Build hierarchy condition for reps/users
+        let hierarchyUserCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (repId && repId !== 'ALL') {
+                if (allowed.includes(repId)) {
+                    hierarchyUserCondition = { userId: repId };
+                } else {
+                    hierarchyUserCondition = { userId: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyUserCondition = { userId: { in: allowed } };
+            }
+        } else if (repId && repId !== 'ALL') {
+            hierarchyUserCondition = { userId: repId };
+        }
 
         // Build date filter
         let createdAtFilter = undefined;
@@ -43,7 +63,7 @@ export async function getDcrRecordsAction(workspaceId, filters = {}) {
         const where = {
             workspaceId,
             type: callType && callType !== 'ALL' ? callType : { in: dcrTypes },
-            ...(repId && repId !== 'ALL' ? { userId: repId } : {}),
+            ...hierarchyUserCondition,
             ...(createdAtFilter ? { createdAt: createdAtFilter } : {}),
             ...(search ? {
                 OR: [
@@ -484,3 +504,125 @@ export async function generateDcrAiFollowupAction(workspaceId, { clientName, con
         return { success: false, error: "Failed to generate AI follow-up draft" };
     }
 }
+
+/**
+ * AI Voice Note & Call Audio Summarizer to DCR Record
+ * Transcribes/summarizes unstructured sales notes/transcripts into a full DCR record with sentiment & action items
+ */
+export async function summarizeVoiceNoteToDcrAction(workspaceId, payload = {}) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+        const {
+            rawTranscript,
+            contactId,
+            dealId,
+            clientName,
+            clientPhone,
+            callType = "PHONE_CALL",
+            durationMinutes = 5,
+            gpsLatitude,
+            gpsLongitude,
+            gpsAddress
+        } = payload;
+
+        if (!rawTranscript || !rawTranscript.trim()) {
+            return { success: false, error: "Audio transcript or call notes cannot be empty." };
+        }
+
+        const { executeGatewayRequest } = await import('../../flowgenix/_lib/combo-router');
+
+        const prompt = `
+You are FlowGenix AI Meeting & Sales Call Intelligence Analyst.
+Analyze these unstructured spoken sales call notes/transcript:
+"""
+${rawTranscript}
+"""
+
+Extract structured call telemetry strictly in raw JSON (no markdown, no backticks):
+{
+  "clientName": "Extracted client or company name (or fallback to '${clientName || 'Prospect'}')",
+  "contactPerson": "Name of person spoken to if mentioned",
+  "summary": "Crisp 2-3 sentence overview of what was discussed",
+  "sentiment": "POSITIVE" | "NEUTRAL" | "SKEPTICAL" | "DISSATISFIED",
+  "outcome": "HOT_LEAD" | "PROPOSAL_SENT" | "FOLLOWUP_SCHEDULED" | "WON" | "GATEKEEPER" | "NOT_INTERESTED",
+  "objections": ["Objection 1 if any"],
+  "nextAction": "Clear actionable next step agreed on",
+  "suggestedFollowupDays": 2, // number of days from now to follow up
+  "dealPotential": 50000 // estimated monetary value if mentioned or 0
+}
+`;
+
+        let aiExtraction = null;
+        try {
+            const gatewayRes = await executeGatewayRequest({
+                workspaceId,
+                model: "auto/smart",
+                messages: [
+                    { role: "system", content: "You extract structured sales CRM call logs from audio transcripts. Return JSON only." },
+                    { role: "user", content: prompt }
+                ]
+            });
+            if (gatewayRes?.success && gatewayRes?.content) {
+                const match = gatewayRes.content.match(/\{[\s\S]*\}/);
+                if (match) aiExtraction = JSON.parse(match[0]);
+            }
+        } catch (e) {
+            console.warn("[VOICE_NOTE_DCR_AI_FALLBACK]", e.message);
+        }
+
+        if (!aiExtraction) {
+            aiExtraction = {
+                clientName: clientName || "Client Meeting",
+                contactPerson: clientName || "Contact",
+                summary: rawTranscript.slice(0, 180),
+                sentiment: "POSITIVE",
+                outcome: "FOLLOWUP_SCHEDULED",
+                objections: [],
+                nextAction: "Follow up as agreed during conversation",
+                suggestedFollowupDays: 3,
+                dealPotential: 0
+            };
+        }
+
+        const now = new Date();
+        const nextDate = new Date();
+        nextDate.setDate(now.getDate() + (aiExtraction.suggestedFollowupDays || 3));
+
+        // Create the DCR record
+        const dcrRecord = await createDcrRecordAction(workspaceId, {
+            clientName: aiExtraction.clientName || clientName || "Client Meeting",
+            contactPerson: aiExtraction.contactPerson || clientName,
+            contactPhone: clientPhone || null,
+            callType: callType || "PHONE_CALL",
+            outcome: aiExtraction.outcome || "FOLLOWUP_SCHEDULED",
+            conversationDetails: `${aiExtraction.summary}\n\nKey Objections: ${aiExtraction.objections?.join(', ') || 'None'}\n\nAudio Note: ${rawTranscript.slice(0, 250)}`,
+            nextActionPlan: aiExtraction.nextAction,
+            nextFollowUpDate: nextDate.toISOString().slice(0, 10),
+            nextFollowUpTime: "11:00",
+            duration: `${durationMinutes} mins`,
+            dealPotential: aiExtraction.dealPotential || 0,
+            contactId: contactId || null,
+            dealId: dealId || null,
+            latitude: gpsLatitude,
+            longitude: gpsLongitude,
+            fieldLocationAddress: gpsAddress,
+            customData: {
+                aiProcessed: true,
+                sentiment: aiExtraction.sentiment,
+                objections: aiExtraction.objections
+            }
+        });
+
+        return {
+            success: true,
+            data: {
+                dcrRecord: dcrRecord.data,
+                aiAnalysis: aiExtraction
+            }
+        };
+    } catch (error) {
+        console.error("[SUMMARIZE_VOICE_NOTE_TO_DCR_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+

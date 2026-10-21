@@ -30,6 +30,7 @@ import { toast } from "sonner";
 
 import CreateAccountModal from './_components/CreateAccountModal';
 import { getAccountsAction, deleteAccountAction } from '../_actions/account-actions';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 export default function AccountsDirectoryPage() {
     const params = useParams();
@@ -44,6 +45,7 @@ export default function AccountsDirectoryPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [industryFilter, setIndustryFilter] = useState('ALL');
     const [ratingFilter, setRatingFilter] = useState('ALL');
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -57,7 +59,8 @@ export default function AccountsDirectoryPage() {
             const res = await getAccountsAction(workspaceId, {
                 industry: industryFilter === 'ALL' ? undefined : industryFilter,
                 rating: ratingFilter === 'ALL' ? undefined : ratingFilter,
-                search: searchQuery || undefined
+                search: searchQuery || undefined,
+                ownerId: targetUserId !== 'ALL' ? targetUserId : undefined
             });
 
             if (res.success) {
@@ -77,7 +80,7 @@ export default function AccountsDirectoryPage() {
 
     useEffect(() => {
         loadAccounts();
-    }, [workspaceId, industryFilter, ratingFilter]);
+    }, [workspaceId, industryFilter, ratingFilter, targetUserId]);
 
     const filteredAccounts = useMemo(() => {
         if (!searchQuery.trim()) return accounts;
@@ -142,7 +145,12 @@ export default function AccountsDirectoryPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
                     <Button
                         variant="outline"
                         size="sm"

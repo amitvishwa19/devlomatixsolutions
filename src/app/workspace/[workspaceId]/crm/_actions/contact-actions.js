@@ -4,17 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
 import { triggerCrmWorkflowAction } from "./crm-automation-actions";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 /**
  * Get all Contacts for CRM with search, filters, and relationship stats
- * RESTRICTION: Only contacts of CRM owned by current user AND contacts shared to that user are returned.
+ * RESTRICTION: Evaluated against Universal Global Org Hierarchy.
+ * Super Admin sees all. Higher ladder users see their own contacts + contacts of all subordinates below them.
  */
 export async function getCrmContactsAction(workspaceId, filters = {}) {
     try {
         const session = await ensureWorkspaceAccess(workspaceId);
         const currentUserId = await getValidUserId(workspaceId, session);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
-        const { search, type, accountId, tag, hasAtsCandidate, scope = 'ALL', moduleFilter = 'ALL' } = filters;
+        const { search, type, accountId, tag, hasAtsCandidate, scope = 'ALL', moduleFilter = 'ALL', targetUserId } = filters;
 
         // In CRM, every contact MUST belong to the CRM module (or be a default LEAD/CLIENT)
         const crmModuleCondition = {
@@ -25,28 +28,44 @@ export async function getCrmContactsAction(workspaceId, filters = {}) {
             ]
         };
 
-        // Access scope condition:
-        // - OWNED: created/owned by user in this workspace
-        // - SHARED: explicitly shared with user across workspaces
-        // - ALL: owned by user in workspace OR shared with user across workspaces
+        // Access scope condition evaluated against Org Hierarchy:
         let accessCondition;
-        if (scope === 'OWNED') {
-            accessCondition = {
-                workspaceId,
-                userId: currentUserId
-            };
-        } else if (scope === 'SHARED') {
-            accessCondition = {
-                sharedWith: { some: { sharedWithUserId: currentUserId } },
-                userId: { not: currentUserId }
-            };
+        if (visibilityScope.isSuperAdmin) {
+            if (targetUserId && targetUserId !== 'ALL') {
+                accessCondition = { workspaceId, userId: targetUserId };
+            } else if (scope === 'OWNED') {
+                accessCondition = { workspaceId };
+            } else if (scope === 'SHARED') {
+                accessCondition = { sharedWith: { some: {} } };
+            } else {
+                accessCondition = { workspaceId };
+            }
         } else {
-            accessCondition = {
-                OR: [
-                    { workspaceId, userId: currentUserId },
-                    { sharedWith: { some: { sharedWithUserId: currentUserId } } }
-                ]
-            };
+            const allowedUserIds = visibilityScope.visibleUserIds || [currentUserId];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowedUserIds.includes(targetUserId)) {
+                    accessCondition = { workspaceId, userId: targetUserId };
+                } else {
+                    accessCondition = { workspaceId, userId: '__NO_ACCESS__' };
+                }
+            } else if (scope === 'OWNED') {
+                accessCondition = {
+                    workspaceId,
+                    userId: { in: allowedUserIds }
+                };
+            } else if (scope === 'SHARED') {
+                accessCondition = {
+                    sharedWith: { some: { sharedWithUserId: currentUserId } },
+                    userId: { notIn: allowedUserIds }
+                };
+            } else {
+                accessCondition = {
+                    OR: [
+                        { workspaceId, userId: { in: allowedUserIds } },
+                        { sharedWith: { some: { sharedWithUserId: currentUserId } } }
+                    ]
+                };
+            }
         }
 
         const andConditions = [
@@ -360,9 +379,15 @@ export async function deleteCrmContactAction(workspaceId, contactId) {
             return { success: false, error: "Contact not found" };
         }
 
-        // Only owner or admin can permanently delete
-        if (contact.userId !== currentUserId && session?.user?.role !== 'ADMIN' && session?.user?.role !== 'SUPER_ADMIN') {
-            return { success: false, error: "Only the owner can delete this contact" };
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
+        const canDelete = visibilityScope.isSuperAdmin ||
+            contact.userId === currentUserId ||
+            (visibilityScope.visibleUserIds && visibilityScope.visibleUserIds.includes(contact.userId)) ||
+            session?.user?.role === 'ADMIN' ||
+            session?.user?.role === 'SUPER_ADMIN';
+
+        if (!canDelete) {
+            return { success: false, error: "Only the owner, hierarchy manager, or admin can delete this contact" };
         }
 
         await prisma.contact.delete({

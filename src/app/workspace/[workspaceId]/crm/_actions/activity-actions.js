@@ -3,22 +3,48 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 /**
  * Get unified activity timeline
+ * Scoped by Universal Global Org Hierarchy: Super Admin sees all; higher ladder users see their own + subordinate activities.
  */
 export async function getActivitiesAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
-        const { contactId, accountId, dealId, type, limit = 50 } = filters;
+        const { contactId, accountId, dealId, type, limit = 50, targetUserId } = filters;
+
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowed.includes(targetUserId)) {
+                    hierarchyCondition = { userId: targetUserId };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = {
+                    OR: [
+                        { userId: { in: allowed } },
+                        { deal: { userId: { in: allowed } } },
+                        { contact: { userId: { in: allowed } } }
+                    ]
+                };
+            }
+        } else if (targetUserId && targetUserId !== 'ALL') {
+            hierarchyCondition = { userId: targetUserId };
+        }
 
         const where = {
             workspaceId,
             contactId: contactId || undefined,
             accountId: accountId || undefined,
             dealId: dealId || undefined,
-            type: type || undefined
+            type: type || undefined,
+            ...hierarchyCondition
         };
 
         const activities = await prisma.crmActivity.findMany({

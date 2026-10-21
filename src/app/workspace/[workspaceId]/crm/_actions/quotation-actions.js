@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 import { dispatchWhatsAppFromCrmAction } from "./whatsapp-template-actions";
 import { createInvoice } from "../../payflow/_actions/payflow-actions";
 import { revalidatePath } from "next/cache";
@@ -71,13 +72,32 @@ async function safeLogCrmActivity(workspaceId, userId, activityData) {
  */
 export async function getCrmQuotationsAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
-        const { search, status, page = 1, limit = 50 } = filters;
+        const { search, status, targetUserId, page = 1, limit = 50 } = filters;
         const skip = (page - 1) * limit;
 
+        // Build hierarchy condition
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowed.includes(targetUserId)) {
+                    hierarchyCondition = { userId: targetUserId };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = { userId: { in: allowed } };
+            }
+        } else if (targetUserId && targetUserId !== 'ALL') {
+            hierarchyCondition = { userId: targetUserId };
+        }
+
         const where = {
-            workspaceId
+            workspaceId,
+            ...hierarchyCondition
         };
 
         if (status && status !== 'ALL') {
@@ -106,7 +126,7 @@ export async function getCrmQuotationsAction(workspaceId, filters = {}) {
             }),
             prisma.quotation.count({ where }),
             prisma.quotation.findMany({
-                where: { workspaceId },
+                where: { workspaceId, ...hierarchyCondition },
                 select: { total: true, status: true }
             })
         ]);
@@ -961,4 +981,147 @@ export async function sendCrmQuotationViaEmailAction(workspaceId, payload) {
         return { success: false, error: error.message || "Failed to send quotation email" };
     }
 }
+
+/**
+ * Record public client view telemetry for a quotation
+ */
+export async function recordQuotationViewAction(quotationId, telemetry = {}) {
+    try {
+        if (!quotationId) return { success: false, error: "Quotation ID required" };
+
+        const quotation = await prisma.quotation.findUnique({
+            where: { id: quotationId }
+        });
+
+        if (!quotation) return { success: false, error: "Quotation not found" };
+
+        const rawData = typeof quotation.data === 'object' && quotation.data !== null ? quotation.data : {};
+        const previousViews = Array.isArray(rawData.viewHistory) ? rawData.viewHistory : [];
+        const viewCount = (rawData.viewCount || 0) + 1;
+        const now = new Date();
+
+        const newViewEntry = {
+            viewId: `view-${Date.now()}`,
+            timestamp: now.toISOString(),
+            ip: telemetry.ip || "Client Browser",
+            userAgent: telemetry.userAgent ? telemetry.userAgent.slice(0, 150) : "Web Viewer",
+            durationSeconds: telemetry.durationSeconds || 5,
+            page: telemetry.page || 1
+        };
+
+        const updatedHistory = [newViewEntry, ...previousViews.slice(0, 49)];
+        const updatedData = {
+            ...rawData,
+            viewCount,
+            lastViewedAt: now.toISOString(),
+            viewHistory: updatedHistory,
+            engagementScore: viewCount >= 4 ? 'HIGH_INTENT' : viewCount >= 2 ? 'ENGAGED' : 'INITIAL_VIEW'
+        };
+
+        const shouldMarkViewed = quotation.status === 'sent' || quotation.status === 'draft';
+        const newStatus = shouldMarkViewed ? 'viewed' : quotation.status;
+
+        const updated = await prisma.quotation.update({
+            where: { id: quotationId },
+            data: {
+                status: newStatus,
+                data: updatedData
+            }
+        });
+
+        // Safe log CRM activity if first view or views count is significant
+        if (quotation.workspaceId && (viewCount === 1 || viewCount % 3 === 0)) {
+            const quotationInfo = rawData.quotation || {};
+            await safeLogCrmActivity(quotation.workspaceId, quotation.userId, {
+                dealId: quotationInfo.dealId,
+                contactId: rawData.client?.contactId,
+                type: "NOTE",
+                title: `🔥 Proposal Viewed: ${quotation.quotationNumber} (${viewCount} views)`,
+                description: `Client opened quotation "${quotationInfo.title || quotation.quotationNumber}". Engagement status: ${updatedData.engagementScore}.`,
+                metadata: {
+                    quotationId: quotation.id,
+                    viewCount,
+                    lastViewedAt: now.toISOString(),
+                    telemetry
+                }
+            });
+        }
+
+        return {
+            success: true,
+            data: {
+                viewCount,
+                lastViewedAt: now.toISOString(),
+                engagementScore: updatedData.engagementScore
+            }
+        };
+    } catch (error) {
+        console.error("[RECORD_QUOTATION_VIEW_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Fetch detailed quotation view tracking stats
+ */
+export async function getQuotationTrackingAction(workspaceId, quotationId) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        const quotation = await prisma.quotation.findFirst({
+            where: { id: quotationId, workspaceId }
+        });
+
+        if (!quotation) return { success: false, error: "Quotation not found" };
+
+        const data = typeof quotation.data === 'object' && quotation.data !== null ? quotation.data : {};
+        const viewHistory = Array.isArray(data.viewHistory) ? data.viewHistory : [];
+        const viewCount = data.viewCount || viewHistory.length || 0;
+        const lastViewedAt = data.lastViewedAt || (viewHistory[0] ? viewHistory[0].timestamp : null);
+
+        return {
+            success: true,
+            data: {
+                quotationId,
+                quotationNumber: quotation.quotationNumber,
+                clientName: quotation.clientName,
+                status: quotation.status,
+                viewCount,
+                lastViewedAt,
+                engagementScore: data.engagementScore || (viewCount > 2 ? 'HIGH_INTENT' : viewCount > 0 ? 'INITIAL_VIEW' : 'UNOPENED'),
+                viewHistory: viewHistory.slice(0, 20)
+            }
+        };
+    } catch (error) {
+        console.error("[GET_QUOTATION_TRACKING_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Public resolver to view a quotation securely via token or ID
+ */
+export async function getPublicQuotationAction(quotationId) {
+    try {
+        if (!quotationId) return { success: false, error: "Invalid quotation ID" };
+
+        const quotation = await prisma.quotation.findUnique({
+            where: { id: quotationId },
+            include: {
+                user: { select: { displayName: true, email: true, phone: true } }
+            }
+        });
+
+        if (!quotation) return { success: false, error: "Quotation not found or expired" };
+
+        return {
+            success: true,
+            data: quotation
+        };
+    } catch (error) {
+        console.error("[GET_PUBLIC_QUOTATION_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
 

@@ -179,3 +179,140 @@ export async function sendWhatsAppFromCrmAction(workspaceId, { contactId, dealId
         return { success: false, error: error.message || "Failed to send WhatsApp message" };
     }
 }
+
+/**
+ * Bridge: Fetch Deskflow Support Tickets for Contact / Account
+ * Enables 360° support visibility before sales calls/follow-ups
+ */
+export async function getContactDeskflowTicketsAction(workspaceId, { email, phone, contactName }) {
+    try {
+        await ensureWorkspaceAccess(workspaceId);
+
+        // Fetch Deskflow tickets from deskflow-actions
+        const { getTickets } = await import('../../deskflow/_actions/deskflow-actions');
+        const ticketsRes = await getTickets(workspaceId);
+        const allTickets = ticketsRes?.success && Array.isArray(ticketsRes.data) ? ticketsRes.data : [];
+
+        const normalizedEmail = email ? email.trim().toLowerCase() : '';
+        const cleanPhone = phone ? phone.replace(/[^0-9]/g, '') : '';
+        const namePart = contactName ? contactName.trim().toLowerCase() : '';
+
+        const matchedTickets = allTickets.filter(t => {
+            const tEmail = (t.email || '').toLowerCase();
+            const tCustomer = (t.customer || '').toLowerCase();
+            if (normalizedEmail && tEmail.includes(normalizedEmail)) return true;
+            if (namePart && tCustomer.includes(namePart)) return true;
+            return false;
+        });
+
+        const openTickets = matchedTickets.filter(t => t.status === 'Open' || t.status === 'In Progress');
+        const urgentTickets = openTickets.filter(t => t.priority === 'Urgent' || t.priority === 'High');
+
+        return {
+            success: true,
+            data: {
+                totalCount: matchedTickets.length,
+                openCount: openTickets.length,
+                hasUrgentIssues: urgentTickets.length > 0,
+                sentimentRisk: urgentTickets.length > 0 ? "HIGH_RISK" : openTickets.length > 0 ? "ATTENTION_NEEDED" : "CLEAR_SAILING",
+                tickets: matchedTickets
+            }
+        };
+    } catch (error) {
+        console.error("[GET_DESKFLOW_TICKETS_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Bridge: Convert a Deskflow Ticket into a CRM Upsell / Expansion Deal
+ */
+export async function convertTicketToUpsellDealAction(workspaceId, ticketId, dealData = {}) {
+    try {
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const userId = await getValidUserId(workspaceId, session);
+
+        const { getTicketById } = await import('../../deskflow/_actions/deskflow-actions');
+        const ticketRes = await getTicketById(workspaceId, ticketId);
+        const ticket = ticketRes?.data;
+
+        if (!ticket) {
+            return { success: false, error: "Support ticket not found" };
+        }
+
+        // 1. Resolve or Create Contact
+        let contact = await prisma.contact.findFirst({
+            where: {
+                workspaceId,
+                OR: [
+                    ...(ticket.email ? [{ email: ticket.email }] : []),
+                    { name: ticket.customer }
+                ]
+            }
+        });
+
+        if (!contact) {
+            contact = await prisma.contact.create({
+                data: {
+                    workspaceId,
+                    userId,
+                    name: ticket.customer || "Support Client",
+                    email: ticket.email || null,
+                    phone: "0000000000",
+                    type: "CLIENT",
+                    category: "DESKFLOW_CUSTOMER",
+                    tags: ["DESKFLOW_SUPPORT", "UPSELL_OPPORTUNITY"]
+                }
+            });
+        }
+
+        // 2. Resolve Pipeline & Stage
+        const pipeline = await prisma.pipeline.findFirst({
+            where: { workspaceId },
+            include: { stages: { orderBy: { order: 'asc' } } }
+        });
+
+        const stageId = dealData.stageId || pipeline?.stages[0]?.id;
+
+        const deal = await prisma.deal.create({
+            data: {
+                workspaceId,
+                userId,
+                title: dealData.title || `Upsell / Expansion: ${ticket.subject?.slice(0, 50) || ticket.customer}`,
+                value: parseFloat(dealData.value) || 50000,
+                currency: dealData.currency || "INR",
+                pipelineId: pipeline.id,
+                stageId,
+                contactId: contact.id,
+                ownerId: userId,
+                priority: "HIGH",
+                tags: ["DESKFLOW_UPSELL", "SUPPORT_EXPANSION"],
+                customFields: {
+                    sourceTicketId: ticket.id,
+                    ticketSubject: ticket.subject,
+                    ticketChannel: ticket.channel
+                }
+            }
+        });
+
+        // 3. Log Activity
+        await prisma.crmActivity.create({
+            data: {
+                workspaceId,
+                userId,
+                dealId: deal.id,
+                contactId: contact.id,
+                type: "NOTE",
+                title: `🎫 Deskflow Ticket Converted to Expansion Deal`,
+                description: `Created deal from Ticket #${ticket.id}: "${ticket.subject}". Initial potential: ${deal.currency} ${deal.value}.`,
+                metadata: { ticketId: ticket.id }
+            }
+        });
+
+        return { success: true, data: { deal, contact } };
+    } catch (error) {
+        console.error("[CONVERT_TICKET_TO_UPSELL_DEAL_ERROR]", error);
+        return { success: false, error: error.message };
+    }
+}
+

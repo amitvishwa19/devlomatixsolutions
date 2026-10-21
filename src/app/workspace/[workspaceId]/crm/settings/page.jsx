@@ -218,13 +218,13 @@ export default function CrmSettingsPage() {
     return (
         <div className="flex flex-col min-h-screen bg-background p-4  mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-2">
                     <div className="p-2 rounded-xl bg-primary/10 text-primary">
                         <SlidersHorizontal className="w-6 h-6" />
                     </div>
                     <div>
-                        <h1 className="text-xl lg:text-2xl font-black tracking-tight text-foreground">
+                        <h1 className="text-xl lg:text-xl font-bold text-foreground">
                             CRM Settings & Pipeline Builder
                         </h1>
                         <p className="text-xs text-muted-foreground">
@@ -252,7 +252,7 @@ export default function CrmSettingsPage() {
             ) : (
                 <div className="space-y-8">
                     {/* Section 1: Pipeline Selector & Manager */}
-                    <div className="p-6 rounded-3xl bg-card border border-border/80 space-y-6">
+                    <div className="p-6 rounded-xl bg-card border border-border/80 space-y-6">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
                             <div>
                                 <h2 className="text-base font-bold text-foreground flex items-center gap-2">
@@ -432,7 +432,7 @@ export default function CrmSettingsPage() {
                     </div>
 
                     {/* Section 2: Unified Cross-Module Bridges Status */}
-                    <div className="p-6 rounded-3xl bg-card border border-border/80 space-y-4">
+                    <div className="p-6 rounded-xl bg-card border border-border/80 space-y-4">
                         <div className="pb-3 border-b border-border/60">
                             <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                                 <Zap className="w-4 h-4 text-amber-500" />

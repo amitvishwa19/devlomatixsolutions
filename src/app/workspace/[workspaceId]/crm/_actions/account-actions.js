@@ -3,20 +3,50 @@
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess, getAuthSession } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 /**
  * Get all B2B Accounts / Companies with stats
+ * Filtered by Universal Global Org Hierarchy: Super Admin sees all; higher ladder users see their own + subordinate accounts.
  */
 export async function getAccountsAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
-        const { search, industry, rating } = filters;
+        const { search, industry, rating, ownerId } = filters;
+
+        // Build hierarchy access condition
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (ownerId && ownerId !== 'ALL') {
+                if (allowed.includes(ownerId)) {
+                    hierarchyCondition = {
+                        OR: [{ ownerId }, { userId: ownerId }]
+                    };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = {
+                    OR: [
+                        { userId: { in: allowed } },
+                        { ownerId: { in: allowed } }
+                    ]
+                };
+            }
+        } else if (ownerId && ownerId !== 'ALL') {
+            hierarchyCondition = {
+                OR: [{ ownerId }, { userId: ownerId }]
+            };
+        }
 
         const where = {
             workspaceId,
             industry: industry || undefined,
             rating: rating || undefined,
+            ...hierarchyCondition,
             ...(search ? {
                 OR: [
                     { name: { contains: search, mode: 'insensitive' } },

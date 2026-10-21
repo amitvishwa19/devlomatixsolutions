@@ -41,6 +41,7 @@ import { toast } from "sonner";
 
 import { getRevenueForecastAction, getTeamSalesLeaderboardAction } from '../_actions/crm-analytics-actions';
 import { getPipelinesAction } from '../_actions/pipeline-actions';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 export default function CrmAnalyticsPage() {
     const params = useParams();
@@ -51,6 +52,7 @@ export default function CrmAnalyticsPage() {
     const [pipelines, setPipelines] = useState([]);
     const [selectedPipelineId, setSelectedPipelineId] = useState('ALL');
     const [timeframe, setTimeframe] = useState('CURRENT_QUARTER');
+    const [targetUserId, setTargetUserId] = useState('ALL');
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -59,7 +61,11 @@ export default function CrmAnalyticsPage() {
         try {
             setIsLoading(true);
             const [forecastRes, leaderboardRes, pipelinesRes] = await Promise.all([
-                getRevenueForecastAction(workspaceId, { pipelineId: selectedPipelineId, timeframe }),
+                getRevenueForecastAction(workspaceId, {
+                    pipelineId: selectedPipelineId,
+                    timeframe,
+                    targetUserId: targetUserId !== 'ALL' ? targetUserId : undefined
+                }),
                 getTeamSalesLeaderboardAction(workspaceId, { timeframe }),
                 getPipelinesAction(workspaceId)
             ]);
@@ -78,7 +84,7 @@ export default function CrmAnalyticsPage() {
 
     useEffect(() => {
         loadAnalytics();
-    }, [workspaceId, selectedPipelineId, timeframe]);
+    }, [workspaceId, selectedPipelineId, timeframe, targetUserId]);
 
     const handleRefresh = () => {
         setIsRefreshing(true);
@@ -128,6 +134,13 @@ export default function CrmAnalyticsPage() {
                 </div>
 
                 <div className="flex items-center gap-2.5 z-10 flex-wrap">
+                    {/* Org Hierarchy Filter */}
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
+
                     {/* Pipeline Selector */}
                     <Select value={selectedPipelineId} onValueChange={setSelectedPipelineId}>
                         <SelectTrigger className="h-9 text-xs w-[160px] bg-background">

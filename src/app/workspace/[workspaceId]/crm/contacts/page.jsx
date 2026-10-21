@@ -38,6 +38,7 @@ import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
 import BulkImportModal from '../_components/BulkImportModal';
 import CrmShareContactModal from './_components/CrmShareContactModal';
 import { getCrmContactsAction, deleteCrmContactAction } from '../_actions/contact-actions';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
 
 export default function ContactsDirectoryPage() {
     const params = useParams();
@@ -55,6 +56,7 @@ export default function ContactsDirectoryPage() {
     const [atsFilter, setAtsFilter] = useState('ALL');
     const [moduleFilter, setModuleFilter] = useState('ALL'); // 'ALL' | 'crm' | 'ats' | 'konnectx'
     const [scopeFilter, setScopeFilter] = useState('ALL'); // 'ALL' | 'OWNED' | 'SHARED'
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -75,7 +77,8 @@ export default function ContactsDirectoryPage() {
                 hasAtsCandidate: atsFilter === 'ATS' ? true : undefined,
                 search: searchQuery || undefined,
                 scope: scopeFilter,
-                moduleFilter: moduleFilter !== 'ALL' ? moduleFilter : undefined
+                moduleFilter: moduleFilter !== 'ALL' ? moduleFilter : undefined,
+                targetUserId: targetUserId !== 'ALL' ? targetUserId : undefined
             });
 
             if (res.success) {
@@ -96,7 +99,7 @@ export default function ContactsDirectoryPage() {
 
     useEffect(() => {
         loadContacts();
-    }, [workspaceId, typeFilter, atsFilter, scopeFilter, moduleFilter]);
+    }, [workspaceId, typeFilter, atsFilter, scopeFilter, moduleFilter, targetUserId]);
 
     // Filtered Contacts for instant search filtering
     const filteredContacts = useMemo(() => {
@@ -177,7 +180,12 @@ export default function ContactsDirectoryPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
                     <Button
                         variant="outline"
                         size="sm"

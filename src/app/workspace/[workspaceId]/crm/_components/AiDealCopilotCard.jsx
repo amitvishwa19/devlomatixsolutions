@@ -15,17 +15,21 @@ import {
     Loader2,
     ShieldAlert,
     BrainCircuit,
-    Zap
+    Zap,
+    Flame
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { analyzeDealAiHealthAction } from "../_actions/crm-ai-actions";
+import AiStalledDealRevivalModal from "./AiStalledDealRevivalModal";
 
 export default function AiDealCopilotCard({ workspaceId, dealId, onUseWhatsAppDraft }) {
     const [analysis, setAnalysis] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isCopied, setIsCopied] = useState(false);
+    const [isRevivalOpen, setIsRevivalOpen] = useState(false);
+
 
     const loadAiAnalysis = async () => {
         if (!workspaceId || !dealId) return;
@@ -199,6 +203,36 @@ export default function AiDealCopilotCard({ workspaceId, dealId, onUseWhatsAppDr
                     </div>
                 </div>
             )}
+
+            {/* Stalled / Ghosted Deal Revival Button */}
+            {(analysis.status === 'STALLED' || analysis.status === 'AT_RISK') && (
+                <div className="pt-2">
+                    <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsRevivalOpen(true)}
+                        className="w-full h-8 text-xs font-semibold gap-1.5 bg-rose-600 hover:bg-rose-500 text-white shadow-xs"
+                    >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>Recover Ghosted Deal (AI Revival Strategies)</span>
+                    </Button>
+                </div>
+            )}
+
+            <AiStalledDealRevivalModal
+                isOpen={isRevivalOpen}
+                onClose={() => setIsRevivalOpen(false)}
+                workspaceId={workspaceId}
+                deal={{
+                    id: dealId,
+                    title: analysis.dealTitle || "Enterprise Opportunity",
+                    value: analysis.dealValue,
+                    currency: analysis.currency || "INR",
+                    stage: { name: analysis.stageName }
+                }}
+                onRevivalSent={() => loadAiAnalysis()}
+            />
         </div>
     );
 }
+

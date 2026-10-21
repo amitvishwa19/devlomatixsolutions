@@ -37,7 +37,8 @@ import {
     Briefcase,
     Navigation,
     Eye,
-    Image as ImageIcon
+    Image as ImageIcon,
+    Mic
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,8 @@ import DcrSheet from './_components/DcrSheet';
 import AiFollowupModal from './_components/AiFollowupModal';
 import DcrDetailModal from './_components/DcrDetailModal';
 import CrmWhatsAppOutreachSheet from '../_components/CrmWhatsAppOutreachSheet';
+import CrmHierarchyFilter from '../_components/CrmHierarchyFilter';
+import AiVoiceNoteModal from './_components/AiVoiceNoteModal';
 
 const OUTCOME_CONFIG = {
     HOT_LEAD: { label: '🔥 Hot Lead', bg: 'bg-rose-500/10 text-rose-600 border-rose-500/30' },
@@ -107,6 +110,7 @@ export default function DcrPage() {
     const [typeFilter, setTypeFilter] = useState('ALL');
     const [outcomeFilter, setOutcomeFilter] = useState('ALL');
     const [searchQuery, setSearchQuery] = useState('');
+    const [targetUserId, setTargetUserId] = useState('ALL');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingRecord, setEditingRecord] = useState(null);
@@ -119,6 +123,7 @@ export default function DcrPage() {
 
     const [detailRecord, setDetailRecord] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isVoiceNoteModalOpen, setIsVoiceNoteModalOpen] = useState(false);
 
     const fetchRecords = useCallback(async () => {
         if (!workspaceId) return;
@@ -148,6 +153,7 @@ export default function DcrPage() {
                 date: filterDate,
                 startDate,
                 endDate,
+                repId: targetUserId !== 'ALL' ? targetUserId : undefined,
                 callType: typeFilter,
                 outcome: outcomeFilter,
                 search: searchQuery
@@ -164,7 +170,7 @@ export default function DcrPage() {
         } finally {
             setLoading(false);
         }
-    }, [workspaceId, dateRangeFilter, customDate, typeFilter, outcomeFilter, searchQuery]);
+    }, [workspaceId, dateRangeFilter, customDate, typeFilter, outcomeFilter, searchQuery, targetUserId]);
 
     useEffect(() => {
         fetchRecords();
@@ -247,6 +253,13 @@ export default function DcrPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Org Hierarchy Filter */}
+                    <CrmHierarchyFilter
+                        workspaceId={workspaceId}
+                        selectedUserId={targetUserId}
+                        onUserChange={setTargetUserId}
+                    />
+
                     {/* Date Quick Selector */}
                     <div className="flex items-center bg-muted/60 p-1 rounded-lg border border-border">
                         <button
@@ -308,6 +321,16 @@ export default function DcrPage() {
                     >
                         <Download className="w-3.5 h-3.5" />
                         <span>Export CSV</span>
+                    </Button>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsVoiceNoteModalOpen(true)}
+                        className="h-8 text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10 font-semibold shadow-xs"
+                    >
+                        <Mic className="w-3.5 h-3.5 text-primary" />
+                        <span>AI Voice Note</span>
                     </Button>
 
                     <Button
@@ -810,6 +833,15 @@ export default function DcrPage() {
                     setIsWaSheetOpen(true);
                 }}
             />
+
+            {/* AI Voice Note Modal */}
+            <AiVoiceNoteModal
+                isOpen={isVoiceNoteModalOpen}
+                onClose={() => setIsVoiceNoteModalOpen(false)}
+                workspaceId={workspaceId}
+                onRecordCreated={() => fetchRecords()}
+            />
         </div>
     );
 }
+

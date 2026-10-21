@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
 import { getValidUserId } from "./auth-helper";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 // Default Preset Tasks per workspace
 const DEFAULT_TASKS = [
@@ -108,10 +109,27 @@ function getWorkspaceTasks(workspaceId) {
  */
 export async function getCrmTasksAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
-        const { status = 'ALL', type, priority, dealId, contactId } = filters;
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
+        const { status = 'ALL', type, priority, dealId, contactId, targetUserId } = filters;
 
         let tasks = getWorkspaceTasks(workspaceId);
+
+        // Filter by hierarchy visibility
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowed.includes(targetUserId)) {
+                    tasks = tasks.filter(t => t.userId === targetUserId || t.assignedToId === targetUserId);
+                } else {
+                    tasks = [];
+                }
+            } else {
+                tasks = tasks.filter(t => !t.userId || allowed.includes(t.userId) || allowed.includes(t.assignedToId));
+            }
+        } else if (targetUserId && targetUserId !== 'ALL') {
+            tasks = tasks.filter(t => t.userId === targetUserId || t.assignedToId === targetUserId);
+        }
 
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
+import { getCrmVisibilityScope } from "./crm-visibility-helper";
 
 // Mock Rep Quota Defaults per workspace
 let mockRepQuotas = {
@@ -20,14 +21,42 @@ let mockRepQuotas = {
  */
 export async function getRevenueForecastAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
 
-        const { pipelineId, timeframe = 'CURRENT_QUARTER' } = filters;
+        const { pipelineId, timeframe = 'CURRENT_QUARTER', targetUserId } = filters;
 
-        // Fetch all deals with stages and pipeline in workspace
+        // Build hierarchy condition
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            if (targetUserId && targetUserId !== 'ALL') {
+                if (allowed.includes(targetUserId)) {
+                    hierarchyCondition = {
+                        OR: [{ userId: targetUserId }, { ownerId: targetUserId }]
+                    };
+                } else {
+                    hierarchyCondition = { id: '__NO_ACCESS__' };
+                }
+            } else {
+                hierarchyCondition = {
+                    OR: [
+                        { userId: { in: allowed } },
+                        { ownerId: { in: allowed } }
+                    ]
+                };
+            }
+        } else if (targetUserId && targetUserId !== 'ALL') {
+            hierarchyCondition = {
+                OR: [{ userId: targetUserId }, { ownerId: targetUserId }]
+            };
+        }
+
+        // Fetch deals within viewer's hierarchy scope
         const deals = await prisma.deal.findMany({
             where: {
                 workspaceId,
+                ...hierarchyCondition,
                 pipelineId: pipelineId && pipelineId !== 'ALL' ? pipelineId : undefined
             },
             include: {
@@ -186,18 +215,42 @@ export async function getRevenueForecastAction(workspaceId, filters = {}) {
  */
 export async function getTeamSalesLeaderboardAction(workspaceId, filters = {}) {
     try {
-        await ensureWorkspaceAccess(workspaceId);
+        const session = await ensureWorkspaceAccess(workspaceId);
+        const visibilityScope = await getCrmVisibilityScope(workspaceId, session);
+
+        let hierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            hierarchyCondition = {
+                OR: [
+                    { userId: { in: allowed } },
+                    { ownerId: { in: allowed } }
+                ]
+            };
+        }
 
         const deals = await prisma.deal.findMany({
-            where: { workspaceId },
+            where: {
+                workspaceId,
+                ...hierarchyCondition
+            },
             include: {
                 stage: true,
                 owner: { select: { id: true, displayName: true, email: true, avatar: true } }
             }
         });
 
+        let activityHierarchyCondition = {};
+        if (!visibilityScope.isSuperAdmin) {
+            const allowed = visibilityScope.visibleUserIds || [];
+            activityHierarchyCondition = { userId: { in: allowed } };
+        }
+
         const activities = await prisma.crmActivity.findMany({
-            where: { workspaceId },
+            where: {
+                workspaceId,
+                ...activityHierarchyCondition
+            },
             include: {
                 user: { select: { id: true, displayName: true, avatar: true } }
             }

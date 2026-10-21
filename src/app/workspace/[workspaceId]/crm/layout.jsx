@@ -64,7 +64,7 @@ export default function CrmLayout({ children }) {
     return (
         <div className="flex flex-col w-full">
             {/* Main CRM Content Area */}
-            <main className="flex-1 w-full min-w-0 sm:p-6">
+            <main className="flex-1 w-full min-w-0">
                 {children}
             </main>
         </div>
