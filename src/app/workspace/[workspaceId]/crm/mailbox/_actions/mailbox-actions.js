@@ -6,6 +6,7 @@ import { getValidUserId } from '../../_actions/auth-helper';
 import { Resend } from 'resend';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 import { resolveUserSender } from '@/app/api/v5/crm/mailbox/_lib/threading';
+import { getUserAuthorizedMailboxes, isUserAuthorizedForMailbox } from '@/app/api/v5/crm/mailbox/_lib/org-mailboxes';
 
 async function getResendClient(workspaceId) {
     let apiKey = process.env.RESEND_API_KEY;
@@ -35,11 +36,27 @@ async function getResendClient(workspaceId) {
 }
 
 /**
- * Get paginated mailbox threads with counts
+ * Fetch all mailboxes/identities authorized for the current logged-in user
+ * (Personal email + assigned Org Builder posts/roles + admin overview).
+ */
+export async function getUserMailboxesAction(workspaceId) {
+    try {
+        const userId = await getValidUserId(workspaceId);
+        const result = await getUserAuthorizedMailboxes(userId, workspaceId);
+        return { success: true, data: result };
+    } catch (error) {
+        console.error('[GET_USER_MAILBOXES_ERROR]', error);
+        return { success: false, error: error.message, data: { mailboxes: [], authorizedEmails: [] } };
+    }
+}
+
+/**
+ * Get paginated mailbox threads with counts, optionally filtered by assigned mailbox
  */
 export async function getMailboxThreadsAction(workspaceId, {
     folder = 'INBOX',
     search = '',
+    mailboxEmail = 'ALL',
     contactId = null,
     dealId = null,
     isStarred = false,
@@ -47,20 +64,67 @@ export async function getMailboxThreadsAction(workspaceId, {
     limit = 30
 } = {}) {
     try {
+        const userId = await getValidUserId(workspaceId);
+        const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
+
         const skip = (page - 1) * limit;
-        const baseWhere = { workspaceId };
+        const cleanMailbox = (mailboxEmail && mailboxEmail !== 'ALL') ? mailboxEmail.trim().toLowerCase() : null;
+
+        // Mailbox scope filter:
+        // - Specific mailbox chosen: restrict to that email address.
+        // - 'ALL' chosen: if not admin, restrict to any of the user's authorized inboxes.
+        const mailboxScopeFilter = cleanMailbox
+            ? {
+                messages: {
+                    some: {
+                        OR: [
+                            { to: { has: cleanMailbox } },
+                            { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            }
+            : (!isAdmin && authorizedEmails.length > 0)
+                ? {
+                    messages: {
+                        some: {
+                            OR: [
+                                { to: { hasSome: authorizedEmails } },
+                                { fromEmail: { in: authorizedEmails } }
+                            ]
+                        }
+                    }
+                }
+                : {};
+
+        const baseWhere = {
+            workspaceId,
+            ...mailboxScopeFilter
+        };
 
         const folderFilter = folder === 'INBOX'
             ? {
                 folder: 'INBOX',
-                messages: { some: { direction: 'INBOUND' } }
+                messages: {
+                    some: {
+                        direction: 'INBOUND',
+                        ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
+                    }
+                }
             }
             : folder === 'SENT'
                 ? {
                     folder: { not: 'TRASH' },
                     OR: [
                         { folder: 'SENT' },
-                        { messages: { some: { direction: 'OUTBOUND' } } }
+                        {
+                            messages: {
+                                some: {
+                                    direction: 'OUTBOUND',
+                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
+                                }
+                            }
+                        }
                     ]
                 }
                 : folder === 'STARRED'
@@ -122,7 +186,18 @@ export async function getMailboxThreadsAction(workspaceId, {
             }),
             prisma.crmEmailThread.count({ where }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', unreadCount: { gt: 0 } } }),
-            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', messages: { some: { direction: 'INBOUND' } } } }),
+            prisma.crmEmailThread.count({
+                where: {
+                    ...baseWhere,
+                    folder: 'INBOX',
+                    messages: {
+                        some: {
+                            direction: 'INBOUND',
+                            ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
+                        }
+                    }
+                }
+            }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, isStarred: true, folder: { not: 'TRASH' } } }),
             prisma.crmEmailThread.count({
                 where: {
@@ -130,7 +205,14 @@ export async function getMailboxThreadsAction(workspaceId, {
                     folder: { not: 'TRASH' },
                     OR: [
                         { folder: 'SENT' },
-                        { messages: { some: { direction: 'OUTBOUND' } } }
+                        {
+                            messages: {
+                                some: {
+                                    direction: 'OUTBOUND',
+                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
+                                }
+                            }
+                        }
                     ]
                 }
             }),
@@ -231,6 +313,7 @@ export async function sendMailboxEmailAction(workspaceId, {
     contactId = null,
     dealId = null,
     senderName = null,
+    fromEmail = null,
     to = [],
     cc = [],
     bcc = [],
@@ -250,8 +333,22 @@ export async function sendMailboxEmailAction(workspaceId, {
         if (toList.length === 0) throw new Error('Recipient email is required');
         if (!subject) throw new Error('Subject is required');
 
+        // Verify authorization if a specific mailbox identity was chosen
+        const cleanFromMailbox = fromEmail?.trim().toLowerCase() || null;
+        if (cleanFromMailbox) {
+            const isAuthorized = await isUserAuthorizedForMailbox(userId, cleanFromMailbox, workspaceId);
+            if (!isAuthorized) {
+                throw new Error(`Unauthorized: You are not assigned to send emails from ${cleanFromMailbox}`);
+            }
+        }
+
         const { resend, defaultFromEmail } = await getResendClient(workspaceId);
-        const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(user, defaultFromEmail, senderName);
+        const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(
+            user,
+            defaultFromEmail,
+            senderName,
+            cleanFromMailbox
+        );
 
         // Auto-heal displayName in DB if it was null or had dots
         if (user && (!user.displayName || user.displayName.includes('.'))) {

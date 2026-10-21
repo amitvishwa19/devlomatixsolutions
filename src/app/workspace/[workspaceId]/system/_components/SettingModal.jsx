@@ -269,7 +269,7 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                         </div>
 
                         {/* Content Scroll Area */}
-                        <ScrollArea className="flex-1 h-full p-4 bg-card">
+                        <ScrollArea className={`flex-1 h-full ${activeTab === 'org_builder' ? 'p-3' : 'p-4'} bg-card`}>
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={activeTab}
@@ -277,7 +277,7 @@ export default function SettingModal({ open, onClose, defaultTab = 'general' }) 
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -8 }}
                                     transition={{ duration: 0.15 }}
-                                    className="space-y-3 pb-8 min-w-0 w-full"
+                                    className={`space-y-3 min-w-0 w-full ${activeTab === 'org_builder' ? 'pb-2' : 'pb-8'}`}
                                 >
                                     {activeTab === 'general' && <GeneralSettings />}
                                     {activeTab === 'business' && <BusinessDetailsSettings />}

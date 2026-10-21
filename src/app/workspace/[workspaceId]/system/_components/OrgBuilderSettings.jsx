@@ -1,36 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Network,
-  Users,
   UserPlus,
   Plus,
   Trash2,
   Edit2,
   ChevronDown,
-  ChevronRight,
   Search,
   Sparkles,
   Save,
-  RotateCcw,
-  Layers,
   LayoutGrid,
   ListTree,
-  Building2,
   Briefcase,
   Check,
   X,
-  AlertCircle,
-  HelpCircle,
-  ArrowRight,
-  ExternalLink,
   Crown,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Globe
+  Globe,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -63,6 +52,7 @@ import {
   saveOrgStructure
 } from '../_actions/org-builder-actions';
 import { DEFAULT_ORG_TEMPLATES } from '../_lib/org-templates';
+import { OrgFlowCanvas } from './org-canvas/OrgFlowCanvas';
 
 const DEPARTMENT_COLORS = {
   Executive: {
@@ -148,18 +138,20 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
   const [structure, setStructure] = useState(DEFAULT_ORG_TEMPLATES.tech_startup);
   const [users, setUsers] = useState([]);
   const [searchFilter, setSearchFilter] = useState('');
-  const [viewMode, setViewMode] = useState('list'); // 'tree' | 'list'
+  const [viewMode, setViewMode] = useState('canvas'); // 'canvas' | 'list'
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [zoom, setZoom] = useState(85); // 85% default fits all main departments side-by-side cleanly
-
   // Modals state
   const [roleModal, setRoleModal] = useState({
     open: false,
     mode: 'create', // 'create' | 'edit'
     nodeId: null,
     parentId: null,
+    spliceTargetId: null,
     title: '',
     department: 'Engineering',
+    mailboxEmail: '',
+    mailboxDisplayName: '',
     responsibilities: ''
   });
 
@@ -203,7 +195,7 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       } else {
         toast.error(res.error || 'Failed to save organization structure');
       }
-    } catch (err) {
+    } catch {
       toast.error('Error saving organization structure');
     } finally {
       setSaving(false);
@@ -220,7 +212,7 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
   };
 
   // Quick lookup helper
-  const nodes = structure?.nodes || {};
+  const nodes = useMemo(() => structure?.nodes || {}, [structure?.nodes]);
   const rootNodeId = structure?.rootNodeId || Object.keys(nodes)[0];
 
   // Map parent -> children
@@ -254,6 +246,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       parentId,
       title: '',
       department: nodes[parentId]?.department || 'Engineering',
+      mailboxEmail: '',
+      mailboxDisplayName: '',
       responsibilities: ''
     });
   };
@@ -269,6 +263,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       parentId: node.parentId,
       title: node.title,
       department: node.department || 'Engineering',
+      mailboxEmail: node.mailboxEmail || '',
+      mailboxDisplayName: node.mailboxDisplayName || '',
       responsibilities: node.responsibilities || ''
     });
   };
@@ -281,6 +277,9 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
       return;
     }
 
+    const cleanMailboxEmail = roleModal.mailboxEmail?.trim().toLowerCase() || null;
+    const cleanDisplayName = roleModal.mailboxDisplayName?.trim() || null;
+
     if (roleModal.mode === 'create') {
       const newId = `node_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       const newNode = {
@@ -289,18 +288,34 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
         department: roleModal.department,
         parentId: roleModal.parentId || null,
         assignedUserIds: [],
+        mailboxEmail: cleanMailboxEmail,
+        mailboxDisplayName: cleanDisplayName,
         responsibilities: roleModal.responsibilities.trim(),
         order: (childrenMap[roleModal.parentId || 'root']?.length || 0) + 1
       };
 
+      const updatedNodes = {
+        ...nodes,
+        [newId]: newNode,
+      };
+
+      // Splicing role in middle: re-parent subordinate to the newly inserted role
+      if (roleModal.spliceTargetId && updatedNodes[roleModal.spliceTargetId]) {
+        updatedNodes[roleModal.spliceTargetId] = {
+          ...updatedNodes[roleModal.spliceTargetId],
+          parentId: newId,
+        };
+      }
+
       setStructure((prev) => ({
         ...prev,
-        nodes: {
-          ...prev.nodes,
-          [newId]: newNode
-        }
+        nodes: updatedNodes
       }));
-      toast.success(`Role '${newNode.title}' added!`);
+      toast.success(
+        roleModal.spliceTargetId
+          ? `Role '${newNode.title}' inserted into reporting line!`
+          : `Role '${newNode.title}' added!`
+      );
     } else {
       // Edit existing
       setStructure((prev) => ({
@@ -312,6 +327,8 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
             title: roleModal.title.trim(),
             department: roleModal.department,
             parentId: roleModal.parentId,
+            mailboxEmail: cleanMailboxEmail,
+            mailboxDisplayName: cleanDisplayName,
             responsibilities: roleModal.responsibilities.trim()
           }
         }
@@ -320,8 +337,44 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
     }
 
     setHasChanges(true);
-    setRoleModal({ open: false, mode: 'create', nodeId: null, parentId: null, title: '', department: 'Engineering', responsibilities: '' });
+    setRoleModal({
+      open: false,
+      mode: 'create',
+      nodeId: null,
+      parentId: null,
+      spliceTargetId: null,
+      title: '',
+      department: 'Engineering',
+      mailboxEmail: '',
+      mailboxDisplayName: '',
+      responsibilities: ''
+    });
   };
+
+  // Open Insert Role Between Manager and Direct Report
+  const handleOpenInsertRoleBetween = (sourceId, targetId) => {
+    setRoleModal({
+      open: true,
+      mode: 'create',
+      nodeId: null,
+      parentId: sourceId,
+      spliceTargetId: targetId,
+      title: '',
+      department: nodes[targetId]?.department || nodes[sourceId]?.department || 'Engineering',
+      mailboxEmail: '',
+      mailboxDisplayName: '',
+      responsibilities: ''
+    });
+  };
+
+  // Update nodesMap directly from canvas (e.g. connections severed or drawn)
+  const handleUpdateNodesMap = useCallback((newNodesMap) => {
+    setStructure((prev) => ({
+      ...prev,
+      nodes: newNodesMap
+    }));
+    setHasChanges(true);
+  }, []);
 
   // Delete Node
   const handleDeleteNode = (nodeId) => {
@@ -397,7 +450,7 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
 
   // Quick remove user from node directly on card
   const handleRemoveUserFromNode = (nodeId, userId, e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     const node = nodes[nodeId];
     if (!node) return;
 
@@ -465,158 +518,107 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-          {/* Search Filter */}
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search role or person..."
-              value={searchFilter}
-              onChange={(e) => setSearchFilter(e.target.value)}
-              className="pl-7 pr-2.5 py-1 text-xs bg-background border border-border/60 rounded-lg w-36 sm:w-44 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
-            />
-          </div>
-
-          {/* View Mode Toggle */}
+          {/* View Mode Toggle: Canvas vs Outline */}
           <div className="flex items-center border border-border/60 rounded-lg p-0.5 bg-background">
             <button
               type="button"
-              onClick={() => setViewMode('tree')}
-              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer ${viewMode === 'tree' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              title="Tree Chart View"
+              onClick={() => setViewMode('canvas')}
+              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer ${
+                viewMode === 'canvas' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Interactive Canvas View"
             >
               <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="hidden md:inline text-[10px]">Chart</span>
+              <span className="text-[10px] font-semibold">Canvas</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
-                }`}
-              title="Hierarchy List View"
+              className={`p-1 rounded text-xs font-medium flex items-center gap-1 transition-colors cursor-pointer ${
+                viewMode === 'list' ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title="Hierarchy Outline List"
             >
               <ListTree className="w-3.5 h-3.5" />
-              <span className="hidden md:inline text-[10px]">List</span>
+              <span className="text-[10px] font-semibold">Outline</span>
             </button>
           </div>
 
-          {/* Zoom Controls (Chart View Only) */}
-          {viewMode === 'tree' && (
-            <div className="flex items-center border border-border/60 rounded-lg p-0.5 bg-background">
-              <button
-                type="button"
-                onClick={() => setZoom((z) => Math.max(50, z - 10))}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-3.5 h-3.5" />
-              </button>
-              <span className="text-[10px] font-semibold text-muted-foreground min-w-[30px] text-center select-none">
-                {zoom}%
-              </span>
-              <button
-                type="button"
-                onClick={() => setZoom((z) => Math.min(130, z + 10))}
-                className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setZoom(85)}
-                className="px-1.5 py-0.5 rounded text-[10px] text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer font-medium"
-                title="Fit to screen (85%)"
-              >
-                Fit
-              </button>
-            </div>
-          )}
+          {/* List Mode Controls (Search & Save) */}
+          {viewMode === 'list' && (
+            <>
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Filter outline..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="pl-7 pr-2.5 py-1 text-xs bg-background border border-border/60 rounded-lg w-32 sm:w-40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50"
+                />
+              </div>
 
-          {/* Preset Templates */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-7 text-xs gap-1 border-border/60 cursor-pointer">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                <span className="hidden sm:inline">Templates</span>
-                <ChevronDown className="w-3 h-3 text-muted-foreground" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1 border-border/60 cursor-pointer">
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span className="hidden sm:inline">Templates</span>
+                    <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 text-xs">
+                  <DropdownMenuItem onClick={() => handleApplyTemplate('tech_startup')} className="cursor-pointer">
+                    <div className="font-semibold text-xs">Tech Startup</div>
+                    <div className="text-[10px] text-muted-foreground">CEO, CTO, VP Sales, HR, CFO</div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleApplyTemplate('corporate_agency')} className="cursor-pointer">
+                    <div className="font-semibold text-xs">Corporate Agency</div>
+                    <div className="text-[10px] text-muted-foreground">MD, Creative, Ops, HR</div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleApplyTemplate('blank')} className="cursor-pointer text-muted-foreground">
+                    <div className="font-semibold text-xs">Blank Canvas</div>
+                    <div className="text-[10px] text-muted-foreground">Start with single CEO node</div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={saving || !hasChanges}
+                className={`h-7 text-xs font-semibold gap-1.5 cursor-pointer ${
+                  hasChanges ? 'bg-primary text-primary-foreground shadow-sm animate-pulse' : ''
+                }`}
+              >
+                <Save className="w-3 h-3" />
+                <span>{saving ? 'Saving...' : 'Save'}</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 text-xs">
-              <DropdownMenuItem onClick={() => handleApplyTemplate('tech_startup')} className="cursor-pointer">
-                <div className="font-semibold text-xs">Tech Startup</div>
-                <div className="text-[10px] text-muted-foreground">CEO, CTO, VP Sales, HR, CFO</div>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleApplyTemplate('corporate_agency')} className="cursor-pointer">
-                <div className="font-semibold text-xs">Corporate Agency</div>
-                <div className="text-[10px] text-muted-foreground">MD, Creative, Ops, HR</div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleApplyTemplate('blank')} className="cursor-pointer text-muted-foreground">
-                <div className="font-semibold text-xs">Blank Canvas</div>
-                <div className="text-[10px] text-muted-foreground">Start with single CEO node</div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Save Button */}
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saving || !hasChanges}
-            className={`h-7 text-xs font-semibold gap-1.5 cursor-pointer ${hasChanges ? 'bg-primary text-primary-foreground shadow-sm animate-pulse' : ''
-              }`}
-          >
-            <Save className="w-3 h-3" />
-            <span>{saving ? 'Saving...' : 'Save Structure'}</span>
-          </Button>
+            </>
+          )}
         </div>
       </div>
 
       {/* Main Builder Canvas */}
-      {viewMode === 'tree' ? (
-        <div className="relative p-4 sm:p-6 bg-card border border-border/70 rounded-xl overflow-x-auto overflow-y-auto min-h-[460px] max-w-full">
-          {/* Background grid dots for canvas feel */}
-          <div
-            className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none"
-            style={{
-              backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-              backgroundSize: '20px 20px'
-            }}
-          />
-
-          <div
-            className="min-w-full w-max mx-auto flex flex-col items-center pb-12 px-6 transition-transform duration-150 origin-top"
-            style={{
-              transform: `scale(${zoom / 100})`,
-              transformOrigin: 'top center'
-            }}
-          >
-            {rootNodeId && nodes[rootNodeId] ? (
-              <OrgTreeNode
-                nodeId={rootNodeId}
-                nodes={nodes}
-                childrenMap={childrenMap}
-                userMap={userMap}
-                searchFilter={searchFilter}
-                onAddReport={handleOpenAddReport}
-                onEditRole={handleOpenEditRole}
-                onAssignUser={handleOpenAssign}
-                onDeleteNode={handleDeleteNode}
-                onRemoveUser={handleRemoveUserFromNode}
-                isRoot={true}
-              />
-            ) : (
-              <div className="text-center py-12 space-y-2">
-                <p className="text-xs text-muted-foreground">No roles configured yet.</p>
-                <Button size="sm" onClick={() => handleApplyTemplate('tech_startup')} className="cursor-pointer text-xs">
-                  Apply Default Startup Template
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
+      {viewMode === 'canvas' ? (
+        <OrgFlowCanvas
+          nodesMap={nodes}
+          rootNodeId={rootNodeId}
+          userMap={userMap}
+          hasChanges={hasChanges}
+          saving={saving}
+          onSave={handleSave}
+          onApplyTemplate={handleApplyTemplate}
+          onAddReport={handleOpenAddReport}
+          onEditRole={handleOpenEditRole}
+          onAssignUser={handleOpenAssign}
+          onDeleteNode={handleDeleteNode}
+          onRemoveUserFromNode={handleRemoveUserFromNode}
+          onInsertRoleBetween={handleOpenInsertRoleBetween}
+          onUpdateNodesMap={handleUpdateNodesMap}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
+        />
       ) : (
         /* Hierarchical List View */
         <div className="p-3 bg-card border border-border/70 rounded-xl space-y-2">
@@ -735,12 +737,46 @@ export function OrgBuilderSettings({ workspaceId = 'global' }) {
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-foreground">Role Description & Responsibilities</label>
               <textarea
-                rows={3}
+                rows={2}
                 placeholder="Brief description of primary duties, deliverables, and team leadership..."
                 value={roleModal.responsibilities}
                 onChange={(e) => setRoleModal((p) => ({ ...p, responsibilities: e.target.value }))}
                 className="w-full px-3 py-1.5 text-xs bg-background border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary resize-none"
               />
+            </div>
+
+            {/* Department Mailbox Email Settings */}
+            <div className="pt-2 border-t border-border/60 space-y-2">
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Role / Inbound Mailbox Email</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="e.g. sales@devlomatix.com, admin@devlomatix.com..."
+                  value={roleModal.mailboxEmail || ''}
+                  onChange={(e) => setRoleModal((p) => ({ ...p, mailboxEmail: e.target.value }))}
+                  className="w-full px-3 py-1.5 text-xs bg-background border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Team members holding this position will automatically see and send from this inbox in their CRM Mailbox.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-foreground">Mailbox Display Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Devlomatix Sales, Executive Office..."
+                  value={roleModal.mailboxDisplayName || ''}
+                  onChange={(e) => setRoleModal((p) => ({ ...p, mailboxDisplayName: e.target.value }))}
+                  className="w-full px-3 py-1.5 text-xs bg-background border border-border/70 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Branded sender label shown to recipients when sending outbound emails.
+                </p>
+              </div>
             </div>
 
             <DialogFooter className="pt-2">
@@ -959,6 +995,15 @@ function OrgTreeNode({
               {node.responsibilities}
             </p>
           )}
+          {node.mailboxEmail && (
+            <div
+              className="flex items-center gap-1 mt-1 text-[10px] text-blue-600 dark:text-blue-400 font-medium truncate bg-blue-50/60 dark:bg-blue-950/40 px-1.5 py-0.5 rounded border border-blue-200/50 dark:border-blue-800/50"
+              title={`Assigned Mailbox: ${node.mailboxEmail}`}
+            >
+              <Mail className="w-2.5 h-2.5 shrink-0" />
+              <span className="truncate">{node.mailboxEmail}</span>
+            </div>
+          )}
         </div>
 
         {/* Assigned Users Section */}
@@ -1111,6 +1156,12 @@ function OrgTreeListView({
           <span className={`text-[9px] px-1.5 py-0.2 rounded-full border ${deptStyle.badge}`}>
             {node.department}
           </span>
+          {node.mailboxEmail && (
+            <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center gap-1 shrink-0 font-medium">
+              <Mail className="w-2.5 h-2.5" />
+              <span>{node.mailboxEmail}</span>
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-3 shrink-0">

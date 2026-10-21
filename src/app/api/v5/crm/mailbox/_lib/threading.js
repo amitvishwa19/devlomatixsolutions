@@ -127,15 +127,18 @@ export function formatSenderHeader(name, email, fallbackName = 'Devlomatix') {
  * The sender email is ALWAYS derived from the logged-in user's email if present,
  * and the name is ALWAYS included in 'Name <email@domain.com>' format.
  */
-export function resolveUserSender(user, defaultFromConfig, customSenderName = null) {
+export function resolveUserSender(user, defaultFromConfig, customSenderName = null, customSenderEmail = null) {
     const parsedConfig = parseEmailAddress(defaultFromConfig, 'Devlomatix');
     const defaultName = parsedConfig.name || 'Devlomatix';
     const defaultEmail = parsedConfig.email || 'noreply@devlomatix.com';
 
-    // The sender email should always be the logged-in user's email if available
-    const rawUserEmail = user?.email?.trim();
-    const cleanUserEmail = rawUserEmail ? rawUserEmail.replace(/['"<>\s]/g, '').toLowerCase() : '';
-    const senderEmail = cleanUserEmail || defaultEmail;
+    // The sender email is customSenderEmail (e.g. sales@devlomatix.com) if provided,
+    // otherwise the logged-in user's email if available, or fallback system default email
+    const rawTargetEmail = (customSenderEmail && typeof customSenderEmail === 'string' && customSenderEmail.trim())
+        ? customSenderEmail.trim()
+        : user?.email?.trim();
+    const cleanTargetEmail = rawTargetEmail ? rawTargetEmail.replace(/['"<>\s]/g, '').toLowerCase() : '';
+    const senderEmail = cleanTargetEmail || defaultEmail;
 
     // Resolve name: custom name > user's displayName > user's username > email handle > defaultName
     const rawName = customSenderName || user?.displayName || user?.username || '';

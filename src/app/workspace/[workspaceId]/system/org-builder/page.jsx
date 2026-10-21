@@ -3,7 +3,7 @@
 import React from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { Network, Settings, ChevronRight, Building2, Globe } from 'lucide-react';
+import { Network, Settings, ChevronRight, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OrgBuilderSettings } from '../_components/OrgBuilderSettings';

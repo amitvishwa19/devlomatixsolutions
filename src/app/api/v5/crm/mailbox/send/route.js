@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { validateCrmUserToken } from '../../_lib/auth';
 import { apiSuccess, apiError } from '../../_lib/response';
 import { normalizeSubject, resolveUserSender } from '../_lib/threading';
+import { isUserAuthorizedForMailbox } from '../_lib/org-mailboxes';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 
 /**
@@ -56,6 +57,7 @@ export async function POST(request) {
             contactId,
             dealId,
             senderName,
+            fromEmail,
             to,
             cc = [],
             bcc = [],
@@ -74,8 +76,22 @@ export async function POST(request) {
             return apiError('Subject and message content are required', 400);
         }
 
+        // Verify authorization if a specific mailbox identity was chosen
+        const cleanFromMailbox = fromEmail?.trim().toLowerCase() || null;
+        if (cleanFromMailbox) {
+            const isAuthorized = await isUserAuthorizedForMailbox(auth.user.id, cleanFromMailbox, auth.workspaceId);
+            if (!isAuthorized) {
+                return apiError(`Unauthorized: You are not assigned to send emails from ${cleanFromMailbox}`, 403);
+            }
+        }
+
         const { resend, defaultFromEmail } = await getResendClient(auth.workspaceId);
-        const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(auth.user, defaultFromEmail, senderName);
+        const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(
+            auth.user,
+            defaultFromEmail,
+            senderName,
+            cleanFromMailbox
+        );
 
         // Threading Context
         let existingThread = null;

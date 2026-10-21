@@ -28,6 +28,9 @@ export default function MailboxComposeSheet({
     senderInfo,
     senderName = '',
     onSenderNameChange,
+    mailboxes = [],
+    selectedFromEmail = '',
+    onFromEmailChange,
     to,
     cc = '',
     bcc = '',
@@ -129,19 +132,34 @@ export default function MailboxComposeSheet({
                         </SheetHeader>
 
                         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                            {/* 1. Sender Identity Preview */}
-                            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs">
+                            {/* 1. Sender Identity Selector / Preview */}
+                            <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 text-xs gap-2">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                     <span className="font-semibold text-slate-400 text-[11px] uppercase tracking-wider shrink-0">From:</span>
-                                    {/* <Input
-                                        value={senderName || senderInfo?.name || ''}
-                                        onChange={(e) => onSenderNameChange?.(e.target.value)}
-                                        placeholder="Sender Name (e.g. Amit Vishwakarma)"
-                                        className="h-7 text-xs font-bold text-slate-800 dark:text-slate-100 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg max-w-[220px]"
-                                    /> */}
-                                    <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px] truncate">
-                                        {senderName || senderInfo?.name || ''} &lt;{senderInfo?.email || 'crm@devlomatix.in'}&gt;
-                                    </span>
+                                    {mailboxes && mailboxes.filter(m => m.email !== 'ALL').length > 1 ? (
+                                        <Select
+                                            value={selectedFromEmail || mailboxes.find(m => m.isPrimary)?.email || mailboxes[1]?.email}
+                                            onValueChange={(val) => onFromEmailChange?.(val)}
+                                        >
+                                            <SelectTrigger className="h-7 text-xs font-medium border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-lg max-w-[340px]">
+                                                <SelectValue placeholder="Select Sender Mailbox" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[99999] max-h-56">
+                                                {mailboxes.filter(m => m.email !== 'ALL').map((mb) => (
+                                                    <SelectItem key={mb.id} value={mb.email} className="text-xs cursor-pointer">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="font-bold text-slate-800 dark:text-slate-100">{mb.displayName || mb.label}</span>
+                                                            <span className="text-slate-400 font-mono text-[11px]">&lt;{mb.email}&gt;</span>
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    ) : (
+                                        <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px] truncate">
+                                            {senderName || senderInfo?.name || ''} &lt;{selectedFromEmail || senderInfo?.email || 'crm@devlomatix.in'}&gt;
+                                        </span>
+                                    )}
                                 </div>
                                 <Badge variant="outline" className="text-[10px] font-normal border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 bg-blue-50/50 dark:bg-blue-950/40 shrink-0">
                                     Verified Sender

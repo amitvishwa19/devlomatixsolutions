@@ -13,6 +13,7 @@ import {
     findOrCreateEmailThread
 } from './_lib/threading';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
+import { getUserAuthorizedMailboxes } from './_lib/org-mailboxes';
 
 /**
  * POST /api/v5/crm/mailbox
@@ -279,6 +280,7 @@ export async function GET(request) {
         const { searchParams } = new URL(request.url);
         const folder = searchParams.get('folder') || 'INBOX';
         const search = searchParams.get('search')?.trim();
+        const mailboxEmailParam = searchParams.get('mailboxEmail') || 'ALL';
         const contactId = searchParams.get('contactId');
         const dealId = searchParams.get('dealId');
         const unreadOnly = searchParams.get('unreadOnly') === 'true';
@@ -288,21 +290,62 @@ export async function GET(request) {
         const limit = parseInt(searchParams.get('limit') || '30', 10);
         const skip = (page - 1) * limit;
 
+        // Resolve user's authorized mailbox identities
+        const { mailboxes, authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
+        const cleanMailbox = (mailboxEmailParam && mailboxEmailParam !== 'ALL') ? mailboxEmailParam.trim().toLowerCase() : null;
+
+        const mailboxScopeFilter = cleanMailbox
+            ? {
+                messages: {
+                    some: {
+                        OR: [
+                            { to: { has: cleanMailbox } },
+                            { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } }
+                        ]
+                    }
+                }
+            }
+            : (!isAdmin && authorizedEmails.length > 0)
+                ? {
+                    messages: {
+                        some: {
+                            OR: [
+                                { to: { hasSome: authorizedEmails } },
+                                { fromEmail: { in: authorizedEmails } }
+                            ]
+                        }
+                    }
+                }
+                : {};
+
         const baseWhere = {
-            workspaceId: auth.workspaceId
+            workspaceId: auth.workspaceId,
+            ...mailboxScopeFilter
         };
 
         const folderFilter = folder === 'INBOX'
             ? {
                 folder: 'INBOX',
-                messages: { some: { direction: 'INBOUND' } }
+                messages: {
+                    some: {
+                        direction: 'INBOUND',
+                        ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
+                    }
+                }
             }
             : folder === 'SENT'
                 ? {
                     folder: { not: 'TRASH' },
                     OR: [
                         { folder: 'SENT' },
-                        { messages: { some: { direction: 'OUTBOUND' } } }
+                        {
+                            messages: {
+                                some: {
+                                    direction: 'OUTBOUND',
+                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
+                                }
+                            }
+                        }
                     ]
                 }
                 : folder === 'STARRED'
@@ -365,7 +408,18 @@ export async function GET(request) {
             }),
             prisma.crmEmailThread.count({ where }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', unreadCount: { gt: 0 } } }),
-            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', messages: { some: { direction: 'INBOUND' } } } }),
+            prisma.crmEmailThread.count({
+                where: {
+                    ...baseWhere,
+                    folder: 'INBOX',
+                    messages: {
+                        some: {
+                            direction: 'INBOUND',
+                            ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
+                        }
+                    }
+                }
+            }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, isStarred: true, folder: { not: 'TRASH' } } }),
             prisma.crmEmailThread.count({
                 where: {
@@ -373,7 +427,14 @@ export async function GET(request) {
                     folder: { not: 'TRASH' },
                     OR: [
                         { folder: 'SENT' },
-                        { messages: { some: { direction: 'OUTBOUND' } } }
+                        {
+                            messages: {
+                                some: {
+                                    direction: 'OUTBOUND',
+                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
+                                }
+                            }
+                        }
                     ]
                 }
             }),
@@ -395,7 +456,8 @@ export async function GET(request) {
                 sent: sentCount,
                 archive: archiveCount,
                 trash: trashCount
-            }
+            },
+            mailboxes: mailboxes || []
         });
     } catch (error) {
         console.error('[CRM_MAILBOX_GET_ERROR]', error);

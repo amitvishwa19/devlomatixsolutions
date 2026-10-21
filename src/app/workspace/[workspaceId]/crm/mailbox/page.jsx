@@ -15,7 +15,8 @@ import {
     getMailboxThreadDetailAction,
     sendMailboxEmailAction,
     updateMailboxThreadAction,
-    getMailboxContactsAndDealsAction
+    getMailboxContactsAndDealsAction,
+    getUserMailboxesAction
 } from './_actions/mailbox-actions';
 import { useCrmSocket } from '@/providers/CrmSocketProvider';
 
@@ -35,6 +36,11 @@ export default function CrmMailboxPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isLoadingThreads, setIsLoadingThreads] = useState(true);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+    // Multi-Mailbox Identity state from Org Builder
+    const [mailboxes, setMailboxes] = useState([]);
+    const [activeMailboxEmail, setActiveMailboxEmail] = useState('ALL');
+    const [composeFromEmail, setComposeFromEmail] = useState('');
 
     // Quick Reply state
     const [replyBody, setReplyBody] = useState('');
@@ -82,14 +88,15 @@ export default function CrmMailboxPage() {
         }
     }, [queryThreadId]);
 
-    // 1. Fetch Threads via Server Action
-    const loadThreads = useCallback(async (folder, search = searchQuery) => {
+    // 1. Fetch Threads via Server Action (supporting mailbox email filtering)
+    const loadThreads = useCallback(async (folder, search = searchQuery, mailboxEmail = activeMailboxEmail) => {
         const targetFolder = folder !== undefined ? folder : currentFolder;
         setIsLoadingThreads(true);
         try {
             const res = await getMailboxThreadsAction(workspaceId, {
                 folder: targetFolder,
-                search
+                search,
+                mailboxEmail
             });
 
             if (res.success) {
@@ -103,19 +110,40 @@ export default function CrmMailboxPage() {
         } finally {
             setIsLoadingThreads(false);
         }
-    }, [workspaceId, currentFolder, searchQuery]);
+    }, [workspaceId, currentFolder, searchQuery, activeMailboxEmail]);
 
     // Folder navigation with direct folder load
     const handleSelectFolder = useCallback((folderId) => {
         setCurrentFolder(folderId);
         setSelectedThreadId(null);
         setThreadDetail(null);
-        loadThreads(folderId, searchQuery);
-    }, [loadThreads, searchQuery]);
+        loadThreads(folderId, searchQuery, activeMailboxEmail);
+    }, [loadThreads, searchQuery, activeMailboxEmail]);
 
-    // Initial fetch of contacts and deals for composer autocomplete (once per workspace)
+    // Switch active mailbox identity (e.g. "sales@devlomatix.com" or "ALL")
+    const handleSelectMailbox = useCallback((email) => {
+        setActiveMailboxEmail(email);
+        setComposeFromEmail(email !== 'ALL' ? email : '');
+        setSelectedThreadId(null);
+        setThreadDetail(null);
+        loadThreads(currentFolder, searchQuery, email);
+    }, [currentFolder, searchQuery, loadThreads]);
+
+    // Initial fetch of user mailboxes from Org Builder and contacts/deals
     useEffect(() => {
         if (workspaceId) {
+            // Load user mailboxes
+            getUserMailboxesAction(workspaceId).then((res) => {
+                if (res.success && res.data?.mailboxes) {
+                    setMailboxes(res.data.mailboxes);
+                    // If user has personal email, pre-fill compose from
+                    const personal = res.data.mailboxes.find(m => m.isPrimary);
+                    if (personal?.email) {
+                        setComposeFromEmail(personal.email);
+                    }
+                }
+            });
+
             getMailboxContactsAndDealsAction(workspaceId).then(res => {
                 if (res.success) {
                     setContactsList(res.data.contacts || []);
@@ -434,6 +462,7 @@ export default function CrmMailboxPage() {
 
             const res = await sendMailboxEmailAction(workspaceId, {
                 senderName: senderName || senderInfo?.name || undefined,
+                fromEmail: composeFromEmail || (activeMailboxEmail !== 'ALL' ? activeMailboxEmail : undefined),
                 to: [composeTo.trim()],
                 cc: ccList,
                 bcc: bccList,
@@ -496,10 +525,13 @@ export default function CrmMailboxPage() {
         <div className="flex absolute inset-0 w-full overflow-hidden p-0">
 
             <div id='mailbox-frame' className='flex flex-1 h-full w-full min-h-0 overflow-hidden rounded-lg'>
-                {/* PANE 1: Folders Navigation Sidebar */}
+                {/* PANE 1: Folders Navigation Sidebar with Mailbox Switcher */}
                 <MailboxSidebar
                     currentFolder={currentFolder}
                     counts={counts}
+                    mailboxes={mailboxes}
+                    activeMailboxEmail={activeMailboxEmail}
+                    onSelectMailbox={handleSelectMailbox}
                     onSelectFolder={handleSelectFolder}
                     onOpenCompose={() => setIsComposeOpen(true)}
                 />
@@ -547,6 +579,9 @@ export default function CrmMailboxPage() {
                     senderInfo={senderInfo}
                     senderName={senderName}
                     onSenderNameChange={setSenderName}
+                    mailboxes={mailboxes}
+                    selectedFromEmail={composeFromEmail}
+                    onFromEmailChange={setComposeFromEmail}
                     to={composeTo}
                     cc={composeCc}
                     bcc={composeBcc}

@@ -15,6 +15,8 @@ export const DEFAULT_ORG_TEMPLATES = {
         parentId: null,
         order: 0,
         assignedUserIds: [],
+        mailboxEmail: 'admin@devlomatix.com',
+        mailboxDisplayName: 'Executive Office',
         responsibilities: 'Company vision, strategy, capital allocation, and executive leadership.'
       },
       node_cto: {
@@ -25,6 +27,8 @@ export const DEFAULT_ORG_TEMPLATES = {
         parentId: 'node_ceo',
         order: 0,
         assignedUserIds: [],
+        mailboxEmail: 'tech@devlomatix.com',
+        mailboxDisplayName: 'Devlomatix Tech',
         responsibilities: 'Engineering leadership, tech roadmap, system scalability, and security.'
       },
       node_hr: {
@@ -35,6 +39,8 @@ export const DEFAULT_ORG_TEMPLATES = {
         parentId: 'node_ceo',
         order: 1,
         assignedUserIds: [],
+        mailboxEmail: 'hr@devlomatix.com',
+        mailboxDisplayName: 'Human Resources',
         responsibilities: 'Talent acquisition, employee retention, organizational culture, and compliance.'
       },
       node_vp_sales: {
@@ -45,6 +51,8 @@ export const DEFAULT_ORG_TEMPLATES = {
         parentId: 'node_ceo',
         order: 2,
         assignedUserIds: [],
+        mailboxEmail: 'sales@devlomatix.com',
+        mailboxDisplayName: 'Devlomatix Sales',
         responsibilities: 'Revenue targets, enterprise partnerships, and sales pipeline expansion.'
       },
       node_cfo: {

@@ -7,17 +7,41 @@ import {
     Send,
     Archive,
     Trash2,
-    Plus
+    Plus,
+    ChevronDown,
+    Check,
+    User,
+    Briefcase,
+    Layers,
+    Mail
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function MailboxSidebar({
     currentFolder,
     counts,
     onSelectFolder,
-    onOpenCompose
+    onOpenCompose,
+    mailboxes = [],
+    activeMailboxEmail = 'ALL',
+    onSelectMailbox = () => {}
 }) {
+    const activeMailbox = mailboxes.find((m) => m.email === activeMailboxEmail) || mailboxes[0] || {
+        id: 'all',
+        email: 'ALL',
+        label: 'All Inboxes',
+        type: 'ALL'
+    };
+
     const folders = [
         {
             id: 'INBOX',
@@ -60,8 +84,77 @@ export default function MailboxSidebar({
 
     return (
         <aside className="w-64 border-r flex flex-col shrink-0 bg-card h-full min-h-0">
+            {/* Mailbox Identity Switcher */}
+            {mailboxes && mailboxes.length > 1 && (
+                <div className="p-3 pb-0">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                type="button"
+                                className="w-full flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 transition-all text-left cursor-pointer group"
+                            >
+                                <div className="flex items-center gap-2 min-w-0 pr-1">
+                                    <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 font-bold text-xs">
+                                        {activeMailbox?.type === 'ALL' ? (
+                                            <Layers className="w-3.5 h-3.5" />
+                                        ) : activeMailbox?.type === 'PERSONAL' ? (
+                                            <User className="w-3.5 h-3.5" />
+                                        ) : (
+                                            <Briefcase className="w-3.5 h-3.5" />
+                                        )}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
+                                            {activeMailbox?.label || 'All Inboxes'}
+                                        </div>
+                                        <div className="text-[10px] text-slate-500 truncate">
+                                            {activeMailbox?.email === 'ALL' ? 'Unified Mailbox' : activeMailbox?.email}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 shrink-0" />
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-64 z-[9999] shadow-xl p-1 text-xs">
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-slate-400 font-bold px-2 py-1">
+                                Switch Mailbox
+                            </DropdownMenuLabel>
+                            {mailboxes.map((mb) => {
+                                const isSelected = (activeMailboxEmail || 'ALL') === mb.email;
+                                return (
+                                    <DropdownMenuItem
+                                        key={mb.id}
+                                        onClick={() => onSelectMailbox(mb.email)}
+                                        className={`flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer ${
+                                            isSelected ? 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-semibold' : ''
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            {mb.type === 'ALL' ? (
+                                                <Layers className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                            ) : mb.type === 'PERSONAL' ? (
+                                                <User className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                            ) : (
+                                                <Briefcase className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                            )}
+                                            <div className="min-w-0">
+                                                <div className="truncate text-xs">{mb.label}</div>
+                                                {mb.email !== 'ALL' && (
+                                                    <div className="text-[10px] text-slate-400 truncate">{mb.email}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0 ml-1" />}
+                                    </DropdownMenuItem>
+                                );
+                            })}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            )}
+
             {/* Compose Button */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-3 border-b border-slate-100 dark:border-slate-800">
                 <Button
                     onClick={onOpenCompose}
                     className="w-full justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm font-semibold rounded-xl h-10"
