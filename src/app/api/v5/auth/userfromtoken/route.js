@@ -9,19 +9,29 @@ import { headers } from "next/headers";
 export async function POST(req) {
     try {
         console.log('getting user from token')
-        let user = null
-        const headersList = headers()
-        const accessToken = headersList.get('Authorization')
-        //console.log('userfromtoken', accessToken)
+        let user = null;
+        let accessToken = req?.headers?.get('Authorization') || req?.headers?.get('authorization');
+        if (!accessToken) {
+            try {
+                const body = await req.json();
+                accessToken = body?.token || body?.accessToken || body?.refreshToken;
+            } catch (_) {}
+        }
+        if (!accessToken) {
+            try {
+                const headersList = await headers();
+                accessToken = headersList.get('Authorization') || headersList.get('authorization');
+            } catch (_) {}
+        }
 
         const secretKey = process.env.ENCRYPTION_KEY;
-
-
-
-
         const key = new TextEncoder().encode(secretKey);
 
-        const { userId } = await decrypt(accessToken)
+        const decoded = await decrypt(accessToken);
+        const userId = decoded?.userId || decoded?.id;
+        if (!userId) {
+            return NextResponse.json({ message: "Invalid or expired token", status: 401 }, { status: 401 });
+        }
 
 
 
@@ -58,7 +68,7 @@ export async function POST(req) {
 
             await db.user.update({
                 where: { id: userId },
-                data: { refreshToken },
+                data: { accessToken, refreshToken },
             })
 
             // user = {
@@ -109,13 +119,18 @@ export async function POST(req) {
                     profile: true
                 }
             })
+            if (user) {
+                user.accessToken = accessToken;
+                user.refreshToken = refreshToken;
+            }
         }
 
-
-        console.log(user)
-
-
-        return NextResponse.json({ status: 200, user: user })
+        return NextResponse.json({
+            status: 200,
+            user: user,
+            accessToken: user?.accessToken,
+            refreshToken: user?.refreshToken
+        })
     } catch (error) {
 
         return NextResponse.json({ error: 'internal server error' }, { status: 500 })
