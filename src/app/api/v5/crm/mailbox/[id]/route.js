@@ -1,6 +1,26 @@
 import { prisma } from '@/lib/prisma';
 import { validateCrmUserToken } from '../../_lib/auth';
 import { apiSuccess, apiError } from '../../_lib/response';
+import { getUserAuthorizedMailboxes } from '../_lib/org-mailboxes';
+
+/**
+ * Validates if the authenticated user has access to view or mutate a thread.
+ */
+async function authorizeThreadAccess(thread, user, workspaceId) {
+    if (!thread) return false;
+
+    const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(user.id, workspaceId);
+    if (isAdmin) return true;
+
+    const threadEmails = (thread.messages || []).flatMap((m) => [
+        m.fromEmail,
+        ...(Array.isArray(m.to) ? m.to : []),
+        ...(Array.isArray(m.cc) ? m.cc : []),
+        ...(Array.isArray(m.bcc) ? m.bcc : [])
+    ]).map((e) => (typeof e === 'string' ? e.trim().toLowerCase() : '')).filter(Boolean);
+
+    return authorizedEmails.some((ae) => threadEmails.includes(ae.toLowerCase()));
+}
 
 /**
  * GET /api/v5/crm/mailbox/[id]
@@ -17,11 +37,8 @@ export async function GET(request, { params }) {
 
         const { id } = await params;
 
-        const thread = await prisma.crmEmailThread.findFirst({
-            where: {
-                id,
-                workspaceId: auth.workspaceId
-            },
+        const thread = await prisma.crmEmailThread.findUnique({
+            where: { id },
             include: {
                 contact: {
                     include: {
@@ -53,6 +70,11 @@ export async function GET(request, { params }) {
 
         if (!thread) {
             return apiError('Thread not found', 404);
+        }
+
+        const isAuthorized = await authorizeThreadAccess(thread, auth.user, auth.workspaceId);
+        if (!isAuthorized) {
+            return apiError('Unauthorized to view this email thread', 403);
         }
 
         // Auto-mark thread and messages as read
@@ -93,12 +115,18 @@ export async function PATCH(request, { params }) {
         const body = await request.json();
         const { folder, isStarred, contactId, dealId, assignedToId, subject } = body;
 
-        const existing = await prisma.crmEmailThread.findFirst({
-            where: { id, workspaceId: auth.workspaceId }
+        const existing = await prisma.crmEmailThread.findUnique({
+            where: { id },
+            include: { messages: { select: { fromEmail: true, to: true, cc: true, bcc: true } } }
         });
 
         if (!existing) {
             return apiError('Thread not found', 404);
+        }
+
+        const isAuthorized = await authorizeThreadAccess(existing, auth.user, auth.workspaceId);
+        if (!isAuthorized) {
+            return apiError('Unauthorized to update this email thread', 403);
         }
 
         const data = {};
@@ -143,12 +171,18 @@ export async function DELETE(request, { params }) {
 
         const { id } = await params;
 
-        const thread = await prisma.crmEmailThread.findFirst({
-            where: { id, workspaceId: auth.workspaceId }
+        const thread = await prisma.crmEmailThread.findUnique({
+            where: { id },
+            include: { messages: { select: { fromEmail: true, to: true, cc: true, bcc: true } } }
         });
 
         if (!thread) {
             return apiError('Thread not found', 404);
+        }
+
+        const isAuthorized = await authorizeThreadAccess(thread, auth.user, auth.workspaceId);
+        if (!isAuthorized) {
+            return apiError('Unauthorized to delete this email thread', 403);
         }
 
         if (thread.folder === 'TRASH') {

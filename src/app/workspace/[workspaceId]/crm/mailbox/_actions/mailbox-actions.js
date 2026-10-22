@@ -35,6 +35,22 @@ async function getResendClient(workspaceId) {
     };
 }
 
+async function authorizeThreadAccess(thread, userId, workspaceId) {
+    if (!thread) return false;
+
+    const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
+    if (isAdmin) return true;
+
+    const threadEmails = (thread.messages || []).flatMap((m) => [
+        m.fromEmail,
+        ...(Array.isArray(m.to) ? m.to : []),
+        ...(Array.isArray(m.cc) ? m.cc : []),
+        ...(Array.isArray(m.bcc) ? m.bcc : [])
+    ]).map((e) => (typeof e === 'string' ? e.trim().toLowerCase() : '')).filter(Boolean);
+
+    return authorizedEmails.some((ae) => threadEmails.includes(ae.toLowerCase()));
+}
+
 /**
  * Fetch all mailboxes/identities authorized for the current logged-in user
  * (Personal email + assigned Org Builder posts/roles + admin overview).
@@ -65,16 +81,16 @@ export async function getMailboxThreadsAction(workspaceId, {
 } = {}) {
     try {
         const userId = await getValidUserId(workspaceId);
-        const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
+        const { mailboxes, authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
 
         const skip = (page - 1) * limit;
         const cleanMailbox = (mailboxEmail && mailboxEmail !== 'ALL') ? mailboxEmail.trim().toLowerCase() : null;
 
-        // Mailbox scope filter:
-        // - Specific mailbox chosen: restrict to that email address.
-        // - 'ALL' chosen: if not admin, restrict to any of the user's authorized inboxes.
-        const mailboxScopeFilter = cleanMailbox
-            ? {
+        let baseWhere;
+
+        if (cleanMailbox) {
+            // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail
+            baseWhere = {
                 messages: {
                     some: {
                         OR: [
@@ -85,26 +101,27 @@ export async function getMailboxThreadsAction(workspaceId, {
                         ]
                     }
                 }
-            }
-            : (!isAdmin && authorizedEmails.length > 0)
-                ? {
-                    messages: {
-                        some: {
-                            OR: [
-                                { to: { hasSome: authorizedEmails } },
-                                { cc: { hasSome: authorizedEmails } },
-                                { bcc: { hasSome: authorizedEmails } },
-                                { fromEmail: { in: authorizedEmails } }
-                            ]
+            };
+        } else {
+            // 'ALL' mailbox selected: filter by all authorized email IDs for this user
+            const allEmails = authorizedEmails.map(e => e.toLowerCase()).filter(Boolean);
+            baseWhere = isAdmin
+                ? {}
+                : allEmails.length > 0
+                    ? {
+                        messages: {
+                            some: {
+                                OR: [
+                                    { to: { hasSome: allEmails } },
+                                    { cc: { hasSome: allEmails } },
+                                    { bcc: { hasSome: allEmails } },
+                                    { fromEmail: { in: allEmails } }
+                                ]
+                            }
                         }
                     }
-                }
-                : {};
-
-        const baseWhere = {
-            workspaceId,
-            ...mailboxScopeFilter
-        };
+                    : { id: '__no_access__' };
+        }
 
         const folderFilter = folder === 'INBOX'
             ? { folder: 'INBOX' }
@@ -205,8 +222,9 @@ export async function getMailboxThreadsAction(workspaceId, {
  */
 export async function getMailboxThreadDetailAction(workspaceId, threadId) {
     try {
-        const thread = await prisma.crmEmailThread.findFirst({
-            where: { id: threadId, workspaceId },
+        const userId = await getValidUserId(workspaceId);
+        const thread = await prisma.crmEmailThread.findUnique({
+            where: { id: threadId },
             include: {
                 contact: {
                     include: {
@@ -238,6 +256,11 @@ export async function getMailboxThreadDetailAction(workspaceId, threadId) {
 
         if (!thread) {
             return { success: false, error: 'Thread not found' };
+        }
+
+        const hasAccess = await authorizeThreadAccess(thread, userId, workspaceId);
+        if (!hasAccess) {
+            return { success: false, error: 'Unauthorized to view this email thread' };
         }
 
         if (thread.unreadCount > 0) {
@@ -319,8 +342,8 @@ export async function sendMailboxEmailAction(workspaceId, {
         let references = null;
 
         if (threadId) {
-            existingThread = await prisma.crmEmailThread.findFirst({
-                where: { id: threadId, workspaceId },
+            existingThread = await prisma.crmEmailThread.findUnique({
+                where: { id: threadId },
                 include: {
                     messages: {
                         orderBy: { createdAt: 'desc' },
@@ -328,6 +351,13 @@ export async function sendMailboxEmailAction(workspaceId, {
                     }
                 }
             });
+
+            if (existingThread) {
+                const hasAccess = await authorizeThreadAccess(existingThread, userId, workspaceId);
+                if (!hasAccess) {
+                    throw new Error('Unauthorized to reply to this email thread');
+                }
+            }
 
             if (existingThread?.messages?.length > 0) {
                 const lastMsg = existingThread.messages[0];
@@ -420,10 +450,12 @@ export async function sendMailboxEmailAction(workspaceId, {
             });
         }
 
+        const targetWorkspaceId = thread.workspaceId || workspaceId;
+
         const message = await prisma.crmEmailMessage.create({
             data: {
                 threadId: thread.id,
-                workspaceId,
+                workspaceId: targetWorkspaceId,
                 messageId: generatedMessageId,
                 inReplyTo,
                 references,
@@ -448,7 +480,7 @@ export async function sendMailboxEmailAction(workspaceId, {
         // Log CrmActivity
         await prisma.crmActivity.create({
             data: {
-                workspaceId,
+                workspaceId: targetWorkspaceId,
                 userId: user.id,
                 type: 'EMAIL',
                 title: `Email sent: ${subject.slice(0, 80)}`,
@@ -466,8 +498,8 @@ export async function sendMailboxEmailAction(workspaceId, {
 
         // Emit Socket event
         try {
-            await emitKonnectxEvent(workspaceId, 'crm:mailbox:email_sent', {
-                workspaceId,
+            await emitKonnectxEvent(targetWorkspaceId, 'crm:mailbox:email_sent', {
+                workspaceId: targetWorkspaceId,
                 threadId: thread.id,
                 messageId: message.id,
                 resendEmailId,
@@ -538,18 +570,36 @@ export async function updateMailboxThreadAction(workspaceId, {
     contactId
 }) {
     try {
+        const userId = await getValidUserId(workspaceId);
         const targetIds = threadIds.length > 0 ? threadIds : (threadId ? [threadId] : []);
         if (targetIds.length === 0) throw new Error('No thread specified');
 
-        const where = {
-            id: { in: targetIds },
-            workspaceId
-        };
+        // Fetch candidate threads
+        const candidateThreads = await prisma.crmEmailThread.findMany({
+            where: { id: { in: targetIds } },
+            include: {
+                messages: {
+                    select: { fromEmail: true, to: true, cc: true, bcc: true }
+                }
+            }
+        });
+
+        const allowedThreads = [];
+        for (const t of candidateThreads) {
+            if (await authorizeThreadAccess(t, userId, workspaceId)) {
+                allowedThreads.push(t);
+            }
+        }
+
+        const allowedIds = allowedThreads.map(t => t.id);
+        if (allowedIds.length === 0) {
+            return { success: false, error: 'No matching authorized threads found' };
+        }
+
+        const where = { id: { in: allowedIds } };
 
         if (action === 'toggleStar') {
-            const current = await prisma.crmEmailThread.findFirst({
-                where: { id: targetIds[0], workspaceId }
-            });
+            const current = allowedThreads[0];
             if (current) {
                 const updated = await prisma.crmEmailThread.update({
                     where: { id: current.id },
@@ -574,7 +624,7 @@ export async function updateMailboxThreadAction(workspaceId, {
             await Promise.all([
                 prisma.crmEmailThread.updateMany({ where, data: { unreadCount: 0 } }),
                 prisma.crmEmailMessage.updateMany({
-                    where: { threadId: { in: targetIds }, workspaceId },
+                    where: { threadId: { in: allowedIds } },
                     data: { isRead: true }
                 })
             ]);

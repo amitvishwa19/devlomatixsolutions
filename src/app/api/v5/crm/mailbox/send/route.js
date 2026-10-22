@@ -99,8 +99,8 @@ export async function POST(request) {
         let references = null;
 
         if (threadId) {
-            existingThread = await prisma.crmEmailThread.findFirst({
-                where: { id: threadId, workspaceId: auth.workspaceId },
+            existingThread = await prisma.crmEmailThread.findUnique({
+                where: { id: threadId },
                 include: {
                     messages: {
                         orderBy: { createdAt: 'desc' },
@@ -209,7 +209,7 @@ export async function POST(request) {
         const message = await prisma.crmEmailMessage.create({
             data: {
                 threadId: thread.id,
-                workspaceId: auth.workspaceId,
+                workspaceId: thread.workspaceId,
                 messageId: generatedMessageId,
                 inReplyTo,
                 references,

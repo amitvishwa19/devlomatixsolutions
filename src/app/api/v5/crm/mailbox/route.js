@@ -294,60 +294,47 @@ export async function GET(request) {
         const { mailboxes, authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
         const cleanMailbox = (mailboxEmailParam && mailboxEmailParam !== 'ALL') ? mailboxEmailParam.trim().toLowerCase() : null;
 
-        const mailboxScopeFilter = cleanMailbox
-            ? {
+        let baseWhere;
+
+        if (cleanMailbox) {
+            // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail
+            baseWhere = {
                 messages: {
                     some: {
                         OR: [
                             { to: { has: cleanMailbox } },
+                            { cc: { has: cleanMailbox } },
+                            { bcc: { has: cleanMailbox } },
                             { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } }
                         ]
                     }
                 }
-            }
-            : (!isAdmin && authorizedEmails.length > 0)
-                ? {
-                    messages: {
-                        some: {
-                            OR: [
-                                { to: { hasSome: authorizedEmails } },
-                                { fromEmail: { in: authorizedEmails } }
-                            ]
-                        }
-                    }
-                }
-                : {};
-
-        const baseWhere = {
-            workspaceId: auth.workspaceId,
-            ...mailboxScopeFilter
-        };
-
-        const folderFilter = folder === 'INBOX'
-            ? {
-                folder: 'INBOX',
-                messages: {
-                    some: {
-                        direction: 'INBOUND',
-                        ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
-                    }
-                }
-            }
-            : folder === 'SENT'
-                ? {
-                    folder: { not: 'TRASH' },
-                    OR: [
-                        { folder: 'SENT' },
-                        {
-                            messages: {
-                                some: {
-                                    direction: 'OUTBOUND',
-                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
-                                }
+            };
+        } else {
+            // 'ALL' mailbox selected: filter by all authorized email IDs for this user
+            const allEmails = authorizedEmails.map(e => e.toLowerCase()).filter(Boolean);
+            baseWhere = isAdmin
+                ? {}
+                : allEmails.length > 0
+                    ? {
+                        messages: {
+                            some: {
+                                OR: [
+                                    { to: { hasSome: allEmails } },
+                                    { cc: { hasSome: allEmails } },
+                                    { bcc: { hasSome: allEmails } },
+                                    { fromEmail: { in: allEmails } }
+                                ]
                             }
                         }
-                    ]
-                }
+                    }
+                    : { id: '__no_access__' };
+        }
+
+        const folderFilter = folder === 'INBOX'
+            ? { folder: 'INBOX' }
+            : folder === 'SENT'
+                ? { folder: 'SENT' }
                 : folder === 'STARRED'
                     ? { isStarred: true, folder: { not: 'TRASH' } }
                     : folder === 'ALL'
@@ -408,36 +395,9 @@ export async function GET(request) {
             }),
             prisma.crmEmailThread.count({ where }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX', unreadCount: { gt: 0 } } }),
-            prisma.crmEmailThread.count({
-                where: {
-                    ...baseWhere,
-                    folder: 'INBOX',
-                    messages: {
-                        some: {
-                            direction: 'INBOUND',
-                            ...(cleanMailbox ? { to: { has: cleanMailbox } } : {})
-                        }
-                    }
-                }
-            }),
+            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'INBOX' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, isStarred: true, folder: { not: 'TRASH' } } }),
-            prisma.crmEmailThread.count({
-                where: {
-                    ...baseWhere,
-                    folder: { not: 'TRASH' },
-                    OR: [
-                        { folder: 'SENT' },
-                        {
-                            messages: {
-                                some: {
-                                    direction: 'OUTBOUND',
-                                    ...(cleanMailbox ? { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } } : {})
-                                }
-                            }
-                        }
-                    ]
-                }
-            }),
+            prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'SENT' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'ARCHIVE' } }),
             prisma.crmEmailThread.count({ where: { ...baseWhere, folder: 'TRASH' } })
         ]);
@@ -485,10 +445,23 @@ export async function PATCH(request) {
             return apiError('Missing threadIds or threadId', 400);
         }
 
-        const where = {
-            id: { in: targetIds },
-            workspaceId: auth.workspaceId
-        };
+        const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
+        const allEmails = authorizedEmails.map(e => e.toLowerCase()).filter(Boolean);
+        const where = isAdmin
+            ? { id: { in: targetIds } }
+            : {
+                id: { in: targetIds },
+                messages: {
+                    some: {
+                        OR: [
+                            { to: { hasSome: allEmails } },
+                            { cc: { hasSome: allEmails } },
+                            { bcc: { hasSome: allEmails } },
+                            { fromEmail: { in: allEmails } }
+                        ]
+                    }
+                }
+            };
 
         if (action === 'markRead') {
             await prisma.crmEmailThread.updateMany({
@@ -496,7 +469,7 @@ export async function PATCH(request) {
                 data: { unreadCount: 0 }
             });
             await prisma.crmEmailMessage.updateMany({
-                where: { threadId: { in: targetIds }, workspaceId: auth.workspaceId },
+                where: { threadId: { in: targetIds } },
                 data: { isRead: true }
             });
             return apiSuccess({ updated: true, action: 'markRead', count: targetIds.length });
@@ -512,7 +485,7 @@ export async function PATCH(request) {
 
         if (action === 'toggleStar') {
             const thread = await prisma.crmEmailThread.findFirst({
-                where: { id: targetIds[0], workspaceId: auth.workspaceId }
+                where: { id: targetIds[0] }
             });
             if (thread) {
                 const updated = await prisma.crmEmailThread.update({
