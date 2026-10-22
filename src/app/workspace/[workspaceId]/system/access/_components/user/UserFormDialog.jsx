@@ -1,24 +1,51 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, } from '@/components/ui/dialog';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetDescription,
+    SheetFooter,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, icons, Loader, Save, User } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+    Eye,
+    EyeOff,
+    Loader2,
+    Save,
+    UserPlus,
+    UserCheck,
+    Mail,
+    Lock,
+    Shield,
+    X,
+    CheckCircle2
+} from 'lucide-react';
 import { useAction } from '@/hooks/use-action';
 import { upsertUser } from '../../_action/upsert-user';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { useAccess } from '@/providers/WorkspaceProvider';
-import { DepartmentMultiSelect } from './DepartmentMultiSelect';
 import { RoleSelect } from './RoleSelect';
-import { MultiSelectDropDown } from '@/components/global/MultiSelectDropDown';
 
 const userFormSchema = z.object({
     id: z.string(),
@@ -30,14 +57,10 @@ const userFormSchema = z.object({
 });
 
 export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
-    const { data: session, update } = useSession()
-    const [loading, setloading] = useState(false)
-    const [showPassword, setShowPassword] = useState(false)
-    const isEditing = !!user;
-    const { departments } = useAccess()
-
-    // console.log('user', user)
-
+    const { update } = useSession();
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const isEditing = Boolean(user);
 
     const form = useForm({
         resolver: zodResolver(userFormSchema),
@@ -47,7 +70,7 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
             email: '',
             password: '',
             roles: [],
-            status: false,
+            status: true,
         },
     });
 
@@ -55,13 +78,13 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
         if (user) {
             form.reset({
                 id: user.id || '',
-                name: user.displayName || '',
+                name: user.displayName || user.name || '',
                 email: user.email || '',
                 password: '',
                 roles: user.roles?.map((p) =>
                     typeof p === 'string' ? p : p.id
                 ) ?? [],
-                status: user.isActive || false,
+                status: user.isActive !== undefined ? user.isActive : true,
             });
         } else {
             form.reset({
@@ -70,236 +93,302 @@ export function UserFormDialog({ open, onOpenChange, user, roles, onSubmit }) {
                 email: '',
                 password: '',
                 roles: [],
-                status: false,
+                status: true,
             });
         }
         setShowPassword(false);
     }, [user, form, open]);
 
-    useEffect(() => {
-        console.log("Departments value:", form.watch("departments"));
-    }, [form.watch("departments")]);
-
-
     const { execute } = useAction(upsertUser, {
         onSuccess: (data) => {
-            onSubmit(data.user)
-            handleOpenClose()
-            update(); // PRODUCTION GRADE: Refresh session data immediately
-            toast.success(`${user ? 'User updated successfully' : 'User created successfully'}`, { id: 'new-user' })
+            onSubmit?.(data.user);
+            handleOpenClose();
+            update();
+            toast.success(
+                user ? 'User updated successfully' : 'User created successfully',
+                { id: 'user-form-action' }
+            );
         },
         onError: (error) => {
-            console.log(error)
-            toast.error(error?.message || 'Failed to save user, please try again', { id: 'new-user' })
-            setloading(false);
+            console.error('Upsert User Error:', error);
+            toast.error(error?.message || 'Failed to save user, please try again', { id: 'user-form-action' });
+            setLoading(false);
         }
-    })
+    });
 
     const handleSubmit = async (data) => {
-        console.log('User data', data)
-        setloading(true);
-        toast.loading(user ? 'Updating user...' : 'Creating user...', { id: 'new-user' })
-        await execute({ formData: data })
+        setLoading(true);
+        toast.loading(user ? 'Updating user...' : 'Creating user...', { id: 'user-form-action' });
+        await execute({ formData: data });
     };
 
     const handleOpenClose = () => {
-        onOpenChange()
-        setloading(false)
-        form.reset()
-    }
+        onOpenChange?.(false);
+        setLoading(false);
+        form.reset();
+    };
+
+    const isStatusActive = form.watch('status');
 
     return (
         <Sheet open={open} onOpenChange={handleOpenClose}>
-            <SheetContent className="min-w-[620px] bg-transparent border-0 shadow-none p-2">
-                <div className="bg-card rounded-md flex flex-col h-full border overflow-hidden shadow-2xl">
-                    <SheetHeader className="border-b p-6 bg-muted/5">
-                        <div className="flex items-center gap-4">
-                            <div className="p-3 rounded-md bg-primary/10 border border-primary/20 shadow-inner">
-                                <User className="w-6 h-6 text-primary" />
+            <SheetContent
+                side="right"
+                className="w-full sm:max-w-[560px] p-0 border-l border-border/80 bg-card shadow-2xl flex flex-col h-full overflow-hidden"
+            >
+                {/* Header */}
+                <SheetHeader className="p-6 border-b border-border/60 bg-muted/20">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3.5">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-xs">
+                                {isEditing ? (
+                                    <UserCheck className="w-5 h-5 text-primary" />
+                                ) : (
+                                    <UserPlus className="w-5 h-5 text-primary" />
+                                )}
                             </div>
-                            <div>
-                                <SheetTitle className="text-xl font-bold tracking-tight">
-                                    {isEditing ? 'Edit User' : 'Add New User'}
+                            <div className="space-y-0.5">
+                                <SheetTitle className="text-base font-bold text-foreground tracking-tight">
+                                    {isEditing ? 'Edit User Profile' : 'Add New User'}
                                 </SheetTitle>
-                                <SheetDescription className="text-sm opacity-70">
+                                <SheetDescription className="text-xs text-muted-foreground">
                                     {isEditing
-                                        ? 'Update user information and role assignment.'
-                                        : 'Add a new user to the system.'}
+                                        ? 'Update workspace account information and role assignments.'
+                                        : 'Create a new user account and assign permissions.'}
                                 </SheetDescription>
                             </div>
                         </div>
-                    </SheetHeader>
 
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col flex-1 overflow-hidden">
-                            <ScrollArea className="flex-1 h-[80vh] p-6">
-                                <div className="space-y-8 pb-10">
-                                    <div className="space-y-4">
-                                        <FormField
-                                            control={form.control}
-                                            name="name"
-                                            render={({ field }) => (
-                                                <FormItem className="grid gap-2 p-1">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Full Name</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            placeholder="Enter full name"
-                                                            {...field}
-                                                            className="bg-secondary/30 border-border/40 h-12 rounded-md text-lg font-medium focus:ring-primary/20"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                        <SheetClose asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 cursor-pointer"
+                            >
+                                <X className="w-4 h-4" />
+                                <span className="sr-only">Close</span>
+                            </Button>
+                        </SheetClose>
+                    </div>
+                </SheetHeader>
 
-                                        <FormField
-                                            control={form.control}
-                                            name="email"
-                                            render={({ field }) => (
-                                                <FormItem className="grid gap-2 p-1">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Email Address</FormLabel>
-                                                    <FormControl>
-                                                        <Input
-                                                            type="email"
-                                                            placeholder="user@domain.com"
-                                                            {...field}
-                                                            className="bg-secondary/30 border-border/40 rounded-md focus:ring-primary/20"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
+                {/* Form Content */}
+                <Form {...form}>
+                    <form
+                        onSubmit={form.handleSubmit(handleSubmit)}
+                        className="flex flex-col flex-1 overflow-hidden"
+                    >
+                        <ScrollArea className="flex-1 p-6">
+                            <div className="space-y-5 pb-6">
+                                {/* FULL NAME */}
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1.5">
+                                            <FormLabel className="text-xs font-semibold text-foreground flex items-center gap-1">
+                                                <span>Full Name</span>
+                                                <span className="text-rose-500">*</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <div className="relative flex items-center">
+                                                    <Input
+                                                        placeholder="e.g. John Doe"
+                                                        {...field}
+                                                        className="h-10 text-xs bg-background border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 transition-all"
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage className="text-[11px] text-rose-500" />
+                                        </FormItem>
+                                    )}
+                                />
 
-                                        <FormField
-                                            control={form.control}
-                                            name="password"
-                                            render={({ field }) => (
-                                                <FormItem className="grid gap-2 p-1">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">
-                                                        Password {isEditing ? "(Leave blank to keep unchanged)" : "(Set User Password)"}
+                                {/* EMAIL ADDRESS */}
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1.5">
+                                            <FormLabel className="text-xs font-semibold text-foreground flex items-center gap-1">
+                                                <span>Email Address</span>
+                                                <span className="text-rose-500">*</span>
+                                            </FormLabel>
+                                            <FormControl>
+                                                <div className="relative flex items-center">
+                                                    <Input
+                                                        type="email"
+                                                        placeholder="john.doe@company.com"
+                                                        {...field}
+                                                        className="h-10 text-xs bg-background border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 transition-all pl-9"
+                                                    />
+                                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage className="text-[11px] text-rose-500" />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* PASSWORD */}
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1.5">
+                                            <FormLabel className="text-xs font-semibold text-foreground flex items-center justify-between">
+                                                <span className="flex items-center gap-1">
+                                                    <span>Password</span>
+                                                    {!isEditing && <span className="text-rose-500">*</span>}
+                                                </span>
+                                                {isEditing && (
+                                                    <span className="text-[10px] text-muted-foreground font-normal">
+                                                        Leave empty to keep current
+                                                    </span>
+                                                )}
+                                            </FormLabel>
+                                            <FormControl>
+                                                <div className="relative flex items-center">
+                                                    <Input
+                                                        type={showPassword ? "text" : "password"}
+                                                        placeholder={isEditing ? "••••••••" : "Create a strong password"}
+                                                        {...field}
+                                                        className="h-10 text-xs bg-background border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary/30 transition-all pl-9 pr-10"
+                                                    />
+                                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword((prev) => !prev)}
+                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+                                                        title={showPassword ? "Hide password" : "Show password"}
+                                                    >
+                                                        {showPassword ? (
+                                                            <EyeOff className="w-4 h-4" />
+                                                        ) : (
+                                                            <Eye className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage className="text-[11px] text-rose-500" />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* ROLES SELECTION */}
+                                <FormField
+                                    control={form.control}
+                                    name="roles"
+                                    render={({ field }) => (
+                                        <FormItem className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <FormLabel className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                    <Shield className="w-3.5 h-3.5 text-primary" />
+                                                    <span>Assigned Roles</span>
+                                                </FormLabel>
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    Multi-role support
+                                                </span>
+                                            </div>
+                                            <FormControl>
+                                                <RoleSelect
+                                                    roles={roles || []}
+                                                    selected={field.value || []}
+                                                    onChange={field.onChange}
+                                                    placeholder="Select one or more roles..."
+                                                />
+                                            </FormControl>
+                                            <FormDescription className="text-[10px] text-muted-foreground">
+                                                Roles grant module permissions and access level across web & mobile suites.
+                                            </FormDescription>
+                                            <FormMessage className="text-[11px] text-rose-500" />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* STATUS CARD TOGGLE */}
+                                <FormField
+                                    control={form.control}
+                                    name="status"
+                                    render={({ field }) => (
+                                        <FormItem className={`flex items-start space-x-3.5 p-3.5 rounded-xl border transition-all mt-4 ${
+                                            isStatusActive
+                                                ? "bg-emerald-500/5 border-emerald-500/25"
+                                                : "bg-muted/20 border-border/60"
+                                        }`}>
+                                            <FormControl className="mt-0.5">
+                                                <Checkbox
+                                                    checked={field.value}
+                                                    onCheckedChange={field.onChange}
+                                                    id="user-status"
+                                                    className="w-4 h-4 rounded data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 border-border/80 cursor-pointer"
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 flex-1 leading-none">
+                                                <div className="flex items-center justify-between">
+                                                    <FormLabel
+                                                        htmlFor="user-status"
+                                                        className="text-xs font-semibold text-foreground cursor-pointer"
+                                                    >
+                                                        Account Status
                                                     </FormLabel>
-                                                    <FormControl>
-                                                        <div className="relative flex items-center">
-                                                            <Input
-                                                                type={showPassword ? "text" : "password"}
-                                                                placeholder={isEditing ? "••••••••" : "Enter password"}
-                                                                {...field}
-                                                                className="bg-secondary/30 border-border/40 rounded-md focus:ring-primary/20 pr-10"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    e.stopPropagation();
-                                                                    setShowPassword((prev) => !prev);
-                                                                }}
-                                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-10 cursor-pointer p-1"
-                                                            >
-                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                            </button>
-                                                        </div>
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        {/* <FormField
-                                            control={form.control}
-                                            name="departments"
-                                            render={({ field }) => (
-                                                <FormItem className="grid gap-2 p-1">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Departments</FormLabel>
-                                                    <FormControl>
-                                                        <MultiSelectDropDown
-                                                            data={departments}
-                                                            columns={2}
-                                                            value={field.value}
-                                                            onChange={field.onChange}
-                                                            placeholder="Select departments..."
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        /> */}
-
-                                        <FormField
-                                            control={form.control}
-                                            name="roles"
-                                            render={({ field }) => (
-                                                <FormItem className="grid gap-2 p-1">
-                                                    <FormLabel className="text-xs font-black uppercase tracking-widest opacity-50 ml-1">Roles</FormLabel>
-                                                    <FormControl>
-                                                        <RoleSelect
-                                                            roles={roles}
-                                                            selected={field.value}
-                                                            onChange={field.onChange}
-                                                            placeholder="Select roles..."
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-
-                                        {/* STATUS TOGGLE */}
-                                        <FormField
-                                            control={form.control}
-                                            name="status"
-                                            render={({ field }) => (
-                                                <FormItem className="flex items-center space-x-3 space-y-0 p-4 rounded-md bg-secondary/20 border border-border/30 mt-4 mx-1 transition-colors hover:bg-secondary/30">
-                                                    <FormControl>
-                                                        <Checkbox
-                                                            checked={field.value}
-                                                            onCheckedChange={field.onChange}
-                                                            id="status"
-                                                            className="w-5 h-5 rounded-md data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                                        />
-                                                    </FormControl>
-                                                    <div className="space-y-1 leading-none flex-1 mt-0.5">
-                                                        <FormLabel
-                                                            htmlFor="status"
-                                                            className="text-sm font-bold cursor-pointer block"
+                                                    {isStatusActive ? (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] border-emerald-500/30 text-emerald-600 bg-emerald-500/10 px-2 py-0 gap-1 font-medium"
                                                         >
-                                                            Active Status
-                                                        </FormLabel>
-                                                        <FormDescription className="text-[10px] opacity-70">
-                                                            Enable to activate user account and grant full workspace access.
-                                                        </FormDescription>
-                                                        <FormMessage />
-                                                    </div>
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </div>
-                                </div>
-                            </ScrollArea>
+                                                            <CheckCircle2 className="w-3 h-3" />
+                                                            <span>Active</span>
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-[10px] border-border/60 text-muted-foreground bg-muted/40 px-2 py-0 font-medium"
+                                                        >
+                                                            Inactive
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <FormDescription className="text-[11px] text-muted-foreground leading-relaxed">
+                                                    {isStatusActive
+                                                        ? "User account is enabled and can log in to the workspace and mobile app."
+                                                        : "User account is suspended and cannot authenticate into any workspace services."}
+                                                </FormDescription>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+                        </ScrollArea>
 
-                            <SheetFooter className="p-6 border-t bg-muted/5 flex-row justify-end items-center gap-4">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    onClick={() => onOpenChange(false)}
-                                    disabled={loading}
-                                    className="rounded-md font-bold text-xs uppercase tracking-widest px-8"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="rounded-md  px-8 shadow-xl shadow-primary/20"
-                                >
-                                    {loading ? <Loader className="w-5 h-5 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                                    {isEditing ? 'Save Changes' : 'Add User'}
-                                </Button>
-                            </SheetFooter>
-                        </form>
-                    </Form>
-                </div>
+                        {/* Footer */}
+                        <SheetFooter className="p-4 sm:p-5 border-t border-border/60 bg-muted/20 flex-row items-center justify-end gap-2.5">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleOpenClose}
+                                disabled={loading}
+                                className="h-9 px-4 text-xs font-medium border-border/60 text-muted-foreground hover:text-foreground cursor-pointer rounded-lg"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="sm"
+                                disabled={loading}
+                                className="h-9 px-5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm shadow-primary/25 cursor-pointer rounded-lg gap-2"
+                            >
+                                {loading ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <Save className="w-3.5 h-3.5" />
+                                )}
+                                <span>{isEditing ? 'Save Changes' : 'Create User'}</span>
+                            </Button>
+                        </SheetFooter>
+                    </form>
+                </Form>
             </SheetContent>
         </Sheet>
     );

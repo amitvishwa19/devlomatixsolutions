@@ -9,23 +9,48 @@ import Roles from './_components/comps/Roles'
 
 import { useSession } from 'next-auth/react'
 import Permissions from './_components/permission/Permissions'
-import { PermissionMatrix } from './_components/permission/PermissionMatrix'
+import { PermissionTabs } from './_components/permission/PermissionTabs'
 import { authorize } from '@/lib/authorize'
 import ProtectedRoute from '@/components/global/ProtectedRoute'
 import { useAccess } from '@/providers/WorkspaceProvider'
-import { Loader2, MonitorSmartphone, X } from 'lucide-react'
+import { Loader2, MonitorSmartphone, X, DatabaseZap } from 'lucide-react'
 import AccessSkeleton from './_components/AccessSkeleton'
+import { seedAccessData } from './_actions/seed-access-data'
+import { toast } from 'sonner'
 
 export default function Dashboard() {
 
-    const { loading, previewRole, setPreviewRole } = useAccess();
+    const { loading, previewRole, setPreviewRole, fetchAccessData } = useAccess();
     const { data: session } = useSession();
+    const [isSeeding, setIsSeeding] = useState(false);
+
+    const handleSeedData = async () => {
+        setIsSeeding(true);
+        toast.loading('Seeding roles & permissions...', { id: 'seed-access' });
+        try {
+            const result = await seedAccessData();
+            if (result?.data) {
+                toast.success(
+                    `Seeded ${result.data.permissionsSeeded} permissions and ${result.data.rolesSeeded} roles successfully!`,
+                    { id: 'seed-access', duration: 5000 }
+                );
+                fetchAccessData?.();
+            } else {
+                toast.error(result?.message || 'Seed failed', { id: 'seed-access' });
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error('Failed to seed access data', { id: 'seed-access' });
+        } finally {
+            setIsSeeding(false);
+        }
+    };
 
     const routes = useMemo(() => [
         { value: 'dashboard', label: 'Dashboard', icon: 'layout-dashboard', component: <AccessDashboard user={session?.user} /> },
         { value: 'users', label: 'Users', icon: 'user', component: <Users /> },
         { value: 'roles', label: 'Roles', icon: 'shield-user', component: <Roles /> },
-        { value: 'permissions', label: 'Permissions', icon: 'key', component: <PermissionMatrix /> }
+        { value: 'permissions', label: 'Permissions', icon: 'key', component: <PermissionTabs /> }
     ], [session?.user]);
 
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -92,20 +117,36 @@ export default function Dashboard() {
                     <h1 className="text-2xl font-bold">Access Management</h1>
                     <p className="text-xs text-muted-foreground">Manage users, roles, and permissions.</p>
                 </div>
-                <ButtonGroup>
-                    {routes?.map((route) => (
-                        <Button
-                            key={route.value}
-                            variant='ghost'
-                            size='sm'
-                            className={`border w-32   ${activeRoute.value === route.value && 'text-primary '}`}
-                            onClick={() => handleTabChange(route.value)}
-                        >
-                            <DynamicIcon name={route.icon} />
-                            <span>{route.label}</span>
-                        </Button>
-                    ))}
-                </ButtonGroup>
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleSeedData}
+                        disabled={isSeeding}
+                        className="gap-2 text-xs border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer"
+                    >
+                        {isSeeding ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                            <DatabaseZap className="w-3.5 h-3.5" />
+                        )}
+                        <span>Seed Roles & Permissions</span>
+                    </Button>
+                    <ButtonGroup>
+                        {routes?.map((route) => (
+                            <Button
+                                key={route.value}
+                                variant='ghost'
+                                size='sm'
+                                className={`border w-32   ${activeRoute.value === route.value && 'text-primary '}`}
+                                onClick={() => handleTabChange(route.value)}
+                            >
+                                <DynamicIcon name={route.icon} />
+                                <span>{route.label}</span>
+                            </Button>
+                        ))}
+                    </ButtonGroup>
+                </div>
             </div>
 
             <div className='grow overflow-y-auto min-h-0'>

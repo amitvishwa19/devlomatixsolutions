@@ -98,10 +98,9 @@ export default function PermissionEditor({
     const actionOptions = [...defaultActionOptions, ...customActions];
 
     useEffect(() => {
-        if (open && category) {
-            setModuleName(category);
-
-            if (mode === "edit" && editData?.permissions) {
+        if (open) {
+            if (mode === "edit" && category && editData?.permissions) {
+                setModuleName(category);
                 const activeActions = [];
                 Object.entries(editData.permissions).forEach(([actionId, perm]) => {
                     if (perm?.status === true) {
