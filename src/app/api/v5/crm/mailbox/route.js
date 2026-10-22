@@ -14,6 +14,7 @@ import {
 } from './_lib/threading';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 import { getUserAuthorizedMailboxes } from './_lib/org-mailboxes';
+import { dispatchMailboxPushNotification } from './_lib/mail-push-service';
 
 /**
  * POST /api/v5/crm/mailbox
@@ -217,6 +218,25 @@ export async function POST(request) {
                     });
                 } catch (socketErr) {
                     console.warn('[SOCKET_BRIDGE_WARN]', socketErr.message);
+                }
+
+                // Step 10: Send Push Notification to Mobile Expo App
+                try {
+                    await dispatchMailboxPushNotification({
+                        workspaceId,
+                        toList,
+                        ccList,
+                        bccList,
+                        fromEmail,
+                        fromName,
+                        rawFrom,
+                        subject,
+                        snippet,
+                        thread,
+                        message
+                    });
+                } catch (pushErr) {
+                    console.error('[CRM_MAILBOX_PUSH_ERR]', pushErr.message);
                 }
 
                 console.log(`[RESEND_INBOUND_SAVED] Message ${message.id} saved to thread ${thread.id} in workspace ${workspaceId}`);

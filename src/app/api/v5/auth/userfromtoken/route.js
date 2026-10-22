@@ -10,12 +10,14 @@ export async function POST(req) {
     try {
         console.log('getting user from token')
         let user = null;
+        let bodyPayload = {};
+        try {
+            bodyPayload = await req.json();
+        } catch (_) {}
+
         let accessToken = req?.headers?.get('Authorization') || req?.headers?.get('authorization');
         if (!accessToken) {
-            try {
-                const body = await req.json();
-                accessToken = body?.token || body?.accessToken || body?.refreshToken;
-            } catch (_) {}
+            accessToken = bodyPayload?.token || bodyPayload?.accessToken || bodyPayload?.refreshToken;
         }
         if (!accessToken) {
             try {
@@ -66,9 +68,13 @@ export async function POST(req) {
             const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
             const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
+            const updateData = { accessToken, refreshToken };
+            if (bodyPayload?.expoPushToken) updateData.expoPushToken = bodyPayload.expoPushToken;
+            if (bodyPayload?.deviceToken) updateData.deviceToken = bodyPayload.deviceToken;
+
             await db.user.update({
                 where: { id: userId },
-                data: { accessToken, refreshToken },
+                data: updateData,
             })
 
             // user = {
