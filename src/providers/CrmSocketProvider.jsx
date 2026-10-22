@@ -418,7 +418,7 @@ export function CrmSocketProvider({ children }) {
       });
 
       s.on('presence:sync', (users) => {
-        setOnlineUsers(users.filter((u) => u.userId !== currentUserId));
+        setOnlineUsers(users.filter((u) => String(u.userId) !== String(currentUserId)));
       });
 
       socketRef.current = s;

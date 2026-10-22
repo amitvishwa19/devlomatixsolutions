@@ -441,8 +441,9 @@ export default function CrmChatPage() {
     };
 
     const isUserOnline = (userId) => {
+        if (!userId) return false;
         if (userId === currentUserId) return isConnected;
-        return onlineUsers.some((u) => u.userId === userId);
+        return onlineUsers.some((u) => String(u?.userId || u?.id) === String(userId));
     };
 
     const currentChatMessages = messages[currentRoomId] || [];
@@ -545,7 +546,22 @@ export default function CrmChatPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-1">
-                                                <h4 className="text-xs font-bold truncate">{member.name}</h4>
+                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                    <h4 className="text-xs font-bold truncate">{member.name}</h4>
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold shrink-0 ${online
+                                                            ? active
+                                                                ? 'bg-emerald-500/20 text-emerald-100'
+                                                                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                            : active
+                                                                ? 'bg-white/10 text-primary-foreground/60'
+                                                                : 'bg-muted text-muted-foreground'
+                                                            }`}
+                                                    >
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                                                        {online ? 'Online' : 'Offline'}
+                                                    </span>
+                                                </div>
                                                 {member.department && (
                                                     <span
                                                         className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${active
@@ -719,9 +735,15 @@ export default function CrmChatPage() {
                                     {remoteTyping ? (
                                         <span className="text-indigo-600 font-medium animate-pulse">{remoteTyping} is typing...</span>
                                     ) : isUserOnline(activeChatUser.id) ? (
-                                        '🟢 Online & Ready to Call'
+                                        <span className="inline-flex items-center gap-1.5 text-emerald-600 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            Online & Ready to Connect
+                                        </span>
                                     ) : (
-                                        activeChatUser.title || activeChatUser.email || 'Available'
+                                        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                            Offline • {activeChatUser.title || activeChatUser.email || 'Member'}
+                                        </span>
                                     )}
                                 </p>
                             </div>
