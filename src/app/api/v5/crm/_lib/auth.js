@@ -58,6 +58,18 @@ export async function validateCrmUserToken(request) {
             }
         }
 
+        // Fallback for NextAuth session (when called from web browser)
+        if (!userId) {
+            try {
+                const { getServerSession } = await import("next-auth");
+                const { authOptions } = await import("@/app/api/auth/[...nextauth]/options");
+                const session = await getServerSession(authOptions);
+                if (session?.user?.userId || session?.user?.id) {
+                    userId = session.user.userId || session.user.id;
+                }
+            } catch (e) {}
+        }
+
         // Fallback for query/header userId (dev or server-to-server)
         if (!userId) {
             const fallbackId = searchParams.get("userId") || request.headers.get("x-user-id");

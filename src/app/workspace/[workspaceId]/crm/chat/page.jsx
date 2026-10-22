@@ -119,18 +119,37 @@ export default function CrmChatPage() {
     const messagesEndRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
-    // 1. Fetch Real Team Members from Database
+    // 1. Fetch Real Team Members from Database (Unified with Org Builder via /api/v5/crm/team)
     useEffect(() => {
         async function loadTeamMembers() {
             if (!workspaceId) return;
             setLoadingTeam(true);
             try {
+                // Fetch directly from CRM Team REST API (same endpoint verified on mobile)
+                const apiRes = await fetch(`/api/v5/crm/team?workspaceId=${workspaceId}`);
+                if (apiRes.ok) {
+                    const json = await apiRes.json();
+                    if (json.success && Array.isArray(json.data)) {
+                        setTeamMembers(json.data);
+                        return;
+                    }
+                }
+
+                // Fallback to Server Action if needed
                 const res = await getCrmTeamMembersAction(workspaceId);
                 if (res.success && res.data) {
                     setTeamMembers(res.data);
                 }
             } catch (err) {
-                console.warn('Failed to load team members for chat:', err);
+                console.warn('Failed to load team members via API, trying action:', err);
+                try {
+                    const res = await getCrmTeamMembersAction(workspaceId);
+                    if (res.success && res.data) {
+                        setTeamMembers(res.data);
+                    }
+                } catch (actionErr) {
+                    console.warn('Action fallback also failed:', actionErr);
+                }
             } finally {
                 setLoadingTeam(false);
             }
@@ -204,7 +223,8 @@ export default function CrmChatPage() {
         return (
             member.name?.toLowerCase().includes(q) ||
             member.email?.toLowerCase().includes(q) ||
-            member.title?.toLowerCase().includes(q)
+            member.title?.toLowerCase().includes(q) ||
+            member.department?.toLowerCase().includes(q)
         );
     });
 
@@ -486,8 +506,16 @@ export default function CrmChatPage() {
                                 <span className="text-xs">Loading sales team...</span>
                             </div>
                         ) : filteredTeamMembers.length === 0 ? (
-                            <div className="p-6 text-center text-xs text-muted-foreground">
-                                No team members found
+                            <div className="p-6 text-center text-xs text-muted-foreground flex flex-col items-center gap-1.5">
+                                <Building2 className="w-8 h-8 text-muted-foreground/40 mb-1" />
+                                <span className="font-semibold text-foreground">
+                                    {teamMembers.length === 0 ? 'No Org Members Assigned' : 'No matching team members'}
+                                </span>
+                                <span className="text-[11px] max-w-[200px] leading-relaxed">
+                                    {teamMembers.length === 0
+                                        ? 'Assign team members to roles in Settings > Org Builder to chat with them here.'
+                                        : `No members matching "${searchQuery}"`}
+                                </span>
                             </div>
                         ) : (
                             filteredTeamMembers.map((member) => {
@@ -518,6 +546,16 @@ export default function CrmChatPage() {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between gap-1">
                                                 <h4 className="text-xs font-bold truncate">{member.name}</h4>
+                                                {member.department && (
+                                                    <span
+                                                        className={`text-[9px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ${active
+                                                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                                                            : 'bg-muted text-muted-foreground border border-border/50'
+                                                            }`}
+                                                    >
+                                                        {member.department}
+                                                    </span>
+                                                )}
                                             </div>
                                             <p className={`text-[11px] truncate ${active ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>
                                                 {member.title || member.email}

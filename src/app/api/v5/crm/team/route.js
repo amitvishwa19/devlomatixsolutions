@@ -11,42 +11,89 @@ export async function GET(request) {
         const auth = await validateCrmUserToken(request);
         if (!auth.authenticated) return apiError(auth.error, auth.status);
 
-        // Fetch all users and workspace members in parallel
-        const [users, members] = await Promise.all([
-            prisma.user.findMany({
-                select: {
-                    id: true,
-                    displayName: true,
-                    username: true,
-                    email: true,
-                    phone: true,
-                    avatar: true,
-                    role: true,
-                    roles: {
-                        select: { id: true, title: true, color: true }
-                    }
-                },
-                orderBy: { createdAt: 'desc' }
-            }),
-            prisma.member.findMany({
-                where: { serverId: auth.workspaceId },
-                select: { userId: true, role: true }
-            })
-        ]);
+        // 1. Fetch Org Builder Structure (Universal Global or Workspace-specific)
+        const globalRecord = await prisma.appSettings.findUnique({
+            where: { key: 'org_structure_global' }
+        }).catch(() => null);
 
-        const memberRoleMap = {};
-        for (const m of members) {
-            if (m.userId) memberRoleMap[m.userId] = m.role;
+        let structure = null;
+        if (globalRecord?.general && typeof globalRecord.general === 'object') {
+            structure = globalRecord.general;
+        } else if (auth.workspaceId && auth.workspaceId !== 'global') {
+            const wsRecord = await prisma.appSettings.findUnique({
+                where: { key: `org_structure_${auth.workspaceId}` }
+            }).catch(() => null);
+            if (wsRecord?.general && typeof wsRecord.general === 'object') {
+                structure = wsRecord.general;
+            }
         }
 
+        // 2. Extract assigned user IDs and role metadata from Org Builder nodes
+        const nodes = structure?.nodes || {};
+        const userOrgMap = {};
+        const assignedUserIdsSet = new Set();
+
+        Object.values(nodes).forEach((node) => {
+            if (Array.isArray(node.assignedUserIds)) {
+                node.assignedUserIds.forEach((uid) => {
+                    if (uid) {
+                        const cleanUid = String(uid);
+                        assignedUserIdsSet.add(cleanUid);
+                        if (!userOrgMap[cleanUid]) {
+                            userOrgMap[cleanUid] = {
+                                title: node.title || 'Team Member',
+                                department: node.department || 'General',
+                                color: node.color || '#8b5cf6',
+                                order: node.order || 0
+                            };
+                        } else {
+                            if (node.title && !userOrgMap[cleanUid].title.includes(node.title)) {
+                                userOrgMap[cleanUid].title += `, ${node.title}`;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
+        const assignedUserIds = Array.from(assignedUserIdsSet);
+
+        // If no members are assigned in Org Builder, return empty list
+        if (assignedUserIds.length === 0) {
+            return apiSuccess([], {
+                total: 0,
+                orgConfigured: !!structure,
+                message: 'No organization members assigned in Org Builder'
+            });
+        }
+
+        // 3. Query only users assigned to Org Builder nodes
+        const users = await prisma.user.findMany({
+            where: { id: { in: assignedUserIds } },
+            select: {
+                id: true,
+                displayName: true,
+                username: true,
+                email: true,
+                phone: true,
+                avatar: true,
+                role: true,
+                roles: {
+                    select: { id: true, title: true, color: true }
+                }
+            },
+            orderBy: { createdAt: 'asc' }
+        });
+
         const teamList = users.map((u) => {
+            const orgMeta = userOrgMap[u.id];
             const roleTitle =
+                orgMeta?.title ||
                 (Array.isArray(u.roles) && u.roles.length > 0
                     ? u.roles.map((r) => r.title).filter(Boolean).join(', ')
                     : null) ||
-                memberRoleMap[u.id] ||
                 u.role ||
-                'Sales Executive';
+                'Sales Member';
 
             return {
                 id: u.id,
@@ -55,11 +102,13 @@ export async function GET(request) {
                 phone: u.phone || '',
                 avatar: u.avatar || null,
                 role: roleTitle,
+                department: orgMeta?.department || 'General',
+                nodeColor: orgMeta?.color || '#8b5cf6',
                 isCurrent: u.id === auth.userId,
             };
         });
 
-        return apiSuccess(teamList, { total: teamList.length });
+        return apiSuccess(teamList, { total: teamList.length, orgConfigured: true });
     } catch (error) {
         console.error('[API_CRM_GET_TEAM_ERROR]', error);
         return apiError(error.message || 'Failed to fetch sales team', 500);
