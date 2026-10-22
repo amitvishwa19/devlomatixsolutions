@@ -130,8 +130,7 @@ export async function dispatchMailboxPushNotification({
             return { sent: 0, reason: 'no_push_tokens' };
         }
 
-        const senderDisplayName = fromName ? `${fromName}` : (fromEmail || 'Someone');
-        const pushTitle = `📧 ${senderDisplayName}`;
+        const pushTitle = `📧 ${fromEmail || fromName || 'New Email'}`;
         const cleanSnippet = (snippet || '').replace(/\s+/g, ' ').trim();
         const pushBody = subject
             ? (cleanSnippet ? `${subject} — ${cleanSnippet.slice(0, 100)}` : subject)

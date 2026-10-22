@@ -275,7 +275,7 @@ export default function WorkspaceMessageNotifier() {
 
             const currentWsId = workspaceIdRef.current || data.workspaceId;
             const threadId = data.threadId;
-            const senderName = data.contactName || data.fromName || data.fromEmail || data.from || 'New Email';
+            const senderEmail = data.fromEmail || data.from || data.contactName || data.fromName || 'New Email';
             const subject = data.subject || '(No Subject)';
             const snippet = data.snippet || 'You received a new email';
 
@@ -288,7 +288,7 @@ export default function WorkspaceMessageNotifier() {
 
             // Background tab notification & title flashing
             if (typeof document !== 'undefined' && document.hidden) {
-                startTitleFlashing(`✉️ ${senderName}: ${subject.slice(0, 30)}`);
+                startTitleFlashing(`✉️ ${senderEmail}: ${subject.slice(0, 30)}`);
             }
 
             // Record in Notification Center (Top navbar bell drawer)
@@ -296,10 +296,10 @@ export default function WorkspaceMessageNotifier() {
                 addNotification({
                     id: `email_${data.messageId || threadId}_${Date.now()}`,
                     type: 'EMAIL',
-                    title: `Email: ${senderName}`,
+                    title: `Email: ${senderEmail}`,
                     message: `${subject} - ${snippet}`,
                     link: currentWsId ? `/workspace/${currentWsId}/crm/mailbox?threadId=${encodeURIComponent(threadId)}` : null,
-                    metadata: { threadId, messageId: data.messageId, senderName, subject }
+                    metadata: { threadId, messageId: data.messageId, senderEmail, subject }
                 }, { silent: true });
             }
 
@@ -328,7 +328,7 @@ export default function WorkspaceMessageNotifier() {
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1 mb-0.5">
                             <h4 className="text-xs font-bold text-white truncate group-hover:text-blue-400 transition-colors">
-                                {senderName}
+                                {senderEmail}
                             </h4>
                             <span className="text-[10px] text-slate-400 shrink-0 font-medium">Just now</span>
                         </div>
