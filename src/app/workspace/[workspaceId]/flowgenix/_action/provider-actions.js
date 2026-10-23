@@ -183,6 +183,7 @@ function resolveProviderUrl(provider, customBaseUrl) {
         case "openrouter": return "https://openrouter.ai/api/v1";
         case "nvidia": return "https://integrate.api.nvidia.com/v1";
         case "ollama": return "http://localhost:11434/v1";
+        case "ollama-cloud": return "https://ollama.com/v1";
         case "freemodel": return "https://freemodel.dev/api/v1";
         case "anthropic": return "https://api.anthropic.com/v1";
         default: return "https://api.openai.com/v1";
@@ -252,7 +253,7 @@ export async function testProviderConnectionAction({ id, workspaceId }) {
 function resolveChatEndpoint(provider, customBaseUrl) {
     let base = resolveProviderUrl(provider, customBaseUrl);
     base = base.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
-    if (provider?.toLowerCase() === "ollama" && !/\/v\d+$/.test(base)) {
+    if (["ollama", "ollama-cloud"].includes(provider?.toLowerCase()) && !/\/v\d+$/.test(base)) {
         base = `${base}/v1`;
     }
     return `${base}/chat/completions`;
@@ -423,7 +424,8 @@ export async function validateApiKeyAction({ provider, apiKey, baseUrl, validati
             "deepseek": ["deepseek-chat", "deepseek-reasoner"],
             "groq": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
             "openrouter": ["anthropic/claude-3.7-sonnet", "deepseek/deepseek-r1", "google/gemini-2.0-flash-001", "meta-llama/llama-3.1-8b-instruct:free", "qwen/qwen-2.5-coder-32b-instruct"],
-            "ollama": ["llama3.2:latest", "deepseek-r1:14b", "qwen2.5:7b"]
+            "ollama": ["llama3.2:latest", "deepseek-r1:14b", "qwen2.5:7b"],
+            "ollama-cloud": ["gpt-oss:120b", "gemma4:31b", "deepseek-v4.1-flash", "glm-5.3"]
         };
 
         const targetUrl = resolveProviderUrl(provider, baseUrl);

@@ -9,6 +9,7 @@ export const PROVIDER_PRESETS = {
   Mistral: { baseURL: "https://api.mistral.ai/v1", model: "mistral-large-latest" },
   NVIDIA: { baseURL: "https://integrate.api.nvidia.com/v1", model: "meta/llama-3.1-405b-instruct" },
   Ollama: { baseURL: "http://localhost:11434/v1", model: "llama3.1" },
+  OllamaCloud: { baseURL: "https://ollama.com/v1", model: "gpt-oss:120b" },
   Custom: { baseURL: "", model: "" },
 };
 

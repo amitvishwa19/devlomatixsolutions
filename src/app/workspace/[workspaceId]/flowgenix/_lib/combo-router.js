@@ -68,7 +68,8 @@ const DEFAULT_PROVIDER_MODELS = {
     "anthropic": "claude-3-5-haiku-20241022",
     "openrouter": "auto",
     "nvidia": "meta/llama-3.1-405b-instruct",
-    "ollama": "llama3.2:latest"
+    "ollama": "llama3.2:latest",
+    "ollama-cloud": "gpt-oss:120b"
 };
 
 /**
@@ -78,6 +79,9 @@ export function getProviderBaseUrl(providerId, customBaseUrl = null) {
     if (customBaseUrl && customBaseUrl.trim()) {
         let url = customBaseUrl.trim().replace(/\/+$/, "");
         url = url.replace(/\/chat\/completions$/, "").replace(/\/completions$/, "");
+        if (["ollama", "ollama-cloud"].includes(providerId?.toLowerCase()) && !/\/v\d+$/.test(url)) {
+            url = `${url}/v1`;
+        }
         return url;
     }
 
@@ -89,6 +93,7 @@ export function getProviderBaseUrl(providerId, customBaseUrl = null) {
         case "openrouter": return "https://openrouter.ai/api/v1";
         case "nvidia": return "https://integrate.api.nvidia.com/v1";
         case "ollama": return "http://localhost:11434/v1";
+        case "ollama-cloud": return "https://ollama.com/v1";
         case "freemodel": return "https://freemodel.dev/api/v1";
         case "anthropic": return "https://api.anthropic.com/v1";
         default: return "https://api.openai.com/v1";
@@ -112,7 +117,7 @@ export async function resolveCandidateTargets(workspaceId, requestedModel) {
         const prov = parts[0].toLowerCase();
         const modelName = parts.slice(1).join("/");
 
-        const knownProviders = ["openrouter", "openai", "anthropic", "google", "deepseek", "groq", "ollama", "nvidia", "freemodel"];
+        const knownProviders = ["openrouter", "openai", "anthropic", "google", "deepseek", "groq", "ollama", "ollama-cloud", "nvidia", "freemodel"];
         if (knownProviders.includes(prov)) {
             initialTargets = [{ provider: prov, model: modelName, name: `${prov}/${modelName}` }];
         }

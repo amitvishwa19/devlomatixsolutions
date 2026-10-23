@@ -49,6 +49,7 @@ export const MODEL_PRICING = {
 export const PROVIDER_FALLBACK_PRICING = {
     "freemodel": { in: 0.00, out: 0.00, tier: "free" },
     "ollama": { in: 0.00, out: 0.00, tier: "free" },
+    "ollama-cloud": { in: 0.15, out: 0.60, tier: "paid" },
     "nvidia": { in: 0.00, out: 0.00, tier: "free" },
     "groq": { in: 0.05, out: 0.08, tier: "free_eligible" },
     "google": { in: 0.10, out: 0.40, tier: "free_eligible" },

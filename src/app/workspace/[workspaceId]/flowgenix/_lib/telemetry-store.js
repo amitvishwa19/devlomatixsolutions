@@ -20,7 +20,8 @@ export const PROVIDER_PRICING = {
     "openai": { in: 0.15, out: 0.60, name: "OpenAI" },
     "anthropic": { in: 0.80, out: 4.00, name: "Anthropic Claude" },
     "nvidia": { in: 0.00, out: 0.00, name: "NVIDIA NIM" },
-    "ollama": { in: 0.00, out: 0.00, name: "Ollama Local GPU" }
+    "ollama": { in: 0.00, out: 0.00, name: "Ollama Local GPU" },
+    "ollama-cloud": { in: 0.15, out: 0.60, name: "Ollama Cloud" }
 };
 
 /**

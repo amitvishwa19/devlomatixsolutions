@@ -94,6 +94,7 @@ export function ProvidersTab({ workspaceId }) {
         { id: "groq", name: "Groq Cloud", category: "free", authType: "Free Tier API Key", defaultModels: ["llama-3.3-70b-versatile", "mixtral-8x7b"], isFreeTier: true, defaultUrl: "https://api.groq.com/openai/v1" },
         { id: "google", name: "Google AI Studio", category: "free", authType: "Free Tier API Key", defaultModels: ["gemini-2.0-flash", "gemini-1.5-pro"], isFreeTier: true, defaultUrl: "https://generativelanguage.googleapis.com" },
         { id: "openrouter", name: "OpenRouter", category: "all", authType: "API Key", defaultModels: ["auto", "anthropic/claude-3.5-sonnet", "deepseek/deepseek-r1"], isFreeTier: true, defaultUrl: "https://openrouter.ai/api/v1" },
+        { id: "ollama-cloud", name: "Ollama Cloud", category: "free", authType: "API Key", defaultModels: ["gpt-oss:120b", "gemma4:31b", "deepseek-v4.1-flash", "glm-5.3"], isFreeTier: true, defaultUrl: "https://ollama.com/v1" },
         { id: "ollama", name: "Ollama (Local GPU)", category: "local", authType: "Local / No Key", defaultModels: ["llama3.2:latest", "deepseek-r1:14b"], isFreeTier: true, defaultUrl: "http://localhost:11434" }
     ];
 
@@ -519,7 +520,7 @@ export function ProvidersTab({ workspaceId }) {
                     </div>
                     <button
                         onClick={() => setActiveDetailProvider(null)}
-                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-semibold transition-colors"
+                        className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 font-semibold transition-colors cursor-pointer"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" /> Back to Providers
                     </button>
@@ -532,7 +533,7 @@ export function ProvidersTab({ workspaceId }) {
                     </div>
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-xl">{activeDetailProvider.name}</h1>
+                            <h1 className="text-lg font-bold">{activeDetailProvider.name}</h1>
                             <ExternalLink className="w-4 h-4 text-muted-foreground hover:text-primary cursor-pointer" />
                         </div>
                         <span className="text-xs text-muted-foreground font-mono">{configuredConnections.length} connections</span>

@@ -53,6 +53,7 @@ function defaultModelsFor(provider) {
         case "google": return ["gemini-2.0-flash", "gemini-1.5-pro"];
         case "openrouter": return ["auto", "anthropic/claude-3.5-sonnet", "deepseek/deepseek-r1"];
         case "ollama": return ["llama3.2:latest", "deepseek-r1:14b"];
+        case "ollama-cloud": return ["gpt-oss:120b", "gemma4:31b", "deepseek-v4.1-flash", "glm-5.3"];
         default: return [];
     }
 }
