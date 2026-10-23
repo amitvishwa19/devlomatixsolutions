@@ -6,13 +6,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-    Copy, 
-    Check, 
-    Code2, 
-    ShieldAlert, 
-    ShieldCheck, 
-    RefreshCw, 
+import {
+    Copy,
+    Check,
+    Code2,
+    ShieldAlert,
+    ShieldCheck,
+    RefreshCw,
     Sliders,
     Key,
     Plus,
@@ -29,7 +29,7 @@ export function IntegrationsTab({ workspaceId }) {
     const [origin, setOrigin] = useState('http://localhost:3000');
     const [copiedSnippet, setCopiedSnippet] = useState(null);
     const [selectedTargetModel, setSelectedTargetModel] = useState('auto/coding');
-    
+
     // Circuit Breaker state
     const [circuitStatuses, setCircuitStatuses] = useState([]);
     const [loadingBreaker, setLoadingBreaker] = useState(false);
@@ -237,7 +237,7 @@ async function main() {
 main();`;
 
     return (
-        <div className="space-y-4 max-w-6xl mx-auto pb-12">
+        <div className="space-y-4  mx-auto pb-12">
             {/* Header Hero */}
             <div className="p-4 rounded-xl bg-card/60 backdrop-blur-md border border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -269,8 +269,8 @@ main();`;
                     <div className="flex items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border/40 text-xs">
                         <Sliders className="w-3.5 h-3.5 text-primary" />
                         <span className="font-semibold text-muted-foreground">Default Route:</span>
-                        <select 
-                            value={selectedTargetModel} 
+                        <select
+                            value={selectedTargetModel}
                             onChange={(e) => setSelectedTargetModel(e.target.value)}
                             className="bg-transparent font-mono font-bold text-primary focus:outline-none cursor-pointer"
                         >
@@ -299,10 +299,10 @@ main();`;
                         </div>
                     </div>
 
-                    <Button 
-                        size="sm" 
-                        variant="default" 
-                        onClick={() => setIsCreatingKey(!isCreatingKey)} 
+                    <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => setIsCreatingKey(!isCreatingKey)}
                         className="h-7 text-xs px-2 gap-1 font-semibold"
                     >
                         <Plus className="w-3 h-3" /> Create API Key
@@ -316,9 +316,9 @@ main();`;
                                 <span className="flex items-center gap-1.5">
                                     <Lock className="w-3.5 h-3.5" /> New Key Created (Save this now! It won't be shown again)
                                 </span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-6 text-[10px] gap-1 font-mono"
                                     onClick={() => copyToClipboard(newlyCreatedSecret, 'new-secret')}
                                 >
@@ -337,16 +337,16 @@ main();`;
                         <form onSubmit={handleCreateKey} className="p-3 rounded-lg bg-muted/40 border border-border/50 space-y-2 text-xs">
                             <div className="flex items-center gap-2 flex-wrap">
                                 <div className="flex-1 min-w-[200px]">
-                                    <Input 
-                                        placeholder="Key Label (e.g. Cursor Pro, Claude Code CLI)" 
-                                        value={newKeyLabel} 
-                                        onChange={(e) => setNewKeyLabel(e.target.value)} 
+                                    <Input
+                                        placeholder="Key Label (e.g. Cursor Pro, Claude Code CLI)"
+                                        value={newKeyLabel}
+                                        onChange={(e) => setNewKeyLabel(e.target.value)}
                                         className="h-8 text-xs bg-background"
                                         autoFocus
                                     />
                                 </div>
-                                <select 
-                                    value={newKeyScope} 
+                                <select
+                                    value={newKeyScope}
                                     onChange={(e) => setNewKeyScope(e.target.value)}
                                     className="h-8 px-2 bg-background border border-border rounded-md text-xs font-mono"
                                 >
@@ -383,9 +383,9 @@ main();`;
                                         <div className="font-mono text-[11px] text-muted-foreground">{key.maskedKey}</div>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Button 
-                                            size="sm" 
-                                            variant="ghost" 
+                                        <Button
+                                            size="sm"
+                                            variant="ghost"
                                             className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
                                             onClick={() => handleRevokeKey(key.id)}
                                             title="Revoke Key"
@@ -414,7 +414,7 @@ main();`;
                                 Circuit Breaker Live Status
                             </CardTitle>
                             <CardDescription className="text-[11px]">
-                                {circuitStatuses.length > 0 
+                                {circuitStatuses.length > 0
                                     ? `${circuitStatuses.length} upstream endpoint(s) currently suspended in cooldown`
                                     : "All upstream provider circuits are healthy and closed."}
                             </CardDescription>
@@ -422,19 +422,19 @@ main();`;
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                        <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={loadCircuitStatuses} 
-                            disabled={loadingBreaker} 
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={loadCircuitStatuses}
+                            disabled={loadingBreaker}
                             className="h-7 text-xs px-2"
                         >
                             <RefreshCw className={`w-3 h-3 ${loadingBreaker ? 'animate-spin' : ''}`} />
                         </Button>
                         {circuitStatuses.length > 0 && (
-                            <Button 
-                                size="sm" 
-                                variant="destructive" 
+                            <Button
+                                size="sm"
+                                variant="destructive"
                                 onClick={handleResetAllCircuits}
                                 className="h-7 text-xs font-semibold px-2"
                             >
@@ -486,9 +486,9 @@ main();`;
                         <CardHeader className="p-3 border-b border-border/40">
                             <CardTitle className="text-xs font-bold flex items-center justify-between">
                                 <span>Cursor AI Settings Setup</span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-7 text-xs gap-1 font-semibold"
                                     onClick={() => copyToClipboard(gatewayBaseUrl, 'cursor-url')}
                                 >
@@ -523,9 +523,9 @@ main();`;
                                     <pre className="p-3 bg-black/40 rounded-lg border border-border/40 font-mono text-[11px] text-muted-foreground overflow-x-auto">
                                         {cursorConfigSnippet}
                                     </pre>
-                                    <Button 
-                                        size="sm" 
-                                        variant="outline" 
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
                                         className="absolute top-2 right-2 h-6 px-2 text-[10px] gap-1 font-semibold"
                                         onClick={() => copyToClipboard(cursorConfigSnippet, 'cursor-json')}
                                     >
@@ -544,9 +544,9 @@ main();`;
                         <CardHeader className="p-3 border-b border-border/40">
                             <CardTitle className="text-xs font-bold flex items-center justify-between">
                                 <span>Claude Code CLI Terminal Setup</span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-7 text-xs gap-1 font-semibold"
                                     onClick={() => copyToClipboard(claudeCodeExport, 'claude-cli')}
                                 >
@@ -574,9 +574,9 @@ main();`;
                         <CardHeader className="p-3 border-b border-border/40">
                             <CardTitle className="text-xs font-bold flex items-center justify-between">
                                 <span>Cline & Roo Code Extension Config</span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-7 text-xs gap-1 font-semibold"
                                     onClick={() => copyToClipboard(clineConfigSnippet, 'cline-json')}
                                 >
@@ -601,9 +601,9 @@ main();`;
                         <CardHeader className="p-3 border-b border-border/40">
                             <CardTitle className="text-xs font-bold flex items-center justify-between">
                                 <span>Python (openai library)</span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-7 text-xs gap-1 font-semibold"
                                     onClick={() => copyToClipboard(pythonSnippet, 'python-code')}
                                 >
@@ -628,9 +628,9 @@ main();`;
                         <CardHeader className="p-3 border-b border-border/40">
                             <CardTitle className="text-xs font-bold flex items-center justify-between">
                                 <span>Node.js / TypeScript (openai npm package)</span>
-                                <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="h-7 text-xs gap-1 font-semibold"
                                     onClick={() => copyToClipboard(nodeSnippet, 'node-code')}
                                 >
