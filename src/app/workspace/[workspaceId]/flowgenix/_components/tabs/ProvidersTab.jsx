@@ -26,7 +26,9 @@ import {
     ExternalLink,
     Loader2,
     Check,
-    X
+    X,
+    Play,
+    FlaskConical
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -35,13 +37,25 @@ import {
     toggleProviderStatusAction,
     testProviderConnectionAction,
     deleteProviderAction,
-    validateApiKeyAction
+    validateApiKeyAction,
+    testModelAction
 } from '../../_action/provider-actions';
+
+function parseConnectionModels(provider, fallbackModels = []) {
+    const imported = Array.isArray(provider?.metadata?.importedModels) ? provider.metadata.importedModels : null;
+    if (imported && imported.length > 0) return imported;
+    const match = (provider?.description || "").match(/Imported Models:\s*(.+)/i);
+    if (match && match[1]) return match[1].split(",").map(m => m.trim()).filter(Boolean);
+    return fallbackModels;
+}
 
 export function ProvidersTab({ workspaceId }) {
     const [providers, setProviders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [testingId, setTestingId] = useState(null);
+    const [modelTestResults, setModelTestResults] = useState({});
+    const [testingModelKey, setTestingModelKey] = useState(null);
+    const [testingAllModels, setTestingAllModels] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [configuredOnly, setConfiguredOnly] = useState(false);
@@ -200,6 +214,71 @@ export function ProvidersTab({ workspaceId }) {
         }
     };
 
+    const modelKey = (entry) => `${entry.providerId}:${entry.model}`;
+
+    const getModelResult = (entry) => modelTestResults[modelKey(entry)] || entry.storedResult || null;
+
+    const runModelTest = async (entry) => {
+        const key = modelKey(entry);
+        const res = await testModelAction({ id: entry.providerId, model: entry.model, workspaceId });
+        const result = res.success
+            ? res.data
+            : { ok: false, status: 0, latencyMs: 0, error: res.error || "Model test failed" };
+        setModelTestResults(prev => ({ ...prev, [key]: result }));
+        return result;
+    };
+
+    const handleTestModel = async (entry) => {
+        if (testingModelKey || testingAllModels) return;
+        setTestingModelKey(modelKey(entry));
+        try {
+            const result = await runModelTest(entry);
+            if (result.ok) {
+                toast.success(`${entry.model} responded in ${result.latencyMs}ms`);
+            } else {
+                toast.error(`${entry.model}: ${result.error || "Test failed"}`);
+            }
+        } catch (err) {
+            toast.error(err.message || "Model test failed");
+        } finally {
+            setTestingModelKey(null);
+        }
+    };
+
+    const handleTestAllModels = async (entries) => {
+        if (testingAllModels || testingModelKey || entries.length === 0) return;
+        setTestingAllModels(true);
+        let passed = 0;
+        let failed = 0;
+
+        try {
+            const batchSize = 3;
+            for (let i = 0; i < entries.length; i += batchSize) {
+                const batch = entries.slice(i, i + batchSize);
+                const batchResults = await Promise.all(batch.map(async (entry) => {
+                    const key = modelKey(entry);
+                    setModelTestResults(prev => ({ ...prev, [key]: { ...(prev[key] || {}), testing: true } }));
+                    try {
+                        return await runModelTest(entry);
+                    } catch (err) {
+                        const result = { ok: false, status: 0, latencyMs: 0, error: err.message || "Model test failed" };
+                        setModelTestResults(prev => ({ ...prev, [key]: result }));
+                        return result;
+                    }
+                }));
+                batchResults.forEach(result => result.ok ? passed++ : failed++);
+            }
+
+            if (failed === 0) {
+                toast.success(`All ${passed} models passed`);
+            } else {
+                toast.error(`${passed} passed, ${failed} failed`);
+            }
+        } finally {
+            setTestingAllModels(false);
+        }
+    };
+
     const resetForm = () => {
         setFormData({
             id: '',
@@ -330,7 +409,7 @@ export function ProvidersTab({ workspaceId }) {
                         <div className="space-y-0.5 text-left">
                             <label className="text-xs font-bold text-foreground block">Import only free models</label>
                             <p className="text-[10px] text-muted-foreground">
-                                When enabled, only this provider's free models are imported. Paid models are skipped.
+                                When enabled, only this provider&apos;s free models are imported. Paid models are skipped.
                             </p>
                         </div>
                         <Switch
@@ -361,7 +440,7 @@ export function ProvidersTab({ workspaceId }) {
                                         className="bg-[#1e2230] border-border/30 text-xs h-10 rounded-lg"
                                     />
                                     <p className="text-[10px] text-muted-foreground">
-                                        Model used to verify the API key. Leave blank to use provider's first available model.
+                                        Model used to verify the API key. Leave blank to use provider&apos;s first available model.
                                     </p>
                                 </div>
 
@@ -405,6 +484,27 @@ export function ProvidersTab({ workspaceId }) {
     // Render Provider Detail Screen matching Screenshot #1
     if (activeDetailProvider) {
         const configuredConnections = providers.filter(p => p.provider === activeDetailProvider.id);
+        const configuredModels = (() => {
+            const seen = new Set();
+            const entries = [];
+            for (const conn of configuredConnections) {
+                const models = parseConnectionModels(conn, activeDetailProvider.defaultModels);
+                const storedHealth = conn.metadata?.modelHealth && typeof conn.metadata.modelHealth === "object"
+                    ? conn.metadata.modelHealth
+                    : {};
+                for (const model of models) {
+                    if (seen.has(model)) continue;
+                    seen.add(model);
+                    entries.push({
+                        model,
+                        providerId: conn.id,
+                        connectionName: conn.name,
+                        storedResult: storedHealth[model] || null
+                    });
+                }
+            }
+            return entries;
+        })();
 
         return (
             <div className="space-y-6 pb-6">
@@ -491,19 +591,93 @@ export function ProvidersTab({ workspaceId }) {
                     </CardContent>
                 </Card>
 
-                {/* Available Models Block */}
+                {/* Configured Models List */}
                 <Card className="border border-border/50 bg-card/40">
-                    <CardHeader className="p-5 pb-3">
-                        <CardTitle className="text-sm font-bold">Available Models</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-5 pt-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                            {activeDetailProvider.defaultModels.map((model, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs font-mono bg-secondary/50 p-2">
-                                    {model}
-                                </Badge>
-                            ))}
+                    <CardHeader className="p-5 pb-3 flex flex-row items-start justify-between gap-3">
+                        <div>
+                            <CardTitle className="text-sm font-bold flex items-center gap-2">
+                                <FlaskConical className="w-4 h-4 text-primary" /> Available Models
+                            </CardTitle>
+                            <CardDescription className="text-xs mt-1">
+                                {configuredModels.length} model{configuredModels.length === 1 ? "" : "s"} imported from {configuredConnections.length} connection{configuredConnections.length === 1 ? "" : "s"}
+                            </CardDescription>
                         </div>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs font-bold gap-1.5 shrink-0"
+                            disabled={testingAllModels || testingModelKey !== null || configuredModels.length === 0}
+                            onClick={() => handleTestAllModels(configuredModels)}
+                        >
+                            {testingAllModels ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                            {testingAllModels ? "Testing All..." : "Test All Models"}
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        {configuredModels.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10 text-center px-5">
+                                <div className="p-3 rounded-full bg-secondary/30 text-purple-400 mb-3 border border-border/30">
+                                    <FlaskConical className="w-5 h-5" />
+                                </div>
+                                <h4 className="text-sm font-bold text-foreground mb-1">No models imported</h4>
+                                <p className="text-xs text-muted-foreground">Add a connection above to import and test models.</p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-border/30 border-t border-border/30">
+                                {configuredModels.map((entry) => {
+                                    const key = modelKey(entry);
+                                    const result = getModelResult(entry);
+                                    const isTesting = testingModelKey === key || Boolean(result?.testing);
+                                    const otherTesting = testingAllModels || (testingModelKey !== null && testingModelKey !== key);
+
+                                    return (
+                                        <div key={key} className="flex items-center justify-between gap-3 px-5 py-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <span className="font-mono text-xs font-bold text-foreground truncate" title={entry.model}>
+                                                        {entry.model}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                    <span className="text-[10px] text-muted-foreground font-mono truncate">
+                                                        {entry.connectionName}
+                                                    </span>
+                                                    {isTesting ? (
+                                                        <Badge className="text-[9px] font-mono px-1.5 py-0 bg-secondary text-muted-foreground border-border/40">
+                                                            Testing...
+                                                        </Badge>
+                                                    ) : result ? (
+                                                        <Badge className={`text-[9px] font-mono px-1.5 py-0 border ${result.ok ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20" : "bg-red-500/15 text-red-400 border-red-500/20"}`}>
+                                                            {result.ok ? `Passed • ${result.latencyMs}ms` : "Failed"}
+                                                        </Badge>
+                                                    ) : (
+                                                        <Badge className="text-[9px] font-mono px-1.5 py-0 bg-secondary text-muted-foreground border-border/40">
+                                                            Untested
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                {!isTesting && result && !result.ok && result.error && (
+                                                    <p className="text-[10px] text-red-400/80 truncate mt-1" title={result.error}>
+                                                        {result.error}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-7 px-2.5 text-[11px] font-bold gap-1.5 shrink-0"
+                                                disabled={testingAllModels || testingModelKey !== null}
+                                                onClick={() => handleTestModel(entry)}
+                                                title={otherTesting ? "Another test is running" : `Test ${entry.model}`}
+                                            >
+                                                {isTesting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                                                {isTesting ? "Testing" : "Test Model"}
+                                            </Button>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 {renderAddModal()}

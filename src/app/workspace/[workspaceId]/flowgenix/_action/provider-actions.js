@@ -249,6 +249,154 @@ export async function testProviderConnectionAction({ id, workspaceId }) {
     }
 }
 
+function resolveChatEndpoint(provider, customBaseUrl) {
+    let base = resolveProviderUrl(provider, customBaseUrl);
+    base = base.replace(/\/+$/, "").replace(/\/chat\/completions$/, "");
+    if (provider?.toLowerCase() === "ollama" && !/\/v\d+$/.test(base)) {
+        base = `${base}/v1`;
+    }
+    return `${base}/chat/completions`;
+}
+
+/**
+ * Send a tiny completion request to a single model and measure its response.
+ */
+async function runModelTest(provider, model) {
+    const startTime = Date.now();
+    const cleanKey = (provider.apiKey || "").replace(/^Bearer\s+/i, "").trim();
+    const providerId = (provider.provider || "").toLowerCase();
+    const isAnthropicNative = providerId === "anthropic" && cleanKey.startsWith("sk-ant-");
+
+    let endpoint;
+    let headers;
+    let body;
+
+    if (isAnthropicNative) {
+        endpoint = `${resolveProviderUrl(provider.provider, provider.baseUrl).replace(/\/+$/, "")}/messages`;
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": cleanKey,
+            "anthropic-version": "2023-06-01"
+        };
+        body = {
+            model,
+            max_tokens: 16,
+            messages: [{ role: "user", content: "Reply with the single word OK." }]
+        };
+    } else {
+        endpoint = resolveChatEndpoint(provider.provider, provider.baseUrl);
+        headers = {
+            "Content-Type": "application/json",
+            ...(cleanKey ? { Authorization: `Bearer ${cleanKey}` } : {}),
+            ...(providerId === "openrouter" ? { "HTTP-Referer": "https://devlomatix.com" } : {})
+        };
+        body = {
+            model,
+            messages: [{ role: "user", content: "Reply with the single word OK." }],
+            max_tokens: 16,
+            temperature: 0,
+            stream: false
+        };
+    }
+
+    try {
+        const res = await fetch(endpoint, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+            signal: AbortSignal.timeout(20000)
+        });
+
+        const latencyMs = Date.now() - startTime;
+        const rawBody = await res.text().catch(() => "");
+        let reply = "";
+        let error = null;
+
+        if (res.ok) {
+            try {
+                const json = JSON.parse(rawBody);
+                reply = json?.choices?.[0]?.message?.content
+                    || json?.content?.[0]?.text
+                    || json?.response
+                    || "";
+            } catch {
+                reply = rawBody;
+            }
+        } else {
+            try {
+                const json = JSON.parse(rawBody);
+                error = json?.error?.message || json?.message || rawBody;
+            } catch {
+                error = rawBody;
+            }
+            error = String(error || `HTTP ${res.status}`).slice(0, 500);
+        }
+
+        return {
+            ok: res.ok,
+            status: res.status,
+            model,
+            latencyMs,
+            reply: String(reply || "").slice(0, 200),
+            error,
+            testedAt: new Date().toISOString()
+        };
+    } catch (error) {
+        return {
+            ok: false,
+            status: 0,
+            model,
+            latencyMs: Date.now() - startTime,
+            reply: "",
+            error: error?.name === "TimeoutError"
+                ? "Request timed out after 20s"
+                : (error?.message || "Request failed"),
+            testedAt: new Date().toISOString()
+        };
+    }
+}
+
+/**
+ * Test a single model of a configured provider with a live completion request.
+ */
+export async function testModelAction({ id, model, workspaceId }) {
+    try {
+        await ensureAdmin();
+
+        if (!id || !model) {
+            return { success: false, error: "Provider ID and model name are required." };
+        }
+
+        const provider = await db.agentModel.findUnique({ where: { id } });
+        if (!provider) return { success: false, error: "Provider not found" };
+
+        const result = await runModelTest(provider, model);
+
+        const metadata = provider.metadata && typeof provider.metadata === "object" ? { ...provider.metadata } : {};
+        const modelHealth = metadata.modelHealth && typeof metadata.modelHealth === "object" ? { ...metadata.modelHealth } : {};
+        modelHealth[model] = {
+            ok: result.ok,
+            status: result.status,
+            latencyMs: result.latencyMs,
+            error: result.error,
+            testedAt: result.testedAt
+        };
+
+        await db.agentModel.update({
+            where: { id },
+            data: {
+                metadata: { ...metadata, modelHealth },
+                ...(result.ok ? { healthStatus: "HEALTHY", latency: `${result.latencyMs}ms` } : {})
+            }
+        });
+
+        return { success: true, data: result };
+    } catch (error) {
+        console.error("testModelAction Error:", error);
+        return { success: false, error: error.message || "Model test failed" };
+    }
+}
+
 /**
  * Validate API Key against provider & auto-import all model names
  */
