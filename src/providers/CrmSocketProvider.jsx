@@ -381,13 +381,8 @@ export function CrmSocketProvider({ children }) {
           });
         } catch (_) {}
 
-        // Register presence in workspace
-        s.emit('user:join', {
-          workspaceId,
-          userId: currentUserId,
-          userName: currentUserName,
-          avatar: currentUserAvatar
-        });
+        // Register presence — server uses verified JWT identity (no workspaceId needed for presence)
+        s.emit('user:join', {});
       });
 
       s.on('disconnect', (reason) => {
@@ -410,6 +405,8 @@ export function CrmSocketProvider({ children }) {
         setIsConnected(true);
         setConnectionStatus('connected');
         setTransport(s.io?.engine?.transport?.name || 'websocket');
+        // Re-register presence after reconnect
+        s.emit('user:join', {});
       });
 
       s.io?.on('reconnect_failed', () => {
