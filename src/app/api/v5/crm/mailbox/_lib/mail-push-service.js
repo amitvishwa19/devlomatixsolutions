@@ -91,7 +91,7 @@ export async function dispatchMailboxPushNotification({
         if (targetUserIds.size === 0) {
             const adminUsers = await prisma.user.findMany({
                 where: {
-                    role: { in: ['ADMIN', 'SUPERADMIN', 'DEVELOPER'] },
+                    role: { in: ['ADMIN', 'SUPERADMIN'] },
                     OR: [
                         { expoPushToken: { not: null } },
                         { deviceToken: { not: null } }
