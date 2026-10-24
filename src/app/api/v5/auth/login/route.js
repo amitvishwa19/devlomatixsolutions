@@ -40,8 +40,28 @@ export async function POST(req) {
             return NextResponse.json({ message: "Invalid credentials", status: 401 }, { status: 401 })
         }
 
-        const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
-        const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
+        // Record mobile login session, update User.activeSession JSON, and send alert email
+        const { recordUserLoginSession } = await import("@/lib/sessionAuth");
+        const sessionResult = await recordUserLoginSession({
+            userId: user.id,
+            email: user.email,
+            userName: user.displayName,
+            platform: "mobile",
+            deviceModel: payload.deviceModel || payload.device || null,
+            req,
+        });
+
+        const accessToken = await new SignJWT({
+            userId: user.id,
+            sessionId: sessionResult?.sessionId,
+            platform: "mobile",
+        }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+
+        const refreshToken = await new SignJWT({
+            userId: user.id,
+            sessionId: sessionResult?.sessionId,
+            platform: "mobile",
+        }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
         await db.user.update({
             where: { email: email },

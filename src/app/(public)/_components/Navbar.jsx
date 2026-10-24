@@ -29,7 +29,7 @@ const Navbar = () => {
     const router = useRouter();
     const pathname = usePathname();
     const { data: session } = useSession()
-    console.log(pathname)
+    const isAuthenticated = Boolean(session?.user?.userId || session?.user?.id || (session?.user && !session?.error))
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -158,16 +158,11 @@ const Navbar = () => {
                     </div>
 
                     <div className="hidden md:flex items-center gap-3">
-                        {session ? (
+                        {isAuthenticated ? (
                             <AuthSelector />
                         ) : (
                             <div className="flex items-center gap-2">
-                                {/* <Button variant="ghost" size="sm" asChild className="rounded-full font-semibold hover:text-primary">
-                                    <Link href="/login">Sign In</Link>
-                                </Button>
-                                <Button variant="hero" size="sm" asChild className="rounded-full shadow-md shadow-primary/20 px-4 font-bold bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white border-0 hover:brightness-110">
-                                    <Link href="/contact">Get in Touch</Link>
-                                </Button> */}
+
                             </div>
                         )}
                     </div>
@@ -248,15 +243,15 @@ const Navbar = () => {
 
 
                         <div className="flex gap-2 mt-3">
-                            {session ? (
+                            {isAuthenticated ? (
                                 <Link href="/workspace" onClick={() => setIsOpen(false)} className="flex-1">
                                     <Button variant="outline" className="w-full rounded-full">Workspace</Button>
                                 </Link>
-                            ) : !session ? (
+                            ) : (
                                 <Link href="/login" onClick={() => setIsOpen(false)} className="flex-1">
-                                    {/* <Button variant="outline" className="w-full rounded-full">Login</Button> */}
+                                    <Button variant="outline" className="w-full rounded-full">Login</Button>
                                 </Link>
-                            ) : null}
+                            )}
                             <Link href="/contact" onClick={() => setIsOpen(false)} className="flex-1">
                                 <Button variant="hero" className="w-full rounded-full">Get Started</Button>
                             </Link>

@@ -99,12 +99,39 @@ export default function AppSidebar() {
         return session?.user;
     }, [previewRole, activePermissions, session?.user]);
 
-    const navigation = useMemo(() => {
-        if (isSuperAdmin || checkIsSuperAdmin(userForAuth)) {
-            return rawNavigation;
+    // Instant rendering via localStorage cache
+    const [cachedNavigation, setCachedNavigation] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const stored = localStorage.getItem(`workspace_sidebar_nav_${workspaceId}`);
+                if (stored) return JSON.parse(stored);
+            } catch (e) {}
         }
-        return rawNavigation.filter((item) => canAccessNavGroup(item, userForAuth));
-    }, [rawNavigation, isSuperAdmin, userForAuth]);
+        return null;
+    });
+
+    const navigation = useMemo(() => {
+        // If user session or superadmin is confirmed, compute live navigation and cache
+        if (session?.user || isSuperAdmin) {
+            const filtered = (isSuperAdmin || checkIsSuperAdmin(userForAuth))
+                ? rawNavigation
+                : rawNavigation.filter((item) => canAccessNavGroup(item, userForAuth));
+
+            if (typeof window !== 'undefined') {
+                try {
+                    localStorage.setItem(`workspace_sidebar_nav_${workspaceId}`, JSON.stringify(filtered));
+                } catch (e) {}
+            }
+            return filtered;
+        }
+
+        // While session is loading, use cached navigation from localStorage for instant 0ms render!
+        if (cachedNavigation && cachedNavigation.length > 0) {
+            return cachedNavigation;
+        }
+
+        return rawNavigation;
+    }, [rawNavigation, isSuperAdmin, userForAuth, session?.user, cachedNavigation, workspaceId]);
 
     // Automatically expand the active group on route change
     useEffect(() => {

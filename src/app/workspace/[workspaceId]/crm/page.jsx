@@ -22,7 +22,8 @@ import {
     PhoneCall,
     Headphones,
     Trophy,
-    Zap
+    Zap,
+    MapPin,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -107,7 +108,7 @@ export default function CrmDashboardPage() {
     }
 
     return (
-        <div className="space-y-6 mx-auto w-full">
+        <div className="space-y-6 mx-auto w-full p-2">
             {/* Header Banner */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-violet-600/10 border border-border/80 p-5 rounded-2xl">
                 <div>
@@ -128,6 +129,12 @@ export default function CrmDashboardPage() {
                         <Button variant="outline" className="h-8 text-xs font-semibold gap-1.5 shadow-sm bg-background/80 hover:bg-background">
                             <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
                             <span>Daily Call Record (DCR)</span>
+                        </Button>
+                    </Link>
+                    <Link href={`/workspace/${workspaceId}/crm/location`}>
+                        <Button variant="outline" className="h-8 text-xs font-semibold gap-1.5 shadow-sm bg-background/80 hover:bg-background">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Field Map</span>
                         </Button>
                     </Link>
                     <Link href={`/workspace/${workspaceId}/crm/pipeline`}>
@@ -328,6 +335,21 @@ export default function CrmDashboardPage() {
                                 </p>
                                 <Link href={`/workspace/${workspaceId}/deskflow`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-purple-500 hover:underline">
                                     Deskflow Tickets <ArrowUpRight className="w-3 h-3 ml-0.5" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 shrink-0">
+                                <MapPin className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-xs font-bold text-foreground">Field Telemetry & Map</h4>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    Live Google Maps GPS tracking, walking vs driving speed indicators, and device sessions.
+                                </p>
+                                <Link href={`/workspace/${workspaceId}/crm/location`} className="mt-2 inline-flex items-center text-[11px] font-semibold text-emerald-600 hover:underline">
+                                    Open Live Field Map <ArrowUpRight className="w-3 h-3 ml-0.5" />
                                 </Link>
                             </div>
                         </div>

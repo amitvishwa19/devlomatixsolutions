@@ -60,13 +60,45 @@ export async function POST(req) {
                     }
                 }
             }
-        })
+        });
+
+        if (!user) {
+            return NextResponse.json({ message: "User not found", status: 401 }, { status: 401 });
+        }
+
+        // Single-device mutual exclusivity:
+        // If user logged into Web, the Mobile session is revoked
+        if (user.activeSession && typeof user.activeSession === "object" && user.activeSession.platform === "web") {
+            return NextResponse.json(
+                { message: "SESSION_SUPERSEDED: Your account was logged in on Web. Please sign in again.", status: 401 },
+                { status: 401 }
+            );
+        }
 
 
+
+        // If user does not have an activeSession yet, establish mobile activeSession
+        if (!user.activeSession) {
+            const { recordUserLoginSession } = await import("@/lib/sessionAuth");
+            await recordUserLoginSession({
+                userId: user.id,
+                email: user.email,
+                userName: user.displayName,
+                platform: "mobile",
+                deviceModel: bodyPayload?.deviceModel || bodyPayload?.device || "Mobile App",
+                req,
+            });
+        }
 
         if (user) {
-            const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
-            const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
+            const accessToken = await new SignJWT({
+                userId: user.id,
+                platform: "mobile",
+            }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+            const refreshToken = await new SignJWT({
+                userId: user.id,
+                platform: "mobile",
+            }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
             const updateData = { accessToken, refreshToken };
             if (bodyPayload?.expoPushToken) updateData.expoPushToken = bodyPayload.expoPushToken;

@@ -74,8 +74,28 @@ export async function POST(req) {
 
         }
 
-        const accessToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
-        const refreshToken = await new SignJWT({ userId: user.id }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
+        // Record mobile login session, update User.activeSession JSON, and send alert email
+        const { recordUserLoginSession } = await import("@/lib/sessionAuth");
+        const sessionResult = await recordUserLoginSession({
+            userId: user.id,
+            email: user.email,
+            userName: user.displayName,
+            platform: "mobile",
+            deviceModel: payload.deviceModel || payload.device || "Mobile App",
+            req,
+        });
+
+        const accessToken = await new SignJWT({
+            userId: user.id,
+            sessionId: sessionResult?.sessionId,
+            platform: "mobile",
+        }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("24h").sign(key);
+
+        const refreshToken = await new SignJWT({
+            userId: user.id,
+            sessionId: sessionResult?.sessionId,
+            platform: "mobile",
+        }).setProtectedHeader({ alg: "HS256" }).setIssuedAt().setExpirationTime("10d").sign(key);
 
         user = await db.user.update({
             where: { id: user.id },
@@ -136,7 +156,8 @@ export async function POST(req) {
             expoPushToken: user?.expoPushToken,
             webDeviceToken: user?.webDeviceToken,
             roles: user?.roles,
-            profile: user?.profile
+            profile: user?.profile,
+            activeSession: sessionResult?.activeSession || user?.activeSession || null
         }
 
         console.log('formatted user', user)

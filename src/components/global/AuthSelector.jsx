@@ -38,6 +38,15 @@ export function AuthSelector({ name = false, classname }) {
     const { orgId } = useParams()
     const { theme, themeToggle } = useApp()
 
+    const isAuthenticated = Boolean(session?.user?.userId || session?.user?.id || (session?.user && !session?.error))
+
+    // Clear stale invalidated session cookie in client
+    useEffect(() => {
+        if (session?.error === 'SESSION_SUPERSEDED') {
+            signOut({ redirect: false })
+        }
+    }, [session])
+
     const handleOrg = () => {
         router.push('/workspace')
         setOpen(false)
@@ -52,41 +61,35 @@ export function AuthSelector({ name = false, classname }) {
         onOpen("manageAccount", { orgId: 'params.orgId' })
     }
 
-
+    if (!isAuthenticated) {
+        return (
+            <div className={cn("font-semibold hover:text-primary transition-colors", classname)}>
+                <Link href="/login" className="text-sm font-medium">
+                    Login
+                </Link>
+            </div>
+        )
+    }
 
     return (
         <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
             <DropdownMenuTrigger asChild>
-                {
-                    session ?
-                        (
-                            <div role='button' className=' flex gap-2 items-center cursor-pointer'>
-                                <Avatar className='h-10 w-10 rounded-lg'>
-                                    <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
-                                    <AvatarFallback className=' capitalize rounded-lg'>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>
-                                    {/* {name && <AvatarFallback>{session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1)}</AvatarFallback>} */}
-                                </Avatar>
-                                {
-                                    session?.user?.displayName && (
-                                        <div className='flex flex-col'>
-                                            <span className=''> {session?.user?.displayName} </span>
-                                            <span className='text-xs text-muted-foreground'> {session?.user?.email} </span>
-                                        </div>
-                                    )
-                                }
+                <div role='button' className='flex gap-2 items-center cursor-pointer'>
+                    <Avatar className='h-10 w-10 rounded-lg'>
+                        <AvatarImage src={session?.user?.avatar} alt={session?.user?.displayName} />
+                        <AvatarFallback className='capitalize rounded-lg'>
+                            {session?.user?.displayName?.substring(0, 1) || session?.user?.email?.substring(0, 1) || "U"}
+                        </AvatarFallback>
+                    </Avatar>
+                    {
+                        session?.user?.displayName && (
+                            <div className='flex flex-col'>
+                                <span className=''> {session?.user?.displayName} </span>
+                                <span className='text-xs text-muted-foreground'> {session?.user?.email} </span>
                             </div>
-                        ) :
-                        (
-                            (
-                                <div className={`${classname} font-semibold hover:text-[#0495FF] `}>
-
-                                    <Link href={'/login'}>
-                                        Login
-                                    </Link>
-                                </div>
-                            )
                         )
-                }
+                    }
+                </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
                 {session && (

@@ -14,18 +14,19 @@ export default async function WorkspacePage() {
         name: session?.user?.name
     });
 
-    if (!session) {
-        console.log('[DEBUG] No session found, redirecting to /login');
+    const userId = session?.user?.userId || session?.user?.id;
+
+    if (!session || !session.user || !userId || session.error) {
+        console.log('[DEBUG] No valid user session found, redirecting to /login');
         redirect("/login");
     }
-
 
     let server;
 
     try {
         server = await db.server.findFirst({
             where: {
-                userId: session.user.userId,
+                userId: userId,
                 default: true,
             },
             select: { id: true },
@@ -33,14 +34,14 @@ export default async function WorkspacePage() {
 
         if (!server) {
             server = await db.server.findFirst({
-                where: { userId: session.user.userId },
+                where: { userId: userId },
                 select: { id: true },
             });
         }
 
         if (!server) {
             server = await db.server.findFirst({
-                where: { members: { some: { userId: session.user.userId } } },
+                where: { members: { some: { userId: userId } } },
                 select: { id: true },
             });
         }

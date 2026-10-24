@@ -37,20 +37,21 @@ export async function validateCrmUserToken(request) {
         const tokenRaw = authHeader || queryToken;
 
         let userId = null;
+        let tokenPayload = null;
 
         if (tokenRaw) {
             const token = tokenRaw.replace(/^Bearer\s+/i, '').trim();
-            let payload = await decrypt(token).catch(() => null);
+            tokenPayload = await decrypt(token).catch(() => null);
 
-            if (!payload && token.includes('.')) {
+            if (!tokenPayload && token.includes('.')) {
                 try {
                     const { decodeJwt } = await import("jose");
-                    payload = decodeJwt(token);
+                    tokenPayload = decodeJwt(token);
                 } catch (e) {}
             }
 
-            if (payload) {
-                userId = payload?.userId || payload?.id || payload?.data?.id || payload?.data?.userId || null;
+            if (tokenPayload) {
+                userId = tokenPayload?.userId || tokenPayload?.id || tokenPayload?.data?.id || tokenPayload?.data?.userId || null;
             } else if (token.length >= 20 && !token.includes('.')) {
                 // If direct raw user ID was provided in header
                 const directUser = await prisma.user.findUnique({ where: { id: token } });
@@ -95,13 +96,33 @@ export async function validateCrmUserToken(request) {
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, displayName: true, email: true, role: true, avatar: true }
+            select: { id: true, displayName: true, email: true, role: true, avatar: true, activeSession: true }
         });
 
         if (!user) {
             return {
                 authenticated: false,
                 error: "Unauthorized: User account not found.",
+                status: 401
+            };
+        }
+
+        // Single-device mutual exclusivity:
+        // If user logged into Web, mobile sessions are immediately revoked
+        const isMobileClient = Boolean(
+            request.headers.get("x-mobile-app") ||
+            request.headers.get("usertoken") ||
+            request.headers.get("user-token") ||
+            request.headers.get("user-agent")?.includes("Expo") ||
+            request.headers.get("user-agent")?.includes("okhttp") ||
+            request.headers.get("user-agent")?.includes("CFNetwork") ||
+            tokenPayload?.platform === "mobile"
+        );
+
+        if (isMobileClient && user.activeSession?.platform === "web") {
+            return {
+                authenticated: false,
+                error: "SESSION_SUPERSEDED: Your account was logged in on Web. Mobile session terminated.",
                 status: 401
             };
         }
@@ -126,13 +147,14 @@ export async function validateCrmUserToken(request) {
             authenticated: true,
             userId: user.id,
             user,
-            workspaceId
+            workspaceId,
+            isMobileClient
         };
     } catch (error) {
         console.error("[CRM_API_AUTH_ERROR]", error);
         return {
             authenticated: false,
-            error: "Authentication failed",
+            error: error?.message || "Authentication failed",
             status: 401
         };
     }

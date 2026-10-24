@@ -21,9 +21,25 @@ export const WorkspaceProvider = ({ children }) => {
         return checkIsSuperAdmin(session?.user);
     }, [session?.user]);
 
-    // --- Settings State (from legacy SettingProvider) ---
-    const [settings, setSettings] = useState(null);
-    const [settingsLoading, setSettingsLoading] = useState(true);
+    // --- Settings State (with localStorage cache for instant loading) ---
+    const [settings, setSettings] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const stored = localStorage.getItem(`workspace_settings_${workspaceId}`);
+                if (stored) return JSON.parse(stored);
+            } catch (e) {}
+        }
+        return null;
+    });
+    const [settingsLoading, setSettingsLoading] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const stored = localStorage.getItem(`workspace_settings_${workspaceId}`);
+                if (stored) return false;
+            } catch (e) {}
+        }
+        return true;
+    });
     const [saving, setSaving] = useState(false);
 
     // --- Access/Simulation State (from legacy accessProvider) ---
@@ -46,7 +62,6 @@ export const WorkspaceProvider = ({ children }) => {
 
     // --- Fetch Settings ---
     const fetchSettings = useCallback(async () => {
-        setSettingsLoading(true);
         try {
             if (workspaceId && workspaceId !== '[workspaceId]' && workspaceId !== 'undefined' && workspaceId !== 'null') {
                 const response = await fetch(`/api/workspace/${workspaceId}/system/settings`, { cache: 'no-store' });
@@ -56,6 +71,11 @@ export const WorkspaceProvider = ({ children }) => {
                     if (contentType && contentType.includes("application/json")) {
                         const data = await response.json();
                         setSettings(data);
+                        if (typeof window !== 'undefined') {
+                            try {
+                                localStorage.setItem(`workspace_settings_${workspaceId}`, JSON.stringify(data));
+                            } catch (e) {}
+                        }
                         return;
                     }
                 }

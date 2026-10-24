@@ -6,6 +6,7 @@ import { Inter } from "next/font/google";
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
+import { useSession, signOut } from 'next-auth/react';
 import AppTopNav from '../_components/AppTopNav';
 import AppSidebar from '../_components/AppSidebar';
 import { WorkspaceProvider } from '@/providers/WorkspaceProvider';
@@ -43,6 +44,17 @@ function UnauthorizedToastHandler() {
 
 function WorkspaceLayoutInner({ children }) {
     const { open, setOpen, Component: ShortcutsModal } = useKeyboardShortcuts();
+    const { data: session } = useSession();
+
+    useEffect(() => {
+        if (session?.error === 'SESSION_SUPERSEDED') {
+            toast.error('Session ended: You logged in from Mobile. Please log in again to use Web.', {
+                id: 'session-superseded-toast',
+                duration: 6000,
+            });
+            signOut({ callbackUrl: '/login' });
+        }
+    }, [session]);
 
     return (
         <>

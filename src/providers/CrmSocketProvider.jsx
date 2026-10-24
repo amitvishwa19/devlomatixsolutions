@@ -11,6 +11,7 @@ import { WebRtcClient } from '@/lib/webrtc/webrtc-client';
 import IncomingCallDialog from '@/app/workspace/[workspaceId]/crm/_components/call/IncomingCallDialog';
 import ActiveCallModal from '@/app/workspace/[workspaceId]/crm/_components/call/ActiveCallModal';
 import PostCallSummaryDialog from '@/app/workspace/[workspaceId]/crm/_components/call/PostCallSummaryDialog';
+import SessionSupersededModal from '@/components/global/SessionSupersededModal';
 
 const CrmSocketContext = createContext(null);
 
@@ -198,6 +199,13 @@ export function CrmSocketProvider({ children }) {
 
   // Audio/Video control states
   const [isMuted, setIsMuted] = useState(false);
+  
+  // Single-device session protection state
+  const [supersededData, setSupersededData] = useState({
+    isOpen: false,
+    device: 'Mobile App',
+    loggedAt: null,
+  });
   const [isCameraOff, setIsCameraOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -416,6 +424,21 @@ export function CrmSocketProvider({ children }) {
 
       s.on('presence:sync', (users) => {
         setOnlineUsers(users.filter((u) => String(u.userId) !== String(currentUserId)));
+      });
+
+      // Single-device security: Real-time kickout when user logs into Mobile App
+      s.on('auth:session_superseded', (data) => {
+        console.warn('[CRM_SOCKET] Web session superseded by login on:', data?.platform, data?.device);
+        if (data?.platform === 'mobile') {
+          setSupersededData({
+            isOpen: true,
+            device: data?.device || 'Mobile App',
+            loggedAt: data?.loggedAt || new Date().toISOString(),
+          });
+          try {
+            s.disconnect();
+          } catch (_) {}
+        }
       });
 
       socketRef.current = s;
@@ -1025,6 +1048,13 @@ export function CrmSocketProvider({ children }) {
           record={postCallRecord}
         />
       )}
+
+      {/* Single-Device Session Exclusivity Alert Modal */}
+      <SessionSupersededModal
+        isOpen={supersededData.isOpen}
+        device={supersededData.device}
+        loggedAt={supersededData.loggedAt}
+      />
     </CrmSocketContext.Provider>
   );
 }

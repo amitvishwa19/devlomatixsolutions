@@ -21,7 +21,8 @@ import {
     MessageSquare,
     CheckSquare,
     UserCheck,
-    FileSpreadsheet
+    FileSpreadsheet,
+    MapPin,
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +37,7 @@ export default function CrmLayout({ children }) {
         { title: "Dashboard", href: baseCRMPath, icon: LayoutDashboard, exact: true },
         { title: "Chat & Calls", href: `${baseCRMPath}/chat`, icon: Video },
         { title: "DCR (Daily Call Record)", href: `${baseCRMPath}/dcr`, icon: PhoneCall },
+        { title: "Team Location", href: `${baseCRMPath}/location`, icon: MapPin },
         { title: "AI Copilot", href: `${baseCRMPath}/copilot`, icon: Sparkles },
         { title: "Pipelines & Deals", href: `${baseCRMPath}/pipeline`, icon: Kanban },
         { title: "Quotations", href: `${baseCRMPath}/quotations`, icon: FileSpreadsheet },
@@ -55,7 +57,7 @@ export default function CrmLayout({ children }) {
         return pathname.startsWith(item.href);
     };
 
-    const isFullBleedRoute = pathname?.includes('/tasks') || pathname?.includes('/kanban') || pathname?.includes('/pipeline') || pathname?.includes('/mailbox');
+    const isFullBleedRoute = pathname?.includes('/tasks') || pathname?.includes('/kanban') || pathname?.includes('/pipeline') || pathname?.includes('/mailbox') || pathname?.includes('/location');
 
     if (isFullBleedRoute) {
         return children;

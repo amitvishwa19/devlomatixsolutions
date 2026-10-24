@@ -108,11 +108,22 @@ export const authOptions = {
             //Removed the server and caannel creation
 
             if (usr) {
+                // Record web login session and notify user via email
+                try {
+                    const { recordUserLoginSession } = await import("@/lib/sessionAuth");
+                    await recordUserLoginSession({
+                        userId: usr.id,
+                        email: usr.email,
+                        userName: usr.displayName || user.name,
+                        platform: "web",
+                    });
+                } catch (sessErr) {
+                    console.warn("[NextAuth] Failed to record web session:", sessErr?.message);
+                }
+
                 let server = await db.server.findFirst({
                     where: { userId: usr.id },
                 });
-
-
 
                 if (!server) {
                     server = await db.server.create({
@@ -144,11 +155,16 @@ export const authOptions = {
 
         async session({ session, token }) {
             if (token?.invalidUser) {
-                console.log(`[NextAuth] Invalidating session for ${token.email} - User not found in DB`);
-                return null; // This will effectively sign the user out
+                console.log(`[NextAuth] Web session invalidated for ${token.email} - Superseded by mobile or invalid in DB`);
+                return {
+                    ...session,
+                    user: null,
+                    expires: new Date(0).toISOString(),
+                    error: "SESSION_SUPERSEDED",
+                };
             }
 
-            if (token) {
+            if (token && session?.user) {
                 session.user.userId = token.userId;
                 session.user.displayName = token.displayName;
                 session.user.avatar = token.avatar;
@@ -156,7 +172,7 @@ export const authOptions = {
                 session.user.roles = token.roles;
                 session.user.workspaces = token.workspaces;
             }
-            return session
+            return session;
         },
 
         async jwt({ token, user, trigger, session }) {
@@ -164,10 +180,10 @@ export const authOptions = {
             if (user) {
                 token.userId = user.id;
                 token.role = user.role;
+                token.platform = "web";
             }
 
-            // 2. Continuous Enrichment & Validation
-            // We verify against the DB on sign-in, update, or if data is stale (every 60s)
+            // 2. Continuous Enrichment & Single-Device Session Validation
             const now = Date.now();
             const lastEnriched = token.lastEnriched || 0;
             const isStale = (now - lastEnriched) > 60 * 1000;
@@ -175,31 +191,65 @@ export const authOptions = {
 
             if (needsEnrichment && token.email) {
                 try {
+                    const isFullFetch = !token.roles || trigger === "signIn" || trigger === "update";
                     const usr = await db.user.findUnique({
                         where: { email: token.email },
-                        include: {
-                            members: {
-                                select: {
-                                    serverId: true,
-                                    role: true
+                        select: {
+                            id: true,
+                            displayName: true,
+                            avatar: true,
+                            role: true,
+                            activeSession: true,
+                            ...(isFullFetch ? {
+                                members: {
+                                    select: {
+                                        serverId: true,
+                                        role: true
+                                    }
+                                },
+                                roles: {
+                                    select: {
+                                        id: true,
+                                        title: true,
+                                        color: true,
+                                        permissions: {
+                                            select: {
+                                                value: true,
+                                                status: true
+                                            }
+                                        }
+                                    }
                                 }
-                            },
-                            roles: {
-                                include: {
-                                    permissions: true
-                                }
-                            }
+                            } : {})
                         }
                     });
 
                     if (usr) {
+                        // Single-device mutual exclusivity:
+                        // If user logged into Mobile, this Web session is automatically terminated
+                        const sessionData = usr.activeSession;
+                        if (sessionData && typeof sessionData === "object" && sessionData.platform === "mobile") {
+                            console.log(`[NextAuth Security] Web session revoked for ${token.email} - User is now active on Mobile (${sessionData.device || 'Mobile App'})`);
+                            token.invalidUser = true;
+                            return token;
+                        }
+
                         // Force the internal Prisma ID into the token
                         token.userId = usr.id;
                         token.displayName = usr.displayName;
                         token.avatar = usr.avatar;
                         token.role = usr.role;
-                        token.roles = usr.roles;
-                        token.workspaces = usr.members.map(m => m.serverId);
+                        if (usr.roles) {
+                            token.roles = usr.roles.map(r => ({
+                                id: r.id,
+                                title: r.title,
+                                color: r.color,
+                                permissions: (r.permissions || []).map(p => ({ value: p.value, status: p.status }))
+                            }));
+                        }
+                        if (usr.members) {
+                            token.workspaces = usr.members.map(m => m.serverId);
+                        }
                         token.invalidUser = false;
                         token.lastEnriched = now;
                     } else {
@@ -213,7 +263,7 @@ export const authOptions = {
                 }
             }
 
-            return token
+            return token;
         }
     },
     pages: {
