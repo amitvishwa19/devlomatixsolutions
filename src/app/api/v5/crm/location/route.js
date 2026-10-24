@@ -105,6 +105,18 @@ export async function GET(request) {
                 }
             });
 
+            // Always ensure the authenticated requesting user is included
+            if (auth.userId) {
+                assignedUserIdsSet.add(auth.userId);
+            }
+
+            // Also include all users who currently have an active session
+            const activeSessionUsers = await prisma.user.findMany({
+                where: { activeSession: { not: null } },
+                select: { id: true },
+            }).catch(() => []);
+            activeSessionUsers.forEach((u) => assignedUserIdsSet.add(u.id));
+
             let assignedUserIds = Array.from(assignedUserIdsSet);
 
             let users = [];

@@ -113,10 +113,12 @@ export async function validateCrmUserToken(request) {
             request.headers.get("x-mobile-app") ||
             request.headers.get("usertoken") ||
             request.headers.get("user-token") ||
+            request.headers.get("x-client-platform") === "mobile" ||
             request.headers.get("user-agent")?.includes("Expo") ||
             request.headers.get("user-agent")?.includes("okhttp") ||
             request.headers.get("user-agent")?.includes("CFNetwork") ||
-            tokenPayload?.platform === "mobile"
+            tokenPayload?.platform === "mobile" ||
+            user.activeSession?.platform === "mobile"
         );
 
         if (isMobileClient && user.activeSession?.platform === "web") {
