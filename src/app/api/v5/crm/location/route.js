@@ -61,8 +61,10 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const isTeamQuery = searchParams.get("team") === "true" || searchParams.get("all") === "true";
+        const platformFilter = searchParams.get("platform");
+        const onlyMobile = platformFilter === "mobile" || auth.isMobileClient;
 
-        // ── TEAM MODE: Return all organization users with their latest location ────
+        // ── TEAM MODE: Return organization users with their latest location ────
         if (isTeamQuery) {
             // 1. Fetch Org Structure
             const globalRecord = await prisma.appSettings.findUnique({
@@ -222,12 +224,16 @@ export async function GET(request) {
                     const isDriving = speed >= 2.5;
 
                     const sessionData = u.activeSession;
-                    const platform = (sessionData && typeof sessionData === "object" && sessionData.platform)
-                        ? sessionData.platform
-                        : (idx % 2 === 0 ? "mobile" : "web");
-                    const device = (sessionData && typeof sessionData === "object" && sessionData.device)
-                        ? sessionData.device
-                        : (platform === "mobile" ? "Mobile App" : "Web Browser");
+                    const isMobileSession = Boolean(
+                        (sessionData && typeof sessionData === "object" && (sessionData.platform === "mobile" || sessionData.platform === "android" || sessionData.platform === "ios")) ||
+                        (u.id === auth.userId && auth.isMobileClient)
+                    );
+                    const isWebSession = Boolean(
+                        sessionData && typeof sessionData === "object" && sessionData.platform === "web"
+                    );
+
+                    const platform = isMobileSession ? "mobile" : (isWebSession ? "web" : "offline");
+                    const device = sessionData?.device || (platform === "mobile" ? "Mobile App" : (platform === "web" ? "Web Browser" : "Offline"));
 
                     return {
                         id: u.id,
@@ -250,8 +256,16 @@ export async function GET(request) {
                 })
             );
 
+            let filteredTeam = teamLocations;
+            if (onlyMobile) {
+                // In mobile map mode, ONLY show users currently logged in on mobile (or current mobile user)
+                filteredTeam = teamLocations.filter(
+                    (u) => (u.platform === "mobile" && u.activeSession?.platform !== "web") || u.isCurrent
+                );
+            }
+
             return apiSuccess(
-                { users: teamLocations, totalUsers: teamLocations.length },
+                { users: filteredTeam, totalUsers: filteredTeam.length },
                 { message: "Team locations fetched" }
             );
         }
