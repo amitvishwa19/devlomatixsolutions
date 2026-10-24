@@ -16,6 +16,7 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import CookieConsent from "@/components/global/CookieConsent";
 import { VisitorTracker } from "@/components/global/VisitorTracker";
+import GlobalSessionGuard from "@/components/global/GlobalSessionGuard";
 import { Suspense } from "react";
 
 const outfit = Outfit({ subsets: ["latin"] });
@@ -57,6 +58,7 @@ export default async function RootLayout({ children }) {
                                                 <Suspense fallback={null}>
                                                     <VisitorTracker />
                                                 </Suspense>
+                                                <GlobalSessionGuard />
 
                                             </Providers>
                                         </WorkspaceProvider>

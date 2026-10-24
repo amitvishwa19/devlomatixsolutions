@@ -28,16 +28,16 @@ async function getGlobalSocketConfig() {
 async function getInternalSocketUrlsAndSecret() {
   const config = await getGlobalSocketConfig();
 
-  const devUrl = (config?.devUrl || process.env.NEXT_PUBLIC_SOCKET_SERVER || process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'http://localhost:5001').replace(/\/+$/, '');
-  const prodUrl = (config?.prodUrl || 'https://socket.devlomatix.in').replace(/\/+$/, '');
+  const devUrl = (config?.devUrl || process.env.NEXT_PUBLIC_SOCKET_SERVER || process.env.NEXT_PUBLIC_SOCKET_SERVER_URL || 'https://socket.devlomatix.com').replace(/\/+$/, '');
+  const prodUrl = (config?.prodUrl || 'https://socket.devlomatix.com').replace(/\/+$/, '');
   const mode = config?.environmentMode || 'auto';
-  const secret = config?.internalSecret || process.env.INTERNAL_SERVICE_SECRET || 'devlomatix_internal_secret_key_2026';
+  const secret = process.env.INTERNAL_SERVICE_SECRET || config?.internalSecret || 'b9f781c6465e99dfb8cd41fa313002a007bf0a03d2bebac11937bd998d8ac3dd';
   const enableLocalFallback = config?.enableLocalFallback ?? true;
 
   if (mode === 'development') {
-    const urls = [devUrl];
+    const urls = [devUrl, 'https://socket.devlomatix.com'];
     if (enableLocalFallback && !devUrl.includes(':5000')) urls.push('http://localhost:5000');
-    return { urls, secret };
+    return { urls: [...new Set(urls)], secret };
   }
 
   if (mode === 'production') {
@@ -47,7 +47,7 @@ async function getInternalSocketUrlsAndSecret() {
   // 'auto' mode
   const envUrl = process.env.INTERNAL_SOCKET_URL || process.env.NEXT_PUBLIC_SOCKET_SERVER || process.env.NEXT_PUBLIC_SOCKET_SERVER_URL;
   if (envUrl) {
-    const urls = [envUrl.replace(/\/+$/, '')];
+    const urls = [envUrl.replace(/\/+$/, ''), 'https://socket.devlomatix.com'];
     if (enableLocalFallback && (envUrl.includes('localhost') || envUrl.includes('127.0.0.1'))) {
       urls.push('http://localhost:5001', 'http://localhost:5000');
     }
@@ -58,7 +58,7 @@ async function getInternalSocketUrlsAndSecret() {
     return { urls: [prodUrl], secret };
   }
 
-  const urls = [devUrl];
+  const urls = [devUrl, 'https://socket.devlomatix.com'];
   if (enableLocalFallback) {
     urls.push('http://localhost:5001', 'http://localhost:5000');
   }

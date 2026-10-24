@@ -46,13 +46,10 @@ export const resolveSocketUrl = (customConfig) => {
     process.env.NEXT_PUBLIC_SOCKETSERVER ||
     process.env.NEXT_PUBLIC_SOCKET_URL;
 
-  if (envUrl) {
+  if (envUrl && !envUrl.includes(':5001') && !envUrl.includes(':5000')) {
     return envUrl.trim().replace(/\/+$/, '');
   }
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
-    return 'http://localhost:5001';
-  }
-  return 'https://socket.devlomatix.in';
+  return 'https://socket.devlomatix.com';
 };
 
 export const getSocketUrl = (customConfig) => resolveSocketUrl(customConfig);
@@ -333,11 +330,12 @@ export function CrmSocketProvider({ children }) {
 
   // 1. Connect Socket
   useEffect(() => {
-    if (!currentUserId || !workspaceId) {
+    if (!currentUserId) {
       setConnectionStatus('disconnected');
       return;
     }
 
+    const resolvedUrl = resolveSocketUrl(customSocketConfig);
     let isCancelled = false;
     let s = null;
 
@@ -429,7 +427,8 @@ export function CrmSocketProvider({ children }) {
       // Single-device security: Real-time kickout when user logs into Mobile App
       s.on('auth:session_superseded', (data) => {
         console.warn('[CRM_SOCKET] Web session superseded by login on:', data?.platform, data?.device);
-        if (data?.platform === 'mobile') {
+        const p = (data?.platform || '').toLowerCase();
+        if (p !== 'web') {
           setSupersededData({
             isOpen: true,
             device: data?.device || 'Mobile App',
