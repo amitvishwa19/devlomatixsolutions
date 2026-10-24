@@ -85,6 +85,7 @@ model User {
   crmActivities             CrmActivity[]
   crmAssignedEmailThreads   CrmEmailThread[]         @relation("EmailThreadAssignee")
   crmSentEmails             CrmEmailMessage[]        @relation("EmailSentByUser")
+  locationPoints            UserLocationPoint[]
 
   @@index([email])
   @@index([phone])
@@ -2149,4 +2150,30 @@ model KonnectLegacyTemplate {
   @@index([status])
 }
 
+
+// ==========================================
+// 📍 USER LOCATION TRACKING
+// ==========================================
+
+model UserLocationPoint {
+  id          String   @id @default(cuid())
+  userId      String
+  workspaceId String?
+  lat         Float
+  lng         Float
+  accuracy    Float?
+  altitude    Float?
+  speed       Float?
+  heading     Float?
+  sessionId   String?  // groups points from same tracking session
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([userId, timestamp])
+}
 

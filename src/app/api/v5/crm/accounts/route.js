@@ -13,7 +13,7 @@ export async function GET(request) {
 
         const { searchParams } = new URL(request.url);
         const search = searchParams.get("search");
-        const tier = searchParams.get("tier");
+        const rating = searchParams.get("rating") || searchParams.get("tier");
         const industry = searchParams.get("industry");
 
         const page = parseInt(searchParams.get("page") || "1", 10);
@@ -22,7 +22,7 @@ export async function GET(request) {
 
         const where = {
             workspaceId: auth.workspaceId,
-            ...(tier && tier !== 'ALL' ? { tier } : {}),
+            ...(rating && rating !== 'ALL' ? { rating } : {}),
             ...(industry && industry !== 'ALL' ? { industry } : {}),
             ...(search ? {
                 OR: [
@@ -65,7 +65,7 @@ export async function GET(request) {
 
 /**
  * POST /api/v5/crm/accounts
- * Body: { name, domain, industry, size, tier, annualRevenue, phone, address }
+ * Body: { name, domain, industry, size, rating, annualRevenue, phone, email, website, city, country, address }
  */
 export async function POST(request) {
     try {
@@ -78,9 +78,13 @@ export async function POST(request) {
             domain,
             industry = "Technology",
             size = "11-50",
-            tier = "WARM",
+            rating = "WARM",
             annualRevenue = 0,
             phone,
+            email,
+            website,
+            city,
+            country,
             address
         } = body;
 
@@ -96,9 +100,13 @@ export async function POST(request) {
                 domain: domain ? domain.trim().toLowerCase() : null,
                 industry,
                 size,
-                tier,
+                rating,
                 annualRevenue: parseFloat(annualRevenue) || 0,
                 phone: phone ? phone.trim() : null,
+                email: email ? email.trim().toLowerCase() : null,
+                website: website ? website.trim() : null,
+                city: city ? city.trim() : null,
+                country: country ? country.trim() : null,
                 address: address || null
             }
         });

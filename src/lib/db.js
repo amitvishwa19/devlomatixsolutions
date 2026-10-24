@@ -44,7 +44,7 @@ const prismaClientSingleton = () => {
     return new PrismaClient({ adapter });
 };
 
-const SCHEMA_VERSION = 33; // Increment this to force a re-init in dev
+const SCHEMA_VERSION = 34; // Increment this to force a re-init in dev
 
 // Store the singleton on the global object to prevent multiple instances in dev
 const getBaseDb = () => {
@@ -65,6 +65,7 @@ const getBaseDb = () => {
         !globalThis.prismaGlobal.eCommerceStore ||
         !globalThis.prismaGlobal.konnectLegacyTemplate ||
         !globalThis.prismaGlobal.konnectLegacyTemplateGroup ||
+        !globalThis.prismaGlobal.userLocationPoint ||
         globalThis.prismaGlobal._schemaVersion !== SCHEMA_VERSION
     );
 
