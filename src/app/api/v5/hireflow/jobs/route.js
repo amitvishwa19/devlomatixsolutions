@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { decrypt } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 async function getUserId(request) {
   const authHeader = request.headers.get("authorization");
@@ -15,9 +16,8 @@ export async function GET(request) {
     const userId = await getUserId(request);
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get("workspaceId");
-    if (!workspaceId) return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request);
+    if (!workspaceId) return NextResponse.json({ error: "Could not resolve workspace" }, { status: 400 });
 
     const jobs = await db.job.findMany({
       where: { workspaceId },
@@ -37,10 +37,11 @@ export async function POST(request) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await request.json();
-    const { title, description, department, location, type, salaryRange, status, requirements, workspaceId } = body;
+    const { title, description, department, location, type, salaryRange, status, requirements } = body;
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request, body);
 
     if (!title || !workspaceId) {
-      return NextResponse.json({ error: "Title and workspaceId are required" }, { status: 400 });
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
     const job = await db.job.create({

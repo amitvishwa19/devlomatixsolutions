@@ -9,8 +9,8 @@ import { getUserAuthorizedMailboxes } from '../_lib/org-mailboxes';
 async function authorizeThreadAccess(thread, user, workspaceId) {
     if (!thread) return false;
 
-    const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(user.id, workspaceId);
-    if (isAdmin) return true;
+    const { authorizedEmails } = await getUserAuthorizedMailboxes(user.id, workspaceId);
+    if (!authorizedEmails || authorizedEmails.length === 0) return false;
 
     const threadEmails = (thread.messages || []).flatMap((m) => [
         m.fromEmail,

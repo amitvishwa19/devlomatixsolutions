@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { ok, fail, requireUserId } from "../../_lib/helpers";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 export const dynamic = "force-dynamic";
 
@@ -14,23 +15,29 @@ export async function GET(request) {
         const userId = await requireUserId(request);
         const { searchParams } = new URL(request.url);
 
-        const workspaceId = searchParams.get("workspaceId");
+        const workspaceId = await resolveEffectiveWorkspaceId(userId, request);
         const query = (searchParams.get("query") || "").trim();
         const limit = Math.min(
             25,
             Math.max(1, parseInt(searchParams.get("limit") || "25", 10))
         );
 
-        if (!workspaceId) return fail("workspaceId is required", 400);
+        if (!workspaceId) return fail("Could not resolve workspace", 400);
 
         // The workspace must actually belong to the caller.
-        const workspace = await db.server.findFirst({
+        let workspace = await db.server.findFirst({
             where: {
                 id: workspaceId,
                 OR: [{ userId }, { members: { some: { userId } } }]
             },
             select: { id: true, userId: true }
         });
+        if (!workspace) {
+            workspace = await db.server.findFirst({
+                where: { OR: [{ userId }, { members: { some: { userId } } }] },
+                select: { id: true, userId: true }
+            });
+        }
         if (!workspace) return fail("Workspace not found", 404);
 
         // Membership and the free-text filter are independent constraints, so

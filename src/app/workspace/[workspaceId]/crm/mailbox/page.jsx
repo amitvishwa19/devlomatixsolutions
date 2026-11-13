@@ -132,14 +132,16 @@ export default function CrmMailboxPage() {
     // Initial fetch of user mailboxes from Org Builder and contacts/deals
     useEffect(() => {
         if (workspaceId) {
-            // Load user mailboxes
+            // Load user official mailboxes from Org Builder
             getUserMailboxesAction(workspaceId).then((res) => {
                 if (res.success && res.data?.mailboxes) {
                     setMailboxes(res.data.mailboxes);
-                    // If user has personal email, pre-fill compose from
-                    const personal = res.data.mailboxes.find(m => m.isPrimary);
-                    if (personal?.email) {
-                        setComposeFromEmail(personal.email);
+                    const primary = res.data.mailboxes.find(m => m.isPrimary && m.email !== 'ALL') || (res.data.mailboxes.length === 1 ? res.data.mailboxes[0] : null);
+                    if (primary?.email) {
+                        setComposeFromEmail(primary.email);
+                        if (res.data.mailboxes.length === 1) {
+                            setActiveMailboxEmail(primary.email);
+                        }
                     }
                 }
             });

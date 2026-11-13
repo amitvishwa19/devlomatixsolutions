@@ -77,20 +77,30 @@ export async function POST(request) {
         }
 
         // Verify authorization if a specific mailbox identity was chosen
-        const cleanFromMailbox = fromEmail?.trim().toLowerCase() || null;
-        if (cleanFromMailbox) {
-            const isAuthorized = await isUserAuthorizedForMailbox(auth.user.id, cleanFromMailbox, auth.workspaceId);
+        // Resolve user's authorized official mailboxes from Org Builder
+        const { mailboxes, authorizedEmails } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
+        const primaryOfficialMailbox = mailboxes.find(m => m.isPrimary)?.email || authorizedEmails[0] || null;
+
+        let targetFromMailbox = fromEmail?.trim().toLowerCase() || primaryOfficialMailbox;
+
+        if (targetFromMailbox) {
+            const isAuthorized = await isUserAuthorizedForMailbox(auth.user.id, targetFromMailbox, auth.workspaceId);
             if (!isAuthorized) {
-                return apiError(`Unauthorized: You are not assigned to send emails from ${cleanFromMailbox}`, 403);
+                return apiError(`Unauthorized: You are not assigned to send emails from ${targetFromMailbox}`, 403);
             }
+        } else {
+            return apiError('Unauthorized: No official mailbox assigned to your account in Org Builder', 403);
         }
+
+        const matchedMailbox = mailboxes.find(m => m.email?.toLowerCase() === targetFromMailbox);
+        const effectiveSenderName = senderName || matchedMailbox?.displayName || auth.user?.displayName || 'Devlomatix Sales';
 
         const { resend, defaultFromEmail } = await getResendClient(auth.workspaceId);
         const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(
             auth.user,
             defaultFromEmail,
-            senderName,
-            cleanFromMailbox
+            effectiveSenderName,
+            targetFromMailbox
         );
 
         // Threading Context

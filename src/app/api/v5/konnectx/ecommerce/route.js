@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { resolveEffectiveWorkspaceId } from "../../_lib/workspace-resolver";
 import {
     ok,
     created,
@@ -116,7 +117,8 @@ export async function POST(request) {
         // Give the store a matching category so products can be grouped.
         let category = null;
         let categoryError = null;
-        if (isNew && workspaceId) {
+        const effectiveWorkspaceId = await resolveEffectiveWorkspaceId(userId, request, body);
+        if (isNew && effectiveWorkspaceId) {
             try {
                 category = await db.category.create({
                     data: {
@@ -124,7 +126,7 @@ export async function POST(request) {
                         slug: `${store.slug}-category`,
                         type: "GENERAL",
                         color: "#3b82f6",
-                        workspaceId,
+                        workspaceId: effectiveWorkspaceId,
                         storeId: store.id
                     }
                 });

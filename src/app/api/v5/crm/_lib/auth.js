@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { decrypt } from "@/lib/auth";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 /**
  * Standard HTTP Error for API Route Handlers
@@ -129,21 +130,7 @@ export async function validateCrmUserToken(request) {
             };
         }
 
-        // Resolve workspaceId
-        let workspaceId =
-            searchParams.get("workspaceId") ||
-            searchParams.get("workspace_id") ||
-            request.headers.get("x-workspace-id") ||
-            request.headers.get("workspaceid");
-
-        if (!workspaceId) {
-            // Find user's first workspace
-            const memberServer = await prisma.member.findFirst({
-                where: { userId: user.id },
-                select: { serverId: true }
-            });
-            workspaceId = memberServer?.serverId || 'default-workspace';
-        }
+        const workspaceId = await resolveEffectiveWorkspaceId(user.id, request);
 
         return {
             authenticated: true,

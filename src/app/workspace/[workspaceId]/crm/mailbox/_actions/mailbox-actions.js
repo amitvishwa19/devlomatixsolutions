@@ -38,8 +38,8 @@ async function getResendClient(workspaceId) {
 async function authorizeThreadAccess(thread, userId, workspaceId) {
     if (!thread) return false;
 
-    const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
-    if (isAdmin) return true;
+    const { authorizedEmails } = await getUserAuthorizedMailboxes(userId, workspaceId);
+    if (!authorizedEmails || authorizedEmails.length === 0) return false;
 
     const threadEmails = (thread.messages || []).flatMap((m) => [
         m.fromEmail,
@@ -81,7 +81,8 @@ export async function getMailboxThreadsAction(workspaceId, {
 } = {}) {
     try {
         const userId = await getValidUserId(workspaceId);
-        const { mailboxes, authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
+        const { mailboxes, authorizedEmails } = await getUserAuthorizedMailboxes(userId, workspaceId);
+        const authorizedSet = new Set((authorizedEmails || []).map(e => e.toLowerCase()));
 
         const skip = (page - 1) * limit;
         const cleanMailbox = (mailboxEmail && mailboxEmail !== 'ALL') ? mailboxEmail.trim().toLowerCase() : null;
@@ -89,6 +90,14 @@ export async function getMailboxThreadsAction(workspaceId, {
         let baseWhere;
 
         if (cleanMailbox) {
+            if (authorizedSet.size > 0 && !authorizedSet.has(cleanMailbox)) {
+                return {
+                    success: true,
+                    data: [],
+                    pagination: { page, limit, total: 0, totalPages: 0 },
+                    counts: { unread: 0, inbox: 0, starred: 0, sent: 0, archive: 0, trash: 0 }
+                };
+            }
             // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail
             baseWhere = {
                 messages: {
@@ -103,24 +112,22 @@ export async function getMailboxThreadsAction(workspaceId, {
                 }
             };
         } else {
-            // 'ALL' mailbox selected: filter by all authorized email IDs for this user
-            const allEmails = authorizedEmails.map(e => e.toLowerCase()).filter(Boolean);
-            baseWhere = isAdmin
-                ? {}
-                : allEmails.length > 0
-                    ? {
-                        messages: {
-                            some: {
-                                OR: [
-                                    { to: { hasSome: allEmails } },
-                                    { cc: { hasSome: allEmails } },
-                                    { bcc: { hasSome: allEmails } },
-                                    { fromEmail: { in: allEmails } }
-                                ]
-                            }
+            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user
+            const allEmails = Array.from(authorizedSet).filter(Boolean);
+            baseWhere = allEmails.length > 0
+                ? {
+                    messages: {
+                        some: {
+                            OR: [
+                                { to: { hasSome: allEmails } },
+                                { cc: { hasSome: allEmails } },
+                                { bcc: { hasSome: allEmails } },
+                                { fromEmail: { in: allEmails } }
+                            ]
                         }
                     }
-                    : { id: '__no_access__' };
+                }
+                : { id: '__no_access__' };
         }
 
         const folderFilter = folder === 'INBOX'
@@ -313,20 +320,30 @@ export async function sendMailboxEmailAction(workspaceId, {
         if (!subject) throw new Error('Subject is required');
 
         // Verify authorization if a specific mailbox identity was chosen
-        const cleanFromMailbox = fromEmail?.trim().toLowerCase() || null;
-        if (cleanFromMailbox) {
-            const isAuthorized = await isUserAuthorizedForMailbox(userId, cleanFromMailbox, workspaceId);
+        // Resolve user's authorized official mailboxes from Org Builder
+        const { mailboxes, authorizedEmails } = await getUserAuthorizedMailboxes(userId, workspaceId);
+        const primaryOfficialMailbox = mailboxes.find(m => m.isPrimary)?.email || authorizedEmails[0] || null;
+
+        let targetFromMailbox = fromEmail?.trim().toLowerCase() || primaryOfficialMailbox;
+
+        if (targetFromMailbox) {
+            const isAuthorized = await isUserAuthorizedForMailbox(userId, targetFromMailbox, workspaceId);
             if (!isAuthorized) {
-                throw new Error(`Unauthorized: You are not assigned to send emails from ${cleanFromMailbox}`);
+                throw new Error(`Unauthorized: You are not assigned to send emails from ${targetFromMailbox}`);
             }
+        } else {
+            throw new Error('Unauthorized: No official mailbox assigned to your account in Org Builder');
         }
+
+        const matchedMailbox = mailboxes.find(m => m.email?.toLowerCase() === targetFromMailbox);
+        const effectiveSenderName = senderName || matchedMailbox?.displayName || user?.displayName || 'Devlomatix Sales';
 
         const { resend, defaultFromEmail } = await getResendClient(workspaceId);
         const { formattedFrom, pureEmail, replyTo, fallbackFrom, fallbackEmail, userName } = resolveUserSender(
             user,
             defaultFromEmail,
-            senderName,
-            cleanFromMailbox
+            effectiveSenderName,
+            targetFromMailbox
         );
 
         // Auto-heal displayName in DB if it was null or had dots

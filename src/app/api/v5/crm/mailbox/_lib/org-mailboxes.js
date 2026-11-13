@@ -5,16 +5,14 @@ import { deriveDisplayName } from './threading';
  * Resolves all authorized email identities for a given user based on their
  * personal account and roles/posts assigned in the Organization Builder.
  *
- * Example:
- * If amit.vishwakarma@devlomatix.com is assigned to:
- * - VP of Sales (mailboxEmail: sales@devlomatix.com)
- * - Executive / Admin (mailboxEmail: admin@devlomatix.com)
- *
- * Then returned identities include:
- * 1. "All Inboxes" (aggregated feed)
- * 2. "Amit Vishwakarma (Personal)" (amit.vishwakarma@devlomatix.com)
- * 3. "VP of Sales (sales@devlomatix.com)"
- * 4. "Executive Office (admin@devlomatix.com)"
+ * Rules:
+ * 1. If user is assigned to one or more posts in Org Builder with official mailboxEmails
+ *    (e.g., node_vp_sales with sales@devlomatix.com), ONLY those official corporate
+ *    emails are authorized and primary.
+ * 2. Personal auth emails (e.g. @gmail.com) are excluded from corporate mailbox
+ *    operations whenever official mailboxes are assigned.
+ * 3. Admins only see mailboxes for posts they are assigned to, preventing unauthorized
+ *    cross-department email exposure.
  */
 export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global') {
     if (!userId) {
@@ -72,7 +70,6 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
             : {};
 
         const assignedPosts = [];
-        const allOrgPosts = [];
 
         Object.values(nodes).forEach((node) => {
             if (!node || !node.id) return;
@@ -93,35 +90,44 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
             const isAssigned = (Array.isArray(node.assignedUserIds) && node.assignedUserIds.includes(userId)) ||
                 (cleanUserEmail && validEmails.includes(cleanUserEmail));
 
-            validEmails.forEach((email) => {
-                const postItem = {
-                    nodeId: `${node.id}_${email}`,
-                    roleId: node.id,
-                    postTitle: node.title || 'Role Position',
-                    department: node.department || 'General',
-                    mailboxEmail: email,
-                    mailboxDisplayName: node.mailboxDisplayName || node.title || 'Devlomatix',
-                    assignedUserIds: node.assignedUserIds || []
-                };
-
-                allOrgPosts.push(postItem);
-
-                if (isAssigned) {
-                    assignedPosts.push(postItem);
-                }
-            });
+            if (isAssigned) {
+                validEmails.forEach((email) => {
+                    assignedPosts.push({
+                        nodeId: `${node.id}_${email}`,
+                        roleId: node.id,
+                        postTitle: node.title || 'Role Position',
+                        department: node.department || 'General',
+                        mailboxEmail: email,
+                        mailboxDisplayName: node.mailboxDisplayName || node.title || 'Devlomatix',
+                        assignedUserIds: node.assignedUserIds || []
+                    });
+                });
+            }
         });
 
-        // Unique email collector
         const authorizedEmailsSet = new Set();
-        if (cleanUserEmail) {
-            authorizedEmailsSet.add(cleanUserEmail);
-        }
-
-        // Base personal mailbox identity
         const mailboxList = [];
 
-        if (cleanUserEmail) {
+        if (assignedPosts.length > 0) {
+            // User has official mailboxes assigned in Org Builder
+            assignedPosts.forEach((post, index) => {
+                if (!authorizedEmailsSet.has(post.mailboxEmail)) {
+                    authorizedEmailsSet.add(post.mailboxEmail);
+                    mailboxList.push({
+                        id: post.nodeId,
+                        email: post.mailboxEmail,
+                        label: `${post.postTitle} (${post.mailboxEmail})`,
+                        type: 'POST',
+                        isPrimary: index === 0,
+                        postTitle: post.postTitle,
+                        department: post.department,
+                        displayName: post.mailboxDisplayName
+                    });
+                }
+            });
+        } else if (cleanUserEmail) {
+            // Fallback: If user has no Org Builder role assigned, use account email
+            authorizedEmailsSet.add(cleanUserEmail);
             mailboxList.push({
                 id: 'personal',
                 email: cleanUserEmail,
@@ -134,57 +140,23 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
             });
         }
 
-        // Add posts assigned directly to this user
-        assignedPosts.forEach((post) => {
-            if (!authorizedEmailsSet.has(post.mailboxEmail)) {
-                authorizedEmailsSet.add(post.mailboxEmail);
-                mailboxList.push({
-                    id: post.nodeId,
-                    email: post.mailboxEmail,
-                    label: `${post.postTitle} (${post.mailboxEmail})`,
-                    type: 'POST',
-                    isPrimary: false,
-                    postTitle: post.postTitle,
-                    department: post.department,
-                    displayName: post.mailboxDisplayName
-                });
-            }
-        });
-
-        // If user is Admin, also allow visibility into other department mailboxes
-        if (isAdmin) {
-            allOrgPosts.forEach((post) => {
-                if (!authorizedEmailsSet.has(post.mailboxEmail)) {
-                    authorizedEmailsSet.add(post.mailboxEmail);
-                    mailboxList.push({
-                        id: post.nodeId,
-                        email: post.mailboxEmail,
-                        label: `${post.postTitle} (${post.mailboxEmail})`,
-                        type: 'ADMIN_OVERVIEW',
-                        isPrimary: false,
-                        postTitle: post.postTitle,
-                        department: post.department,
-                        displayName: post.mailboxDisplayName
-                    });
-                }
-            });
-        }
-
         const authorizedEmails = Array.from(authorizedEmailsSet);
 
-        // Include "All Inboxes" entry if user has multiple mailboxes
-        const finalMailboxes = [
-            {
-                id: 'all',
-                email: 'ALL',
-                label: 'All Inboxes',
-                type: 'ALL',
-                isAll: true,
-                postTitle: 'Unified Feed',
-                department: 'All'
-            },
-            ...mailboxList
-        ];
+        // Include "All Inboxes" only if user has multiple assigned mailboxes
+        const finalMailboxes = mailboxList.length > 1
+            ? [
+                {
+                    id: 'all',
+                    email: 'ALL',
+                    label: 'All Inboxes',
+                    type: 'ALL',
+                    isAll: true,
+                    postTitle: 'Unified Feed',
+                    department: 'All'
+                },
+                ...mailboxList
+            ]
+            : mailboxList;
 
         return {
             user,
@@ -208,7 +180,6 @@ export async function getUserAuthorizedMailboxes(userId, workspaceId = 'global')
  */
 export async function isUserAuthorizedForMailbox(userId, mailboxEmail, workspaceId = 'global') {
     if (!mailboxEmail || mailboxEmail === 'ALL') return true;
-    const { authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(userId, workspaceId);
-    if (isAdmin) return true;
+    const { authorizedEmails } = await getUserAuthorizedMailboxes(userId, workspaceId);
     return authorizedEmails.includes(mailboxEmail.trim().toLowerCase());
 }

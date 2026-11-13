@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { db as prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const DEFAULT_BRANDING = {
     primaryColor: "#3b82f6",
     logoUrl: "",
@@ -8,6 +11,7 @@ const DEFAULT_BRANDING = {
     logoDarkUrl: "",
     appName: "Devlomatix",
     appDescription: "Your Productivity Platform",
+    showGoogleLogin: true,
 };
 
 export async function GET() {
@@ -16,7 +20,12 @@ export async function GET() {
             where: { key: 'global' }
         }).catch(() => null);
 
-        const branding = globalSettings?.social || globalSettings?.general || DEFAULT_BRANDING;
+        const savedBranding = globalSettings?.social || globalSettings?.general || {};
+        const branding = {
+            ...DEFAULT_BRANDING,
+            ...savedBranding,
+            showGoogleLogin: savedBranding.showGoogleLogin !== undefined ? Boolean(savedBranding.showGoogleLogin) : true,
+        };
 
         return NextResponse.json(branding);
     } catch (error) {

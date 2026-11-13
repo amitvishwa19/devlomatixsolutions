@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { decrypt } from "@/lib/auth";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 async function getUserIdFromRequest(request) {
   try {
@@ -22,10 +23,12 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { workspaceId, title, order } = body;
+    const { title, order } = body;
 
-    if (!workspaceId || !title) {
-      return NextResponse.json({ error: "workspaceId and title are required" }, { status: 400 });
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request, body);
+
+    if (!title) {
+      return NextResponse.json({ error: "title is required" }, { status: 400 });
     }
 
     const maxOrder = await db.kanbanColumn.findFirst({

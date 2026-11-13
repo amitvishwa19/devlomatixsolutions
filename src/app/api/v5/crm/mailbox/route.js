@@ -211,6 +211,9 @@ export async function POST(request) {
                         subject,
                         from: rawFrom,
                         fromEmail,
+                        to: toList,
+                        cc: ccList,
+                        bcc: bccList,
                         snippet,
                         contactName: contact?.name || fromName,
                         isNewThread: isNew,
@@ -311,12 +314,22 @@ export async function GET(request) {
         const skip = (page - 1) * limit;
 
         // Resolve user's authorized mailbox identities
-        const { mailboxes, authorizedEmails, isAdmin } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
+        const { mailboxes, authorizedEmails } = await getUserAuthorizedMailboxes(auth.user.id, auth.workspaceId);
+        const authorizedSet = new Set((authorizedEmails || []).map(e => e.toLowerCase()));
         const cleanMailbox = (mailboxEmailParam && mailboxEmailParam !== 'ALL') ? mailboxEmailParam.trim().toLowerCase() : null;
 
         let baseWhere;
 
         if (cleanMailbox) {
+            // Ensure user is authorized for the explicitly selected mailbox
+            if (authorizedSet.size > 0 && !authorizedSet.has(cleanMailbox)) {
+                return apiSuccess([], {
+                    pagination: { page, limit, total: 0, totalPages: 0 },
+                    counts: { unread: 0, inbox: 0, starred: 0, sent: 0, archive: 0, trash: 0 },
+                    mailboxes: mailboxes || []
+                });
+            }
+
             // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail
             baseWhere = {
                 messages: {
@@ -331,24 +344,22 @@ export async function GET(request) {
                 }
             };
         } else {
-            // 'ALL' mailbox selected: filter by all authorized email IDs for this user
-            const allEmails = authorizedEmails.map(e => e.toLowerCase()).filter(Boolean);
-            baseWhere = isAdmin
-                ? {}
-                : allEmails.length > 0
-                    ? {
-                        messages: {
-                            some: {
-                                OR: [
-                                    { to: { hasSome: allEmails } },
-                                    { cc: { hasSome: allEmails } },
-                                    { bcc: { hasSome: allEmails } },
-                                    { fromEmail: { in: allEmails } }
-                                ]
-                            }
+            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user
+            const allEmails = Array.from(authorizedSet).filter(Boolean);
+            baseWhere = allEmails.length > 0
+                ? {
+                    messages: {
+                        some: {
+                            OR: [
+                                { to: { hasSome: allEmails } },
+                                { cc: { hasSome: allEmails } },
+                                { bcc: { hasSome: allEmails } },
+                                { fromEmail: { in: allEmails } }
+                            ]
                         }
                     }
-                    : { id: '__no_access__' };
+                }
+                : { id: '__no_access__' };
         }
 
         const folderFilter = folder === 'INBOX'

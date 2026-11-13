@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { decrypt } from "@/lib/auth";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 async function getUserIdFromRequest(request) {
   try {
@@ -16,16 +17,17 @@ async function getUserIdFromRequest(request) {
 
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get("workspaceId");
-
-    if (!workspaceId) {
-      return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
+    const userId = await getUserIdFromRequest(request);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = await getUserIdFromRequest(request);
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request);
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Could not resolve workspace" }, { status: 400 });
+    }
 
-    const columns = await db.kanbanColumn.findMany({
+    let columns = await db.kanbanColumn.findMany({
       where: { workspaceId },
       include: {
         tasks: {

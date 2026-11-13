@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { decrypt } from "@/lib/auth";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 async function getUserIdFromRequest(request) {
   try {
@@ -22,11 +23,19 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    const { workspaceId, columnId, title, content, type, priority, dueDate, assigneeId, coverUrl, checklists } = body;
+    const { columnId, title, content, type, priority, dueDate, assigneeId, coverUrl, checklists } = body;
 
-    if (!workspaceId || !columnId || !title) {
-      return NextResponse.json({ error: "workspaceId, columnId, and title are required" }, { status: 400 });
+    if (!columnId || !title) {
+      return NextResponse.json({ error: "columnId and title are required" }, { status: 400 });
     }
+
+    const column = await db.kanbanColumn.findUnique({
+      where: { id: columnId },
+      select: { workspaceId: true },
+    });
+
+    const workspaceId =
+      body.workspaceId || column?.workspaceId || (await resolveEffectiveWorkspaceId(userId, request, body));
 
     const maxOrder = await db.kanbanTask.findFirst({
       where: { columnId },

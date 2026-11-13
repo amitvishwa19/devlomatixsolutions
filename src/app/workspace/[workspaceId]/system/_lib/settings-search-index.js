@@ -10,6 +10,7 @@ export const SETTINGS_SEARCH_INDEX = [
     { tabId: 'general', title: 'App Name & Tagline', description: 'Public platform branding and slogan', keywords: ['app name', 'tagline', 'branding', 'slogan', 'title'] },
     { tabId: 'general', title: 'Brand Primary Color', description: 'Global primary accent theme color', keywords: ['color', 'theme', 'palette', 'primary', 'hex', 'visual'] },
     { tabId: 'general', title: 'Workspace Logo', description: 'Upload company logo or icon', keywords: ['logo', 'icon', 'image', 'avatar', 'upload', 'photo'] },
+    { tabId: 'general', title: 'Google Sign-In Visibility (Global)', description: 'Show or hide Google Sign-In button on the public login screen', keywords: ['google', 'google signin', 'google login', 'oauth', 'social login', 'sign-in', 'login screen', 'authentication', 'global'] },
     { tabId: 'general', title: 'Social Media Links', description: 'Facebook, Twitter/X, Instagram, LinkedIn, YouTube, GitHub', keywords: ['social', 'facebook', 'twitter', 'x', 'instagram', 'linkedin', 'youtube', 'github', 'links'] },
 
     // Business Details

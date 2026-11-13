@@ -57,7 +57,8 @@ export const WorkspaceProvider = ({ children }) => {
         logoDarkUrl: "",
         appName: "Devlomatix",
         appDescription: "Your Productivity Platform",
-        workspaceUrl: "http://localhost:3000"
+        workspaceUrl: "http://localhost:3000",
+        showGoogleLogin: true
     };
 
     // --- Fetch Settings ---

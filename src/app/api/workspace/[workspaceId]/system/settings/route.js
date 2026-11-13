@@ -113,13 +113,19 @@ export async function GET(req, { params }) {
             logoDarkUrl: "",
             appName: "Devlomatix",
             appDescription: "Your Productivity Platform",
-            workspaceUrl: `http://localhost:3000`
+            workspaceUrl: `http://localhost:3000`,
+            showGoogleLogin: true,
         };
+
+        const resolvedShowGoogle = glSocial.showGoogleLogin !== undefined
+            ? Boolean(glSocial.showGoogleLogin)
+            : (glGeneral.showGoogleLogin !== undefined ? Boolean(glGeneral.showGoogleLogin) : true);
 
         const mergedBranding = {
             ...defaultBranding,
             ...glSocial,
             ...glGeneral,
+            showGoogleLogin: resolvedShowGoogle,
         };
 
         // Universal business details saved strictly under key: 'global'

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { decrypt } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 async function getUserId(request) {
   const authHeader = request.headers.get("authorization");
@@ -16,11 +17,11 @@ export async function GET(request) {
     if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(request.url);
-    const workspaceId = searchParams.get("workspaceId");
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request);
     const candidateId = searchParams.get("candidateId");
     const limit = parseInt(searchParams.get("limit") || "20");
 
-    if (!workspaceId) return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
+    if (!workspaceId) return NextResponse.json({ error: "Could not resolve workspace" }, { status: 400 });
 
     const where = { candidate: { workspaceId }, ...(candidateId && { candidateId }) };
 

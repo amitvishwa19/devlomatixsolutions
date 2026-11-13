@@ -157,7 +157,7 @@ export default function MailboxComposeSheet({
                                         </Select>
                                     ) : (
                                         <span className="text-slate-700 dark:text-slate-300 font-medium text-[11px] truncate">
-                                            {senderName || senderInfo?.name || ''} &lt;{selectedFromEmail || senderInfo?.email || 'crm@devlomatix.in'}&gt;
+                                            {mailboxes[0]?.displayName || senderName || senderInfo?.name || 'Devlomatix Sales'} &lt;{selectedFromEmail || mailboxes[0]?.email || 'sales@devlomatix.com'}&gt;
                                         </span>
                                     )}
                                 </div>

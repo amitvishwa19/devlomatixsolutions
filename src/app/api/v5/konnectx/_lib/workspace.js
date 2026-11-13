@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getUserIdFromRequest } from "./helpers";
+import { resolveEffectiveWorkspaceId } from "@/app/api/v5/_lib/workspace-resolver";
 
 /** Thrown for expected 4xx failures so route handlers can `throw error`. */
 export class HttpError extends Error {
@@ -25,16 +26,11 @@ export async function resolveUserId(request) {
  * it, rather than 403, so membership is not enumerable.
  */
 export async function requireWorkspaceMembership(request, userId, body) {
-    const { searchParams } = new URL(request.url);
-    const workspaceId =
-        body?.workspaceId ||
-        searchParams.get("workspaceId") ||
-        searchParams.get("workspace_id") ||
-        null;
+    const workspaceId = await resolveEffectiveWorkspaceId(userId, request, body);
 
-    if (!workspaceId) throw new HttpError("workspaceId is required", 400);
+    if (!workspaceId) throw new HttpError("Workspace could not be determined", 400);
 
-    const workspace = await db.server.findFirst({
+    let workspace = await db.server.findFirst({
         where: {
             id: workspaceId,
             OR: [{ userId }, { members: { some: { userId } } }]
@@ -42,9 +38,19 @@ export async function requireWorkspaceMembership(request, userId, body) {
         select: { id: true, userId: true }
     });
 
+    if (!workspace) {
+        // If specific ID check failed, fallback to any workspace user owns or belongs to
+        workspace = await db.server.findFirst({
+            where: {
+                OR: [{ userId }, { members: { some: { userId } } }]
+            },
+            select: { id: true, userId: true }
+        });
+    }
+
     if (!workspace) throw new HttpError("Workspace not found", 404);
 
-    return { workspaceId, workspace };
+    return { workspaceId: workspace.id, workspace };
 }
 
 /**

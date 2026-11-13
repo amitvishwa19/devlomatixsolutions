@@ -903,7 +903,7 @@ model Department {
 model Candidate {
   id           String           @id @default(cuid())
   name         String
-  email        String           @unique
+  email        String
   phone        String?
   location     String?
   resumeUrl    String?
@@ -921,6 +921,7 @@ model Candidate {
   notes        AtsNote[]
   scorecards   Scorecard[]
 
+  @@unique([workspaceId, email])
   @@index([workspaceId])
   @@index([email])
 }
