@@ -201,7 +201,18 @@ export const ApplyModal = ({ job, isOpen, onClose }) => {
                     <ScrollArea className="w-full md:w-[60%] border-b md:border-b-0 md:border-r border-border/40 h-auto md:h-[90vh] bg-card">
                         <div className="p-6 space-y-8">
                             <div className="space-y-4">
-                                <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full">{job.department}</Badge>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full">{job.department || job.category?.name || 'General'}</Badge>
+                                    {job.type && job.type.split(/[,/]+/).map(t => {
+                                        const clean = t.trim();
+                                        if (!clean) return null;
+                                        return (
+                                            <Badge key={clean} variant="outline" className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-primary/20">
+                                                {clean}
+                                            </Badge>
+                                        );
+                                    })}
+                                </div>
                                 <h3 className="text-3xl font-bold tracking-tight leading-tight">{job.title}</h3>
                                 <div className="flex flex-wrap gap-4 pt-2">
                                     <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">

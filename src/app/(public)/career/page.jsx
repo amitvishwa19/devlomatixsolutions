@@ -60,7 +60,14 @@ export default function CareerPage() {
             const matchesSearch = (job.title || "").toLowerCase().includes(search.toLowerCase()) ||
                 deptName.toLowerCase().includes(search.toLowerCase());
             const matchesDept = department === 'ALL' || deptName.toLowerCase() === department.toLowerCase();
-            const matchesType = type === 'ALL' || (job.type || "").toLowerCase().includes(type.toLowerCase());
+            const matchesType = type === 'ALL' || (() => {
+                const jobTypeLower = (job.type || "").toLowerCase();
+                const filterLower = type.toLowerCase();
+                if (filterLower === 'freelancer' || filterLower === 'freelance') {
+                    return jobTypeLower.includes('freelance');
+                }
+                return jobTypeLower.includes(filterLower);
+            })();
             const matchesLoc = location === 'ALL' || locName.toLowerCase().includes(location.toLowerCase());
 
             return matchesSearch && matchesDept && matchesType && matchesLoc;
@@ -97,7 +104,7 @@ export default function CareerPage() {
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase tracking-widest shadow-lg shadow-primary/5"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] uppercase  shadow-lg shadow-primary/5"
                         >
                             <Sparkles size={14} className="fill-primary" />
                             Careers at Devlomatix
@@ -107,7 +114,7 @@ export default function CareerPage() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl tracking-tight leading-[1.1]"
+                            className="text-5xl md:text-7xl  leading-[1.1]"
                         >
                             Join the Future of <br />
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-blue-500 to-indigo-500">
@@ -134,7 +141,7 @@ export default function CareerPage() {
                             <Button
                                 size="lg"
                                 onClick={scrollToJobs}
-                                className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all active:scale-95"
+                                className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground uppercase  text-xs shadow-xl shadow-primary/20 transition-all active:scale-95"
                             >
                                 View Openings
                                 <ChevronDown size={18} className="ml-2 animate-bounce" />
@@ -155,7 +162,7 @@ export default function CareerPage() {
                                         <stat.icon size={24} className="text-primary" />
                                     </div>
                                     <span className="text-3xl">{stat.value}</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+                                    <span className="text-[10px] font-bold text-muted-foreground uppercase  opacity-60">
                                         {stat.label}
                                     </span>
                                 </div>
@@ -174,11 +181,11 @@ export default function CareerPage() {
                             initial={{ opacity: 0, scale: 0.9 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] uppercase tracking-widest"
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] uppercase "
                         >
                             Our Vision
                         </motion.div>
-                        <h2 className="text-4xl md:text-5xl tracking-tight leading-tight">
+                        <h2 className="text-4xl md:text-5xl  leading-tight">
                             Driven by Innovation,<br />
                             <span className="text-primary">Defined by People.</span>
                         </h2>
@@ -235,7 +242,7 @@ export default function CareerPage() {
                         {/* Section Header */}
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div className="space-y-3">
-                                <h2 className="text-4xl tracking-tight">Open Positions</h2>
+                                <h2 className="text-4xl ">Open Positions</h2>
                                 <p className="text-sm font-bold text-muted-foreground opacity-60">
                                     Showing {isLoading ? '...' : filteredJobs.length} opportunities across the globe
                                 </p>
@@ -245,9 +252,8 @@ export default function CareerPage() {
                                     <Badge
                                         variant={department === 'ALL' ? "secondary" : "ghost"}
                                         onClick={() => setDepartment('ALL')}
-                                        className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${
-                                            department === 'ALL' ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
-                                        }`}
+                                        className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${department === 'ALL' ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
+                                            }`}
                                     >
                                         All ({jobs?.length || 0})
                                     </Badge>
@@ -256,9 +262,8 @@ export default function CareerPage() {
                                             key={dept}
                                             variant={department === dept ? "secondary" : "ghost"}
                                             onClick={() => setDepartment(department === dept ? 'ALL' : dept)}
-                                            className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${
-                                                department === dept ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
-                                            }`}
+                                            className={`text-[10px] font-bold px-3 py-1.5 cursor-pointer transition-colors ${department === dept ? 'bg-primary/10 text-primary border-none' : 'opacity-60 hover:opacity-100'
+                                                }`}
                                         >
                                             {dept}
                                         </Badge>
@@ -335,7 +340,7 @@ export default function CareerPage() {
                             style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
 
                         <div className="space-y-4 relative z-10">
-                            <h2 className="text-4xl md:text-5xl tracking-tight leading-tight">
+                            <h2 className="text-4xl md:text-5xl  leading-tight">
                                 Don&apos;t see the right role? <br />
                                 <span className="text-primary">Apply anyway.</span>
                             </h2>
@@ -348,7 +353,7 @@ export default function CareerPage() {
                         <div className="relative z-10">
                             <Button
                                 size="lg"
-                                className="h-14 px-12 rounded-2xl bg-foreground text-background hover:bg-foreground/90 uppercase tracking-widest text-[10px] transition-all group-hover:scale-105 active:scale-95"
+                                className="h-14 px-12 rounded-2xl bg-foreground text-background hover:bg-foreground/90 uppercase  text-[10px] transition-all group-hover:scale-105 active:scale-95"
                                 onClick={() => handleApply({
                                     id: 'custom',
                                     title: 'General Application',

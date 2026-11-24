@@ -32,8 +32,26 @@ export const JobCard = ({ job, onApply }) => {
                     <div className="space-y-1.5 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 transition-colors border-primary/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-                                {job.category?.name || job.department || 'Engineering'}
+                                {job.category?.name || job.department || 'General'}
                             </Badge>
+                            {job.type && job.type.split(/[,/]+/).map(t => {
+                                const clean = t.trim();
+                                if (!clean) return null;
+                                const lower = clean.toLowerCase();
+                                let badgeStyle = "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20";
+                                if (lower.includes('freelanc')) {
+                                    badgeStyle = "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20";
+                                } else if (lower.includes('contract')) {
+                                    badgeStyle = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
+                                } else if (lower.includes('full')) {
+                                    badgeStyle = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
+                                }
+                                return (
+                                    <Badge key={clean} variant="outline" className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${badgeStyle}`}>
+                                        {clean}
+                                    </Badge>
+                                );
+                            })}
                             {job.isHot && (
                                 <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                                     <Zap size={10} className="fill-amber-500" /> Urgent
@@ -56,7 +74,13 @@ export const JobCard = ({ job, onApply }) => {
                         <div className="p-1.5 bg-secondary/80 rounded-lg shrink-0">
                             <IndianRupee size={12} className="text-primary" />
                         </div>
-                        <span>{job.salaryRange || job.salary || 'Competitive'} p/m</span>
+                        <span>
+                            {job.salaryRange ? (
+                                /(PA|p\.a|per annum|yearly|\/yr|\/year|PM|p\.m|per month|monthly|\/mo|\/month|hourly|\/hr)/i.test(job.salaryRange)
+                                    ? job.salaryRange
+                                    : `${job.salaryRange} /month`
+                            ) : (job.salary || 'Competitive')}
+                        </span>
                     </div>
                     <div className="flex items-center gap-2 text-[11px] font-bold text-muted-foreground">
                         <div className="p-1.5 bg-secondary/80 rounded-lg shrink-0">

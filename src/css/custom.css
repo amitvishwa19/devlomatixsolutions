@@ -239,8 +239,42 @@
 }
 
 /* Selection Styles */
-.ProseMirror ::selection {
-    background-color: hsl(var(--primary) / 0.2);
+.ProseMirror ::selection,
+.ProseMirror *::selection,
+.ProseMirror::selection,
+.tiptap ::selection,
+.tiptap *::selection,
+.tiptap::selection,
+.ProseMirror p::selection,
+.ProseMirror span::selection,
+.ProseMirror div::selection,
+.ProseMirror h1::selection,
+.ProseMirror h2::selection,
+.ProseMirror h3::selection,
+.ProseMirror li::selection {
+    background-color: #2563eb !important;
+    background: #2563eb !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+}
+
+.dark .ProseMirror ::selection,
+.dark .ProseMirror *::selection,
+.dark .ProseMirror::selection,
+.dark .tiptap ::selection,
+.dark .tiptap *::selection,
+.dark .tiptap::selection,
+.dark .ProseMirror p::selection,
+.dark .ProseMirror span::selection,
+.dark .ProseMirror div::selection,
+.dark .ProseMirror h1::selection,
+.dark .ProseMirror h2::selection,
+.dark .ProseMirror h3::selection,
+.dark .ProseMirror li::selection {
+    background-color: #3b82f6 !important;
+    background: #3b82f6 !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
 }
 
 /* Placeholder */

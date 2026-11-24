@@ -173,12 +173,35 @@ export function normalizeSubject(subject) {
 /**
  * Resolves the workspaceId for an inbound email.
  * Strategy:
+ * 0. In-Reply-To or References matching an existing message in DB -> message's workspaceId
  * 1. Plus-addressing in recipient: "inbox+{workspaceId}@domain.com"
- * 2. Recipient matches an existing User -> user's workspace
- * 3. Sender matches an existing Contact in a workspace
- * 4. Fallback to first available workspace in database
+ * 2. Recipient matches an existing User -> user's default/active workspace
+ * 3. Recipient matches an Organization Builder Role/Post mailbox -> assigned user's workspace
+ * 4. Sender matches an existing Contact in a workspace
+ * 5. Fallback to default or first available workspace in database
  */
-export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
+export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail, inReplyTo, references }) {
+    // 0. Match parent message via In-Reply-To or References header
+    if (inReplyTo) {
+        const cleanInReplyTo = inReplyTo.trim();
+        const parentMsg = await prisma.crmEmailMessage.findFirst({
+            where: { messageId: cleanInReplyTo },
+            select: { workspaceId: true }
+        });
+        if (parentMsg?.workspaceId) return parentMsg.workspaceId;
+    }
+
+    if (references) {
+        const refList = references.split(/\s+/).map(r => r.trim()).filter(Boolean);
+        if (refList.length > 0) {
+            const parentMsg = await prisma.crmEmailMessage.findFirst({
+                where: { messageId: { in: refList } },
+                select: { workspaceId: true }
+            });
+            if (parentMsg?.workspaceId) return parentMsg.workspaceId;
+        }
+    }
+
     // 1. Check plus-addressing or slug in recipient list
     for (const recipient of to) {
         const { email } = parseEmailAddress(recipient);
@@ -193,7 +216,33 @@ export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
         }
     }
 
-    // 2. Check if recipient matches an Organization Builder Role/Post mailbox
+    // 2. Check if recipient matches a registered User email directly
+    for (const recipient of to) {
+        const { email } = parseEmailAddress(recipient);
+        if (!email) continue;
+
+        const user = await prisma.user.findUnique({
+            where: { email },
+            select: { id: true }
+        });
+
+        if (user) {
+            const server = await prisma.server.findFirst({
+                where: { userId: user.id, default: true },
+                select: { id: true }
+            }) || await prisma.server.findFirst({
+                where: { userId: user.id },
+                select: { id: true }
+            }) || await prisma.member.findFirst({
+                where: { userId: user.id },
+                select: { serverId: true }
+            });
+
+            if (server?.id || server?.serverId) return server.id || server.serverId;
+        }
+    }
+
+    // 3. Check if recipient matches an Organization Builder Role/Post mailbox
     try {
         const globalRecord = await prisma.appSettings.findUnique({
             where: { key: 'org_structure_global' }
@@ -217,17 +266,18 @@ export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
                 if (cleanNodeEmails.includes(cleanRecip)) {
                     const assignedUserIds = Array.isArray(node.assignedUserIds) ? node.assignedUserIds : [];
                     for (const uid of assignedUserIds) {
-                        const member = await prisma.member.findFirst({
+                        const server = await prisma.server.findFirst({
+                            where: { userId: uid, default: true },
+                            select: { id: true }
+                        }) || await prisma.server.findFirst({
+                            where: { userId: uid },
+                            select: { id: true }
+                        }) || await prisma.member.findFirst({
                             where: { userId: uid },
                             select: { serverId: true }
                         });
-                        if (member?.serverId) return member.serverId;
 
-                        const server = await prisma.server.findFirst({
-                            where: { userId: uid },
-                            select: { id: true }
-                        });
-                        if (server?.id) return server.id;
+                        if (server?.id || server?.serverId) return server.id || server.serverId;
                     }
                 }
             }
@@ -236,40 +286,25 @@ export async function resolveWorkspaceForInboundEmail({ to = [], fromEmail }) {
         console.warn('[RESOLVE_WS_ORG_BUILDER_WARN]', orgErr.message);
     }
 
-    // 3. Check if recipient matches a registered User email
-    for (const recipient of to) {
-        const { email } = parseEmailAddress(recipient);
-        if (!email) continue;
-
-        const user = await prisma.user.findUnique({
-            where: { email },
-            select: { id: true }
-        });
-
-        if (user) {
-            const member = await prisma.member.findFirst({
-                where: { userId: user.id },
-                select: { serverId: true }
-            });
-            if (member?.serverId) return member.serverId;
-        }
-    }
-
     // 4. Check if sender email matches an existing Contact
     if (fromEmail) {
         const contact = await prisma.contact.findFirst({
             where: { email: { equals: fromEmail, mode: 'insensitive' } },
+            orderBy: { updatedAt: 'desc' },
             select: { workspaceId: true }
         });
         if (contact?.workspaceId) return contact.workspaceId;
     }
 
-    // 4. Fallback: first Server / workspace
-    const firstServer = await prisma.server.findFirst({
+    // 5. Fallback: default or first Server / workspace
+    const defaultServer = await prisma.server.findFirst({
+        where: { default: true },
+        select: { id: true }
+    }) || await prisma.server.findFirst({
         select: { id: true }
     });
 
-    return firstServer?.id || 'default-workspace';
+    return defaultServer?.id || 'default-workspace';
 }
 
 /**
@@ -360,13 +395,20 @@ export async function findOrCreateEmailThread({
     // 1. Try matching via In-Reply-To header
     if (inReplyTo) {
         const cleanInReplyTo = inReplyTo.trim();
-        const matchedMsg = await prisma.crmEmailMessage.findFirst({
+        let matchedMsg = await prisma.crmEmailMessage.findFirst({
             where: {
                 workspaceId,
                 messageId: cleanInReplyTo
             },
             select: { threadId: true }
         });
+
+        if (!matchedMsg) {
+            matchedMsg = await prisma.crmEmailMessage.findFirst({
+                where: { messageId: cleanInReplyTo },
+                select: { threadId: true }
+            });
+        }
 
         if (matchedMsg?.threadId) {
             const thread = await prisma.crmEmailThread.findUnique({
@@ -384,13 +426,20 @@ export async function findOrCreateEmailThread({
             .filter(Boolean);
 
         if (refIds.length > 0) {
-            const matchedMsg = await prisma.crmEmailMessage.findFirst({
+            let matchedMsg = await prisma.crmEmailMessage.findFirst({
                 where: {
                     workspaceId,
                     messageId: { in: refIds }
                 },
                 select: { threadId: true }
             });
+
+            if (!matchedMsg) {
+                matchedMsg = await prisma.crmEmailMessage.findFirst({
+                    where: { messageId: { in: refIds } },
+                    select: { threadId: true }
+                });
+            }
 
             if (matchedMsg?.threadId) {
                 const thread = await prisma.crmEmailThread.findUnique({

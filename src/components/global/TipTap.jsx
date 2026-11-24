@@ -14,6 +14,8 @@ import TaskItem from '@tiptap/extension-task-item';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Highlight } from '@tiptap/extension-highlight';
 import Underline from '@tiptap/extension-underline';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Separator } from '@/components/ui/separator';
 import { Toggle } from "@/components/ui/toggle"
@@ -28,8 +30,34 @@ import {
     Quote, Code2, Minus,
     Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
     Undo, Redo, Highlighter,
-    Plus, Type
+    Plus, Type, ALargeSmall
 } from 'lucide-react';
+
+const FontSize = Extension.create({
+    name: 'fontSize',
+    addOptions() { return { types: ['textStyle'] } },
+    addGlobalAttributes() {
+        return [{
+            types: this.options.types,
+            attributes: {
+                fontSize: {
+                    default: null,
+                    parseHTML: element => element.style.fontSize?.replace(/['"]+/g, '') || null,
+                    renderHTML: attributes => {
+                        if (!attributes.fontSize) return {}
+                        return { style: `font-size: ${attributes.fontSize}` }
+                    },
+                },
+            },
+        }]
+    },
+    addCommands() {
+        return {
+            setFontSize: fontSize => ({ chain }) => chain().setMark('textStyle', { fontSize }).run(),
+            unsetFontSize: () => ({ chain }) => chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run(),
+        }
+    },
+})
 
 const FontFamily = Extension.create({
     name: 'fontFamily',
@@ -81,16 +109,19 @@ export default function TipTap({ data, onChange }) {
             TaskItem.configure({ nested: true }),
             TextStyle,
             FontFamily,
+            FontSize,
             Highlight.configure({ multicolor: true }),
             Underline,
+            Subscript,
+            Superscript,
             Placeholder.configure({
-                placeholder: '',
+                placeholder: 'Start typing job details...',
             }),
         ],
-        content: data,
+        content: data || '',
         editorProps: {
             attributes: {
-                class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl dark:prose-invert focus:outline-none p-6 max-w-none break-words overflow-x-auto',
+                class: 'prose prose-sm text-xs text-[12px] dark:prose-invert focus:outline-none p-6 max-w-none break-words overflow-x-auto min-h-[700px] selection:bg-blue-600 selection:text-white dark:selection:bg-blue-500 dark:selection:text-white',
             },
         },
         immediatelyRender: false,
@@ -116,7 +147,7 @@ export default function TipTap({ data, onChange }) {
         };
 
         if (normalize(currentHTML) !== normalize(data)) {
-            editor.commands.setContent(data, false);
+            editor.commands.setContent(data || '', false);
         }
     }, [data, editor]);
 
@@ -137,13 +168,54 @@ export default function TipTap({ data, onChange }) {
     };
 
     return (
-        <div className="flex flex-col h-full w-full rounded-lg  overflow-hidden">
+        <div className="flex flex-col h-full w-full rounded-lg overflow-hidden bg-background selection:bg-blue-600 selection:text-white dark:selection:bg-blue-500 dark:selection:text-white">
+            {/* Direct High-Contrast Selection Style */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .tiptap ::selection,
+                .tiptap *::selection,
+                .tiptap::selection,
+                .ProseMirror ::selection,
+                .ProseMirror *::selection,
+                .ProseMirror::selection,
+                .ProseMirror p::selection,
+                .ProseMirror span::selection,
+                .ProseMirror div::selection,
+                .ProseMirror h1::selection,
+                .ProseMirror h2::selection,
+                .ProseMirror h3::selection,
+                .ProseMirror li::selection {
+                    background-color: #2563eb !important;
+                    background: #2563eb !important;
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
+                }
+                .dark .tiptap ::selection,
+                .dark .tiptap *::selection,
+                .dark .tiptap::selection,
+                .dark .ProseMirror ::selection,
+                .dark .ProseMirror *::selection,
+                .dark .ProseMirror::selection,
+                .dark .ProseMirror p::selection,
+                .dark .ProseMirror span::selection,
+                .dark .ProseMirror div::selection,
+                .dark .ProseMirror h1::selection,
+                .dark .ProseMirror h2::selection,
+                .dark .ProseMirror h3::selection,
+                .dark .ProseMirror li::selection {
+                    background-color: #3b82f6 !important;
+                    background: #3b82f6 !important;
+                    color: #ffffff !important;
+                    -webkit-text-fill-color: #ffffff !important;
+                }
+                .ProseMirror-selectednode {
+                    outline: 2px solid #3b82f6 !important;
+                }
+            `}} />
 
-            {/* ✅ FULL FEATURED TOOLBAR (Google Docs style) */}
-            <div className="sticky top-0 z-20 bg-background border-b">
+            {/* FULL FEATURED TOOLBAR */}
+            <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40">
                 <ScrollArea className="w-full">
-
-
                     <div className="flex items-center gap-1 p-2 whitespace-nowrap">
 
                         {/* Undo / Redo */}
@@ -178,10 +250,12 @@ export default function TipTap({ data, onChange }) {
 
                         {/* Subscript / Superscript */}
                         <ToolbarButton icon={<Minus className="h-4 w-4" />} tooltip="Subscript"
-                            onClick={() => editor.chain().focus().setSubscript().run()}
+                            isActive={editor.isActive('subscript')}
+                            onClick={() => editor.chain().focus().toggleSubscript().run()}
                         />
                         <ToolbarButton icon={<Code2 className="h-4 w-4" />} tooltip="Superscript"
-                            onClick={() => editor.chain().focus().setSuperscript().run()}
+                            isActive={editor.isActive('superscript')}
+                            onClick={() => editor.chain().focus().toggleSuperscript().run()}
                         />
 
                         <Separator orientation="vertical" className="h-6 mx-1" />
@@ -194,24 +268,31 @@ export default function TipTap({ data, onChange }) {
 
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                     <Highlighter className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="flex gap-2">
+                            <PopoverContent className="flex gap-2 bg-card border-border shadow-xl">
                                 <Input type="color" value={highlightColor} onChange={e => setHighlightColor(e.target.value)} />
                                 <Button onClick={() => editor.chain().focus().setHighlight({ color: highlightColor }).run()}>Apply</Button>
                             </PopoverContent>
                         </Popover>
 
-
+                        {/* Font Family */}
                         <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <Type className="h-4 w-4" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="flex flex-col gap-1 w-48">
+                            <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                <Type className="h-4 w-4" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="text-xs">Font Family</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="flex flex-col gap-1 w-48 bg-card border-border shadow-xl">
                                 <Button variant="ghost" className="justify-start font-normal" onClick={() => editor.chain().focus().unsetFontFamily().run()}>Default Font</Button>
                                 {['Arial', 'Courier New', 'Georgia', 'Impact', 'Times New Roman', 'Trebuchet MS', 'Verdana'].map(font => (
                                     <Button
@@ -227,16 +308,64 @@ export default function TipTap({ data, onChange }) {
                             </PopoverContent>
                         </Popover>
 
+                        {/* Font Size */}
+                        <Popover>
+                            <TooltipProvider delayDuration={200}>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <PopoverTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                <ALargeSmall className="h-4 w-4" />
+                                            </Button>
+                                        </PopoverTrigger>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="text-xs">Font Size</TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <PopoverContent className="flex flex-col gap-1 w-48 bg-card border-border shadow-xl p-1.5 max-h-60 overflow-y-auto">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="justify-start font-normal text-xs h-7"
+                                    onClick={() => editor.chain().focus().unsetFontSize().run()}
+                                >
+                                    Default Size
+                                </Button>
+                                {[
+                                    { label: 'Tiny (10px)', value: '10px' },
+                                    { label: 'Small (12px)', value: '12px' },
+                                    { label: 'Normal (14px)', value: '14px' },
+                                    { label: 'Medium (16px)', value: '16px' },
+                                    { label: 'Large (18px)', value: '18px' },
+                                    { label: 'XL (20px)', value: '20px' },
+                                    { label: '2XL (24px)', value: '24px' },
+                                    { label: '3XL (30px)', value: '30px' },
+                                    { label: '4XL (36px)', value: '36px' },
+                                ].map(item => (
+                                    <Button
+                                        key={item.value}
+                                        variant={editor.isActive('textStyle', { fontSize: item.value }) ? 'secondary' : 'ghost'}
+                                        size="sm"
+                                        className="justify-start font-normal text-xs h-7 gap-2"
+                                        onClick={() => editor.chain().focus().setFontSize(item.value).run()}
+                                    >
+                                        <span style={{ fontSize: item.value }} className="w-5 text-center font-bold">A</span>
+                                        <span>{item.label}</span>
+                                    </Button>
+                                ))}
+                            </PopoverContent>
+                        </Popover>
+
                         <Separator orientation="vertical" className="h-6 mx-1" />
 
                         {/* Format dropdown (Paragraph / H1 / H2 / H3) */}
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                     <Heading1 className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="flex flex-col gap-1">
+                            <PopoverContent className="flex flex-col gap-1 bg-card border-border shadow-xl">
                                 {[{ level: null, label: 'Paragraph' }, { level: 1, label: 'H1' }, { level: 2, label: 'H2' }, { level: 3, label: 'H3' }].map(item => (
                                     <Button
                                         key={item.label}
@@ -256,12 +385,15 @@ export default function TipTap({ data, onChange }) {
 
                         {/* Lists */}
                         <ToolbarButton icon={<List className="h-4 w-4" />} tooltip="Bullet List"
+                            isActive={editor.isActive('bulletList')}
                             onClick={() => editor.chain().focus().toggleBulletList().run()}
                         />
                         <ToolbarButton icon={<ListOrdered className="h-4 w-4" />} tooltip="Ordered List"
+                            isActive={editor.isActive('orderedList')}
                             onClick={() => editor.chain().focus().toggleOrderedList().run()}
                         />
                         <ToolbarButton icon={<ListTodo className="h-4 w-4" />} tooltip="Task List"
+                            isActive={editor.isActive('taskList')}
                             onClick={() => editor.chain().focus().toggleTaskList().run()}
                         />
 
@@ -270,6 +402,7 @@ export default function TipTap({ data, onChange }) {
                         {/* Alignment */}
                         {[['left', AlignLeft], ['center', AlignCenter], ['right', AlignRight], ['justify', AlignJustify]].map(([align, Icon]) => (
                             <ToolbarButton key={align} icon={<Icon className="h-4 w-4" />} tooltip={`Align ${align}`}
+                                isActive={editor.isActive({ textAlign: align })}
                                 onClick={() => editor.chain().focus().setTextAlign(align).run()}
                             />
                         ))}
@@ -279,34 +412,32 @@ export default function TipTap({ data, onChange }) {
                         {/* Insert dropdown */}
                         <Popover>
                             <PopoverTrigger asChild>
-                                <Button variant="ghost" size="icon">
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                     <Plus className="h-4 w-4" />
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="flex flex-col gap-1">
-
+                            <PopoverContent className="flex flex-col gap-2 bg-card border-border shadow-xl">
                                 {/* Table */}
-                                <Button onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()}>
+                                <Button variant="outline" size="sm" onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()}>
                                     Table
                                 </Button>
 
                                 {/* Image */}
                                 <div className="flex gap-2">
-                                    <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL" />
-                                    <Button onClick={() => addImage()}>Add Image</Button>
+                                    <Input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL" className="h-8 text-xs bg-background" />
+                                    <Button size="sm" onClick={() => addImage()}>Add Image</Button>
                                 </div>
 
                                 {/* Link */}
                                 <div className="flex gap-2">
-                                    <Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="Link URL" />
-                                    <Button onClick={() => addLink()}>Add Link</Button>
+                                    <Input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="Link URL" className="h-8 text-xs bg-background" />
+                                    <Button size="sm" onClick={() => addLink()}>Add Link</Button>
                                 </div>
 
                                 {/* Horizontal line */}
-                                <Button onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+                                <Button variant="outline" size="sm" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
                                     Horizontal Line
                                 </Button>
-
                             </PopoverContent>
                         </Popover>
 
@@ -314,10 +445,8 @@ export default function TipTap({ data, onChange }) {
                 </ScrollArea>
             </div>
 
-
-
-            {/* ✅ SCROLLABLE EDITOR ONLY */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            {/* SCROLLABLE EDITOR ONLY */}
+            <div className="flex-1 min-h-[700px] overflow-y-auto">
                 <EditorContent editor={editor} />
             </div>
 
@@ -330,16 +459,21 @@ export const ToolbarButton = ({ onClick, isActive = false, disabled = false, ico
         <Tooltip>
             <TooltipTrigger asChild>
                 <Button
+                    type="button"
                     onClick={onClick}
                     disabled={disabled}
                     variant={isActive ? 'secondary' : 'ghost'}
                     size="icon"
-                    className="h-8 w-8"
+                    className={`h-8 w-8 transition-colors ${
+                        isActive
+                            ? 'bg-primary/20 text-primary hover:bg-primary/30 font-semibold'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                    }`}
                 >
                     {icon}
                 </Button>
             </TooltipTrigger>
-            <TooltipContent>{tooltip}</TooltipContent>
+            <TooltipContent side="bottom" className="text-xs">{tooltip}</TooltipContent>
         </Tooltip>
     </TooltipProvider>
 );

@@ -89,9 +89,10 @@ export async function createDepartmentAction(workspaceId, data) {
                 description: description || null,
                 color: color || '#3b82f6',
                 type: 'ATS_DEPARTMENT',
-                parentId: rootParent.id,
-                workspaceId,
-                userId
+                parent: {
+                    connect: { id: rootParent.id }
+                },
+                workspaceId
             }
         });
 
@@ -114,7 +115,7 @@ export async function updateDepartmentAction(workspaceId, departmentId, data) {
         const { name, description, color } = data;
 
         const department = await prisma.category.update({
-            where: { id: departmentId, workspaceId },
+            where: { id: departmentId },
             data: {
                 name: name !== undefined ? name : undefined,
                 description: description !== undefined ? description : undefined,
@@ -154,8 +155,7 @@ export async function deleteDepartmentAction(departmentId, workspaceId) {
         // Delete the category corresponding to the department
         await prisma.category.delete({
             where: {
-                id: departmentId,
-                workspaceId
+                id: departmentId
             }
         });
 

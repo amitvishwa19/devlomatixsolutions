@@ -57,14 +57,14 @@ import { getDepartmentsAction, createDepartmentAction } from '../../departments/
 import { createJobAction, updateJobAction } from '../../_actions/job-actions';
 
 const JOB_TYPES = [
+    { value: 'Remote', label: 'Remote' },
+    { value: 'Freelancer', label: 'Freelancer' },
+    { value: 'Contract', label: 'Contract' },
     { value: 'Full-time', label: 'Full-time' },
     { value: 'Part-time', label: 'Part-time' },
-    { value: 'Contract', label: 'Contract' },
     { value: 'Internship', label: 'Internship' },
-    { value: 'Remote', label: 'Remote' },
     { value: 'Hybrid', label: 'Hybrid' },
     { value: 'Temporary', label: 'Temporary' },
-    { value: 'Freelance', label: 'Freelance' },
 ];
 
 export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = false, open, setOpen }) {
@@ -82,10 +82,11 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
     const [location, setLocation] = useState("");
     const [selectedTypes, setSelectedTypes] = useState([]);
     const [isTypePopoverOpen, setIsTypePopoverOpen] = useState(false);
-    const [salaryRange, setSalaryRange] = useState("");
+    const [salaryAmount, setSalaryAmount] = useState("");
+    const [salaryPeriod, setSalaryPeriod] = useState("yearly");
     const [status, setStatus] = useState("OPEN");
     const [description, setDescription] = useState('');
-    const [editorType, setEditorType] = useState('jodit');
+    const [editorType, setEditorType] = useState('tiptap');
 
     const toggleType = (val) => {
         setSelectedTypes(prev =>
@@ -135,13 +136,35 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                 setCategoryId(data.categoryId || "");
                 setLocation(data.location || "");
                 if (Array.isArray(data.type)) {
-                    setSelectedTypes(data.type);
+                    setSelectedTypes(data.type.map(t => (t && t.toLowerCase() === 'freelance' ? 'Freelancer' : t)));
                 } else if (typeof data.type === 'string' && data.type.trim()) {
-                    setSelectedTypes(data.type.split(',').map(t => t.trim()).filter(Boolean));
+                    setSelectedTypes(data.type.split(',').map(t => {
+                        const trimmed = t.trim();
+                        if (trimmed.toLowerCase() === 'freelance') return 'Freelancer';
+                        return trimmed;
+                    }).filter(Boolean));
                 } else {
                     setSelectedTypes([]);
                 }
-                setSalaryRange(data.salaryRange || "");
+                if (data.salaryRange) {
+                    const raw = String(data.salaryRange).trim();
+                    if (/(yearly|per annum|PA|p\.a|\/yr|\/year)/i.test(raw)) {
+                        setSalaryPeriod('yearly');
+                        setSalaryAmount(raw.replace(/\s*(PA|p\.a|per annum|yearly|\/yr|\/year)\s*$/i, '').trim());
+                    } else if (/(monthly|per month|PM|p\.m|\/mo|\/month)/i.test(raw)) {
+                        setSalaryPeriod('monthly');
+                        setSalaryAmount(raw.replace(/\s*(PM|p\.m|per month|monthly|\/mo|\/month)\s*$/i, '').trim());
+                    } else if (/(hourly|per hour|\/hr)/i.test(raw)) {
+                        setSalaryPeriod('hourly');
+                        setSalaryAmount(raw.replace(/\s*(hourly|per hour|\/hr)\s*$/i, '').trim());
+                    } else {
+                        setSalaryPeriod('yearly');
+                        setSalaryAmount(raw);
+                    }
+                } else {
+                    setSalaryAmount("");
+                    setSalaryPeriod("yearly");
+                }
                 setStatus(data.status || "OPEN");
                 setDescription(data.description || '');
             } else {
@@ -159,13 +182,26 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
         setIsSubmitting(true);
         try {
             const typeString = selectedTypes.join(', ');
+            let formattedSalary = salaryAmount.trim();
+            if (formattedSalary) {
+                const hasYearly = /(PA|p\.a|per annum|yearly|\/yr|\/year)/i.test(formattedSalary);
+                const hasMonthly = /(PM|p\.m|per month|monthly|\/mo|\/month)/i.test(formattedSalary);
+                const hasHourly = /(hourly|\/hr|per hour)/i.test(formattedSalary);
+
+                if (!hasYearly && !hasMonthly && !hasHourly) {
+                    if (salaryPeriod === 'yearly') formattedSalary += ' PA';
+                    else if (salaryPeriod === 'monthly') formattedSalary += ' /month';
+                    else if (salaryPeriod === 'hourly') formattedSalary += ' /hr';
+                }
+            }
+
             const payload = {
                 title,
                 description,
                 categoryId,
                 location,
                 type: typeString || 'FULL_TIME',
-                salaryRange,
+                salaryRange: formattedSalary,
                 status: status || 'OPEN'
             };
 
@@ -194,9 +230,11 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
         setCategoryId("");
         setLocation("");
         setSelectedTypes([]);
-        setSalaryRange("");
+        setSalaryAmount("");
+        setSalaryPeriod("yearly");
         setStatus("OPEN");
         setDescription('');
+        setEditorType('tiptap');
     };
 
     return (
@@ -213,12 +251,11 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                 </div>
                                 <Badge
                                     variant="outline"
-                                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
-                                        status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' :
-                                        status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' :
-                                        status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
-                                        'bg-muted text-muted-foreground'
-                                    }`}
+                                    className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' :
+                                            status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' :
+                                                status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
+                                                    'bg-muted text-muted-foreground'
+                                        }`}
                                 >
                                     {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
                                 </Badge>
@@ -389,8 +426,8 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                                                 key={item.value}
                                                                 onClick={() => toggleType(item.value)}
                                                                 className={`flex items-center justify-between px-2.5 py-1.5 text-xs font-bold rounded-sm cursor-pointer transition-colors ${isSelected
-                                                                        ? 'bg-primary/10 text-primary font-bold'
-                                                                        : 'hover:bg-muted text-foreground'
+                                                                    ? 'bg-primary/10 text-primary font-bold'
+                                                                    : 'hover:bg-muted text-foreground'
                                                                     }`}
                                                             >
                                                                 <span>{item.label}</span>
@@ -415,146 +452,126 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="  text-muted-foreground text-xs ml-1 ">Salary Range</label>
-                                        <Input
-                                            placeholder="e.g. 15L - 25L PA"
-                                            className="bg-muted/20 border rounded-md text-xs  shadow-inner"
-                                            value={salaryRange}
-                                            onChange={(e) => setSalaryRange(e.target.value)}
-                                        />
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-muted-foreground text-xs ml-1">Salary Range</label>
+                                            <span className="text-[10px] text-muted-foreground font-semibold">Frequency</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="relative flex-1 min-w-0">
+                                                <Input
+                                                    placeholder={salaryPeriod === 'yearly' ? "e.g. 15L - 25L" : salaryPeriod === 'monthly' ? "e.g. 50,000 - 80,000" : "e.g. 500 - 1,000"}
+                                                    className="bg-muted/20 border rounded-md text-xs shadow-inner h-10"
+                                                    value={salaryAmount}
+                                                    onChange={(e) => setSalaryAmount(e.target.value)}
+                                                />
+                                            </div>
+                                            <Select value={salaryPeriod} onValueChange={setSalaryPeriod}>
+                                                <SelectTrigger className="w-[125px] bg-muted/20 border rounded-md text-xs font-bold shadow-inner h-10 shrink-0">
+                                                    <SelectValue placeholder="Period" />
+                                                </SelectTrigger>
+                                                <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
+                                                    <SelectItem value="yearly" className="text-xs font-bold">Yearly (PA)</SelectItem>
+                                                    <SelectItem value="monthly" className="text-xs font-bold">Monthly (/mo)</SelectItem>
+                                                    <SelectItem value="hourly" className="text-xs font-bold">Hourly (/hr)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Status Section (Open / Close / Draft) */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center p-4 rounded-xl border border-border/50 bg-muted/10">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-foreground flex items-center justify-between">
-                                            <span>Position Status</span>
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                                                status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' :
+                                {/* Status Section (Open / Close / Draft / Archived) */}
+                                <div className="p-4 rounded-xl border border-border/50 bg-muted/10 space-y-2">
+                                    <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                                        <span>Position Status</span>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' :
                                                 status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30' :
-                                                status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
-                                                'bg-muted text-muted-foreground border border-border'
+                                                    status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
+                                                        'bg-muted text-muted-foreground border border-border'
                                             }`}>
-                                                {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
-                                            </span>
-                                        </label>
-                                        <Select value={status} onValueChange={setStatus}>
-                                            <SelectTrigger className="bg-background border rounded-md text-xs font-bold shadow-xs focus:ring-1 focus:ring-primary/40 w-full h-10">
-                                                <SelectValue placeholder="Select Status" />
-                                            </SelectTrigger>
-                                            <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
-                                                <SelectItem value="OPEN" className="text-xs font-bold py-2.5">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-emerald-500 font-bold">Open (Active)</span>
-                                                            <span className="text-[10px] text-muted-foreground font-normal">Accepting applications & visible publicly</span>
-                                                        </div>
+                                            {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
+                                        </span>
+                                    </label>
+                                    <Select value={status} onValueChange={setStatus}>
+                                        <SelectTrigger className="bg-background border rounded-md text-xs font-bold shadow-xs focus:ring-1 focus:ring-primary/40 w-full h-10">
+                                            <SelectValue placeholder="Select Status" />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
+                                            <SelectItem value="OPEN" className="text-xs font-bold py-2.5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-emerald-500 font-bold">Open (Active)</span>
+                                                        <span className="text-[10px] text-muted-foreground font-normal">Accepting applications & visible publicly</span>
                                                     </div>
-                                                </SelectItem>
-                                                <SelectItem value="CLOSED" className="text-xs font-bold py-2.5">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-rose-500 font-bold">Closed</span>
-                                                            <span className="text-[10px] text-muted-foreground font-normal">Applications closed, no longer accepting submissions</span>
-                                                        </div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="CLOSED" className="text-xs font-bold py-2.5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-rose-500 font-bold">Closed</span>
+                                                        <span className="text-[10px] text-muted-foreground font-normal">Applications closed, no longer accepting submissions</span>
                                                     </div>
-                                                </SelectItem>
-                                                <SelectItem value="DRAFT" className="text-xs font-bold py-2.5">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-blue-500 font-bold">Draft</span>
-                                                            <span className="text-[10px] text-muted-foreground font-normal">Internal draft, not open to applicants</span>
-                                                        </div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="DRAFT" className="text-xs font-bold py-2.5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-blue-500 font-bold">Draft</span>
+                                                        <span className="text-[10px] text-muted-foreground font-normal">Internal draft, not open to applicants</span>
                                                     </div>
-                                                </SelectItem>
-                                                <SelectItem value="ARCHIVED" className="text-xs font-bold py-2.5">
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0" />
-                                                        <div className="flex flex-col">
-                                                            <span className="text-muted-foreground font-bold">Archived</span>
-                                                            <span className="text-[10px] text-muted-foreground font-normal">Archived past position</span>
-                                                        </div>
+                                                </div>
+                                            </SelectItem>
+                                            <SelectItem value="ARCHIVED" className="text-xs font-bold py-2.5">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0" />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-muted-foreground font-bold">Archived</span>
+                                                        <span className="text-[10px] text-muted-foreground font-normal">Archived past position</span>
                                                     </div>
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-foreground">Quick Status Switch</label>
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                type="button"
-                                                variant={status === 'OPEN' ? 'default' : 'outline'}
-                                                size="sm"
-                                                onClick={() => setStatus('OPEN')}
-                                                className={`flex-1 h-10 text-xs font-bold gap-2 transition-all ${
-                                                    status === 'OPEN'
-                                                        ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-900/20'
-                                                        : 'border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10'
-                                                }`}
-                                            >
-                                                <div className={`w-2 h-2 rounded-full ${status === 'OPEN' ? 'bg-white' : 'bg-emerald-500'}`} />
-                                                Open Position
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant={status === 'CLOSED' ? 'default' : 'outline'}
-                                                size="sm"
-                                                onClick={() => setStatus('CLOSED')}
-                                                className={`flex-1 h-10 text-xs font-bold gap-2 transition-all ${
-                                                    status === 'CLOSED'
-                                                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-900/20'
-                                                        : 'border-rose-500/30 text-rose-500 hover:bg-rose-500/10'
-                                                }`}
-                                            >
-                                                <div className={`w-2 h-2 rounded-full ${status === 'CLOSED' ? 'bg-white' : 'bg-rose-500'}`} />
-                                                Close Position
-                                            </Button>
-                                        </div>
-                                    </div>
+                                                </div>
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </div>
 
                             {/* Editor Section */}
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between gap-2 mb-2">
-                                    <div className="flex items-center gap-2 tracking-[0.2em] text-muted-foreground text-xs">
+                                    <div className="flex items-center gap-2 tracking-[0.2em] text-muted-foreground text-xs font-semibold">
                                         <Layout className="w-3.5 h-3.5" />
                                         Job Description
                                     </div>
-                                    <div className="flex items-center gap-1 border border rounded-lg p-0.5 bg-muted/10 text-[10px] font-bold">
-                                        <button
-                                            type="button"
-                                            onClick={() => setEditorType('jodit')}
-                                            className={`px-3 py-1 rounded-md transition-all ${editorType === 'jodit'
-                                                ? 'bg-primary text-white shadow-sm'
-                                                : 'text-muted-foreground hover:text-foreground'
-                                                }`}
-                                        >
-                                            Classic Editor
-                                        </button>
+                                    <div className="flex items-center gap-1 border border-border/40 rounded-lg p-0.5 bg-muted/20 text-[10px] font-bold">
                                         <button
                                             type="button"
                                             onClick={() => setEditorType('tiptap')}
                                             className={`px-3 py-1 rounded-md transition-all ${editorType === 'tiptap'
-                                                ? 'bg-primary text-white shadow-sm'
-                                                : 'text-muted-foreground hover:text-foreground'
+                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
                                                 }`}
                                         >
                                             TipTap Editor
                                         </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditorType('jodit')}
+                                            className={`px-3 py-1 rounded-md transition-all ${editorType === 'jodit'
+                                                ? 'bg-primary text-primary-foreground shadow-sm'
+                                                : 'text-muted-foreground hover:text-foreground hover:bg-muted/30'
+                                                }`}
+                                        >
+                                            Classic Editor
+                                        </button>
                                     </div>
                                 </div>
-                                <div className="min-h-[400px]">
+                                <div className="min-h-[750px]">
                                     {editorType === 'jodit' ? (
                                         <JoditRichEditor data={description} onChange={setDescription} />
                                     ) : (
-                                        <div className="border border-border/20 rounded-md overflow-hidden focus-within:border-primary/40 transition-colors bg-muted/5 shadow-inner animate-in fade-in duration-300">
+                                        <div className="border border-border/40 rounded-md overflow-hidden focus-within:border-primary/50 transition-colors bg-background/50 shadow-inner animate-in fade-in duration-300 min-h-[750px] flex flex-col">
                                             <TipTap data={description} onChange={setDescription} />
                                         </div>
                                     )}

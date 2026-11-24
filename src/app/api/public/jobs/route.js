@@ -4,13 +4,28 @@ import { NextResponse } from "next/server";
 export async function GET(req) {
     try {
         const { searchParams } = new URL(req.url);
-        const workspaceId = searchParams.get('workspaceId');
+        let workspaceId = searchParams.get('workspaceId');
+
+        if (!workspaceId) {
+            workspaceId = process.env.CAREER_WORKSPACE_ID || process.env.DEFAULT_WORKSPACE_ID;
+
+            if (!workspaceId) {
+                const ceoServer = await prisma.server.findFirst({
+                    where: {
+                        user: { email: 'amit.vishwakarma@devlomatix.com' },
+                        default: true
+                    },
+                    select: { id: true }
+                });
+                if (ceoServer?.id) {
+                    workspaceId = ceoServer.id;
+                }
+            }
+        }
 
         const where = { status: 'OPEN' };
         if (workspaceId) {
             where.workspaceId = workspaceId;
-        } else if (process.env.APP_MODE === 'prod') {
-            where.workspaceId = 'cmn3zvsj6000dd8ikegztlu1m'; // Production Devlomatix Workspace
         }
 
         const jobs = await prisma.job.findMany({

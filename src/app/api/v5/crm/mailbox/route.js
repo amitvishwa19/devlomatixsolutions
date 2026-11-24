@@ -101,7 +101,9 @@ export async function POST(request) {
                 // Step 1: Resolve Workspace
                 const workspaceId = await resolveWorkspaceForInboundEmail({
                     to: toList,
-                    fromEmail
+                    fromEmail,
+                    inReplyTo,
+                    references
                 });
 
                 // Step 2: Find or Auto-Create Contact

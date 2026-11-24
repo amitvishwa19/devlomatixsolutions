@@ -68,9 +68,13 @@ export const JobFilter = ({
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/20 shadow-2xl">
               <SelectItem value="ALL" className="font-bold text-[10px] uppercase tracking-widest py-3">All Types</SelectItem>
+              <SelectItem value="Remote" className="font-bold text-[10px] uppercase tracking-widest py-3">Remote</SelectItem>
+              <SelectItem value="Freelancer" className="font-bold text-[10px] uppercase tracking-widest py-3">Freelancer</SelectItem>
+              <SelectItem value="Contract" className="font-bold text-[10px] uppercase tracking-widest py-3">Contract</SelectItem>
               <SelectItem value="Full-time" className="font-bold text-[10px] uppercase tracking-widest py-3">Full-time</SelectItem>
               <SelectItem value="Part-time" className="font-bold text-[10px] uppercase tracking-widest py-3">Part-time</SelectItem>
-              <SelectItem value="Contract" className="font-bold text-[10px] uppercase tracking-widest py-3">Contract</SelectItem>
+              <SelectItem value="Internship" className="font-bold text-[10px] uppercase tracking-widest py-3">Internship</SelectItem>
+              <SelectItem value="Hybrid" className="font-bold text-[10px] uppercase tracking-widest py-3">Hybrid</SelectItem>
             </SelectContent>
           </Select>
         </div>

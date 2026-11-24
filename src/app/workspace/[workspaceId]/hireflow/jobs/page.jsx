@@ -103,6 +103,27 @@ export default function JobManagementPage() {
         }
     };
 
+    const renderTypeBadges = (typeString) => {
+        if (!typeString) return null;
+        const types = typeString.split(/[,/]+/).map(t => t.trim()).filter(Boolean);
+        return (
+            <div className="flex flex-wrap gap-1 mt-1">
+                {types.map(t => {
+                    const lower = t.toLowerCase();
+                    let colorClass = "bg-primary/10 text-primary border-primary/20";
+                    if (lower.includes('remote')) colorClass = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+                    else if (lower.includes('freelanc')) colorClass = "bg-purple-500/10 text-purple-500 border-purple-500/20";
+                    else if (lower.includes('contract')) colorClass = "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                    return (
+                        <Badge key={t} variant="outline" className={`text-[10px] px-1.5 py-0 font-medium ${colorClass}`}>
+                            {t}
+                        </Badge>
+                    );
+                })}
+            </div>
+        );
+    };
+
     return (
         <div className="flex flex-col gap-4 p-4 animate-in fade-in duration-700">
             {/* Header */}
@@ -256,7 +277,7 @@ export default function JobManagementPage() {
                                                         </div>
                                                         <div>
                                                             <h4 className="text-sm font-bold group-hover:text-primary transition-colors tracking-tight">{job.title}</h4>
-                                                            <p className="text-xs   text-muted-foreground/60  font-mono">{job.type}</p>
+                                                            {renderTypeBadges(job.type)}
                                                         </div>
                                                     </div>
                                                 </td>
@@ -390,7 +411,7 @@ export default function JobManagementPage() {
                                             </div>
                                             <div>
                                                 <h4 className="font-bold tracking-tight text-lg group-hover:text-primary transition-colors">{job.title}</h4>
-                                                <p className="text-xs text-muted-foreground/60   ">{job.type}</p>
+                                                {renderTypeBadges(job.type)}
                                             </div>
                                         </div>
                                         <DropdownMenu>

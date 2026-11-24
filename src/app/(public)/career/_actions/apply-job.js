@@ -27,7 +27,12 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
 
         // 2. Upsert Candidate
         const candidate = await prisma.candidate.upsert({
-            where: { email },
+            where: {
+                workspaceId_email: {
+                    workspaceId: job.workspaceId,
+                    email: email.trim().toLowerCase()
+                }
+            },
             update: {
                 name,
                 phone: phone || undefined,
@@ -37,7 +42,7 @@ export async function applyForJob({ jobId, name, email, phone, resumeUrl, portfo
             },
             create: {
                 name,
-                email,
+                email: email.trim().toLowerCase(),
                 phone: phone || '',
                 resumeUrl: resumeUrl || '',
                 workspaceId: job.workspaceId,

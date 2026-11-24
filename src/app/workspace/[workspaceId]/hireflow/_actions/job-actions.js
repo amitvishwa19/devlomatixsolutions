@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { ensureWorkspaceAccess } from "@/lib/auth-utils";
+import { revalidatePath } from "next/cache";
 
 /**
  * Get all Jobs for a workspace
@@ -79,6 +80,9 @@ export async function createJobAction(workspaceId, data) {
             }
         });
 
+        revalidatePath('/career');
+        revalidatePath('/api/public/jobs');
+
         return { success: true, data: job };
     } catch (error) {
         console.error("[CREATE_JOB_ACTION_ERROR]", error);
@@ -109,6 +113,9 @@ export async function updateJobAction(workspaceId, jobId, data) {
             }
         });
 
+        revalidatePath('/career');
+        revalidatePath('/api/public/jobs');
+
         return { success: true, data: job };
     } catch (error) {
         console.error("[UPDATE_JOB_ACTION_ERROR]", error);
@@ -126,6 +133,9 @@ export async function deleteJobAction(workspaceId, jobId) {
         await prisma.job.delete({
             where: { id: jobId }
         });
+
+        revalidatePath('/career');
+        revalidatePath('/api/public/jobs');
 
         return { success: true, message: "Job deleted successfully" };
     } catch (error) {

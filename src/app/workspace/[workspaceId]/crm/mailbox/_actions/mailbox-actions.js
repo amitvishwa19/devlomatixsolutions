@@ -98,8 +98,9 @@ export async function getMailboxThreadsAction(workspaceId, {
                     counts: { unread: 0, inbox: 0, starred: 0, sent: 0, archive: 0, trash: 0 }
                 };
             }
-            // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail
+            // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail scoped to workspace
             baseWhere = {
+                workspaceId,
                 messages: {
                     some: {
                         OR: [
@@ -112,10 +113,11 @@ export async function getMailboxThreadsAction(workspaceId, {
                 }
             };
         } else {
-            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user
+            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user scoped to workspace
             const allEmails = Array.from(authorizedSet).filter(Boolean);
             baseWhere = allEmails.length > 0
                 ? {
+                    workspaceId,
                     messages: {
                         some: {
                             OR: [
@@ -230,8 +232,8 @@ export async function getMailboxThreadsAction(workspaceId, {
 export async function getMailboxThreadDetailAction(workspaceId, threadId) {
     try {
         const userId = await getValidUserId(workspaceId);
-        const thread = await prisma.crmEmailThread.findUnique({
-            where: { id: threadId },
+        const thread = await prisma.crmEmailThread.findFirst({
+            where: { id: threadId, workspaceId },
             include: {
                 contact: {
                     include: {
