@@ -4,22 +4,22 @@ import { Search, MapPin, Briefcase, X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 
-export const JobFilter = ({ 
-  search, 
-  setSearch, 
-  department, 
-  setDepartment, 
-  type, 
-  setType, 
-  location, 
+export const JobFilter = ({
+  search,
+  setSearch,
+  department,
+  setDepartment,
+  type,
+  setType,
+  location,
   setLocation,
   departments = []
 }) => {
@@ -42,20 +42,20 @@ export const JobFilter = ({
             placeholder="Search for roles (e.g. Frontend Engineer)..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-12 h-14 bg-card/60 backdrop-blur-xl border-border/40 rounded-2xl text-sm font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
+            className="pl-12 h-12 bg-card/60 backdrop-blur-xl border rounded-xl text-sm font-bold shadow-inner focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
 
         {/* Filters Row */}
         <div className="flex flex-wrap gap-4">
           <Select value={department} onValueChange={setDepartment}>
-            <SelectTrigger className="w-[200px] h-14 bg-card/60 backdrop-blur-xl border-border/40 rounded-2xl font-bold text-xs uppercase tracking-widest px-4">
+            <SelectTrigger className="w-[200px] h-12 bg-card/60 backdrop-blur-xl border rounded-xl font-bold text-xs  px-4">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/20 shadow-2xl">
-              <SelectItem value="ALL" className="font-bold text-[10px] uppercase tracking-widest py-3">All Departments</SelectItem>
+              <SelectItem value="ALL" className="font-bold text-[10px]  py-3">All Departments</SelectItem>
               {departments.map((dept) => (
-                <SelectItem key={dept} value={dept} className="font-bold text-[10px] uppercase tracking-widest py-3">
+                <SelectItem key={dept} value={dept} className="font-bold text-[10px]  py-3">
                   {dept}
                 </SelectItem>
               ))}
@@ -63,18 +63,18 @@ export const JobFilter = ({
           </Select>
 
           <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="w-[180px] h-14 bg-card/60 backdrop-blur-xl border-border/40 rounded-2xl font-bold text-xs uppercase tracking-widest px-4">
+            <SelectTrigger className="w-[180px] h-12 bg-card/60 backdrop-blur-xl border rounded-xl font-bold text-xs  px-4">
               <SelectValue placeholder="Job Type" />
             </SelectTrigger>
             <SelectContent className="rounded-xl border-border/20 shadow-2xl">
-              <SelectItem value="ALL" className="font-bold text-[10px] uppercase tracking-widest py-3">All Types</SelectItem>
-              <SelectItem value="Remote" className="font-bold text-[10px] uppercase tracking-widest py-3">Remote</SelectItem>
-              <SelectItem value="Freelancer" className="font-bold text-[10px] uppercase tracking-widest py-3">Freelancer</SelectItem>
-              <SelectItem value="Contract" className="font-bold text-[10px] uppercase tracking-widest py-3">Contract</SelectItem>
-              <SelectItem value="Full-time" className="font-bold text-[10px] uppercase tracking-widest py-3">Full-time</SelectItem>
-              <SelectItem value="Part-time" className="font-bold text-[10px] uppercase tracking-widest py-3">Part-time</SelectItem>
-              <SelectItem value="Internship" className="font-bold text-[10px] uppercase tracking-widest py-3">Internship</SelectItem>
-              <SelectItem value="Hybrid" className="font-bold text-[10px] uppercase tracking-widest py-3">Hybrid</SelectItem>
+              <SelectItem value="ALL" className="font-bold text-[10px]  py-3">All Types</SelectItem>
+              <SelectItem value="Remote" className="font-bold text-[10px]  py-3">Remote</SelectItem>
+              <SelectItem value="Freelancer" className="font-bold text-[10px]  py-3">Freelancer</SelectItem>
+              <SelectItem value="Contract" className="font-bold text-[10px]  py-3">Contract</SelectItem>
+              <SelectItem value="Full-time" className="font-bold text-[10px]  py-3">Full-time</SelectItem>
+              <SelectItem value="Part-time" className="font-bold text-[10px]  py-3">Part-time</SelectItem>
+              <SelectItem value="Internship" className="font-bold text-[10px]  py-3">Internship</SelectItem>
+              <SelectItem value="Hybrid" className="font-bold text-[10px]  py-3">Hybrid</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -83,31 +83,31 @@ export const JobFilter = ({
       {/* Active Filters */}
       {isFiltered && (
         <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground opacity-40">Active Filters</p>
+          <p className="text-[10px]  text-muted-foreground opacity-40">Active Filters</p>
           <div className="flex flex-wrap gap-2">
             {search && (
               <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full group">
                 &quot;{search}&quot;
-                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setSearch('')}/>
+                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setSearch('')} />
               </Badge>
             )}
             {department !== 'ALL' && (
               <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full group">
                 {department}
-                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setDepartment('ALL')}/>
+                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setDepartment('ALL')} />
               </Badge>
             )}
             {type !== 'ALL' && (
               <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full group">
                 {type}
-                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setType('ALL')}/>
+                <X size={12} className="ml-2 cursor-pointer opacity-50 hover:opacity-100" onClick={() => setType('ALL')} />
               </Badge>
             )}
             <Button
               variant="link"
               size="sm"
               onClick={handleReset}
-              className="h-6 p-0 text-[10px] uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
+              className="h-6 p-0 text-[10px]  text-muted-foreground hover:text-primary transition-colors"
             >
               Reset All
             </Button>

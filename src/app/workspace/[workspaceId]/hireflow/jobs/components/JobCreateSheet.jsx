@@ -252,9 +252,9 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                 <Badge
                                     variant="outline"
                                     className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30' :
-                                            status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' :
-                                                status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
-                                                    'bg-muted text-muted-foreground'
+                                        status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border-rose-500/30' :
+                                            status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' :
+                                                'bg-muted text-muted-foreground'
                                         }`}
                                 >
                                     {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
@@ -441,99 +441,101 @@ export default function JobCreateSheet({ workspaceId, onSuccess, data, isEdit = 
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="  text-muted-foreground text-xs ml-1 ">Location</label>
-                                        <Input
-                                            placeholder="e.g. Remote, City"
-                                            className="bg-muted/20 border rounded-md text-xs  shadow-inner"
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-muted-foreground text-xs ml-1">Salary Range</label>
-                                            <span className="text-[10px] text-muted-foreground font-semibold">Frequency</span>
+                                <div>
+                                    <div className="grid grid-cols-2 gap-6">
+                                        <div className="space-y-2">
+                                            <label className="  text-muted-foreground text-xs ml-1 ">Location</label>
+                                            <Input
+                                                placeholder="e.g. Remote, City"
+                                                className="bg-muted/20 border rounded-md text-xs  shadow-inner"
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                            />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="relative flex-1 min-w-0">
-                                                <Input
-                                                    placeholder={salaryPeriod === 'yearly' ? "e.g. 15L - 25L" : salaryPeriod === 'monthly' ? "e.g. 50,000 - 80,000" : "e.g. 500 - 1,000"}
-                                                    className="bg-muted/20 border rounded-md text-xs shadow-inner h-10"
-                                                    value={salaryAmount}
-                                                    onChange={(e) => setSalaryAmount(e.target.value)}
-                                                />
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-muted-foreground text-xs ml-1">Salary Range</label>
+                                                <span className="text-[10px] text-muted-foreground font-semibold">Frequency</span>
                                             </div>
-                                            <Select value={salaryPeriod} onValueChange={setSalaryPeriod}>
-                                                <SelectTrigger className="w-[125px] bg-muted/20 border rounded-md text-xs font-bold shadow-inner h-10 shrink-0">
-                                                    <SelectValue placeholder="Period" />
-                                                </SelectTrigger>
-                                                <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
-                                                    <SelectItem value="yearly" className="text-xs font-bold">Yearly (PA)</SelectItem>
-                                                    <SelectItem value="monthly" className="text-xs font-bold">Monthly (/mo)</SelectItem>
-                                                    <SelectItem value="hourly" className="text-xs font-bold">Hourly (/hr)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative flex-1 min-w-0">
+                                                    <Input
+                                                        placeholder={salaryPeriod === 'yearly' ? "e.g. 15L - 25L" : salaryPeriod === 'monthly' ? "e.g. 50,000 - 80,000" : "e.g. 500 - 1,000"}
+                                                        className="bg-muted/20 border rounded-md text-xs shadow-inner"
+                                                        value={salaryAmount}
+                                                        onChange={(e) => setSalaryAmount(e.target.value)}
+                                                    />
+                                                </div>
+                                                <Select value={salaryPeriod} onValueChange={setSalaryPeriod}>
+                                                    <SelectTrigger className="w-[125px] bg-muted/20 border rounded-md text-xs font-bold shadow-inner h-10 shrink-0">
+                                                        <SelectValue placeholder="Period" />
+                                                    </SelectTrigger>
+                                                    <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
+                                                        <SelectItem value="yearly" className="text-xs font-bold">Yearly (PA)</SelectItem>
+                                                        <SelectItem value="monthly" className="text-xs font-bold">Monthly (/mo)</SelectItem>
+                                                        <SelectItem value="hourly" className="text-xs font-bold">Hourly (/hr)</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Status Section (Open / Close / Draft / Archived) */}
-                                <div className="p-4 rounded-xl border border-border/50 bg-muted/10 space-y-2">
-                                    <label className="text-xs font-bold text-foreground flex items-center justify-between">
-                                        <span>Position Status</span>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' :
+                                    {/* Status Section (Open / Close / Draft / Archived) */}
+                                    <div className="p-4 rounded-xl border border-border/50 bg-muted/10 space-y-2">
+                                        <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                                            <span>Position Status</span>
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${status === 'OPEN' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' :
                                                 status === 'CLOSED' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30' :
                                                     status === 'DRAFT' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/30' :
                                                         'bg-muted text-muted-foreground border border-border'
-                                            }`}>
-                                            {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
-                                        </span>
-                                    </label>
-                                    <Select value={status} onValueChange={setStatus}>
-                                        <SelectTrigger className="bg-background border rounded-md text-xs font-bold shadow-xs focus:ring-1 focus:ring-primary/40 w-full h-10">
-                                            <SelectValue placeholder="Select Status" />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
-                                            <SelectItem value="OPEN" className="text-xs font-bold py-2.5">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-emerald-500 font-bold">Open (Active)</span>
-                                                        <span className="text-[10px] text-muted-foreground font-normal">Accepting applications & visible publicly</span>
+                                                }`}>
+                                                {status === 'OPEN' ? '● Open (Active)' : status === 'CLOSED' ? '● Closed' : status === 'DRAFT' ? '● Draft' : '● Archived'}
+                                            </span>
+                                        </label>
+                                        <Select value={status} onValueChange={setStatus}>
+                                            <SelectTrigger className="bg-background border rounded-md text-xs font-bold shadow-xs focus:ring-1 focus:ring-primary/40 w-full h-10">
+                                                <SelectValue placeholder="Select Status" />
+                                            </SelectTrigger>
+                                            <SelectContent className="rounded-md border bg-card/95 backdrop-blur-xl">
+                                                <SelectItem value="OPEN" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-emerald-500 font-bold">Open (Active)</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Accepting applications & visible publicly</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </SelectItem>
-                                            <SelectItem value="CLOSED" className="text-xs font-bold py-2.5">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-rose-500 font-bold">Closed</span>
-                                                        <span className="text-[10px] text-muted-foreground font-normal">Applications closed, no longer accepting submissions</span>
+                                                </SelectItem>
+                                                <SelectItem value="CLOSED" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-rose-500 font-bold">Closed</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Applications closed, no longer accepting submissions</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </SelectItem>
-                                            <SelectItem value="DRAFT" className="text-xs font-bold py-2.5">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-blue-500 font-bold">Draft</span>
-                                                        <span className="text-[10px] text-muted-foreground font-normal">Internal draft, not open to applicants</span>
+                                                </SelectItem>
+                                                <SelectItem value="DRAFT" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-blue-500 font-bold">Draft</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Internal draft, not open to applicants</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </SelectItem>
-                                            <SelectItem value="ARCHIVED" className="text-xs font-bold py-2.5">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0" />
-                                                    <div className="flex flex-col">
-                                                        <span className="text-muted-foreground font-bold">Archived</span>
-                                                        <span className="text-[10px] text-muted-foreground font-normal">Archived past position</span>
+                                                </SelectItem>
+                                                <SelectItem value="ARCHIVED" className="text-xs font-bold py-2.5">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground shrink-0" />
+                                                        <div className="flex flex-col">
+                                                            <span className="text-muted-foreground font-bold">Archived</span>
+                                                            <span className="text-[10px] text-muted-foreground font-normal">Archived past position</span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
 
