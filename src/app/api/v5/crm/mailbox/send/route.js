@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import { prisma } from '@/lib/prisma';
 import { validateCrmUserToken } from '../../_lib/auth';
 import { apiSuccess, apiError } from '../../_lib/response';
-import { normalizeSubject, resolveUserSender } from '../_lib/threading';
+import { normalizeSubject, resolveUserSender, deliverInternalRecipients } from '../_lib/threading';
 import { isUserAuthorizedForMailbox } from '../_lib/org-mailboxes';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 
@@ -286,6 +286,44 @@ export async function POST(request) {
             });
         } catch (socketErr) {
             console.warn('[SOCKET_BRIDGE_OUTBOUND_WARN]', socketErr.message);
+        }
+
+        // Deliver INBOX copy immediately for any internal recipients
+        try {
+            const internalDeliveries = await deliverInternalRecipients({
+                from: emailPayload.from,
+                fromEmail: pureEmail,
+                fromName: effectiveSenderName,
+                to: toList,
+                cc,
+                bcc,
+                subject,
+                bodyHtml,
+                bodyText,
+                snippet,
+                messageId: generatedMessageId,
+                inReplyTo,
+                references,
+                resendEmailId,
+                headers: customHeaders
+            });
+
+            for (const del of internalDeliveries) {
+                try {
+                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', {
+                        workspaceId: del.workspaceId,
+                        threadId: del.threadId,
+                        messageId: del.messageId,
+                        from: emailPayload.from,
+                        fromEmail: pureEmail,
+                        to: toList,
+                        subject,
+                        snippet
+                    });
+                } catch (e) {}
+            }
+        } catch (delErr) {
+            console.warn('[INTERNAL_DELIVERY_API_WARN]', delErr.message);
         }
 
         return apiSuccess({

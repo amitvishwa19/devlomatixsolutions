@@ -487,3 +487,183 @@ export async function findOrCreateEmailThread({
 
     return { thread: newThread, isNew: true };
 }
+
+/**
+ * Resolves all internal email addresses registered in Users or Org Builder posts,
+ * and creates INBOX threads + INBOUND messages for internal recipients when an
+ * email is sent from within the CRM mailbox (ensuring instant internal delivery
+ * even when Resend inbound webhook does not loop back internally).
+ */
+export async function deliverInternalRecipients({
+    from,
+    fromEmail,
+    fromName,
+    to = [],
+    cc = [],
+    bcc = [],
+    subject,
+    bodyHtml,
+    bodyText,
+    snippet,
+    messageId,
+    inReplyTo,
+    references,
+    resendEmailId,
+    headers = {}
+}) {
+    const cleanSender = (fromEmail || '').trim().toLowerCase();
+    const rawRecipients = [...(Array.isArray(to) ? to : [to]), ...(Array.isArray(cc) ? cc : []), ...(Array.isArray(bcc) ? bcc : [])];
+    const recipientEmails = Array.from(new Set(
+        rawRecipients
+            .map(r => parseEmailAddress(r).email)
+            .filter(e => e && e.includes('@') && e !== cleanSender)
+    ));
+
+    if (recipientEmails.length === 0) return [];
+
+    // Collect all internal emails from Users and Org Builder
+    const internalSet = new Set();
+    const users = await prisma.user.findMany({
+        where: { email: { in: recipientEmails, mode: 'insensitive' } },
+        select: { email: true }
+    });
+    users.forEach(u => {
+        if (u.email) internalSet.add(u.email.trim().toLowerCase());
+    });
+
+    const globalRecord = await prisma.appSettings.findUnique({
+        where: { key: 'org_structure_global' }
+    }).catch(() => null);
+    const nodes = (globalRecord?.general && typeof globalRecord.general === 'object')
+        ? (globalRecord.general.nodes || {})
+        : {};
+
+    Object.values(nodes).forEach(node => {
+        if (!node) return;
+        const rawEmails = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+            ? node.mailboxEmails
+            : (typeof node.mailboxEmail === 'string' ? node.mailboxEmail.split(/[,;\s]+/) : []);
+        rawEmails.forEach(e => {
+            const clean = typeof e === 'string' ? e.trim().toLowerCase() : '';
+            if (clean && clean.includes('@')) internalSet.add(clean);
+        });
+    });
+
+    const internalRecipients = recipientEmails.filter(e => internalSet.has(e));
+    if (internalRecipients.length === 0) return [];
+
+    // Group recipients by target workspace so each workspace gets one INBOX delivery
+    const workspaceMap = new Map();
+    for (const recipEmail of internalRecipients) {
+        const targetWs = await resolveWorkspaceForInboundEmail({
+            to: [recipEmail],
+            fromEmail: cleanSender,
+            inReplyTo: null,
+            references: null
+        });
+        if (targetWs && !workspaceMap.has(targetWs)) {
+            workspaceMap.set(targetWs, recipEmail);
+        }
+    }
+
+    const delivered = [];
+    for (const [targetWorkspaceId, primaryRecip] of workspaceMap.entries()) {
+        try {
+            if (messageId) {
+                const existing = await prisma.crmEmailMessage.findFirst({
+                    where: { messageId, workspaceId: targetWorkspaceId, direction: 'INBOUND' },
+                    select: { id: true }
+                });
+                if (existing) continue;
+            }
+
+            const contact = await findOrCreateContact({
+                workspaceId: targetWorkspaceId,
+                fromEmail: cleanSender,
+                fromName: fromName || deriveDisplayName('', cleanSender)
+            });
+            const deal = contact ? await findActiveDealForContact(contact.id, targetWorkspaceId) : null;
+
+            // Match existing thread strictly within targetWorkspaceId
+            let targetThread = null;
+            if (inReplyTo) {
+                const matchedMsg = await prisma.crmEmailMessage.findFirst({
+                    where: { workspaceId: targetWorkspaceId, messageId: inReplyTo.trim() },
+                    select: { threadId: true }
+                });
+                if (matchedMsg?.threadId) {
+                    targetThread = await prisma.crmEmailThread.findUnique({ where: { id: matchedMsg.threadId } });
+                }
+            }
+
+            if (!targetThread && references) {
+                const refIds = references.split(/\s+/).map(r => r.trim()).filter(Boolean);
+                if (refIds.length > 0) {
+                    const matchedMsg = await prisma.crmEmailMessage.findFirst({
+                        where: { workspaceId: targetWorkspaceId, messageId: { in: refIds } },
+                        select: { threadId: true }
+                    });
+                    if (matchedMsg?.threadId) {
+                        targetThread = await prisma.crmEmailThread.findUnique({ where: { id: matchedMsg.threadId } });
+                    }
+                }
+            }
+
+            if (!targetThread) {
+                targetThread = await prisma.crmEmailThread.create({
+                    data: {
+                        workspaceId: targetWorkspaceId,
+                        subject: subject || 'No Subject',
+                        snippet: snippet ? snippet.slice(0, 180) : null,
+                        lastMessageAt: new Date(),
+                        contactId: contact?.id || null,
+                        dealId: deal?.id || null,
+                        folder: 'INBOX',
+                        unreadCount: 1
+                    }
+                });
+            } else {
+                targetThread = await prisma.crmEmailThread.update({
+                    where: { id: targetThread.id },
+                    data: {
+                        lastMessageAt: new Date(),
+                        snippet: snippet ? snippet.slice(0, 180) : targetThread.snippet,
+                        unreadCount: { increment: 1 },
+                        folder: targetThread.folder === 'TRASH' || targetThread.folder === 'SPAM' ? targetThread.folder : 'INBOX'
+                    }
+                });
+            }
+
+            const inboundMsg = await prisma.crmEmailMessage.create({
+                data: {
+                    threadId: targetThread.id,
+                    workspaceId: targetWorkspaceId,
+                    messageId,
+                    inReplyTo,
+                    references,
+                    resendEmailId,
+                    direction: 'INBOUND',
+                    status: 'RECEIVED',
+                    from,
+                    fromEmail: cleanSender,
+                    to: Array.isArray(to) ? to : [to],
+                    cc: Array.isArray(cc) ? cc : [],
+                    bcc: Array.isArray(bcc) ? bcc : [],
+                    replyTo: cleanSender,
+                    subject: subject || '(No Subject)',
+                    bodyText,
+                    bodyHtml,
+                    snippet,
+                    headers,
+                    isRead: false
+                }
+            });
+
+            delivered.push({ workspaceId: targetWorkspaceId, threadId: targetThread.id, messageId: inboundMsg.id, recipient: primaryRecip });
+        } catch (err) {
+            console.warn('[INTERNAL_MAIL_DELIVERY_WARN]', targetWorkspaceId, err.message);
+        }
+    }
+
+    return delivered;
+}

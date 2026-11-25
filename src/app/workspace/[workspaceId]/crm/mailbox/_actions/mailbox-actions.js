@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getValidUserId } from '../../_actions/auth-helper';
 import { Resend } from 'resend';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
-import { resolveUserSender } from '@/app/api/v5/crm/mailbox/_lib/threading';
+import { resolveUserSender, deliverInternalRecipients } from '@/app/api/v5/crm/mailbox/_lib/threading';
 import { getUserAuthorizedMailboxes, isUserAuthorizedForMailbox } from '@/app/api/v5/crm/mailbox/_lib/org-mailboxes';
 
 async function getResendClient(workspaceId) {
@@ -98,33 +98,47 @@ export async function getMailboxThreadsAction(workspaceId, {
                     counts: { unread: 0, inbox: 0, starred: 0, sent: 0, archive: 0, trash: 0 }
                 };
             }
-            // Filter strictly by the requested email ID across to, cc, bcc, and fromEmail scoped to workspace
+            // Filter strictly by the requested email ID: INBOUND addressed to it, or OUTBOUND sent from it
             baseWhere = {
-                workspaceId,
                 messages: {
                     some: {
                         OR: [
-                            { to: { has: cleanMailbox } },
-                            { cc: { has: cleanMailbox } },
-                            { bcc: { has: cleanMailbox } },
-                            { fromEmail: { equals: cleanMailbox, mode: 'insensitive' } }
+                            {
+                                direction: 'INBOUND',
+                                OR: [
+                                    { to: { has: cleanMailbox } },
+                                    { cc: { has: cleanMailbox } },
+                                    { bcc: { has: cleanMailbox } }
+                                ]
+                            },
+                            {
+                                direction: 'OUTBOUND',
+                                fromEmail: { equals: cleanMailbox, mode: 'insensitive' }
+                            }
                         ]
                     }
                 }
             };
         } else {
-            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user scoped to workspace
+            // 'ALL' mailbox selected: filter strictly by all authorized official email IDs for this user
             const allEmails = Array.from(authorizedSet).filter(Boolean);
             baseWhere = allEmails.length > 0
                 ? {
-                    workspaceId,
                     messages: {
                         some: {
                             OR: [
-                                { to: { hasSome: allEmails } },
-                                { cc: { hasSome: allEmails } },
-                                { bcc: { hasSome: allEmails } },
-                                { fromEmail: { in: allEmails } }
+                                {
+                                    direction: 'INBOUND',
+                                    OR: [
+                                        { to: { hasSome: allEmails } },
+                                        { cc: { hasSome: allEmails } },
+                                        { bcc: { hasSome: allEmails } }
+                                    ]
+                                },
+                                {
+                                    direction: 'OUTBOUND',
+                                    OR: allEmails.map(email => ({ fromEmail: { equals: email, mode: 'insensitive' } }))
+                                }
                             ]
                         }
                     }
@@ -232,8 +246,8 @@ export async function getMailboxThreadsAction(workspaceId, {
 export async function getMailboxThreadDetailAction(workspaceId, threadId) {
     try {
         const userId = await getValidUserId(workspaceId);
-        const thread = await prisma.crmEmailThread.findFirst({
-            where: { id: threadId, workspaceId },
+        const thread = await prisma.crmEmailThread.findUnique({
+            where: { id: threadId },
             include: {
                 contact: {
                     include: {
@@ -527,6 +541,44 @@ export async function sendMailboxEmailAction(workspaceId, {
                 sentBy: user.displayName
             });
         } catch (e) {}
+
+        // Deliver INBOX copy immediately for any internal recipients (Users / Org Builder mailboxes)
+        try {
+            const internalDeliveries = await deliverInternalRecipients({
+                from: emailPayload.from,
+                fromEmail: pureEmail,
+                fromName: effectiveSenderName,
+                to: toList,
+                cc,
+                bcc,
+                subject,
+                bodyHtml,
+                bodyText,
+                snippet,
+                messageId: generatedMessageId,
+                inReplyTo,
+                references,
+                resendEmailId,
+                headers: customHeaders
+            });
+
+            for (const del of internalDeliveries) {
+                try {
+                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', {
+                        workspaceId: del.workspaceId,
+                        threadId: del.threadId,
+                        messageId: del.messageId,
+                        from: emailPayload.from,
+                        fromEmail: pureEmail,
+                        to: toList,
+                        subject,
+                        snippet
+                    });
+                } catch (e) {}
+            }
+        } catch (delErr) {
+            console.warn('[INTERNAL_DELIVERY_ERR]', delErr.message);
+        }
 
         const fullThread = await prisma.crmEmailThread.findUnique({
             where: { id: thread.id },

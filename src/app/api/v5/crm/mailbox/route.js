@@ -106,6 +106,17 @@ export async function POST(request) {
                     references
                 });
 
+                // Deduplicate if internal delivery already created this INBOUND message
+                if (messageId) {
+                    const existingInbound = await prisma.crmEmailMessage.findFirst({
+                        where: { messageId, workspaceId, direction: 'INBOUND' },
+                        select: { id: true, threadId: true }
+                    });
+                    if (existingInbound) {
+                        return apiSuccess({ deduplicated: true, messageId: existingInbound.id, threadId: existingInbound.threadId });
+                    }
+                }
+
                 // Step 2: Find or Auto-Create Contact
                 const contact = await findOrCreateContact({
                     workspaceId,

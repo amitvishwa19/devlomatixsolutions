@@ -183,3 +183,65 @@ export async function isUserAuthorizedForMailbox(userId, mailboxEmail, workspace
     const { authorizedEmails } = await getUserAuthorizedMailboxes(userId, workspaceId);
     return authorizedEmails.includes(mailboxEmail.trim().toLowerCase());
 }
+
+/**
+ * Resolves all User IDs authorized to receive notifications for the given recipient email list
+ * (matching either direct User.email or Org Builder node assignments).
+ */
+export async function resolveAuthorizedUserIdsForEmails(emails = []) {
+    const cleanEmails = Array.from(new Set(
+        (Array.isArray(emails) ? emails : [emails])
+            .map((e) => (typeof e === 'string' ? parseEmailAddressSimple(e) : ''))
+            .filter((e) => e && e.includes('@'))
+    ));
+
+    if (cleanEmails.length === 0) return [];
+
+    const userIdSet = new Set();
+
+    try {
+        const users = await prisma.user.findMany({
+            where: { email: { in: cleanEmails, mode: 'insensitive' } },
+            select: { id: true }
+        });
+        users.forEach((u) => {
+            if (u.id) userIdSet.add(u.id);
+        });
+
+        const globalRecord = await prisma.appSettings.findUnique({
+            where: { key: 'org_structure_global' }
+        }).catch(() => null);
+
+        const nodes = (globalRecord?.general && typeof globalRecord.general === 'object')
+            ? (globalRecord.general.nodes || {})
+            : {};
+
+        Object.values(nodes).forEach((node) => {
+            if (!node) return;
+            const rawEmails = Array.isArray(node.mailboxEmails) && node.mailboxEmails.length > 0
+                ? node.mailboxEmails
+                : (typeof node.mailboxEmail === 'string' ? node.mailboxEmail.split(/[,;\s]+/) : []);
+
+            const validEmails = rawEmails
+                .map((e) => (typeof e === 'string' ? e.trim().toLowerCase() : ''))
+                .filter(Boolean);
+
+            if (validEmails.some((e) => cleanEmails.includes(e))) {
+                const assigned = Array.isArray(node.assignedUserIds) ? node.assignedUserIds : [];
+                assigned.forEach((uid) => {
+                    if (uid) userIdSet.add(uid);
+                });
+            }
+        });
+    } catch (err) {
+        console.warn('[RESOLVE_AUTHORIZED_USERS_WARN]', err.message);
+    }
+
+    return Array.from(userIdSet);
+}
+
+function parseEmailAddressSimple(raw) {
+    const cleaned = String(raw || '').trim();
+    const match = cleaned.match(/<([^>]+)>/);
+    return (match ? match[1] : cleaned).replace(/['"<>\s]/g, '').toLowerCase();
+}

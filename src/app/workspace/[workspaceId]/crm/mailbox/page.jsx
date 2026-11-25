@@ -132,17 +132,27 @@ export default function CrmMailboxPage() {
     // Initial fetch of user mailboxes from Org Builder and contacts/deals
     useEffect(() => {
         if (workspaceId) {
-            // Load user official mailboxes from Org Builder
+            // Load user official mailboxes from Org Builder and default to logged-in user's email
             getUserMailboxesAction(workspaceId).then((res) => {
                 if (res.success && res.data?.mailboxes) {
-                    setMailboxes(res.data.mailboxes);
-                    const primary = res.data.mailboxes.find(m => m.isPrimary && m.email !== 'ALL') || (res.data.mailboxes.length === 1 ? res.data.mailboxes[0] : null);
-                    if (primary?.email) {
-                        setComposeFromEmail(primary.email);
-                        if (res.data.mailboxes.length === 1) {
-                            setActiveMailboxEmail(primary.email);
-                        }
-                    }
+                    const list = res.data.mailboxes;
+                    setMailboxes(list);
+
+                    const loggedInEmail = res.data?.user?.email?.trim().toLowerCase();
+                    const loggedInMailbox = loggedInEmail
+                        ? list.find(m => m.email?.toLowerCase() === loggedInEmail)
+                        : null;
+                    const defaultMailbox = loggedInMailbox
+                        || list.find(m => m.isPrimary && m.email !== 'ALL')
+                        || list.find(m => m.email !== 'ALL')
+                        || list[0];
+
+                    const initialEmail = defaultMailbox?.email || 'ALL';
+                    setActiveMailboxEmail(initialEmail);
+                    setComposeFromEmail(initialEmail !== 'ALL' ? initialEmail : '');
+                    loadThreads('INBOX', searchQuery, initialEmail);
+                } else {
+                    loadThreads('INBOX', searchQuery, 'ALL');
                 }
             });
 
@@ -156,13 +166,6 @@ export default function CrmMailboxPage() {
                     }
                 }
             });
-        }
-    }, [workspaceId]);
-
-    // Initial threads fetch on mount
-    useEffect(() => {
-        if (workspaceId) {
-            loadThreads('INBOX', searchQuery);
         }
     }, [workspaceId]);
 
@@ -202,7 +205,7 @@ export default function CrmMailboxPage() {
         if (!socket) return;
 
         const handleNewEmail = (data) => {
-            if (!data || (workspaceId && data.workspaceId && data.workspaceId !== workspaceId)) return;
+            if (!data) return;
 
             // Direct useState count update
             setCounts(prev => ({
