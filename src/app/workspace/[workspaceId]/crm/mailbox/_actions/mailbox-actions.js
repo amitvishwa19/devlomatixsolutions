@@ -6,7 +6,7 @@ import { getValidUserId } from '../../_actions/auth-helper';
 import { Resend } from 'resend';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 import { resolveUserSender, deliverInternalRecipients } from '@/app/api/v5/crm/mailbox/_lib/threading';
-import { getUserAuthorizedMailboxes, isUserAuthorizedForMailbox } from '@/app/api/v5/crm/mailbox/_lib/org-mailboxes';
+import { getUserAuthorizedMailboxes, isUserAuthorizedForMailbox, resolveAuthorizedUserIdsForEmails } from '@/app/api/v5/crm/mailbox/_lib/org-mailboxes';
 
 async function getResendClient(workspaceId) {
     let apiKey = process.env.RESEND_API_KEY;
@@ -564,16 +564,27 @@ export async function sendMailboxEmailAction(workspaceId, {
 
             for (const del of internalDeliveries) {
                 try {
-                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', {
+                    const eventPayload = {
                         workspaceId: del.workspaceId,
                         threadId: del.threadId,
                         messageId: del.messageId,
                         from: emailPayload.from,
                         fromEmail: pureEmail,
+                        fromName: effectiveSenderName,
                         to: toList,
+                        cc,
+                        bcc,
                         subject,
-                        snippet
-                    });
+                        snippet,
+                        createdAt: new Date().toISOString()
+                    };
+                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', eventPayload);
+                    const recipientUserIds = await resolveAuthorizedUserIdsForEmails([del.recipient, ...toList, ...cc, ...bcc]);
+                    for (const uid of recipientUserIds) {
+                        if (uid !== user.id) {
+                            await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', eventPayload, { targetUserId: uid });
+                        }
+                    }
                 } catch (e) {}
             }
         } catch (delErr) {

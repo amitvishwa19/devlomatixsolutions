@@ -201,11 +201,48 @@ export default function CrmMailboxPage() {
     };
 
     // 3. Socket listener for instant inbound emails & sent updates
+    const seenSocketMsgIdsRef = React.useRef(new Set());
     useEffect(() => {
         if (!socket) return;
 
+        const normalizeEmail = (raw) => {
+            if (!raw || typeof raw !== 'string') return '';
+            const match = raw.match(/<([^>]+)>/);
+            return (match ? match[1] : raw).replace(/['"<>\s]/g, '').toLowerCase();
+        };
+
         const handleNewEmail = (data) => {
             if (!data) return;
+
+            const dedupeKey = data.messageId || `${data.threadId}_${data.createdAt || ''}`;
+            if (dedupeKey && seenSocketMsgIdsRef.current.has(dedupeKey)) {
+                return;
+            }
+
+            const recipients = [
+                ...(Array.isArray(data.to) ? data.to : (data.to ? [data.to] : [])),
+                ...(Array.isArray(data.cc) ? data.cc : (data.cc ? [data.cc] : [])),
+                ...(Array.isArray(data.bcc) ? data.bcc : (data.bcc ? [data.bcc] : []))
+            ].map(normalizeEmail).filter(Boolean);
+
+            const authorizedList = mailboxes.map(m => m.email?.toLowerCase()).filter(e => e && e !== 'all');
+            if (activeMailboxEmail && activeMailboxEmail !== 'ALL') {
+                if (recipients.length > 0 && !recipients.includes(activeMailboxEmail.toLowerCase())) {
+                    return;
+                }
+            } else if (authorizedList.length > 0 && recipients.length > 0) {
+                if (!recipients.some(r => authorizedList.includes(r))) {
+                    return;
+                }
+            }
+
+            if (dedupeKey) {
+                seenSocketMsgIdsRef.current.add(dedupeKey);
+                if (seenSocketMsgIdsRef.current.size > 100) {
+                    const first = seenSocketMsgIdsRef.current.values().next().value;
+                    seenSocketMsgIdsRef.current.delete(first);
+                }
+            }
 
             // Direct useState count update
             setCounts(prev => ({
@@ -216,7 +253,7 @@ export default function CrmMailboxPage() {
 
             // Prepend or refresh threads if in INBOX
             if (currentFolder === 'INBOX' || currentFolder === 'ALL') {
-                loadThreads(currentFolder, searchQuery);
+                loadThreads(currentFolder, searchQuery, activeMailboxEmail);
             }
 
             // If user is currently viewing this exact thread, refresh conversation live
@@ -245,7 +282,7 @@ export default function CrmMailboxPage() {
             socket.off('crm:mailbox:new_email', handleNewEmail);
             socket.off('crm:mailbox:email_sent', handleEmailSent);
         };
-    }, [socket, selectedThreadId, currentFolder, searchQuery, loadThreads, workspaceId]);
+    }, [socket, selectedThreadId, currentFolder, searchQuery, loadThreads, workspaceId, activeMailboxEmail, mailboxes]);
 
     // Keyboard Shortcuts (c to compose, Escape to close/back)
     useEffect(() => {

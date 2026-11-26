@@ -13,7 +13,7 @@ import {
     findOrCreateEmailThread
 } from './_lib/threading';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
-import { getUserAuthorizedMailboxes } from './_lib/org-mailboxes';
+import { getUserAuthorizedMailboxes, resolveAuthorizedUserIdsForEmails } from './_lib/org-mailboxes';
 import { dispatchMailboxPushNotification } from './_lib/mail-push-service';
 
 /**
@@ -215,15 +215,16 @@ export async function POST(request) {
                     }).catch(err => console.warn('[CRM_ACTIVITY_LOG_WARN]', err.message));
                 }
 
-                // Step 9: Broadcast Real-Time Socket Event
+                // Step 9: Broadcast Real-Time Socket Event (workspace + authorized recipient user rooms)
                 try {
-                    await emitKonnectxEvent(workspaceId, 'crm:mailbox:new_email', {
+                    const eventPayload = {
                         workspaceId,
                         threadId: thread.id,
                         messageId: message.id,
                         subject,
                         from: rawFrom,
                         fromEmail,
+                        fromName: contact?.name || fromName,
                         to: toList,
                         cc: ccList,
                         bcc: bccList,
@@ -231,7 +232,13 @@ export async function POST(request) {
                         contactName: contact?.name || fromName,
                         isNewThread: isNew,
                         createdAt: new Date().toISOString()
-                    });
+                    };
+                    await emitKonnectxEvent(workspaceId, 'crm:mailbox:new_email', eventPayload);
+
+                    const recipientUserIds = await resolveAuthorizedUserIdsForEmails([...toList, ...ccList, ...bccList]);
+                    for (const uid of recipientUserIds) {
+                        await emitKonnectxEvent(workspaceId, 'crm:mailbox:new_email', eventPayload, { targetUserId: uid });
+                    }
                 } catch (socketErr) {
                     console.warn('[SOCKET_BRIDGE_WARN]', socketErr.message);
                 }

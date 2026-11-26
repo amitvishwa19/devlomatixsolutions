@@ -2,10 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { X, MessageSquare, Mail } from "lucide-react";
 import { useCrmSocket } from "@/providers/CrmSocketProvider";
 import { useNotifications } from "@/providers/NotificationProvider";
+import { getUserMailboxesAction } from "@/app/workspace/[workspaceId]/crm/mailbox/_actions/mailbox-actions";
 
 // Singleton Web Audio Context for zero-lag bell chime
 let sharedAudioCtx = null;
@@ -66,13 +68,13 @@ function playMessageTone() {
 }
 
 // Gentle professional email chime (C5 523Hz -> G5 784Hz)
-function playEmailTone() {
+async function playEmailTone() {
     if (typeof window === 'undefined') return;
     try {
         const ctx = getSharedAudioContext();
         if (!ctx) return;
         if (ctx.state === 'suspended') {
-            ctx.resume().catch(() => {});
+            await ctx.resume().catch(() => {});
         }
         const now = ctx.currentTime;
 
@@ -84,7 +86,7 @@ function playEmailTone() {
         osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.09);
 
         gain.gain.setValueAtTime(0.001, now);
-        gain.gain.exponentialRampToValueAtTime(0.20, now + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.22, now + 0.03);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
 
         osc.connect(gain);
@@ -93,6 +95,12 @@ function playEmailTone() {
         osc.start(now);
         osc.stop(now + 0.43);
     } catch (_) {}
+}
+
+function extractPureEmail(raw) {
+    if (!raw || typeof raw !== 'string') return '';
+    const match = raw.match(/<([^>]+)>/);
+    return (match ? match[1] : raw).replace(/['"<>\s]/g, '').toLowerCase();
 }
 
 let titleFlashingInterval = null;
@@ -134,16 +142,52 @@ export default function WorkspaceMessageNotifier() {
     const params = useParams();
     const router = useRouter();
     const workspaceId = params?.workspaceId;
+    const { data: session } = useSession();
     const { socket, isConnected } = useCrmSocket() || {};
-    const { addNotification } = useNotifications();
+    const { addNotification, soundEnabled = true } = useNotifications() || {};
 
     const workspaceIdRef = useRef(workspaceId);
     workspaceIdRef.current = workspaceId;
 
-    // Auto-request desktop notification permission on mount
+    const soundEnabledRef = useRef(soundEnabled);
+    soundEnabledRef.current = soundEnabled;
+
+    const authorizedEmailsRef = useRef([]);
+    const seenEmailIdsRef = useRef(new Set());
+
+    // Resolve authorized mailbox emails for the logged-in user
     useEffect(() => {
-        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        const sessionEmail = session?.user?.email?.trim().toLowerCase();
+        if (sessionEmail && authorizedEmailsRef.current.length === 0) {
+            authorizedEmailsRef.current = [sessionEmail];
+        }
+        if (workspaceId && workspaceId !== '[workspaceId]') {
+            getUserMailboxesAction(workspaceId)
+                .then((res) => {
+                    if (res?.success && Array.isArray(res.data?.authorizedEmails)) {
+                        const list = res.data.authorizedEmails.map((e) => e.trim().toLowerCase()).filter(Boolean);
+                        if (list.length > 0) {
+                            authorizedEmailsRef.current = list;
+                        }
+                    }
+                })
+                .catch(() => {});
+        }
+    }, [workspaceId, session?.user?.email]);
+
+    // Request desktop notification permission on mount & on first user gesture if still default
+    useEffect(() => {
+        if (typeof window === 'undefined' || !('Notification' in window)) return;
+        if (Notification.permission === 'default') {
             Notification.requestPermission().catch(() => {});
+            const requestOnGesture = () => {
+                if (Notification.permission === 'default') {
+                    Notification.requestPermission().catch(() => {});
+                }
+                window.removeEventListener('click', requestOnGesture);
+            };
+            window.addEventListener('click', requestOnGesture, { once: true });
+            return () => window.removeEventListener('click', requestOnGesture);
         }
     }, []);
 
@@ -269,13 +313,47 @@ export default function WorkspaceMessageNotifier() {
 
         // 2. Inbound Email Notification Handler
         const handleNewEmail = (data) => {
-            if (!data || (workspaceIdRef.current && data.workspaceId && data.workspaceId !== workspaceIdRef.current)) {
+            if (!data) return;
+
+            // Deduplicate across workspace + user room emissions
+            const dedupeKey = data.messageId || `${data.threadId}_${data.createdAt || ''}`;
+            if (dedupeKey && seenEmailIdsRef.current.has(dedupeKey)) {
                 return;
+            }
+
+            // Email-based authorization filter (independent of workspaceId)
+            const myEmails = authorizedEmailsRef.current;
+            const recipients = [
+                ...(Array.isArray(data.to) ? data.to : (data.to ? [data.to] : [])),
+                ...(Array.isArray(data.cc) ? data.cc : (data.cc ? [data.cc] : [])),
+                ...(Array.isArray(data.bcc) ? data.bcc : (data.bcc ? [data.bcc] : []))
+            ].map(extractPureEmail).filter(Boolean);
+
+            const senderPure = extractPureEmail(data.fromEmail || data.from);
+            if (myEmails.length > 0) {
+                if (recipients.length > 0 && !recipients.some((r) => myEmails.includes(r))) {
+                    return;
+                }
+                // Avoid notifying on user's own outbound mail unless they also explicitly sent it to themselves
+                if (senderPure && myEmails.includes(senderPure) && !recipients.some((r) => r === senderPure)) {
+                    return;
+                }
+            } else if (workspaceIdRef.current && data.workspaceId && data.workspaceId !== workspaceIdRef.current) {
+                return;
+            }
+
+            if (dedupeKey) {
+                seenEmailIdsRef.current.add(dedupeKey);
+                if (seenEmailIdsRef.current.size > 100) {
+                    const first = seenEmailIdsRef.current.values().next().value;
+                    seenEmailIdsRef.current.delete(first);
+                }
             }
 
             const currentWsId = workspaceIdRef.current || data.workspaceId;
             const threadId = data.threadId;
-            const senderEmail = data.fromEmail || data.from || data.contactName || data.fromName || 'New Email';
+            const senderDisplay = data.fromName || data.contactName || data.from || data.fromEmail || 'New Email';
+            const senderEmail = data.fromEmail || data.from || senderDisplay;
             const subject = data.subject || '(No Subject)';
             const snippet = data.snippet || 'You received a new email';
 
@@ -283,12 +361,14 @@ export default function WorkspaceMessageNotifier() {
             const activeThreadId = typeof window !== 'undefined' ? window.__crm_mailbox_active_thread_id : null;
             const isViewingThisThread = activeThreadId && activeThreadId === threadId && typeof document !== 'undefined' && document.hasFocus();
 
-            // Play professional email tone
-            playEmailTone();
+            // Play professional email tone (respecting user's sound setting)
+            if (soundEnabledRef.current) {
+                playEmailTone();
+            }
 
             // Background tab notification & title flashing
-            if (typeof document !== 'undefined' && document.hidden) {
-                startTitleFlashing(`✉️ ${senderEmail}: ${subject.slice(0, 30)}`);
+            if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) {
+                startTitleFlashing(`✉️ ${senderDisplay}: ${subject.slice(0, 30)}`);
             }
 
             // Record in Notification Center (Top navbar bell drawer)
@@ -296,11 +376,29 @@ export default function WorkspaceMessageNotifier() {
                 addNotification({
                     id: `email_${data.messageId || threadId}_${Date.now()}`,
                     type: 'EMAIL',
-                    title: `Email: ${senderEmail}`,
+                    title: `Email: ${senderDisplay}`,
                     message: `${subject} - ${snippet}`,
                     link: currentWsId ? `/workspace/${currentWsId}/crm/mailbox?threadId=${encodeURIComponent(threadId)}` : null,
                     metadata: { threadId, messageId: data.messageId, senderEmail, subject }
                 }, { silent: true });
+            }
+
+            // Native Desktop Notification (when tab is hidden or browser window is unfocused)
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && (document.hidden || !document.hasFocus())) {
+                try {
+                    const notif = new Notification(`New Email: ${senderDisplay}`, {
+                        body: `${subject}\n${snippet}`,
+                        icon: '/fevicon.ico',
+                        tag: `email-${threadId || data.messageId}`
+                    });
+                    notif.onclick = () => {
+                        window.focus();
+                        if (currentWsId && threadId) {
+                            router.push(`/workspace/${currentWsId}/crm/mailbox?threadId=${encodeURIComponent(threadId)}`);
+                        }
+                        notif.close();
+                    };
+                } catch (_) {}
             }
 
             // If the user is actively reading this exact thread right now in front of them, skip intrusive toast
@@ -358,24 +456,6 @@ export default function WorkspaceMessageNotifier() {
                 duration: 7000,
                 id: `email_toast_${data.messageId || threadId || Date.now()}`
             });
-
-            // Native Desktop Notification (when tab is in background)
-            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted' && document.hidden) {
-                try {
-                    const notif = new Notification(`New Email: ${senderName}`, {
-                        body: `${subject}\n${snippet}`,
-                        icon: '/fevicon.ico',
-                        tag: `email-${threadId}`
-                    });
-                    notif.onclick = () => {
-                        window.focus();
-                        if (currentWsId) {
-                            router.push(`/workspace/${currentWsId}/crm/mailbox?threadId=${encodeURIComponent(threadId)}`);
-                        }
-                        notif.close();
-                    };
-                } catch (_) {}
-            }
         };
 
         socket.on('konnectx:cloud:message:new', handleNewMessage);

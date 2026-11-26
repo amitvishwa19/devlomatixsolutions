@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { validateCrmUserToken } from '../../_lib/auth';
 import { apiSuccess, apiError } from '../../_lib/response';
 import { normalizeSubject, resolveUserSender, deliverInternalRecipients } from '../_lib/threading';
-import { isUserAuthorizedForMailbox } from '../_lib/org-mailboxes';
+import { isUserAuthorizedForMailbox, resolveAuthorizedUserIdsForEmails } from '../_lib/org-mailboxes';
 import { emitKonnectxEvent } from '@/lib/socket-bridge';
 
 /**
@@ -310,16 +310,27 @@ export async function POST(request) {
 
             for (const del of internalDeliveries) {
                 try {
-                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', {
+                    const eventPayload = {
                         workspaceId: del.workspaceId,
                         threadId: del.threadId,
                         messageId: del.messageId,
                         from: emailPayload.from,
                         fromEmail: pureEmail,
+                        fromName: effectiveSenderName,
                         to: toList,
+                        cc,
+                        bcc,
                         subject,
-                        snippet
-                    });
+                        snippet,
+                        createdAt: new Date().toISOString()
+                    };
+                    await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', eventPayload);
+                    const recipientUserIds = await resolveAuthorizedUserIdsForEmails([del.recipient, ...toList, ...cc, ...bcc]);
+                    for (const uid of recipientUserIds) {
+                        if (uid !== auth.user.id) {
+                            await emitKonnectxEvent(del.workspaceId, 'crm:mailbox:new_email', eventPayload, { targetUserId: uid });
+                        }
+                    }
                 } catch (e) {}
             }
         } catch (delErr) {
